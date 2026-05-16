@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Users, Activity, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { ClientsPage } from "@/components/ClientsPage";
 import { DiagnosticPage } from "@/components/DiagnosticPage";
+import { EmptyState } from "@/components/EmptyState";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Simulation } from "@/hooks/useClientStore";
@@ -74,39 +75,41 @@ export function HomePage() {
 
       {/* ── Main content ── */}
       <main className="mx-auto max-w-5xl px-4 py-6">
-        {activeTab === "clients" && (
-          <ClientsPage
-            clients={clientStore.clients}
-            addClient={clientStore.addClient}
-            deleteClient={clientStore.deleteClient}
-            getClientSimulations={clientStore.getClientSimulations}
-            deleteSimulation={clientStore.deleteSimulation}
-            onLoadSimulation={handleLoadSimulation}
-            onGeneratePdf={() => {}}
-            onNewDiagnostic={handleNewDiagnostic}
-          />
-        )}
+        {/* Global loading state while client data is fetching */}
+        {clientStore.loading ? (
+          <LoadingSpinner text="Carregando dados..." />
+        ) : (
+          <>
+            {activeTab === "clients" && (
+              <ClientsPage
+                clients={clientStore.clients}
+                addClient={clientStore.addClient}
+                deleteClient={clientStore.deleteClient}
+                getClientSimulations={clientStore.getClientSimulations}
+                deleteSimulation={clientStore.deleteSimulation}
+                onLoadSimulation={handleLoadSimulation}
+                onGeneratePdf={() => {}}
+                onNewDiagnostic={handleNewDiagnostic}
+              />
+            )}
 
-        {activeTab === "diagnostic" && (
-          <DiagnosticPage
-            key={diagnosticClientId ?? "default"}
-            clients={clientStore.clients}
-            getClientSimulations={clientStore.getClientSimulations}
-            initialClientId={diagnosticClientId}
-          />
-        )}
+            {activeTab === "diagnostic" && (
+              <DiagnosticPage
+                key={diagnosticClientId ?? "default"}
+                clients={clientStore.clients}
+                getClientSimulations={clientStore.getClientSimulations}
+                initialClientId={diagnosticClientId}
+              />
+            )}
 
-        {activeTab === "simulator" && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-lg font-medium text-muted-foreground">
-                Selecione <strong>Clientes</strong> para gerenciar seus clientes
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                ou <strong>Diagnóstico</strong> para iniciar uma nova avaliação financeira.
-              </p>
-            </CardContent>
-          </Card>
+            {activeTab === "simulator" && (
+              <EmptyState
+                icon={Activity}
+                title="Selecione Clientes para gerenciar seus clientes"
+                description="ou Diagnóstico para iniciar uma nova avaliação financeira."
+              />
+            )}
+          </>
         )}
       </main>
     </div>

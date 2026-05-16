@@ -73,3 +73,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Avatar helper ─────────────────────────────────────────── */
+.client-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Print styles ──────────────────────────────────────────── */
+@media print {
+  /* Hide everything except the print layer */
+  body > * { display: none !important; }
+  .print\:block { display: block !important; }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  body {
+    font-family: 'Georgia', serif;
+    font-size: 12pt;
+    color: #000;
+    background: #fff;
+  }
+
+  section { break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+  table { break-inside: avoid; }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}

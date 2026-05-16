@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { Users, MoreVertical, Trash2, Activity, ChevronDown, ChevronUp, Plus, FileBarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -362,12 +363,13 @@ export function ClientsPage({
       {/* empty state */}
       {clients.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Users className="mb-4 h-12 w-12 text-muted-foreground/40" />
-            <p className="font-medium text-muted-foreground">Nenhum cliente cadastrado</p>
-            <p className="mt-1 text-sm text-muted-foreground/70">
-              Clique em "Novo cliente" para começar.
-            </p>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Users}
+              title="Nenhum cliente cadastrado"
+              description="Adicione seu primeiro cliente para começar"
+              action={<Button onClick={() => setDialogOpen(true)}>Novo cliente</Button>}
+            />
           </CardContent>
         </Card>
       ) : (
