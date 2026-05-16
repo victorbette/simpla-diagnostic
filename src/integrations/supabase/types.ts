@@ -84,6 +84,53 @@ export interface Database {
           created_at?: string;
         };
       };
+      financial_plans: {
+        Row: {
+          id: string;
+          client_id: string;
+          perfil: Json;
+          patrimonio: Json;
+          objetivos: Json;
+          protecao: Json;
+          sucessao: Json;
+          cambio: Json;
+          liberdade_financeira: Json;
+          notas: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          perfil?: Json;
+          patrimonio?: Json;
+          objetivos?: Json;
+          protecao?: Json;
+          sucessao?: Json;
+          cambio?: Json;
+          liberdade_financeira?: Json;
+          notas?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          client_id?: string;
+          perfil?: Json;
+          patrimonio?: Json;
+          objetivos?: Json;
+          protecao?: Json;
+          sucessao?: Json;
+          cambio?: Json;
+          liberdade_financeira?: Json;
+          notas?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
