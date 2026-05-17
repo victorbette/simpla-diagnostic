@@ -15,8 +15,9 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import type { Ativo, ItemPlanoAcao } from "@/lib/carteira/types";
-import { GRUPO_CORES } from "@/lib/carteira/types";
 import { calcularValorBRL, formatBRL, formatPct } from "@/lib/carteira/calculos";
+import { getCard } from "@/lib/carteira/segmentos";
+import type { SimplaCardId } from "@/lib/carteira/segmentos";
 
 interface Props {
   ativosAtuais: Ativo[];
@@ -38,33 +39,12 @@ const PERFIL_LABELS_LOCAL: Record<string, string> = {
   arrojado: "Arrojado",
 };
 
-const GRUPOS_DEF = [
-  {
-    nome: "Renda Fixa",
-    classes: ["rf_rapido", "rf_longo"] as const,
-    cor: GRUPO_CORES["Renda Fixa"],
-  },
-  {
-    nome: "Renda Variável Brasil",
-    classes: ["rv_acoes", "rv_fiis"] as const,
-    cor: GRUPO_CORES["Renda Variável Brasil"],
-  },
-  {
-    nome: "Internacional",
-    classes: ["internacional_rv", "internacional_rf"] as const,
-    cor: GRUPO_CORES["Internacional"],
-  },
-  {
-    nome: "Multimercados",
-    classes: ["multi"] as const,
-    cor: GRUPO_CORES["Multimercados"],
-  },
-  {
-    nome: "Criptoativos",
-    classes: ["cripto"] as const,
-    cor: GRUPO_CORES["Criptoativos"],
-  },
-] as const;
+const GRUPOS_DISPLAY = [
+  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#2563EB" },
+  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#16A34A" },
+  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#D97706" },
+  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#EA580C" },
+];
 
 function fmtK(n: number): string {
   const abs = Math.abs(n);
@@ -97,26 +77,26 @@ export function Etapa4Resultado({
 
   const grupoAtual = useMemo(
     () =>
-      GRUPOS_DEF.map((g) => {
+      GRUPOS_DISPLAY.map((g) => {
         const v = ativosAtuais
-          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
         const pct = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
-        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor };
+        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor, cards: g.cards };
       }),
     [ativosAtuais, usdBrl, patrimonio]
   );
 
   const grupoMeta = useMemo(
     () =>
-      GRUPOS_DEF.map((g) => {
+      GRUPOS_DISPLAY.map((g) => {
         const v = ativosRecomendados
-          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + (a.valorMetaBRL ?? 0), 0);
         const pct = ativosRecomendados
-          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
-        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor };
+        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor, cards: g.cards };
       }),
     [ativosRecomendados]
   );
@@ -124,8 +104,8 @@ export function Etapa4Resultado({
   const pieAtual = grupoAtual.filter((g) => g.pct > 0);
   const pieMeta = grupoMeta.filter((g) => g.pct > 0);
 
-  const barData = GRUPOS_DEF.map((g, i) => ({
-    name: g.nome.split(" ")[0] + (g.nome.includes("Variável") ? " BR" : ""),
+  const barData = GRUPOS_DISPLAY.map((g, i) => ({
+    name: g.nome.split(" ")[0] + (g.nome === "RV Brasil" ? " BR" : ""),
     Atual: grupoAtual[i].valor,
     Meta: grupoMeta[i].valor,
   })).filter((d) => d.Atual > 0 || d.Meta > 0);
@@ -204,10 +184,10 @@ export function Etapa4Resultado({
         ))}
       </div>
 
-      {/* SECTION 2 — Comparison Table */}
+      {/* SECTION 2 — Comparison Table (collapsible groups + card level) */}
       <div className="rounded-lg border overflow-hidden">
         <div className="bg-muted px-4 py-2">
-          <h3 className="font-semibold text-sm">Comparativo por classe</h3>
+          <h3 className="font-semibold text-sm">Comparativo por grupo</h3>
         </div>
         <table className="w-full text-sm">
           <thead className="text-muted-foreground border-b text-xs">
@@ -222,7 +202,7 @@ export function Etapa4Resultado({
             </tr>
           </thead>
           <tbody>
-            {GRUPOS_DEF.map((g, i) => {
+            {GRUPOS_DISPLAY.map((g, i) => {
               const atual = grupoAtual[i];
               const meta = grupoMeta[i];
               const difR = meta.valor - atual.valor;
@@ -273,25 +253,26 @@ export function Etapa4Resultado({
                     </td>
                   </tr>
                   {isOpen &&
-                    g.classes.map((classe) => {
+                    g.cards.map((cardId) => {
+                      const card = getCard(cardId);
                       const aV = ativosAtuais
-                        .filter((a) => a.classe === classe)
+                        .filter((a) => a.card === cardId)
                         .reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
                       const mV = ativosRecomendados
-                        .filter((a) => a.classe === classe)
+                        .filter((a) => a.card === cardId)
                         .reduce((s, a) => s + (a.valorMetaBRL ?? 0), 0);
                       const aP = patrimonio > 0 ? (aV / patrimonio) * 100 : 0;
                       const mP = ativosRecomendados
-                        .filter((a) => a.classe === classe)
+                        .filter((a) => a.card === cardId)
                         .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
                       const dR = mV - aV;
                       const dP = mP - aP;
                       return (
                         <tr
-                          key={classe}
+                          key={cardId}
                           className="border-t bg-muted/20 text-xs text-muted-foreground"
                         >
-                          <td className="px-4 py-2 pl-10">{classe}</td>
+                          <td className="px-4 py-2 pl-10">{card.label}</td>
                           <td className="px-4 py-2 text-right">{formatPct(aP)}</td>
                           <td className="px-4 py-2 text-right">{formatBRL(aV)}</td>
                           <td className="px-4 py-2 text-right">{formatPct(mP)}</td>
@@ -363,14 +344,25 @@ export function Etapa4Resultado({
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
             <>
-              {aportes.map((item) => (
-                <div key={item.id} className="flex justify-between text-xs">
-                  <span className="truncate">{item.nomeAtivo}</span>
-                  <span className="text-green-600 font-medium ml-2 shrink-0">
-                    +{formatBRL(item.movimentacaoBRL)}
-                  </span>
-                </div>
-              ))}
+              {aportes.map((item) => {
+                const card = getCard(item.card);
+                return (
+                  <div key={item.id} className="flex justify-between text-xs gap-2">
+                    <div className="truncate flex items-center gap-1 min-w-0">
+                      <span
+                        className="inline-flex shrink-0 items-center text-xs rounded-full px-1.5 py-0.5 font-medium"
+                        style={{ backgroundColor: card.cor + "18", color: card.cor }}
+                      >
+                        {card.label}
+                      </span>
+                      <span className="truncate">{item.nomeAtivo}</span>
+                    </div>
+                    <span className="text-green-600 font-medium shrink-0">
+                      +{formatBRL(item.movimentacaoBRL)}
+                    </span>
+                  </div>
+                );
+              })}
               <div className="border-t pt-1 flex justify-between text-xs font-semibold">
                 <span>Total</span>
                 <span className="text-green-600">
@@ -386,14 +378,25 @@ export function Etapa4Resultado({
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
             <>
-              {resgates.map((item) => (
-                <div key={item.id} className="flex justify-between text-xs">
-                  <span className="truncate">{item.nomeAtivo}</span>
-                  <span className="text-red-600 font-medium ml-2 shrink-0">
-                    {formatBRL(item.movimentacaoBRL)}
-                  </span>
-                </div>
-              ))}
+              {resgates.map((item) => {
+                const card = getCard(item.card);
+                return (
+                  <div key={item.id} className="flex justify-between text-xs gap-2">
+                    <div className="truncate flex items-center gap-1 min-w-0">
+                      <span
+                        className="inline-flex shrink-0 items-center text-xs rounded-full px-1.5 py-0.5 font-medium"
+                        style={{ backgroundColor: card.cor + "18", color: card.cor }}
+                      >
+                        {card.label}
+                      </span>
+                      <span className="truncate">{item.nomeAtivo}</span>
+                    </div>
+                    <span className="text-red-600 font-medium shrink-0">
+                      {formatBRL(item.movimentacaoBRL)}
+                    </span>
+                  </div>
+                );
+              })}
               <div className="border-t pt-1 flex justify-between text-xs font-semibold">
                 <span>Total</span>
                 <span className="text-red-600">
@@ -408,14 +411,25 @@ export function Etapa4Resultado({
           {mantidos.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
-            mantidos.map((item) => (
-              <div key={item.id} className="flex justify-between text-xs">
-                <span className="truncate">{item.nomeAtivo}</span>
-                <span className="text-muted-foreground ml-2 shrink-0">
-                  {formatBRL(item.valorAtualBRL)}
-                </span>
-              </div>
-            ))
+            mantidos.map((item) => {
+              const card = getCard(item.card);
+              return (
+                <div key={item.id} className="flex justify-between text-xs gap-2">
+                  <div className="truncate flex items-center gap-1 min-w-0">
+                    <span
+                      className="inline-flex shrink-0 items-center text-xs rounded-full px-1.5 py-0.5 font-medium"
+                      style={{ backgroundColor: card.cor + "18", color: card.cor }}
+                    >
+                      {card.label}
+                    </span>
+                    <span className="truncate">{item.nomeAtivo}</span>
+                  </div>
+                  <span className="text-muted-foreground shrink-0">
+                    {formatBRL(item.valorAtualBRL)}
+                  </span>
+                </div>
+              );
+            })
           )}
         </div>
       </div>

@@ -4,8 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { ItemPlanoAcao } from "@/lib/carteira/types";
-import { CLASSES } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
+import { SIMPLA_CARDS, getCard } from "@/lib/carteira/segmentos";
+import type { SimplaCardId } from "@/lib/carteira/segmentos";
 
 interface Props {
   planoAcao: ItemPlanoAcao[];
@@ -66,9 +67,9 @@ export function Etapa3PlanoAcao({
     return planoAcao.filter((p) => p.tipo === filtro);
   }, [planoAcao, filtro]);
 
-  // Group by CLASSES order
-  const classesComItens = CLASSES.map((c) => c.key).filter((k) =>
-    filtrados.some((p) => p.classe === k)
+  // Group by SIMPLA_CARDS order, using item.card
+  const cardsComItens: SimplaCardId[] = SIMPLA_CARDS.map((c) => c.id).filter((k) =>
+    filtrados.some((p) => p.card === k)
   );
 
   return (
@@ -126,22 +127,22 @@ export function Etapa3PlanoAcao({
         ))}
       </div>
 
-      {/* Groups */}
-      {classesComItens.map((classe) => {
-        const classeInfo = CLASSES.find((c) => c.key === classe)!;
-        const groupItems = filtrados.filter((p) => p.classe === classe);
+      {/* Groups by card */}
+      {cardsComItens.map((cardId) => {
+        const card = getCard(cardId);
+        const groupItems = filtrados.filter((p) => p.card === cardId);
         const groupTotal = groupItems.reduce((s, p) => s + p.movimentacaoBRL, 0);
 
         return (
-          <div key={classe} className="rounded-lg border overflow-hidden">
+          <div key={cardId} className="rounded-lg border overflow-hidden">
             <div className="bg-muted px-4 py-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: classeInfo.cor }}
+                  style={{ backgroundColor: card.cor }}
                 />
                 <span className="font-semibold text-sm">
-                  {classeInfo.grupo} — {classeInfo.label}
+                  {card.grupo} — {card.label}
                 </span>
               </div>
               <span
@@ -178,8 +179,22 @@ export function Etapa3PlanoAcao({
                   {groupItems.map((item) => (
                     <tr key={item.id} className="border-t">
                       <td className="px-3 py-2">
-                        <AcaoBadge tipo={item.tipo} />{" "}
-                        <span className="ml-1 font-medium">{item.nomeAtivo}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <AcaoBadge tipo={item.tipo} />
+                          <span
+                            className="inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 font-medium"
+                            style={{
+                              backgroundColor: card.cor + "18",
+                              color: card.cor,
+                            }}
+                          >
+                            {card.label}
+                          </span>
+                          <span className="font-medium">{item.nomeAtivo}</span>
+                          {item.segmento && (
+                            <span className="text-muted-foreground">· {item.segmento}</span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">
                         {formatBRL(item.valorAtualBRL)}

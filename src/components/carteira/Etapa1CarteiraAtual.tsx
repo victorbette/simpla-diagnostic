@@ -1,19 +1,27 @@
 import { useState, useRef, useMemo } from "react";
-import { Trash2, Plus, Upload, X, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, X, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Ativo, ClasseAtivo } from "@/lib/carteira/types";
-import { CLASSES } from "@/lib/carteira/types";
+import { cn } from "@/lib/utils";
+import type { Ativo } from "@/lib/carteira/types";
 import type { AtivoExtraido } from "@/lib/carteira/leitorIA";
 import { lerCarteiraClaude } from "@/lib/carteira/leitorIA";
 import {
   calcularPatrimonio,
-  calcularValorBRL,
   atualizarPcts,
   genId,
   formatBRL,
   formatPct,
 } from "@/lib/carteira/calculos";
+import {
+  SIMPLA_CARDS,
+  getCard,
+  cardsPorGrupo,
+  segmentoPadrao,
+} from "@/lib/carteira/segmentos";
+import type { SimplaCardId } from "@/lib/carteira/segmentos";
+import { SegmentoSelect } from "./SegmentoSelect";
+import { TabelaAtivos } from "./TabelaAtivos";
 
 interface Props {
   ativos: Ativo[];
@@ -22,17 +30,14 @@ interface Props {
   onUsdBrl: (v: number) => void;
 }
 
-function SectionHeader({ label, valor, pct }: { label: string; valor: number; pct: number }) {
-  return (
-    <div className="flex items-center justify-between px-4 py-2 bg-muted rounded-t-lg border-b">
-      <span className="font-semibold text-sm">{label}</span>
-      <div className="text-right text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{formatBRL(valor)}</span>
-        <span className="ml-2">{formatPct(pct)}</span>
-      </div>
-    </div>
-  );
-}
+const CONTEXT_LABELS: Record<SimplaCardId, string> = {
+  resgate_rapido: "CDB, LCI, LCA, Tesouro Selic, fundo DI",
+  resgate_longo: "Tesouro IPCA+, NTN-B, CRI, CRA, debêntures",
+  acoes: "Ações de empresas brasileiras",
+  fiis: "Fundos de investimento imobiliário",
+  exterior: "ETFs, stocks, bonds em USD",
+  cripto: "Bitcoin, Ethereum e outros criptoativos",
+};
 
 export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Props) {
   const [iaOpen, setIaOpen] = useState(false);
@@ -42,52 +47,68 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
   const [iaExtraidos, setIaExtraidos] = useState<AtivoExtraido[]>([]);
   const [iaNomes, setIaNomes] = useState<string[]>([]);
   const [iaValores, setIaValores] = useState<number[]>([]);
-  const [iaClasses, setIaClasses] = useState<ClasseAtivo[]>([]);
+  const [iaCards, setIaCards] = useState<SimplaCardId[]>([]);
+  const [iaSegmentos, setIaSegmentos] = useState<string[]>([]);
   const [iaSelecionados, setIaSelecionados] = useState<boolean[]>([]);
   const [iaError, setIaError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const patrimonio = useMemo(() => calcularPatrimonio(ativos, usdBrl), [ativos, usdBrl]);
 
-  function makeAtivo(classe: ClasseAtivo, extra?: Partial<Ativo>): Ativo {
-    return { id: genId(), classe, nome: "", valorBRL: 0, pctCarteira: 0, ...extra };
+  function replaceCardAtivos(cardId: SimplaCardId, updated: Ativo[]) {
+    const others = ativos.filter((a) => a.card !== cardId);
+    onAtivos(atualizarPcts([...others, ...updated], usdBrl));
   }
 
-  function addAtivo(classe: ClasseAtivo, extra?: Partial<Ativo>) {
-    onAtivos(atualizarPcts([...ativos, makeAtivo(classe, extra)], usdBrl));
+  async function handleAnalisarIA() {
+    setIaLoading(true);
+    setIaError("");
+    setIaExtraidos([]);
+    try {
+      const r = await lerCarteiraClaude(iaArquivos, setIaProgress);
+      setIaExtraidos(r);
+      setIaNomes(r.map((x) => x.nome));
+      setIaValores(r.map((x) => x.valorBRL));
+      const cards = r.map((x): SimplaCardId => x.cardInferido ?? "resgate_rapido");
+      setIaCards(cards);
+      setIaSegmentos(cards.map((c) => segmentoPadrao(c)));
+      setIaSelecionados(r.map(() => true));
+    } catch (e) {
+      setIaError(e instanceof Error ? e.message : "Erro ao analisar.");
+    } finally {
+      setIaLoading(false);
+    }
   }
 
-  function updateAtivo(id: string, patch: Partial<Ativo>) {
-    onAtivos(atualizarPcts(ativos.map((a) => (a.id === id ? { ...a, ...patch } : a)), usdBrl));
+  function handleAdicionarSelecionados() {
+    const novos: Ativo[] = iaExtraidos
+      .filter((_x, i) => iaSelecionados[i])
+      .map((_x, i) => {
+        const cardId = iaCards[i] ?? ("resgate_rapido" as SimplaCardId);
+        const card = getCard(cardId);
+        const base: Ativo = {
+          id: genId(),
+          card: cardId,
+          segmento: iaSegmentos[i] ?? segmentoPadrao(cardId),
+          nome: iaNomes[i] ?? "",
+          valorBRL: iaValores[i] ?? 0,
+          pctCarteira: 0,
+        };
+        if (card.inputTipo === "posicao_brl") {
+          base.posicaoBRL = iaValores[i] ?? 0;
+        }
+        return base;
+      });
+    onAtivos(atualizarPcts([...ativos, ...novos], usdBrl));
+    setIaExtraidos([]);
+    setIaArquivos([]);
   }
 
-  function removeAtivo(id: string) {
-    onAtivos(atualizarPcts(ativos.filter((a) => a.id !== id), usdBrl));
-  }
-
-  const rfVal = ativos
-    .filter((a) => a.classe === "rf_rapido" || a.classe === "rf_longo")
-    .reduce((s, a) => s + a.valorBRL, 0);
-  const rfPct = ativos
-    .filter((a) => a.classe === "rf_rapido" || a.classe === "rf_longo")
-    .reduce((s, a) => s + a.pctCarteira, 0);
-
-  const rvBrVal = ativos
-    .filter((a) => a.classe === "rv_acoes" || a.classe === "rv_fiis")
-    .reduce((s, a) => s + a.valorBRL, 0);
-  const rvBrPct = ativos
-    .filter((a) => a.classe === "rv_acoes" || a.classe === "rv_fiis")
-    .reduce((s, a) => s + a.pctCarteira, 0);
-
-  const intVal = ativos
-    .filter((a) => a.classe === "internacional_rv" || a.classe === "internacional_rf")
-    .reduce((s, a) => s + a.valorBRL, 0);
-  const intPct = ativos
-    .filter((a) => a.classe === "internacional_rv" || a.classe === "internacional_rf")
-    .reduce((s, a) => s + a.pctCarteira, 0);
+  const grupos = cardsPorGrupo();
+  const grupoOrder = ["Renda Fixa", "Renda Variável Brasil", "Internacional", "Criptoativos"];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
       {/* LEFT SIDE */}
       <div className="space-y-6">
         {/* AI Import Panel */}
@@ -107,9 +128,12 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
           </button>
           {iaOpen && (
             <div className="px-4 pb-4 space-y-3 border-t">
-              {/* drop zone */}
+              <p className="text-xs text-muted-foreground mt-3">
+                Envie extratos de corretoras, prints de aplicativos ou planilhas. A IA identificará os ativos automaticamente.
+              </p>
+              {/* Drop zone */}
               <div
-                className="mt-3 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -136,14 +160,19 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                 }
               />
 
-              {/* file list */}
+              {/* File list */}
               {iaArquivos.length > 0 && (
                 <div className="space-y-1">
                   {iaArquivos.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs bg-muted rounded px-2 py-1">
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 text-xs bg-muted rounded px-2 py-1"
+                    >
                       <span className="flex-1 truncate">{f.name}</span>
                       <button
-                        onClick={() => setIaArquivos((prev) => prev.filter((_, j) => j !== i))}
+                        onClick={() =>
+                          setIaArquivos((prev) => prev.filter((_, j) => j !== i))
+                        }
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -155,23 +184,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
               <Button
                 size="sm"
                 disabled={iaArquivos.length === 0 || iaLoading}
-                onClick={async () => {
-                  setIaLoading(true);
-                  setIaError("");
-                  setIaExtraidos([]);
-                  try {
-                    const r = await lerCarteiraClaude(iaArquivos, setIaProgress);
-                    setIaExtraidos(r);
-                    setIaNomes(r.map((x) => x.nome));
-                    setIaValores(r.map((x) => x.valorBRL));
-                    setIaClasses(r.map((x) => x.classeInferida ?? "rf_rapido"));
-                    setIaSelecionados(r.map(() => true));
-                  } catch (e) {
-                    setIaError(e instanceof Error ? e.message : "Erro ao analisar.");
-                  } finally {
-                    setIaLoading(false);
-                  }
-                }}
+                onClick={handleAnalisarIA}
               >
                 {iaLoading ? (
                   <>
@@ -182,10 +195,12 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                   "Analisar com IA"
                 )}
               </Button>
-              {iaProgress && <p className="text-xs text-muted-foreground">{iaProgress}</p>}
+              {iaProgress && (
+                <p className="text-xs text-muted-foreground">{iaProgress}</p>
+              )}
               {iaError && <p className="text-xs text-red-500">{iaError}</p>}
 
-              {/* triagem table */}
+              {/* Triagem table */}
               {iaExtraidos.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Ativos extraídos — revise e confirme</p>
@@ -194,9 +209,10 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                       <thead className="bg-muted text-muted-foreground">
                         <tr>
                           <th className="px-2 py-1.5 w-8"></th>
-                          <th className="px-2 py-1.5 text-left font-normal">Ativo</th>
+                          <th className="px-2 py-1.5 text-left font-normal">Nome</th>
                           <th className="px-2 py-1.5 text-left font-normal">Valor R$</th>
-                          <th className="px-2 py-1.5 text-left font-normal">Classe</th>
+                          <th className="px-2 py-1.5 text-left font-normal">Card</th>
+                          <th className="px-2 py-1.5 text-left font-normal">Segmento</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -240,46 +256,44 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                             </td>
                             <td className="px-2 py-1.5">
                               <select
-                                value={iaClasses[i] ?? "rf_rapido"}
+                                value={iaCards[i] ?? "resgate_rapido"}
                                 className="text-xs border rounded px-1 py-0.5 bg-background"
-                                onChange={(e) =>
-                                  setIaClasses((prev) =>
+                                onChange={(e) => {
+                                  const newCard = e.target.value as SimplaCardId;
+                                  setIaCards((prev) =>
+                                    prev.map((v, j) => (j === i ? newCard : v))
+                                  );
+                                  setIaSegmentos((prev) =>
                                     prev.map((v, j) =>
-                                      j === i ? (e.target.value as ClasseAtivo) : v
+                                      j === i ? segmentoPadrao(newCard) : v
                                     )
-                                  )
-                                }
+                                  );
+                                }}
                               >
-                                {CLASSES.map((c) => (
-                                  <option key={c.key} value={c.key}>
+                                {SIMPLA_CARDS.map((c) => (
+                                  <option key={c.id} value={c.id}>
                                     {c.label}
                                   </option>
                                 ))}
                               </select>
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <SegmentoSelect
+                                cardId={iaCards[i] ?? "resgate_rapido"}
+                                value={iaSegmentos[i] ?? ""}
+                                onChange={(v) =>
+                                  setIaSegmentos((prev) =>
+                                    prev.map((s, j) => (j === i ? v : s))
+                                  )
+                                }
+                              />
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const novos: Ativo[] = iaExtraidos
-                        .filter((_x, i) => iaSelecionados[i])
-                        .map((_x, i) => ({
-                          id: genId(),
-                          classe: iaClasses[i] ?? "rf_rapido",
-                          nome: iaNomes[i] ?? "",
-                          posicaoBRL: iaValores[i] ?? 0,
-                          valorBRL: iaValores[i] ?? 0,
-                          pctCarteira: 0,
-                        }));
-                      onAtivos(atualizarPcts([...ativos, ...novos], usdBrl));
-                      setIaExtraidos([]);
-                      setIaArquivos([]);
-                    }}
-                  >
+                  <Button size="sm" onClick={handleAdicionarSelecionados}>
                     Adicionar selecionados à carteira
                   </Button>
                 </div>
@@ -288,706 +302,62 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
           )}
         </div>
 
-        {/* RENDA FIXA */}
-        <div className="rounded-lg border overflow-hidden">
-          <SectionHeader label="Renda Fixa" valor={rfVal} pct={rfPct} />
+        {/* Section groups */}
+        {grupoOrder.map((grupoNome) => {
+          const cards = grupos[grupoNome] ?? [];
+          const grupoVal = ativos
+            .filter((a) => cards.some((c) => c.id === a.card))
+            .reduce((s, a) => s + a.valorBRL, 0);
+          const grupoPct = ativos
+            .filter((a) => cards.some((c) => c.id === a.card))
+            .reduce((s, a) => s + a.pctCarteira, 0);
 
-          {/* Resgate Rápido */}
-          <div className="border-b">
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              CDB, LCI, LCA, Tesouro Selic, fundo DI
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ativo/Fundo</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-left font-normal">Vencimento</th>
-                    <th className="px-3 py-2 text-right font-normal">Posição R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "rf_rapido")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="nome..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs w-28"
-                            value={a.vencimento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { vencimento: e.target.value })}
-                            placeholder="dd/mm/aaaa"
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-32 text-right"
-                            value={a.posicaoBRL ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { posicaoBRL: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("rf_rapido")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> Resgate Rápido
-            </Button>
-          </div>
-
-          {/* Resgate Longo */}
-          <div>
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              Tesouro IPCA+, NTN-B, CRI, CRA, debêntures
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ativo/Fundo</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-left font-normal">Vencimento</th>
-                    <th className="px-3 py-2 text-right font-normal">Posição R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "rf_longo")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="nome..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs w-28"
-                            value={a.vencimento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { vencimento: e.target.value })}
-                            placeholder="dd/mm/aaaa"
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-32 text-right"
-                            value={a.posicaoBRL ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { posicaoBRL: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("rf_longo")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> Resgate Longo
-            </Button>
-          </div>
-        </div>
-
-        {/* RENDA VARIÁVEL BRASIL */}
-        <div className="rounded-lg border overflow-hidden">
-          <SectionHeader label="Renda Variável Brasil" valor={rvBrVal} pct={rvBrPct} />
-
-          {/* Ações */}
-          <div className="border-b">
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              Ações de empresas brasileiras
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ticker</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-right font-normal">Cotação R$</th>
-                    <th className="px-3 py-2 text-right font-normal">Qtde</th>
-                    <th className="px-3 py-2 text-right font-normal">Valor R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "rv_acoes")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs w-24"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="PETR4"
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.cotacaoBRL ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.quantidade ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatBRL(a.valorBRL)}
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("rv_acoes")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> Ação
-            </Button>
-          </div>
-
-          {/* FIIs */}
-          <div>
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              Fundos de investimento imobiliário
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ticker</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-right font-normal">Cotação R$</th>
-                    <th className="px-3 py-2 text-right font-normal">Qtde</th>
-                    <th className="px-3 py-2 text-right font-normal">Valor R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "rv_fiis")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs w-24"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="HGLG11"
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.cotacaoBRL ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.quantidade ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatBRL(a.valorBRL)}
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("rv_fiis")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> FII
-            </Button>
-          </div>
-        </div>
-
-        {/* INTERNACIONAL */}
-        <div className="rounded-lg border overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 bg-muted rounded-t-lg border-b">
-            <span className="font-semibold text-sm">Internacional</span>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">USD/BRL:</span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={usdBrl}
-                  onChange={(e) => onUsdBrl(parseFloat(e.target.value) || 5)}
-                  className="w-20 h-6 text-xs"
-                />
+          return (
+            <div key={grupoNome} className="rounded-lg border overflow-hidden">
+              {/* Group header */}
+              <div className="flex items-center justify-between px-4 py-2 bg-muted border-b">
+                <span className="font-semibold text-sm">{grupoNome}</span>
+                <div className="text-right text-xs text-muted-foreground">
+                  {grupoNome === "Internacional" && (
+                    <span className="mr-3 inline-flex items-center gap-1.5">
+                      USD/BRL:
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={usdBrl}
+                        onChange={(e) => onUsdBrl(parseFloat(e.target.value) || 5)}
+                        className="w-20 h-6 text-xs inline-block"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </span>
+                  )}
+                  <span className="font-medium text-foreground">{formatBRL(grupoVal)}</span>
+                  <span className="ml-2">{formatPct(grupoPct)}</span>
+                </div>
               </div>
-              <div className="text-right text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{formatBRL(intVal)}</span>
-                <span className="ml-2">{formatPct(intPct)}</span>
-              </div>
+
+              {/* Cards within group */}
+              {cards.map((card, idx) => (
+                <div key={card.id} className={idx > 0 ? "border-t" : ""}>
+                  <div className="px-4 pt-2 pb-1">
+                    <p className="text-xs font-medium text-foreground">{card.label}</p>
+                    <p className="text-xs text-muted-foreground">{CONTEXT_LABELS[card.id]}</p>
+                  </div>
+                  <div className="px-2 pb-1">
+                    <TabelaAtivos
+                      card={card}
+                      ativos={ativos.filter((a) => a.card === card.id)}
+                      onChange={(updated) => replaceCardAtivos(card.id, updated)}
+                      patrimonio={patrimonio}
+                      usdBrl={usdBrl}
+                      modo="atual"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-
-          {/* RV Exterior */}
-          <div className="border-b">
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              ETFs, stocks, REITs em USD
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ticker</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-right font-normal">Cotação USD</th>
-                    <th className="px-3 py-2 text-right font-normal">Qtde</th>
-                    <th className="px-3 py-2 text-right font-normal">Valor R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "internacional_rv")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs w-24"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="VOO"
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.cotacaoUSD ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { cotacaoUSD: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-24 text-right"
-                            value={a.quantidade ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatBRL(calcularValorBRL(a, usdBrl))}
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("internacional_rv")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> RV Exterior
-            </Button>
-          </div>
-
-          {/* RF Exterior */}
-          <div>
-            <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-              Bonds, treasuries, RF exterior
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-muted-foreground border-b">
-                    <th className="px-3 py-2 text-left font-normal">Ativo</th>
-                    <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                    <th className="px-3 py-2 text-right font-normal">Posição R$</th>
-                    <th className="px-3 py-2 text-right font-normal">%</th>
-                    <th className="px-3 py-2 w-8"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ativos
-                    .filter((a) => a.classe === "internacional_rf")
-                    .map((a) => (
-                      <tr key={a.id} className="border-t">
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.nome}
-                            onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                            placeholder="nome..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            className="h-7 text-xs"
-                            value={a.segmento ?? ""}
-                            onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                            placeholder="segmento..."
-                          />
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <Input
-                            type="number"
-                            className="h-7 text-xs w-32 text-right"
-                            value={a.posicaoBRL ?? 0}
-                            onChange={(e) =>
-                              updateAtivo(a.id, { posicaoBRL: parseFloat(e.target.value) || 0 })
-                            }
-                          />
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                          {formatPct(a.pctCarteira)}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <button
-                            onClick={() => removeAtivo(a.id)}
-                            className="text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 ml-3 mb-2 h-7 text-xs"
-              onClick={() => addAtivo("internacional_rf")}
-            >
-              <Plus className="h-3 w-3 mr-1" /> RF Exterior
-            </Button>
-          </div>
-        </div>
-
-        {/* MULTIMERCADOS */}
-        <div className="rounded-lg border overflow-hidden">
-          <SectionHeader
-            label="Multimercados"
-            valor={ativos
-              .filter((a) => a.classe === "multi")
-              .reduce((s, a) => s + a.valorBRL, 0)}
-            pct={ativos
-              .filter((a) => a.classe === "multi")
-              .reduce((s, a) => s + a.pctCarteira, 0)}
-          />
-          <p className="text-xs text-muted-foreground px-4 pt-3 pb-1">
-            Fundos macro, hedge, long&amp;short
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b">
-                  <th className="px-3 py-2 text-left font-normal">Fundo</th>
-                  <th className="px-3 py-2 text-left font-normal">Segmento</th>
-                  <th className="px-3 py-2 text-right font-normal">Posição R$</th>
-                  <th className="px-3 py-2 text-right font-normal">%</th>
-                  <th className="px-3 py-2 w-8"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {ativos
-                  .filter((a) => a.classe === "multi")
-                  .map((a) => (
-                    <tr key={a.id} className="border-t">
-                      <td className="px-3 py-1.5">
-                        <Input
-                          className="h-7 text-xs"
-                          value={a.nome}
-                          onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                          placeholder="nome do fundo..."
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Input
-                          className="h-7 text-xs"
-                          value={a.segmento ?? ""}
-                          onChange={(e) => updateAtivo(a.id, { segmento: e.target.value })}
-                          placeholder="segmento..."
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Input
-                          type="number"
-                          className="h-7 text-xs w-32 text-right"
-                          value={a.posicaoBRL ?? 0}
-                          onChange={(e) =>
-                            updateAtivo(a.id, { posicaoBRL: parseFloat(e.target.value) || 0 })
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                        {formatPct(a.pctCarteira)}
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <button
-                          onClick={() => removeAtivo(a.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 ml-3 mb-2 h-7 text-xs"
-            onClick={() => addAtivo("multi")}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Multimercado
-          </Button>
-        </div>
-
-        {/* CRIPTOATIVOS */}
-        <div className="rounded-lg border overflow-hidden">
-          <SectionHeader
-            label="Criptoativos"
-            valor={ativos
-              .filter((a) => a.classe === "cripto")
-              .reduce((s, a) => s + a.valorBRL, 0)}
-            pct={ativos
-              .filter((a) => a.classe === "cripto")
-              .reduce((s, a) => s + a.pctCarteira, 0)}
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-muted-foreground border-b">
-                  <th className="px-3 py-2 text-left font-normal">Ativo</th>
-                  <th className="px-3 py-2 text-right font-normal">Cotação R$</th>
-                  <th className="px-3 py-2 text-right font-normal">Qtde</th>
-                  <th className="px-3 py-2 text-right font-normal">Posição R$</th>
-                  <th className="px-3 py-2 text-right font-normal">%</th>
-                  <th className="px-3 py-2 w-8"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {ativos
-                  .filter((a) => a.classe === "cripto")
-                  .map((a) => (
-                    <tr key={a.id} className="border-t">
-                      <td className="px-3 py-1.5">
-                        <Input
-                          className="h-7 text-xs w-24"
-                          value={a.nome}
-                          onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                          placeholder="BTC"
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Input
-                          type="number"
-                          className="h-7 text-xs w-32 text-right"
-                          value={a.cotacaoBRL ?? 0}
-                          onChange={(e) =>
-                            updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Input
-                          type="number"
-                          className="h-7 text-xs w-24 text-right"
-                          value={a.quantidade ?? 0}
-                          onChange={(e) =>
-                            updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })
-                          }
-                        />
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                        {formatBRL((a.cotacaoBRL ?? 0) * (a.quantidade ?? 0))}
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                        {formatPct(a.pctCarteira)}
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <button
-                          onClick={() => removeAtivo(a.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 ml-3 mb-2 h-7 text-xs"
-            onClick={() => addAtivo("cripto")}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Criptoativo
-          </Button>
-        </div>
+          );
+        })}
       </div>
 
       {/* RIGHT SIDE */}
@@ -1003,158 +373,67 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
 
           {/* Stacked bar */}
           <div className="rounded-full overflow-hidden h-8 flex bg-muted">
-            {CLASSES.map((c) => {
-              const pct = ativos
-                .filter((a) => a.classe === c.key)
-                .reduce((s, a) => s + a.pctCarteira, 0);
-              if (pct <= 0) return null;
-              return (
-                <div
-                  key={c.key}
-                  style={{ width: `${pct}%`, backgroundColor: c.cor }}
-                  title={`${c.label}: ${formatPct(pct)} — ${formatBRL(
-                    ativos
-                      .filter((a) => a.classe === c.key)
-                      .reduce((s, a) => s + a.valorBRL, 0)
-                  )}`}
-                  className="h-full transition-all"
-                />
-              );
-            })}
-            {patrimonio === 0 && (
+            {patrimonio === 0 ? (
               <div className="h-full w-full bg-muted-foreground/20 flex items-center justify-center text-xs text-muted-foreground">
                 0% alocado
               </div>
+            ) : (
+              SIMPLA_CARDS.map((c) => {
+                const pct = ativos
+                  .filter((a) => a.card === c.id)
+                  .reduce((s, a) => s + a.pctCarteira, 0);
+                if (pct <= 0) return null;
+                const val = ativos
+                  .filter((a) => a.card === c.id)
+                  .reduce((s, a) => s + a.valorBRL, 0);
+                return (
+                  <div
+                    key={c.id}
+                    style={{ width: `${pct}%`, backgroundColor: c.cor }}
+                    title={`${c.label}: ${formatPct(pct)} — ${formatBRL(val)}`}
+                    className="h-full transition-all"
+                  />
+                );
+              })
             )}
           </div>
 
           {/* Summary tree table */}
           <table className="w-full text-xs">
             <tbody>
-              {/* Renda Fixa */}
-              {(() => {
-                const rfV = ativos
-                  .filter((a) => ["rf_rapido", "rf_longo"].includes(a.classe))
+              {grupoOrder.map((grupoNome, gi) => {
+                const cards = grupos[grupoNome] ?? [];
+                const gVal = ativos
+                  .filter((a) => cards.some((c) => c.id === a.card))
                   .reduce((s, a) => s + a.valorBRL, 0);
-                const rfP = patrimonio > 0 ? (rfV / patrimonio) * 100 : 0;
+                const gPct = patrimonio > 0 ? (gVal / patrimonio) * 100 : 0;
                 return (
                   <>
-                    <tr className="font-semibold">
-                      <td>Renda Fixa</td>
-                      <td className="text-right">{formatBRL(rfV)}</td>
-                      <td className="text-right text-muted-foreground">{formatPct(rfP)}</td>
+                    <tr key={grupoNome} className={cn("font-semibold", gi > 0 ? "border-t" : "")}>
+                      <td className="py-1">{grupoNome}</td>
+                      <td className="text-right py-1">{formatBRL(gVal)}</td>
+                      <td className="text-right text-muted-foreground py-1">{formatPct(gPct)}</td>
                     </tr>
-                    {(["rf_rapido", "rf_longo"] as ClasseAtivo[]).map((k) => {
-                      const c = CLASSES.find((x) => x.key === k)!;
-                      const v = ativos
-                        .filter((a) => a.classe === k)
+                    {cards.map((card) => {
+                      const cVal = ativos
+                        .filter((a) => a.card === card.id)
                         .reduce((s, a) => s + a.valorBRL, 0);
-                      const p = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
+                      const cPct = patrimonio > 0 ? (cVal / patrimonio) * 100 : 0;
                       return (
-                        <tr key={k} className="text-muted-foreground">
-                          <td className="pl-4">{c.label}</td>
-                          <td className="text-right">{formatBRL(v)}</td>
-                          <td className="text-right">{formatPct(p)}</td>
+                        <tr key={card.id} className="text-muted-foreground">
+                          <td className="pl-4 py-0.5">{card.label}</td>
+                          <td className="text-right py-0.5">{formatBRL(cVal)}</td>
+                          <td className="text-right py-0.5">{formatPct(cPct)}</td>
                         </tr>
                       );
                     })}
                   </>
                 );
-              })()}
-              {/* RV Brasil */}
-              {(() => {
-                const v = ativos
-                  .filter((a) => ["rv_acoes", "rv_fiis"].includes(a.classe))
-                  .reduce((s, a) => s + a.valorBRL, 0);
-                const p = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
-                return (
-                  <>
-                    <tr className="font-semibold border-t">
-                      <td>RV Brasil</td>
-                      <td className="text-right">{formatBRL(v)}</td>
-                      <td className="text-right text-muted-foreground">{formatPct(p)}</td>
-                    </tr>
-                    {(["rv_acoes", "rv_fiis"] as ClasseAtivo[]).map((k) => {
-                      const c = CLASSES.find((x) => x.key === k)!;
-                      const kv = ativos
-                        .filter((a) => a.classe === k)
-                        .reduce((s, a) => s + a.valorBRL, 0);
-                      const kp = patrimonio > 0 ? (kv / patrimonio) * 100 : 0;
-                      return (
-                        <tr key={k} className="text-muted-foreground">
-                          <td className="pl-4">{c.label}</td>
-                          <td className="text-right">{formatBRL(kv)}</td>
-                          <td className="text-right">{formatPct(kp)}</td>
-                        </tr>
-                      );
-                    })}
-                  </>
-                );
-              })()}
-              {/* Internacional */}
-              {(() => {
-                const v = ativos
-                  .filter((a) =>
-                    ["internacional_rv", "internacional_rf"].includes(a.classe)
-                  )
-                  .reduce((s, a) => s + a.valorBRL, 0);
-                const p = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
-                return (
-                  <>
-                    <tr className="font-semibold border-t">
-                      <td>Internacional</td>
-                      <td className="text-right">{formatBRL(v)}</td>
-                      <td className="text-right text-muted-foreground">{formatPct(p)}</td>
-                    </tr>
-                    {(["internacional_rv", "internacional_rf"] as ClasseAtivo[]).map((k) => {
-                      const c = CLASSES.find((x) => x.key === k)!;
-                      const kv = ativos
-                        .filter((a) => a.classe === k)
-                        .reduce((s, a) => s + a.valorBRL, 0);
-                      const kp = patrimonio > 0 ? (kv / patrimonio) * 100 : 0;
-                      return (
-                        <tr key={k} className="text-muted-foreground">
-                          <td className="pl-4">{c.label}</td>
-                          <td className="text-right">{formatBRL(kv)}</td>
-                          <td className="text-right">{formatPct(kp)}</td>
-                        </tr>
-                      );
-                    })}
-                  </>
-                );
-              })()}
-              {/* Multi */}
-              {(() => {
-                const v = ativos
-                  .filter((a) => a.classe === "multi")
-                  .reduce((s, a) => s + a.valorBRL, 0);
-                const p = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
-                return (
-                  <tr className="font-semibold border-t">
-                    <td>Multimercados</td>
-                    <td className="text-right">{formatBRL(v)}</td>
-                    <td className="text-right text-muted-foreground">{formatPct(p)}</td>
-                  </tr>
-                );
-              })()}
-              {/* Cripto */}
-              {(() => {
-                const v = ativos
-                  .filter((a) => a.classe === "cripto")
-                  .reduce((s, a) => s + a.valorBRL, 0);
-                const p = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
-                return (
-                  <tr className="font-semibold border-t">
-                    <td>Criptoativos</td>
-                    <td className="text-right">{formatBRL(v)}</td>
-                    <td className="text-right text-muted-foreground">{formatPct(p)}</td>
-                  </tr>
-                );
-              })()}
+              })}
               <tr className="font-bold border-t-2">
-                <td>TOTAL</td>
-                <td className="text-right">{formatBRL(patrimonio)}</td>
-                <td className="text-right">100%</td>
+                <td className="py-1">Total</td>
+                <td className="text-right py-1">{formatBRL(patrimonio)}</td>
+                <td className="text-right py-1">100%</td>
               </tr>
             </tbody>
           </table>

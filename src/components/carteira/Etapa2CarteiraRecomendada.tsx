@@ -1,20 +1,22 @@
 import { Fragment, useMemo } from "react";
-import { Trash2, Plus, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
-import type { Ativo, ClasseAtivo } from "@/lib/carteira/types";
-import { CLASSES, GRUPO_CORES } from "@/lib/carteira/types";
+import type { Ativo } from "@/lib/carteira/types";
 import {
   ativosIniciais,
-  alocacaoPadraoPorPerfil,
   genId,
-  formatBRL,
   formatPct,
 } from "@/lib/carteira/calculos";
+import {
+  getCard,
+  cardsPorGrupo,
+} from "@/lib/carteira/segmentos";
+import type { SimplaCardId } from "@/lib/carteira/segmentos";
+import { TabelaAtivos } from "./TabelaAtivos";
 
 interface Props {
   ativosRec: Ativo[];
@@ -31,14 +33,14 @@ const PERFIL_LABELS_LOCAL: Record<string, string> = {
   arrojado: "Arrojado",
 };
 
-// Groups definition for display
-const GRUPOS_REC = [
-  { nome: "Renda Fixa", classes: ["rf_rapido", "rf_longo"] as ClasseAtivo[] },
-  { nome: "Renda Variável Brasil", classes: ["rv_acoes", "rv_fiis"] as ClasseAtivo[] },
-  { nome: "Internacional", classes: ["internacional_rv", "internacional_rf"] as ClasseAtivo[] },
-  { nome: "Multimercados", classes: ["multi"] as ClasseAtivo[] },
-  { nome: "Criptoativos", classes: ["cripto"] as ClasseAtivo[] },
+const GRUPOS_DISPLAY = [
+  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#2563EB" },
+  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#16A34A" },
+  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#D97706" },
+  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#EA580C" },
 ];
+
+const GRUPO_ORDER = ["Renda Fixa", "Renda Variável Brasil", "Internacional", "Criptoativos"];
 
 export function Etapa2CarteiraRecomendada({
   ativosRec,
@@ -47,63 +49,43 @@ export function Etapa2CarteiraRecomendada({
   patrimonio,
   clientProfile,
 }: Props) {
-  // suppress unused import warning
-  void alocacaoPadraoPorPerfil;
+  const totalPctMeta = ativosRec.reduce((s, a) => s + (a.pctMeta ?? 0), 0);
+  const isExact = Math.abs(totalPctMeta - 100) < 0.05;
 
-  const totalPct = ativosRec.reduce((s, a) => s + (a.pctMeta ?? 0), 0);
-  const isExact = Math.abs(totalPct - 100) < 0.05;
-
-  function addRec(classe: ClasseAtivo) {
-    onAtivosRec([
-      ...ativosRec,
-      { id: genId(), classe, nome: "", valorBRL: 0, pctCarteira: 0, pctMeta: 0, valorMetaBRL: 0 },
-    ]);
+  function replaceCardAtivos(cardId: SimplaCardId, updated: Ativo[]) {
+    const others = ativosRec.filter((a) => a.card !== cardId);
+    onAtivosRec([...others, ...updated]);
   }
 
-  function updateRec(id: string, patch: Partial<Ativo>) {
-    onAtivosRec(
-      ativosRec.map((a) => {
-        if (a.id !== id) return a;
-        const merged = { ...a, ...patch };
-        if (patch.pctMeta !== undefined) {
-          merged.valorMetaBRL = (patch.pctMeta / 100) * patrimonio;
-        }
-        return merged;
-      })
-    );
-  }
-
-  function removeRec(id: string) {
-    onAtivosRec(ativosRec.filter((a) => a.id !== id));
-  }
-
-  // Sidebar comparison data
+  // Comparison data for right panel
   const comparativo = useMemo(
     () =>
-      GRUPOS_REC.map((g) => {
+      GRUPOS_DISPLAY.map((g) => {
         const atual = ativosAtuais
-          .filter((a) => g.classes.includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + a.pctCarteira, 0);
         const meta = ativosRec
-          .filter((a) => g.classes.includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
         return { nome: g.nome, atual, meta, dif: meta - atual };
       }),
     [ativosAtuais, ativosRec]
   );
 
-  // Pie data for META
+  // Pie data for meta allocation
   const pieData = useMemo(
     () =>
-      GRUPOS_REC.map((g) => ({
+      GRUPOS_DISPLAY.map((g) => ({
         name: g.nome,
         value: ativosRec
-          .filter((a) => g.classes.includes(a.classe))
+          .filter((a) => g.cards.includes(a.card))
           .reduce((s, a) => s + (a.pctMeta ?? 0), 0),
-        cor: GRUPO_CORES[g.nome as keyof typeof GRUPO_CORES] ?? "#94a3b8",
+        cor: g.cor,
       })).filter((d) => d.value > 0),
     [ativosRec]
   );
+
+  const grupos = cardsPorGrupo();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
@@ -128,9 +110,11 @@ export function Etapa2CarteiraRecomendada({
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              clientProfile && onAtivosRec(ativosIniciais(clientProfile, patrimonio))
-            }
+            onClick={() => {
+              if (clientProfile) {
+                onAtivosRec(ativosIniciais(clientProfile, patrimonio));
+              }
+            }}
           >
             Usar alocação padrão do perfil
           </Button>
@@ -147,18 +131,18 @@ export function Etapa2CarteiraRecomendada({
           </Button>
         </div>
 
-        {/* Progress card */}
+        {/* Progress bar card */}
         <div className="rounded-lg border p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Total alocado</span>
             {isExact ? (
               <Badge className="bg-green-100 text-green-800">100% alocado</Badge>
             ) : (
-              <span className="text-sm font-semibold text-amber-600">{formatPct(totalPct)}</span>
+              <span className="text-sm font-semibold text-amber-600">{formatPct(totalPctMeta)}</span>
             )}
           </div>
           <Progress
-            value={Math.min(totalPct, 100)}
+            value={Math.min(totalPctMeta, 100)}
             className={cn("h-2", isExact ? "[&>div]:bg-green-500" : "[&>div]:bg-amber-500")}
           />
           {!isExact && (
@@ -166,155 +150,37 @@ export function Etapa2CarteiraRecomendada({
           )}
         </div>
 
-        {/* Sections by group */}
-        {GRUPOS_REC.map((grupo) => {
+        {/* Section groups */}
+        {GRUPO_ORDER.map((grupoNome) => {
+          const cards = grupos[grupoNome] ?? [];
           const grupoTotalPct = ativosRec
-            .filter((a) => grupo.classes.includes(a.classe))
+            .filter((a) => cards.some((c) => c.id === a.card))
             .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
 
           return (
-            <div key={grupo.nome} className="rounded-lg border overflow-hidden">
+            <div key={grupoNome} className="rounded-lg border overflow-hidden">
               <div className="bg-muted px-4 py-2 flex items-center justify-between">
-                <span className="font-semibold text-sm">{grupo.nome}</span>
+                <span className="font-semibold text-sm">{grupoNome}</span>
                 <span className="text-xs text-muted-foreground">{formatPct(grupoTotalPct)}</span>
               </div>
 
-              {grupo.classes.map((classe) => {
-                const classeInfo = CLASSES.find((c) => c.key === classe)!;
-                const classeAtivos = ativosRec.filter((a) => a.classe === classe);
-
+              {cards.map((card, idx) => {
+                const cardInfo = getCard(card.id);
                 return (
-                  <div key={classe} className="border-t first:border-t-0">
-                    <p className="text-xs text-muted-foreground px-4 pt-2 pb-1 font-medium">
-                      {classeInfo.label}
+                  <div key={card.id} className={idx > 0 ? "border-t" : ""}>
+                    <p className="text-xs font-medium text-muted-foreground px-4 pt-2 pb-1">
+                      {cardInfo.label}
                     </p>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="text-muted-foreground border-b">
-                            <th className="px-3 py-1.5 text-left font-normal">Nome</th>
-                            <th className="px-3 py-1.5 text-left font-normal">Segmento</th>
-                            <th className="px-3 py-1.5 text-right font-normal">% Meta</th>
-                            <th className="px-3 py-1.5 text-right font-normal">R$ Meta</th>
-                            <th className="px-3 py-1.5 text-right font-normal">% Atual</th>
-                            <th className="px-3 py-1.5 text-right font-normal">Dif R$</th>
-                            <th className="px-3 py-1.5 text-left font-normal">Ação</th>
-                            <th className="px-3 py-1.5 w-8"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {classeAtivos.map((a) => {
-                            const match = ativosAtuais.find(
-                              (x) =>
-                                x.nome.toLowerCase().trim() === a.nome.toLowerCase().trim()
-                            );
-                            const pctAtual = match?.pctCarteira ?? 0;
-                            const dif =
-                              ((a.pctMeta ?? 0) / 100) * patrimonio -
-                              (match?.valorBRL ?? 0);
-
-                            let acaoLabel = "Manter";
-                            let acaoCls = "bg-gray-100 text-gray-700";
-                            if (dif > 100) {
-                              acaoLabel = "Aportar";
-                              acaoCls = "bg-blue-100 text-blue-800";
-                            } else if (dif < -100) {
-                              acaoLabel = "Resgatar";
-                              acaoCls = "bg-red-100 text-red-800";
-                            } else if ((a.pctMeta ?? 0) > 0 && !match) {
-                              acaoLabel = "Novo";
-                              acaoCls = "bg-purple-100 text-purple-800";
-                            }
-
-                            return (
-                              <tr key={a.id} className="border-t">
-                                <td className="px-3 py-1.5">
-                                  <Input
-                                    className="h-7 text-xs"
-                                    value={a.nome}
-                                    onChange={(e) =>
-                                      updateRec(a.id, { nome: e.target.value })
-                                    }
-                                    placeholder="nome..."
-                                  />
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  <Input
-                                    className="h-7 text-xs"
-                                    value={a.segmento ?? ""}
-                                    onChange={(e) =>
-                                      updateRec(a.id, { segmento: e.target.value })
-                                    }
-                                    placeholder="segmento..."
-                                  />
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  <Input
-                                    type="number"
-                                    step="0.5"
-                                    min="0"
-                                    max="100"
-                                    className="w-20 h-7 text-xs text-right"
-                                    value={a.pctMeta ?? 0}
-                                    onChange={(e) =>
-                                      updateRec(a.id, {
-                                        pctMeta: parseFloat(e.target.value) || 0,
-                                      })
-                                    }
-                                  />
-                                </td>
-                                <td className="px-3 py-1.5 text-right text-muted-foreground text-xs whitespace-nowrap">
-                                  {formatBRL(a.valorMetaBRL ?? 0)}
-                                </td>
-                                <td className="px-3 py-1.5 text-right text-muted-foreground whitespace-nowrap">
-                                  {formatPct(pctAtual)}
-                                </td>
-                                <td
-                                  className={cn(
-                                    "px-3 py-1.5 text-right font-medium whitespace-nowrap",
-                                    dif > 100
-                                      ? "text-green-600"
-                                      : dif < -100
-                                      ? "text-red-600"
-                                      : "text-muted-foreground"
-                                  )}
-                                >
-                                  {Math.abs(dif) <= 100
-                                    ? "—"
-                                    : `${dif > 0 ? "+" : ""}${formatBRL(dif)}`}
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  <span
-                                    className={cn(
-                                      "text-xs rounded px-1.5 py-0.5",
-                                      acaoCls
-                                    )}
-                                  >
-                                    {acaoLabel}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-1.5">
-                                  <button
-                                    onClick={() => removeRec(a.id)}
-                                    className="text-muted-foreground hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                    <div className="px-2 pb-1">
+                      <TabelaAtivos
+                        card={card}
+                        ativos={ativosRec.filter((a) => a.card === card.id)}
+                        onChange={(updated) => replaceCardAtivos(card.id, updated)}
+                        patrimonio={patrimonio}
+                        modo="recomendada"
+                        ativosAtuaisRef={ativosAtuais}
+                      />
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-1 ml-3 mb-2 h-7 text-xs"
-                      onClick={() => addRec(classe)}
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> {classeInfo.label}
-                    </Button>
                   </div>
                 );
               })}
@@ -325,19 +191,20 @@ export function Etapa2CarteiraRecomendada({
 
       {/* RIGHT SIDE */}
       <div className="sticky top-20 space-y-4">
-        {/* Compact progress */}
         <div className="rounded-lg border bg-card p-4 space-y-3">
-          <h3 className="font-semibold text-sm">Alocação proposta</h3>
+          <h3 className="font-semibold text-sm">Alocação recomendada</h3>
+
+          {/* Compact progress */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Total</span>
             {isExact ? (
               <Badge className="bg-green-100 text-green-800 text-xs">100%</Badge>
             ) : (
-              <span className="text-xs font-semibold text-amber-600">{formatPct(totalPct)}</span>
+              <span className="text-xs font-semibold text-amber-600">{formatPct(totalPctMeta)}</span>
             )}
           </div>
           <Progress
-            value={Math.min(totalPct, 100)}
+            value={Math.min(totalPctMeta, 100)}
             className={cn("h-1.5", isExact ? "[&>div]:bg-green-500" : "[&>div]:bg-amber-500")}
           />
 
@@ -381,7 +248,7 @@ export function Etapa2CarteiraRecomendada({
           {/* Pie chart */}
           {pieData.length > 0 && (
             <>
-              <ResponsiveContainer width="100%" height={180}>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -389,8 +256,8 @@ export function Etapa2CarteiraRecomendada({
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    innerRadius="45%"
-                    outerRadius="75%"
+                    innerRadius="50%"
+                    outerRadius="80%"
                     paddingAngle={2}
                   >
                     {pieData.map((d, i) => (
@@ -422,3 +289,4 @@ export function Etapa2CarteiraRecomendada({
     </div>
   );
 }
+
