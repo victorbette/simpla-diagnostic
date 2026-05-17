@@ -30,10 +30,12 @@ const ASSET_LABELS: Record<string, string> = {
   rendaFixa: "Renda Fixa",
   acoes: "Ações",
   fiis: "FIIs",
-  rvGlobal: "RV Global",
-  rfGlobal: "RF Global",
+  rvGlobal: "Renda Variável Global",
+  rfGlobal: "Renda Fixa Global",
   cripto: "Cripto",
 };
+
+const MAX_PONTOS = SUITABILITY_PERGUNTAS.length * 5; // 35
 
 export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) {
   const [step, setStep] = useState(0);
@@ -45,10 +47,10 @@ export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) 
   const respostaSelecionada = respostas.get(pergunta?.id ?? "");
   const isLast = step === total - 1;
 
-  function selectOption(opcaoId: string, pontos: number) {
+  function selectOption(valor: number) {
     setRespostas((prev) => {
       const next = new Map(prev);
-      next.set(pergunta.id, { perguntaId: pergunta.id, opcaoId, pontos });
+      next.set(pergunta.id, { perguntaId: pergunta.id, valor });
       return next;
     });
   }
@@ -72,6 +74,8 @@ export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) 
   if (result) {
     const alvo = ALOCACAO_ALVO[result.perfil];
     const colorClass = PROFILE_COLORS[result.perfil] ?? "bg-muted";
+    const alvoEntries = Object.entries(alvo) as [string, number][];
+    const totalAlvo = alvoEntries.reduce((s, [, v]) => s + v, 0);
 
     return (
       <div className="flex flex-col gap-6">
@@ -88,7 +92,7 @@ export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) 
             {PERFIL_LABELS[result.perfil]}
           </div>
           <p className="text-sm text-muted-foreground">
-            {result.totalPontos} de {SUITABILITY_PERGUNTAS.length * 4} pontos (
+            {result.totalPontos} de {MAX_PONTOS} pontos (
             {formatNumber(result.percentual, 0)}%)
           </p>
         </div>
@@ -99,19 +103,28 @@ export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) 
               Macroalocação sugerida para este perfil
             </p>
             <div className="space-y-3">
-              {Object.entries(alvo).map(([key, pct]) => (
+              {alvoEntries.map(([key, pct]) => (
                 <div key={key} className="flex items-center gap-3">
-                  <span className="w-28 text-sm text-muted-foreground">
+                  <span className="w-44 shrink-0 text-sm text-muted-foreground">
                     {ASSET_LABELS[key] ?? key}
                   </span>
                   <div className="flex-1">
                     <Progress value={pct} className="h-2" />
                   </div>
-                  <span className="w-10 text-right text-sm font-medium tabular-nums">
+                  <span className="w-12 text-right text-sm font-medium tabular-nums">
                     {pct}%
                   </span>
                 </div>
               ))}
+
+              {/* Total row */}
+              <div className="flex items-center gap-3 border-t pt-2">
+                <span className="w-44 shrink-0 text-sm font-semibold">Total</span>
+                <div className="flex-1" />
+                <span className="w-12 text-right text-sm font-semibold tabular-nums">
+                  {formatNumber(totalAlvo, 0)}%
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -143,15 +156,15 @@ export function SuitabilityForm({ onComplete, onCancel }: SuitabilityFormProps) 
         <Progress value={progressPct} className="h-1.5" />
       </div>
 
-      <h2 className="text-xl font-semibold leading-snug">{pergunta.texto}</h2>
+      <h2 className="text-xl font-semibold leading-snug">{pergunta.pergunta}</h2>
 
       <div className="grid gap-3">
         {pergunta.opcoes.map((opcao) => {
-          const selected = respostaSelecionada?.opcaoId === opcao.id;
+          const selected = respostaSelecionada?.valor === opcao.valor;
           return (
             <button
-              key={opcao.id}
-              onClick={() => selectOption(opcao.id, opcao.pontos)}
+              key={opcao.valor}
+              onClick={() => selectOption(opcao.valor)}
               className={cn(
                 "w-full rounded-xl border-2 px-5 py-4 text-left text-sm font-medium transition-all",
                 selected

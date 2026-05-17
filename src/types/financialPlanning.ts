@@ -8,15 +8,14 @@ export type PerfilRisco =
 
 export const PERFIL_LABELS: Record<PerfilRisco, string> = {
   conservador: "Conservador",
-  conservador_moderado: "Conservador Moderado",
+  conservador_moderado: "Conservador-Moderado",
   moderado: "Moderado",
   arrojado: "Arrojado",
 };
 
 export interface SuitabilityResposta {
   perguntaId: string;
-  opcaoId: string;
-  pontos: number;
+  valor: number;
 }
 
 export interface SuitabilityResult {
@@ -40,122 +39,128 @@ export interface MacroalocacaoAlvo {
 
 export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
   conservador: {
-    rendaFixa: 80,
-    acoes: 5,
-    fiis: 5,
-    rvGlobal: 5,
-    rfGlobal: 5,
+    rendaFixa: 92,
+    acoes: 2,
+    fiis: 2,
+    rvGlobal: 4,
+    rfGlobal: 0,
     cripto: 0,
   },
   conservador_moderado: {
-    rendaFixa: 60,
-    acoes: 15,
-    fiis: 10,
-    rvGlobal: 10,
-    rfGlobal: 5,
+    rendaFixa: 78,
+    acoes: 7,
+    fiis: 6,
+    rvGlobal: 9,
+    rfGlobal: 0,
     cripto: 0,
   },
   moderado: {
-    rendaFixa: 40,
-    acoes: 25,
-    fiis: 15,
-    rvGlobal: 15,
-    rfGlobal: 5,
-    cripto: 0,
+    rendaFixa: 66,
+    acoes: 13,
+    fiis: 7,
+    rvGlobal: 13,
+    rfGlobal: 0,
+    cripto: 1,
   },
   arrojado: {
-    rendaFixa: 20,
-    acoes: 35,
-    fiis: 15,
-    rvGlobal: 20,
-    rfGlobal: 5,
-    cripto: 5,
+    rendaFixa: 52,
+    acoes: 20,
+    fiis: 9,
+    rvGlobal: 17.5,
+    rfGlobal: 0,
+    cripto: 1.5,
   },
 };
 
 // ─── Suitability Questionnaire ────────────────────────────────────────────────
 
 export interface SuitabilityOpcao {
-  id: string;
+  valor: number;
   texto: string;
-  pontos: number;
 }
 
 export interface SuitabilityPergunta {
   id: string;
-  texto: string;
+  pergunta: string;
   opcoes: SuitabilityOpcao[];
 }
 
 export const SUITABILITY_PERGUNTAS: SuitabilityPergunta[] = [
   {
     id: "horizonte",
-    texto: "Qual é o seu horizonte de investimento?",
+    pergunta: "Qual é o seu horizonte de investimento?",
     opcoes: [
-      { id: "h1", texto: "Menos de 1 ano", pontos: 1 },
-      { id: "h2", texto: "Entre 1 e 3 anos", pontos: 2 },
-      { id: "h3", texto: "Entre 3 e 5 anos", pontos: 3 },
-      { id: "h4", texto: "Mais de 5 anos", pontos: 4 },
+      { valor: 1, texto: "Menos de 1 ano" },
+      { valor: 2, texto: "De 1 a 3 anos" },
+      { valor: 3, texto: "De 3 a 5 anos" },
+      { valor: 4, texto: "De 5 a 10 anos" },
+      { valor: 5, texto: "Mais de 10 anos" },
     ],
   },
   {
     id: "objetivo",
-    texto: "Qual é o seu principal objetivo financeiro?",
+    pergunta: "Qual é o seu principal objetivo financeiro?",
     opcoes: [
-      { id: "o1", texto: "Preservar o capital com segurança máxima", pontos: 1 },
-      { id: "o2", texto: "Obter renda estável com baixo risco", pontos: 2 },
-      { id: "o3", texto: "Crescer o patrimônio equilibrando risco e retorno", pontos: 3 },
-      { id: "o4", texto: "Maximizar retorno aceitando oscilações elevadas", pontos: 4 },
+      { valor: 1, texto: "Preservar o capital com segurança máxima" },
+      { valor: 2, texto: "Obter renda estável com baixo risco" },
+      { valor: 3, texto: "Crescer o patrimônio equilibrando risco e retorno" },
+      { valor: 4, texto: "Maximizar retorno aceitando oscilações elevadas" },
+      { valor: 5, texto: "Construir riqueza de longo prazo com alta concentração em ativos de risco" },
     ],
   },
   {
     id: "reacao_queda",
-    texto: "Se sua carteira cair 20% em um mês, o que você faria?",
+    pergunta: "Se sua carteira cair 20% em um mês, o que você faria?",
     opcoes: [
-      { id: "r1", texto: "Venderia tudo para evitar perdas maiores", pontos: 1 },
-      { id: "r2", texto: "Ficaria preocupado e reduziria a exposição", pontos: 2 },
-      { id: "r3", texto: "Manteria a posição e aguardaria a recuperação", pontos: 3 },
-      { id: "r4", texto: "Aproveitaria para comprar mais ativos de risco", pontos: 4 },
+      { valor: 1, texto: "Venderia tudo para evitar perdas maiores" },
+      { valor: 2, texto: "Ficaria preocupado e reduziria a exposição" },
+      { valor: 3, texto: "Manteria a posição e aguardaria a recuperação" },
+      { valor: 4, texto: "Aproveitaria para comprar mais ativos de risco" },
+      { valor: 5, texto: "Aumentaria significativamente a posição, aproveitando o desconto" },
     ],
   },
   {
     id: "experiencia",
-    texto: "Como você classifica sua experiência com investimentos?",
+    pergunta: "Como você classifica sua experiência com investimentos?",
     opcoes: [
-      { id: "e1", texto: "Nenhuma — só poupança ou CDB", pontos: 1 },
-      { id: "e2", texto: "Básica — tenho Tesouro Direto e fundos DI", pontos: 2 },
-      { id: "e3", texto: "Intermediária — invisto em ações e multimercados", pontos: 3 },
-      { id: "e4", texto: "Avançada — opero derivativos, BDRs ou ativos no exterior", pontos: 4 },
+      { valor: 1, texto: "Nenhuma — só poupança ou CDB" },
+      { valor: 2, texto: "Básica — tenho Tesouro Direto e fundos DI" },
+      { valor: 3, texto: "Intermediária — invisto em ações e multimercados" },
+      { valor: 4, texto: "Avançada — opero derivativos, BDRs ou ativos no exterior" },
+      { valor: 5, texto: "Especialista — gestão ativa de carteira com análise fundamentalista ou técnica" },
     ],
   },
   {
     id: "renda_estabilidade",
-    texto: "Como você avalia a estabilidade da sua renda?",
+    pergunta: "Como você avalia a estabilidade da sua renda?",
     opcoes: [
-      { id: "rs1", texto: "Muito instável — renda variável ou informal", pontos: 1 },
-      { id: "rs2", texto: "Razoável — pode haver interrupções ocasionais", pontos: 2 },
-      { id: "rs3", texto: "Estável — emprego fixo ou renda previsível", pontos: 3 },
-      { id: "rs4", texto: "Muito estável — múltiplas fontes de renda", pontos: 4 },
+      { valor: 1, texto: "Muito instável — renda variável ou informal" },
+      { valor: 2, texto: "Razoável — pode haver interrupções ocasionais" },
+      { valor: 3, texto: "Estável — emprego fixo ou renda previsível" },
+      { valor: 4, texto: "Muito estável — múltiplas fontes de renda" },
+      { valor: 5, texto: "Excepcional — renda passiva que cobre todas as despesas" },
     ],
   },
   {
     id: "perda_maxima",
-    texto: "Qual a perda máxima que você toleraria em 12 meses?",
+    pergunta: "Qual a perda máxima que você toleraria em 12 meses?",
     opcoes: [
-      { id: "pm1", texto: "Nenhuma — não aceito perdas", pontos: 1 },
-      { id: "pm2", texto: "Até 5%", pontos: 2 },
-      { id: "pm3", texto: "Entre 5% e 20%", pontos: 3 },
-      { id: "pm4", texto: "Mais de 20%", pontos: 4 },
+      { valor: 1, texto: "Nenhuma — não aceito perdas" },
+      { valor: 2, texto: "Até 5%" },
+      { valor: 3, texto: "Entre 5% e 20%" },
+      { valor: 4, texto: "Entre 20% e 40%" },
+      { valor: 5, texto: "Mais de 40%" },
     ],
   },
   {
     id: "percentual_investido",
-    texto: "Qual percentual da sua renda mensal você consegue investir?",
+    pergunta: "Qual percentual da sua renda mensal você consegue investir?",
     opcoes: [
-      { id: "pi1", texto: "Menos de 5%", pontos: 1 },
-      { id: "pi2", texto: "Entre 5% e 15%", pontos: 2 },
-      { id: "pi3", texto: "Entre 15% e 30%", pontos: 3 },
-      { id: "pi4", texto: "Mais de 30%", pontos: 4 },
+      { valor: 1, texto: "Menos de 5%" },
+      { valor: 2, texto: "Entre 5% e 15%" },
+      { valor: 3, texto: "Entre 15% e 30%" },
+      { valor: 4, texto: "Entre 30% e 50%" },
+      { valor: 5, texto: "Mais de 50%" },
     ],
   },
 ];
@@ -163,8 +168,8 @@ export const SUITABILITY_PERGUNTAS: SuitabilityPergunta[] = [
 // ─── Calcular Perfil ──────────────────────────────────────────────────────────
 
 export function calcularPerfil(respostas: SuitabilityResposta[]): SuitabilityResult {
-  const maxPontos = SUITABILITY_PERGUNTAS.length * 4;
-  const totalPontos = respostas.reduce((sum, r) => sum + r.pontos, 0);
+  const maxPontos = SUITABILITY_PERGUNTAS.length * 5; // 7 × 5 = 35
+  const totalPontos = respostas.reduce((sum, r) => sum + r.valor, 0);
   const percentual = maxPontos > 0 ? (totalPontos / maxPontos) * 100 : 0;
 
   let perfil: PerfilRisco;
@@ -242,6 +247,8 @@ export interface PlanejamentoIF {
   taxaRetornoAnual: number;
   inflacaoAnual: number;
   metodologia: "regra4porcento" | "renda_perpetua" | "renda_temporaria";
+  valorPrevidencia: number;
+  rendaAluguelMensal: number;
 }
 
 export const initialPlanejamentoIF: PlanejamentoIF = {
@@ -254,6 +261,8 @@ export const initialPlanejamentoIF: PlanejamentoIF = {
   taxaRetornoAnual: 6,
   inflacaoAnual: 4,
   metodologia: "regra4porcento",
+  valorPrevidencia: 0,
+  rendaAluguelMensal: 0,
 };
 
 export interface ResultadoIF {
