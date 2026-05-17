@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { X, ChevronLeft, ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Ativo, ItemPlanoAcao, CarteiraResultado } from "@/lib/carteira/types";
+import type { Ativo, ItemPlanoAcao, CarteiraResultado, SimplaCardId } from "@/lib/carteira/types";
 import {
   calcularPatrimonio,
   atualizarPcts,
@@ -11,6 +11,28 @@ import {
   formatBRL,
   genId,
 } from "@/lib/carteira/calculos";
+
+const VALID_CARDS: SimplaCardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto"];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrarAtivo(a: any): Ativo {
+  const rawCard = a.card ?? a.classe ?? a.klass;
+  const card: SimplaCardId = VALID_CARDS.includes(rawCard) ? rawCard : "resgate_rapido";
+  return {
+    ...a,
+    card,
+    segmento: a.segmento ?? "",
+    valorBRL: Number(a.valorBRL) || 0,
+    pctCarteira: Number(a.pctCarteira) || 0,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrarItemPlano(p: any): ItemPlanoAcao {
+  const rawCard = p.card ?? p.classe ?? p.klass;
+  const card: SimplaCardId = VALID_CARDS.includes(rawCard) ? rawCard : "resgate_rapido";
+  return { ...p, card, segmento: p.segmento ?? "" };
+}
 import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
 import { Etapa2CarteiraRecomendada } from "./Etapa2CarteiraRecomendada";
 import { Etapa3PlanoAcao } from "./Etapa3PlanoAcao";
@@ -62,8 +84,22 @@ export function FerramentaCarteira({
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<State>;
-        return { ...makeInitial(clientProfile, patrimonyInicial), ...parsed };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const parsed = JSON.parse(raw) as any;
+        const base = makeInitial(clientProfile, patrimonyInicial);
+        return {
+          ...base,
+          ...parsed,
+          ativosAtuais: Array.isArray(parsed.ativosAtuais)
+            ? parsed.ativosAtuais.map(migrarAtivo)
+            : base.ativosAtuais,
+          ativosRecomendados: Array.isArray(parsed.ativosRecomendados)
+            ? parsed.ativosRecomendados.map(migrarAtivo)
+            : base.ativosRecomendados,
+          planoAcao: Array.isArray(parsed.planoAcao)
+            ? parsed.planoAcao.map(migrarItemPlano)
+            : base.planoAcao,
+        };
       }
     } catch {}
     return makeInitial(clientProfile, patrimonyInicial);

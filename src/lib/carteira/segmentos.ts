@@ -73,8 +73,22 @@ export const SIMPLA_CARDS: SimplaCard[] = [
   },
 ];
 
-export const getCard = (id: SimplaCardId): SimplaCard =>
-  SIMPLA_CARDS.find((c) => c.id === id)!;
+export const getCard = (id: SimplaCardId): SimplaCard => {
+  const card = SIMPLA_CARDS.find((c) => c.id === id);
+  if (!card) {
+    console.error(`[getCard] card não encontrado para id: "${id}"`);
+    return {
+      id: id as SimplaCardId,
+      label: id,
+      grupo: "Desconhecido",
+      cor: "#94A3B8",
+      segmentos: [],
+      segmentoPadrao: "",
+      inputTipo: "posicao_brl",
+    };
+  }
+  return card;
+};
 
 export const cardsPorGrupo = (): Record<string, SimplaCard[]> => {
   const map: Record<string, SimplaCard[]> = {};
