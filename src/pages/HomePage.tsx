@@ -6,6 +6,7 @@ import { DiagnosticPage } from "@/components/DiagnosticPage";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
+import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Simulation } from "@/hooks/useClientStore";
@@ -18,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type ActiveTab = "simulator" | "clients" | "diagnostic" | "financial-planning";
+type ActiveTab = "simulator" | "clients" | "diagnostic" | "financial-planning" | "estrategia";
 
 export function HomePage() {
   const { signOut } = useAuth();
@@ -28,6 +29,8 @@ export function HomePage() {
   const [diagnosticClientId, setDiagnosticClientId] = useState<string | undefined>(undefined);
   const [fpClientId, setFpClientId] = useState<string | undefined>(undefined);
   const [fpClientName, setFpClientName] = useState<string>("");
+  const [estrategiaClientId, setEstrategiaClientId] = useState<string | undefined>(undefined);
+  const [estrategiaClientName, setEstrategiaClientName] = useState<string>("");
 
   function handleNewDiagnostic(clientId: string) {
     setDiagnosticClientId(clientId);
@@ -42,6 +45,12 @@ export function HomePage() {
     setFpClientId(clientId);
     setFpClientName(clientName);
     setActiveTab("financial-planning");
+  }
+
+  function handleNewEstrategia(clientId: string, clientName: string) {
+    setEstrategiaClientId(clientId);
+    setEstrategiaClientName(clientName);
+    setActiveTab("estrategia");
   }
 
   function handleFpClientSelect(clientId: string) {
@@ -64,6 +73,18 @@ export function HomePage() {
       <FinancialPlanningPage
         clientId={fpClientId}
         clientName={fpClientName}
+        onClose={() => setActiveTab("clients")}
+      />
+    );
+  }
+
+  // EstrategiaInicialPage takes over the full viewport when active
+  if (activeTab === "estrategia" && estrategiaClientId) {
+    return (
+      <EstrategiaInicialPage
+        clientId={estrategiaClientId}
+        clientName={estrategiaClientName}
+        financialPlan={null}
         onClose={() => setActiveTab("clients")}
       />
     );
@@ -126,6 +147,7 @@ export function HomePage() {
                 onGeneratePdf={() => {}}
                 onNewDiagnostic={handleNewDiagnostic}
                 onNewFinancialPlan={handleNewFinancialPlan}
+                onNewEstrategia={handleNewEstrategia}
               />
             )}
 

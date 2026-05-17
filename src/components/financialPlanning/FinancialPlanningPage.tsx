@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart2,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -29,6 +30,7 @@ import { FiscalForm } from "./FiscalForm";
 import { SucessorioForm } from "./SucessorioForm";
 import { FinancialPlanDashboard } from "./FinancialPlanDashboard";
 import { FinancialPlanPrintAdvisor, FinancialPlanPrintClient } from "./FinancialPlanPrint";
+import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +82,7 @@ export function FinancialPlanningPage({
   const [saving, setSaving] = useState(false);
   const [printMode, setPrintMode] = useState<"advisor" | "client" | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [estrategiaOpen, setEstrategiaOpen] = useState(false);
 
   const updatePlan = useCallback((patch: Partial<FinancialPlan>) => {
     setPlan((prev) => ({ ...prev, ...patch }));
@@ -159,6 +162,17 @@ export function FinancialPlanningPage({
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+
+  if (estrategiaOpen) {
+    return (
+      <EstrategiaInicialPage
+        clientId={clientId}
+        clientName={clientName}
+        financialPlan={plan}
+        onClose={() => setEstrategiaOpen(false)}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -315,15 +329,21 @@ export function FinancialPlanningPage({
 
           {/* ── Result bottom buttons ── */}
           {isResult && (
-            <div className="mt-6 flex justify-between border-t pt-4">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
               <Button variant="outline" onClick={() => setStep("suitability")}>
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Editar plano
               </Button>
-              <Button onClick={() => handleSave("completo")} disabled={saving}>
-                <Save className="mr-1.5 h-4 w-4" />
-                {saving ? "Salvando..." : "Salvar plano completo"}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEstrategiaOpen(true)}>
+                  <FileText className="mr-1.5 h-4 w-4" />
+                  Gerar Estratégia Inicial
+                </Button>
+                <Button onClick={() => handleSave("completo")} disabled={saving}>
+                  <Save className="mr-1.5 h-4 w-4" />
+                  {saving ? "Salvando..." : "Salvar plano completo"}
+                </Button>
+              </div>
             </div>
           )}
         </div>
