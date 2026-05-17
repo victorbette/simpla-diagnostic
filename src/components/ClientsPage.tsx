@@ -62,6 +62,7 @@ interface ClientsPageProps {
   onLoadSimulation: (simulation: Simulation) => void;
   onGeneratePdf: (clientId: string) => void;
   onNewDiagnostic: (clientId: string) => void;
+  onNewFinancialPlan: (clientId: string, clientName: string) => void;
 }
 
 // ─── Add client dialog ────────────────────────────────────────────────────────
@@ -193,6 +194,7 @@ interface ClientCardProps {
   onLoadSimulation: (sim: Simulation) => void;
   onNewDiagnostic: () => void;
   onGeneratePdf: () => void;
+  onNewFinancialPlan: () => void;
 }
 
 function ClientCard({
@@ -205,6 +207,7 @@ function ClientCard({
   onLoadSimulation,
   onNewDiagnostic,
   onGeneratePdf,
+  onNewFinancialPlan,
 }: ClientCardProps) {
   function handleNewSimulation() {
     onLoadSimulation({
@@ -272,6 +275,10 @@ function ClientCard({
                 <Activity className="mr-2 h-4 w-4" />
                 Novo diagnóstico
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={onNewFinancialPlan}>
+                <FileBarChart className="mr-2 h-4 w-4" />
+                Novo plano financeiro
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={onGeneratePdf}>
                 <FileBarChart className="mr-2 h-4 w-4" />
                 Gerar PDF
@@ -331,6 +338,7 @@ export function ClientsPage({
   onLoadSimulation,
   onGeneratePdf,
   onNewDiagnostic,
+  onNewFinancialPlan,
 }: ClientsPageProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -400,6 +408,7 @@ export function ClientsPage({
               onLoadSimulation={onLoadSimulation}
               onNewDiagnostic={() => onNewDiagnostic(client.id)}
               onGeneratePdf={() => onGeneratePdf(client.id)}
+              onNewFinancialPlan={() => onNewFinancialPlan(client.id, client.nome)}
             />
           ))}
         </div>

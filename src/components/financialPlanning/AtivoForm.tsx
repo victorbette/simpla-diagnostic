@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,6 @@ import {
   calcularAlocacaoAtual,
 } from "@/types/financialPlanning";
 import type { AtivoAtual, PerfilRisco } from "@/types/financialPlanning";
-import { useState } from "react";
 
 interface AtivoFormProps {
   value: AtivoAtual;
@@ -48,14 +47,16 @@ export function AtivoForm({ value, suitabilityPerfil, onChange }: AtivoFormProps
     value.rfGlobal +
     value.cripto;
 
-  useEffect(() => {
-    if (value.total !== total) {
-      onChange({ ...value, total });
-    }
-  }, [total, value, onChange]);
-
   function handleField(key: keyof Omit<AtivoAtual, "total">, v: number) {
-    onChange({ ...value, [key]: v, total });
+    const updated = { ...value, [key]: v };
+    const newTotal =
+      updated.rendaFixa +
+      updated.acoes +
+      updated.fiis +
+      updated.rvGlobal +
+      updated.rfGlobal +
+      updated.cripto;
+    onChange({ ...updated, total: newTotal });
   }
 
   function handleZerando(checked: boolean) {
