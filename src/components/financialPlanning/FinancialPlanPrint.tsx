@@ -264,7 +264,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <PrintSection title="Seu perfil de investidor">
             <p style={{ fontSize: 13, fontWeight: 600 }}>{PERFIL_LABELS[plan.suitability.perfil]}</p>
             <p style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
-              Pontuação: {plan.suitability.totalPontos} de {7 * 4} pontos (
+              Pontuação: {plan.suitability.totalPontos} de 35 pontos (
               {formatNumber(plan.suitability.percentual, 0)}%)
             </p>
           </PrintSection>
