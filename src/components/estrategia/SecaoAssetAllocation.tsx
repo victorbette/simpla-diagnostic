@@ -52,7 +52,7 @@ function scoreBadge(score: number) {
 
 function getCarteiraTimestamp(clientId: string): string | null {
   try {
-    const raw = localStorage.getItem(`carteira_${clientId}`);
+    const raw = localStorage.getItem(`carteira_v2_${clientId}`);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { savedAt?: string };
     return parsed.savedAt ?? null;
@@ -60,6 +60,8 @@ function getCarteiraTimestamp(clientId: string): string | null {
     return null;
   }
 }
+
+type ClientProfile = "conservador" | "conservador_moderado" | "moderado" | "arrojado" | null;
 
 export function SecaoAssetAllocation({
   plan, clientName, comentario, onComentarioChange, status, onStatusChange,
@@ -101,16 +103,18 @@ export function SecaoAssetAllocation({
 
   function handleCarteiraSave(_resultado: CarteiraResultado) {
     const ts = getCarteiraTimestamp(plan.clientId);
-    setCarteiraSalvaEm(ts);
+    setCarteiraSalvaEm(ts ?? new Date().toISOString());
     setMostrarCarteira(false);
   }
+
+  const perfil = (plan.suitability?.perfil ?? null) as ClientProfile;
 
   if (mostrarCarteira) {
     return (
       <FerramentaCarteira
         clientName={clientName}
         clientId={plan.clientId}
-        clientProfile={plan.suitability?.perfil ?? null}
+        clientProfile={perfil}
         patrimonyInicial={total}
         onClose={() => setMostrarCarteira(false)}
         onSave={handleCarteiraSave}
@@ -183,18 +187,20 @@ export function SecaoAssetAllocation({
               </div>
             )}
 
-            {/* Carteira tool button */}
-            <div className="pt-1 flex items-center gap-3 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => setMostrarCarteira(true)}>
-                <Layers className="h-3.5 w-3.5 mr-1.5" />
-                Montar carteira completa →
-              </Button>
-              {carteiraSalvaEm && (
-                <Badge className="bg-emerald-100 text-emerald-800 text-xs gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Carteira montada em {new Date(carteiraSalvaEm).toLocaleDateString("pt-BR")}
-                </Badge>
-              )}
+            {/* Carteira tool */}
+            <div className="pt-1 flex items-center gap-3 flex-wrap border-t">
+              <div className="pt-3 flex items-center gap-3 flex-wrap w-full">
+                <Button variant="outline" size="sm" onClick={() => setMostrarCarteira(true)}>
+                  <Layers className="h-3.5 w-3.5 mr-1.5" />
+                  {carteiraSalvaEm ? "Ver / Editar carteira" : "Montar carteira completa →"}
+                </Button>
+                {carteiraSalvaEm && (
+                  <Badge className="bg-emerald-100 text-emerald-800 text-xs gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Montada em {new Date(carteiraSalvaEm).toLocaleDateString("pt-BR")}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -207,7 +213,7 @@ export function SecaoAssetAllocation({
             <Textarea
               value={comentario}
               onChange={(e) => onComentarioChange(e.target.value)}
-              placeholder="Ex: Dado o perfil moderado, recomendamos migrar gradualmente para maior exposição internacional, reduzindo renda fixa de X% para Y% ao longo de 12 meses..."
+              placeholder="Ex: Dado o perfil moderado, recomendamos migrar gradualmente para maior exposição internacional..."
               className="min-h-[200px]"
               disabled={disabled}
             />

@@ -1,102 +1,172 @@
-import type { AtivoItem, MacroAlocacao, MacroClassKey, PlanoAcaoItem } from "./types";
-import { macroVazia } from "./types";
+import type { Ativo, ClasseAtivo, ItemPlanoAcao, MacroResumo } from "./types";
+import { CLASSES } from "./types";
 
-export function valorAtivoBRL(a: AtivoItem, usdBrl = 5): number {
-  if (a.klass === "internacional") {
-    return (Number(a.quantidade) || 0) * (Number(a.cotacaoUSD) || 0) * usdBrl;
+export function calcularValorBRL(ativo: Ativo, usdBrl = 5): number {
+  switch (ativo.classe) {
+    case "rf_rapido":
+    case "rf_longo":
+    case "internacional_rf":
+    case "multi":
+      return Number(ativo.posicaoBRL) || 0;
+    case "rv_acoes":
+    case "rv_fiis":
+    case "cripto":
+      return (Number(ativo.quantidade) || 0) * (Number(ativo.cotacaoBRL) || 0);
+    case "internacional_rv":
+      return (Number(ativo.quantidade) || 0) * (Number(ativo.cotacaoUSD) || 0) * usdBrl;
+    default:
+      return 0;
   }
-  if (a.klass === "rv") {
-    return (Number(a.quantidade) || 0) * (Number(a.cotacaoBRL) || 0);
-  }
-  if (a.klass === "cripto") {
-    const byQtde = (Number(a.quantidade) || 0) * (Number(a.cotacaoBRL) || 0);
-    return byQtde > 0 ? byQtde : (Number(a.posicaoBRL) || 0);
-  }
-  return Number(a.posicaoBRL) || 0;
 }
 
-export function totalPatrimonioBRL(ativos: AtivoItem[], usdBrl = 5): number {
-  return ativos.reduce((s, a) => s + valorAtivoBRL(a, usdBrl), 0);
+export function calcularPatrimonio(ativos: Ativo[], usdBrl = 5): number {
+  return ativos.reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
 }
 
-export function derivarMacro(ativos: AtivoItem[], usdBrl = 5): MacroAlocacao {
-  const result = macroVazia();
-  const total = totalPatrimonioBRL(ativos, usdBrl);
-  if (total <= 0) return result;
-  for (const a of ativos) {
-    const v = valorAtivoBRL(a, usdBrl);
-    result[a.klass] = (result[a.klass] || 0) + (v / total) * 100;
-  }
-  (Object.keys(result) as MacroClassKey[]).forEach((k) => {
-    result[k] = Math.round((result[k] || 0) * 100) / 100;
+export function atualizarPcts(ativos: Ativo[], usdBrl = 5): Ativo[] {
+  const total = calcularPatrimonio(ativos, usdBrl);
+  return ativos.map((a) => {
+    const valorBRL = calcularValorBRL(a, usdBrl);
+    return {
+      ...a,
+      valorBRL,
+      pctCarteira: total > 0 ? Math.round((valorBRL / total) * 1000) / 10 : 0,
+    };
   });
-  return result;
 }
 
-export function derivarMacroPorMeta(ativosMeta: AtivoItem[]): MacroAlocacao {
-  const result = macroVazia();
-  for (const a of ativosMeta) {
-    result[a.klass] = Math.round(((result[a.klass] || 0) + a.pctMeta) * 100) / 100;
+export function derivarMacroResumo(ativos: Ativo[], usdBrl = 5): MacroResumo {
+  const total = calcularPatrimonio(ativos, usdBrl);
+  if (total <= 0) return { rendaFixa: 0, rendaVariavelBrasil: 0, internacional: 0, multimercados: 0, cripto: 0 };
+
+  function pctClasses(classes: ClasseAtivo[]): number {
+    const sum = ativos.filter((a) => classes.includes(a.classe)).reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
+    return Math.round((sum / total) * 1000) / 10;
   }
-  return result;
+
+  return {
+    rendaFixa: pctClasses(["rf_rapido", "rf_longo"]),
+    rendaVariavelBrasil: pctClasses(["rv_acoes", "rv_fiis"]),
+    internacional: pctClasses(["internacional_rv", "internacional_rf"]),
+    multimercados: pctClasses(["multi"]),
+    cripto: pctClasses(["cripto"]),
+  };
 }
 
-export function atualizarPctAtual(ativos: AtivoItem[], usdBrl = 5): AtivoItem[] {
-  const total = totalPatrimonioBRL(ativos, usdBrl);
-  if (total <= 0) return ativos.map((a) => ({ ...a, pctAtual: 0 }));
-  return ativos.map((a) => ({
-    ...a,
-    pctAtual: Math.round((valorAtivoBRL(a, usdBrl) / total) * 1000) / 10,
+type Perfil = "conservador" | "conservador_moderado" | "moderado" | "arrojado";
+
+export const ALOCACAO_PADRAO: Record<Perfil, Record<ClasseAtivo, number>> = {
+  conservador: {
+    rf_rapido: 50, rf_longo: 42, rv_acoes: 2, rv_fiis: 2,
+    internacional_rv: 4, internacional_rf: 0, multi: 0, cripto: 0,
+  },
+  conservador_moderado: {
+    rf_rapido: 35, rf_longo: 43, rv_acoes: 7, rv_fiis: 6,
+    internacional_rv: 9, internacional_rf: 0, multi: 0, cripto: 0,
+  },
+  moderado: {
+    rf_rapido: 25, rf_longo: 41, rv_acoes: 13, rv_fiis: 7,
+    internacional_rv: 13, internacional_rf: 0, multi: 0, cripto: 1,
+  },
+  arrojado: {
+    rf_rapido: 15, rf_longo: 37, rv_acoes: 20, rv_fiis: 9,
+    internacional_rv: 17.5, internacional_rf: 0, multi: 0, cripto: 1.5,
+  },
+};
+
+export function alocacaoPadraoPorPerfil(perfil: string): Record<ClasseAtivo, number> {
+  return ALOCACAO_PADRAO[perfil as Perfil] ?? {
+    rf_rapido: 0, rf_longo: 0, rv_acoes: 0, rv_fiis: 0,
+    internacional_rv: 0, internacional_rf: 0, multi: 0, cripto: 0,
+  };
+}
+
+let _idSeq = 0;
+export function genId(): string {
+  return `${Date.now().toString(36)}_${(++_idSeq).toString(36)}`;
+}
+
+export function ativosIniciais(perfil: string | null, patrimonio: number): Ativo[] {
+  const padrao = perfil ? alocacaoPadraoPorPerfil(perfil) : null;
+  return CLASSES.filter((c) => !padrao || padrao[c.key] > 0).map((c) => ({
+    id: genId(),
+    classe: c.key,
+    nome: c.label,
+    valorBRL: padrao ? ((padrao[c.key] / 100) * patrimonio) : 0,
+    pctCarteira: 0,
+    pctMeta: padrao ? padrao[c.key] : 0,
+    valorMetaBRL: padrao ? ((padrao[c.key] / 100) * patrimonio) : 0,
   }));
 }
 
-export const ALOCACAO_ALVO_POR_PERFIL: Record<string, MacroAlocacao> = {
-  conservador:         { rf_pos: 50, rf_inflacao: 42, multi: 0, rv: 4,  internacional: 4,    cripto: 0   },
-  conservador_moderado:{ rf_pos: 35, rf_inflacao: 43, multi: 0, rv: 13, internacional: 9,    cripto: 0   },
-  moderado:            { rf_pos: 25, rf_inflacao: 41, multi: 0, rv: 20, internacional: 13,   cripto: 1   },
-  arrojado:            { rf_pos: 15, rf_inflacao: 37, multi: 0, rv: 29, internacional: 17.5, cripto: 1.5 },
-};
-
 export function gerarPlanoAcao(
-  ativosAtuais: AtivoItem[],
-  ativosMeta: AtivoItem[],
+  ativosAtuais: Ativo[],
+  ativosRecomendados: Ativo[],
   patrimonio: number,
   usdBrl = 5,
-): PlanoAcaoItem[] {
-  const plano: PlanoAcaoItem[] = [];
+): ItemPlanoAcao[] {
+  const plano: ItemPlanoAcao[] = [];
 
-  for (const meta of ativosMeta) {
+  for (const rec of ativosRecomendados) {
     const atual = ativosAtuais.find(
-      (a) => a.nome.trim().toLowerCase() === meta.nome.trim().toLowerCase()
+      (a) => a.nome.trim().toLowerCase() === rec.nome.trim().toLowerCase()
     );
-    const valorAtualBRL = atual ? valorAtivoBRL(atual, usdBrl) : 0;
-    const valorMetaBRL = (meta.pctMeta / 100) * patrimonio;
-    const movimentacao = Math.round((valorMetaBRL - valorAtualBRL) * 100) / 100;
+    const valorAtualBRL = atual ? calcularValorBRL(atual, usdBrl) : 0;
+    const valorMetaBRL = ((rec.pctMeta ?? 0) / 100) * patrimonio;
+    const mov = Math.round((valorMetaBRL - valorAtualBRL) * 100) / 100;
 
-    let acao: PlanoAcaoItem["acao"] = "manter";
-    if (!atual) acao = "novo";
-    else if (movimentacao > 100) acao = "aportar";
-    else if (movimentacao < -100) {
-      acao = Math.abs(movimentacao) >= valorAtualBRL * 0.95 ? "resgatar_total" : "resgatar_parcial";
+    let tipo: ItemPlanoAcao["tipo"] = "manter";
+    if (!atual) tipo = "novo_ativo";
+    else if (mov > 100) tipo = "aportar";
+    else if (mov < -100) {
+      tipo = Math.abs(mov) >= valorAtualBRL * 0.95 ? "resgatar_total" : "resgatar_parcial";
     }
 
-    plano.push({ ativoId: meta.id, nomeAtivo: meta.nome, klass: meta.klass, acao, valorAtualBRL, valorMetaBRL, movimentacaoBRL: movimentacao, observacao: "" });
+    const abs = Math.abs(mov);
+    const prioridade: ItemPlanoAcao["prioridade"] =
+      abs > patrimonio * 0.1 ? "alta" : abs > patrimonio * 0.03 ? "media" : "baixa";
+
+    plano.push({
+      id: genId(),
+      classe: rec.classe,
+      nomeAtivo: rec.nome,
+      tipo,
+      valorAtualBRL,
+      valorMetaBRL,
+      movimentacaoBRL: mov,
+      observacao: "",
+      prioridade,
+    });
   }
 
   for (const atual of ativosAtuais) {
-    const naMeta = ativosMeta.find(
-      (m) => m.nome.trim().toLowerCase() === atual.nome.trim().toLowerCase()
+    const naMeta = ativosRecomendados.find(
+      (r) => r.nome.trim().toLowerCase() === atual.nome.trim().toLowerCase()
     );
     if (!naMeta) {
-      const vBRL = valorAtivoBRL(atual, usdBrl);
-      plano.push({ ativoId: atual.id, nomeAtivo: atual.nome, klass: atual.klass, acao: "resgatar_total", valorAtualBRL: vBRL, valorMetaBRL: 0, movimentacaoBRL: -vBRL, observacao: "" });
+      const vBRL = calcularValorBRL(atual, usdBrl);
+      plano.push({
+        id: genId(),
+        classe: atual.classe,
+        nomeAtivo: atual.nome,
+        tipo: "resgatar_total",
+        valorAtualBRL: vBRL,
+        valorMetaBRL: 0,
+        movimentacaoBRL: -vBRL,
+        observacao: "",
+        prioridade: vBRL > patrimonio * 0.03 ? "media" : "baixa",
+      });
     }
   }
 
   return plano;
 }
 
-export const formatBRL = (n: number) =>
-  (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const formatBRL = (n: number): string =>
+  (Number(n) || 0).toLocaleString("pt-BR", {
+    style: "currency", currency: "BRL",
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  });
 
-export const formatPct = (n: number) => `${(Number(n) || 0).toFixed(1)}%`;
+export const formatPct = (n: number, casas = 1): string =>
+  `${(Number(n) || 0).toFixed(casas).replace(".", ",")}%`;

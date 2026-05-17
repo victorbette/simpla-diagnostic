@@ -2,64 +2,71 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { X, ChevronLeft, ChevronRight, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { AtivoItem, PlanoAcaoItem, CarteiraResultado } from "@/lib/carteira/types";
+import type { Ativo, ItemPlanoAcao, CarteiraResultado } from "@/lib/carteira/types";
 import {
-  derivarMacro,
-  derivarMacroPorMeta,
-  atualizarPctAtual,
-  totalPatrimonioBRL,
+  calcularPatrimonio,
+  atualizarPcts,
+  ativosIniciais,
   gerarPlanoAcao,
   formatBRL,
+  genId,
 } from "@/lib/carteira/calculos";
-import { Etapa1AlocacaoAtual } from "./Etapa1AlocacaoAtual";
-import { Etapa2AlocacaoIdeal } from "./Etapa2AlocacaoIdeal";
+import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
+import { Etapa2CarteiraRecomendada } from "./Etapa2CarteiraRecomendada";
 import { Etapa3PlanoAcao } from "./Etapa3PlanoAcao";
 import { Etapa4Resultado } from "./Etapa4Resultado";
 
 interface Props {
   clientName: string;
   clientId: string;
-  clientProfile: string | null;
-  patrimonyInicial: number;
+  clientProfile: "conservador" | "conservador_moderado" | "moderado" | "arrojado" | null;
+  patrimonyInicial?: number;
   onClose: () => void;
-  onSave: (resultado: CarteiraResultado) => void;
+  onSave?: (r: CarteiraResultado) => void;
 }
 
-type Step = 1 | 2 | 3 | 4;
+type Etapa = 1 | 2 | 3 | 4;
 
-const STEP_LABELS = ["Carteira atual", "Alocação ideal", "Plano de ação", "Resultado"];
+const ETAPAS = [
+  { n: 1 as Etapa, label: "Carteira Atual" },
+  { n: 2 as Etapa, label: "Carteira Recomendada" },
+  { n: 3 as Etapa, label: "Plano de Ação" },
+  { n: 4 as Etapa, label: "Resultado" },
+];
 
-interface CarteiraState {
-  step: Step;
-  ativosAtuais: AtivoItem[];
-  ativosMeta: AtivoItem[];
-  planoAcao: PlanoAcaoItem[];
+interface State {
+  ativosAtuais: Ativo[];
+  ativosRecomendados: Ativo[];
+  planoAcao: ItemPlanoAcao[];
   usdBrl: number;
-  observacoesGerais: string;
+  notaConsultor: string;
 }
 
-function makeInitialState(): CarteiraState {
+function makeInitial(perfil: string | null, patrimonio: number): State {
   return {
-    step: 1,
     ativosAtuais: [],
-    ativosMeta: [],
+    ativosRecomendados: ativosIniciais(perfil, patrimonio),
     planoAcao: [],
     usdBrl: 5,
-    observacoesGerais: "",
+    notaConsultor: "",
   };
 }
 
 export function FerramentaCarteira({
-  clientName, clientId, clientProfile, patrimonyInicial, onClose, onSave,
+  clientName, clientId, clientProfile, patrimonyInicial = 0, onClose, onSave,
 }: Props) {
-  const storageKey = `carteira_${clientId}`;
+  const storageKey = `carteira_v2_${clientId}`;
 
-  const [state, setState] = useState<CarteiraState>(() => {
+  const [etapa, setEtapa] = useState<Etapa>(1);
+  const [state, setState] = useState<State>(() => {
     try {
       const raw = localStorage.getItem(storageKey);
-      if (raw) return { ...makeInitialState(), ...JSON.parse(raw) };
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<State>;
+        return { ...makeInitial(clientProfile, patrimonyInicial), ...parsed };
+      }
     } catch {}
-    return makeInitialState();
+    return makeInitial(clientProfile, patrimonyInicial);
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,122 +74,136 @@ export function FerramentaCarteira({
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(state));
-      } catch {}
-    }, 1000);
+      try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {}
+    }, 800);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [state, storageKey]);
 
-  const { step, ativosAtuais, ativosMeta, planoAcao, usdBrl, observacoesGerais } = state;
+  const { ativosAtuais, ativosRecomendados, planoAcao, usdBrl, notaConsultor } = state;
 
   const patrimonio = useMemo(
-    () => totalPatrimonioBRL(ativosAtuais, usdBrl) || patrimonyInicial,
+    () => calcularPatrimonio(ativosAtuais, usdBrl) || patrimonyInicial,
     [ativosAtuais, usdBrl, patrimonyInicial],
   );
 
-  const macroAtual = useMemo(() => derivarMacro(ativosAtuais, usdBrl), [ativosAtuais, usdBrl]);
-  const macroMeta = useMemo(() => derivarMacroPorMeta(ativosMeta), [ativosMeta]);
-
-  function patch(p: Partial<CarteiraState>) {
+  function patch(p: Partial<State>) {
     setState((prev) => ({ ...prev, ...p }));
   }
 
-  function handleAtivosAtuaisChange(ativos: AtivoItem[]) {
-    patch({ ativosAtuais: atualizarPctAtual(ativos, usdBrl) });
+  function handleAtivosAtuais(ativos: Ativo[]) {
+    patch({ ativosAtuais: atualizarPcts(ativos, usdBrl) });
   }
 
-  function handleUsdBrlChange(v: number) {
-    patch({ usdBrl: v, ativosAtuais: atualizarPctAtual(ativosAtuais, v) });
+  function handleUsdBrl(v: number) {
+    patch({ usdBrl: v, ativosAtuais: atualizarPcts(ativosAtuais, v) });
   }
 
-  function handleAtivosMeta(ativos: AtivoItem[]) {
-    patch({ ativosMeta: ativos });
+  function handleAtivosRec(ativos: Ativo[]) {
+    patch({ ativosRecomendados: ativos });
   }
 
-  function goToStep(s: Step) {
-    if (s === 3) {
-      const newPlano = gerarPlanoAcao(ativosAtuais, ativosMeta, patrimonio, usdBrl);
-      patch({ step: s, planoAcao: newPlano });
-    } else {
-      patch({ step: s });
+  function goToEtapa(n: Etapa) {
+    if (n === 3) {
+      const plano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio, usdBrl);
+      patch({ planoAcao: plano });
     }
+    setEtapa(n);
   }
 
   function handleNext() {
-    if (step < 4) goToStep((step + 1) as Step);
+    if (etapa < 4) goToEtapa((etapa + 1) as Etapa);
   }
 
   function handleBack() {
-    if (step > 1) patch({ step: (step - 1) as Step });
+    if (etapa > 1) setEtapa((etapa - 1) as Etapa);
   }
 
   function handleSave() {
     const resultado: CarteiraResultado = {
+      clientId,
       patrimonio,
       ativosAtuais,
-      ativosMeta,
-      macroAtual,
-      macroMeta: derivarMacroPorMeta(ativosMeta),
+      ativosRecomendados,
       planoAcao,
-      observacoes: observacoesGerais,
+      notaConsultor,
+      dataElaboracao: new Date().toISOString(),
+      usdBrl,
     };
     try {
       localStorage.setItem(storageKey, JSON.stringify({ ...state, savedAt: new Date().toISOString() }));
     } catch {}
-    onSave(resultado);
+    onSave?.(resultado);
   }
 
+  // Prevent background scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const PERFIL_LABELS: Record<string, string> = {
+    conservador: "Conservador",
+    conservador_moderado: "Conservador Moderado",
+    moderado: "Moderado",
+    arrojado: "Arrojado",
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
-      <header className="shrink-0 border-b bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+      <header className="shrink-0 border-b bg-background shadow-sm">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0">
+            <X className="h-4 w-4" />
+          </Button>
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="font-semibold text-sm">Gestão de Carteira</span>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="font-semibold">Gestão de Carteira</span>
               <span className="text-muted-foreground text-sm">{clientName}</span>
               {clientProfile && (
-                <span className="text-xs text-muted-foreground capitalize">· {clientProfile}</span>
-              )}
-              {patrimonio > 0 && (
-                <span className="text-xs text-muted-foreground">· {formatBRL(patrimonio)}</span>
+                <span className="rounded-full bg-primary/10 text-primary text-xs px-2 py-0.5">
+                  {PERFIL_LABELS[clientProfile] ?? clientProfile}
+                </span>
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          {patrimonio > 0 && (
+            <div className="shrink-0 text-right">
+              <p className="text-xs text-muted-foreground">Patrimônio</p>
+              <p className="font-semibold text-sm">{formatBRL(patrimonio)}</p>
+            </div>
+          )}
         </div>
 
-        {/* Step indicators */}
-        <div className="mx-auto max-w-7xl px-4 pb-2">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {STEP_LABELS.map((label, i) => {
-              const s = (i + 1) as Step;
-              const isCurrent = s === step;
-              const isDone = s < step;
+        {/* Stepper */}
+        <div className="px-4 pb-3 overflow-x-auto">
+          <div className="flex items-center gap-1 min-w-max">
+            {ETAPAS.map((e, i) => {
+              const isCurrent = e.n === etapa;
+              const isDone = e.n < etapa;
               return (
-                <button
-                  key={s}
-                  onClick={() => s <= step && goToStep(s)}
-                  disabled={s > step}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors whitespace-nowrap",
-                    isCurrent
-                      ? "bg-primary text-primary-foreground"
-                      : isDone
-                      ? "text-foreground hover:bg-muted cursor-pointer"
-                      : "text-muted-foreground cursor-default",
+                <div key={e.n} className="flex items-center">
+                  <button
+                    onClick={() => e.n <= etapa && goToEtapa(e.n)}
+                    disabled={e.n > etapa}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                      isCurrent ? "bg-primary text-primary-foreground" :
+                      isDone ? "text-foreground hover:bg-muted cursor-pointer" :
+                      "text-muted-foreground cursor-default",
+                    )}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                    ) : (
+                      <Circle className={cn("h-3.5 w-3.5 shrink-0", isCurrent ? "" : "opacity-40")} />
+                    )}
+                    {e.n}. {e.label}
+                  </button>
+                  {i < ETAPAS.length - 1 && (
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground mx-0.5 shrink-0" />
                   )}
-                >
-                  {isDone ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                  ) : (
-                    <Circle className={cn("h-3.5 w-3.5 shrink-0", isCurrent ? "opacity-100" : "opacity-40")} />
-                  )}
-                  {s}. {label}
-                </button>
+                </div>
               );
             })}
           </div>
@@ -191,72 +212,77 @@ export function FerramentaCarteira({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          {step === 1 && (
-            <Etapa1AlocacaoAtual
+        <div className="mx-auto max-w-screen-xl px-4 py-6">
+          {etapa === 1 && (
+            <Etapa1CarteiraAtual
               ativos={ativosAtuais}
-              onAtivos={handleAtivosAtuaisChange}
+              onAtivos={handleAtivosAtuais}
               usdBrl={usdBrl}
-              onUsdBrl={handleUsdBrlChange}
+              onUsdBrl={handleUsdBrl}
             />
           )}
-          {step === 2 && (
-            <Etapa2AlocacaoIdeal
-              ativosMeta={ativosMeta}
-              onAtivosMeta={handleAtivosMeta}
+          {etapa === 2 && (
+            <Etapa2CarteiraRecomendada
+              ativosRec={ativosRecomendados}
+              onAtivosRec={handleAtivosRec}
               ativosAtuais={ativosAtuais}
               patrimonio={patrimonio}
               clientProfile={clientProfile}
-              macroAtual={macroAtual}
-              usdBrl={usdBrl}
             />
           )}
-          {step === 3 && (
+          {etapa === 3 && (
             <Etapa3PlanoAcao
               planoAcao={planoAcao}
               onPlanoAcao={(p) => patch({ planoAcao: p })}
               patrimonio={patrimonio}
-              observacoes={observacoesGerais}
-              onObservacoes={(s) => patch({ observacoesGerais: s })}
+              notaConsultor={notaConsultor}
+              onNotaConsultor={(s) => patch({ notaConsultor: s })}
             />
           )}
-          {step === 4 && (
+          {etapa === 4 && (
             <Etapa4Resultado
               ativosAtuais={ativosAtuais}
-              ativosMeta={ativosMeta}
-              macroAtual={macroAtual}
-              macroMeta={macroMeta}
+              ativosRecomendados={ativosRecomendados}
               planoAcao={planoAcao}
               patrimonio={patrimonio}
+              notaConsultor={notaConsultor}
               clientName={clientName}
               clientProfile={clientProfile}
-              observacoes={observacoesGerais}
+              usdBrl={usdBrl}
+              onGoToEtapa3={() => setEtapa(3)}
               onSave={handleSave}
             />
           )}
         </div>
       </div>
 
-      {/* Footer navigation */}
+      {/* Footer */}
       <footer className="shrink-0 border-t bg-background px-4 py-3">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={step === 1 ? onClose : handleBack}>
+        <div className="mx-auto max-w-screen-xl flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={etapa === 1 ? onClose : handleBack}
+          >
             <ChevronLeft className="mr-1 h-4 w-4" />
-            {step === 1 ? "Fechar" : "Anterior"}
+            {etapa === 1 ? "Fechar" : "Anterior"}
           </Button>
-          <div className="flex items-center gap-2">
-            {step < 4 && (
-              <Button onClick={handleNext}>
-                {step === 3 ? "Ver resultado" : "Próximo"}
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            )}
-            {step === 4 && (
-              <Button onClick={handleSave}>Salvar carteira</Button>
-            )}
-          </div>
+          <span className="text-xs text-muted-foreground">Etapa {etapa} de 4</span>
+          {etapa < 4 ? (
+            <Button onClick={handleNext} size="sm">
+              {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleSave} size="sm">
+              Salvar carteira
+            </Button>
+          )}
         </div>
       </footer>
     </div>
   );
 }
+
+// re-export so callers can use genId for temporary ativo construction
+export { genId };

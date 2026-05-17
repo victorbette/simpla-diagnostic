@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -7,373 +7,515 @@ import {
   Bar,
   XAxis,
   YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import type { AtivoItem, MacroAlocacao, PlanoAcaoItem } from "@/lib/carteira/types";
-import { MACRO_CLASSES } from "@/lib/carteira/types";
-import { formatBRL, formatPct, valorAtivoBRL } from "@/lib/carteira/calculos";
 import { cn } from "@/lib/utils";
+import type { Ativo, ClasseAtivo, ItemPlanoAcao } from "@/lib/carteira/types";
+import { formatBRL, formatPct } from "@/lib/carteira/calculos";
 
 interface Props {
-  ativosAtuais: AtivoItem[];
-  ativosMeta: AtivoItem[];
-  macroAtual: MacroAlocacao;
-  macroMeta: MacroAlocacao;
-  planoAcao: PlanoAcaoItem[];
+  ativosAtuais: Ativo[];
+  ativosRecomendados: Ativo[];
+  planoAcao: ItemPlanoAcao[];
   patrimonio: number;
+  notaConsultor: string;
   clientName: string;
   clientProfile: string | null;
-  observacoes: string;
+  usdBrl: number;
+  onGoToEtapa3: () => void;
   onSave: () => void;
 }
 
-type AcaoType = PlanoAcaoItem["acao"];
+const GRUPOS_DISPLAY = [
+  {
+    nome: "Renda Fixa",
+    classes: ["rf_rapido", "rf_longo"] as ClasseAtivo[],
+    cor: "#2563EB",
+    subclasses: [
+      { key: "rf_rapido" as ClasseAtivo, label: "Resgate Rápido" },
+      { key: "rf_longo" as ClasseAtivo, label: "Resgate Longo" },
+    ],
+  },
+  {
+    nome: "RV Brasil",
+    classes: ["rv_acoes", "rv_fiis"] as ClasseAtivo[],
+    cor: "#16A34A",
+    subclasses: [
+      { key: "rv_acoes" as ClasseAtivo, label: "Ações" },
+      { key: "rv_fiis" as ClasseAtivo, label: "FIIs" },
+    ],
+  },
+  {
+    nome: "Internacional",
+    classes: ["internacional_rv", "internacional_rf"] as ClasseAtivo[],
+    cor: "#D97706",
+    subclasses: [
+      { key: "internacional_rv" as ClasseAtivo, label: "RV Exterior" },
+      { key: "internacional_rf" as ClasseAtivo, label: "RF Exterior" },
+    ],
+  },
+  {
+    nome: "Multimercados",
+    classes: ["multi"] as ClasseAtivo[],
+    cor: "#7C3AED",
+    subclasses: [{ key: "multi" as ClasseAtivo, label: "Multimercados" }],
+  },
+  {
+    nome: "Criptoativos",
+    classes: ["cripto"] as ClasseAtivo[],
+    cor: "#EA580C",
+    subclasses: [{ key: "cripto" as ClasseAtivo, label: "Criptoativos" }],
+  },
+];
 
-function AcaoBadge({ acao }: { acao: AcaoType }) {
-  switch (acao) {
-    case "manter":
-      return <span className="text-xs rounded px-1.5 py-0.5 bg-gray-100 text-gray-700">Manter</span>;
-    case "aportar":
-      return <span className="text-xs rounded px-1.5 py-0.5 bg-blue-100 text-blue-800">Aportar</span>;
-    case "resgatar_parcial":
-      return <span className="text-xs rounded px-1.5 py-0.5 bg-amber-100 text-amber-800">Resgate parcial</span>;
-    case "resgatar_total":
-      return <span className="text-xs rounded px-1.5 py-0.5 bg-red-100 text-red-800">Resgatar tudo</span>;
-    case "novo":
-      return <span className="text-xs rounded px-1.5 py-0.5 bg-purple-100 text-purple-800">Novo</span>;
-    default:
-      return null;
-  }
-}
-
-function formatBRLShort(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+function formatBRLAbbr(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
   return formatBRL(n);
 }
 
 export function Etapa4Resultado({
   ativosAtuais,
-  ativosMeta: _ativosMeta,
-  macroAtual,
-  macroMeta,
+  ativosRecomendados,
   planoAcao,
   patrimonio,
-  clientName,
-  clientProfile,
-  observacoes,
+  notaConsultor,
+  clientName: _clientName,
+  clientProfile: _clientProfile,
+  usdBrl: _usdBrl,
+  onGoToEtapa3,
   onSave,
 }: Props) {
-  const pieAtual = useMemo(
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+
+  function toggleGroup(nome: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(nome)) next.delete(nome);
+      else next.add(nome);
+      return next;
+    });
+  }
+
+  // Helpers
+  function sumAtualBRL(classes: ClasseAtivo[]) {
+    return ativosAtuais
+      .filter((a) => classes.includes(a.classe))
+      .reduce((s, a) => s + a.valorBRL, 0);
+  }
+  function sumAtualPct(classes: ClasseAtivo[]) {
+    return patrimonio > 0 ? (sumAtualBRL(classes) / patrimonio) * 100 : 0;
+  }
+  function sumMetaPct(classes: ClasseAtivo[]) {
+    return ativosRecomendados
+      .filter((a) => classes.includes(a.classe))
+      .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
+  }
+  function sumMetaBRL(classes: ClasseAtivo[]) {
+    return (sumMetaPct(classes) / 100) * patrimonio;
+  }
+
+  // Pie chart data
+  const pieAtualData = useMemo(
     () =>
-      MACRO_CLASSES.filter((c) => macroAtual[c.key] > 0).map((c) => ({
-        name: c.label,
-        value: macroAtual[c.key],
-        color: c.color,
-      })),
-    [macroAtual],
+      GRUPOS_DISPLAY.map((g) => ({
+        name: g.nome,
+        value: sumAtualPct(g.classes),
+        cor: g.cor,
+      })).filter((d) => d.value > 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ativosAtuais, patrimonio]
   );
 
-  const pieMeta = useMemo(
+  const pieMetaData = useMemo(
     () =>
-      MACRO_CLASSES.filter((c) => macroMeta[c.key] > 0).map((c) => ({
-        name: c.label,
-        value: macroMeta[c.key],
-        color: c.color,
-      })),
-    [macroMeta],
+      GRUPOS_DISPLAY.map((g) => ({
+        name: g.nome,
+        value: sumMetaPct(g.classes),
+        cor: g.cor,
+      })).filter((d) => d.value > 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ativosRecomendados, patrimonio]
   );
 
+  // Bar chart data
   const barData = useMemo(
     () =>
-      MACRO_CLASSES.map((c) => ({
-        name: c.label,
-        Atual: (macroAtual[c.key] / 100) * patrimonio,
-        Meta: (macroMeta[c.key] / 100) * patrimonio,
-      })).filter((d) => d.Atual > 0 || d.Meta > 0),
-    [macroAtual, macroMeta, patrimonio],
+      GRUPOS_DISPLAY.map((g) => ({
+        nome: g.nome,
+        Atual: Math.round(sumAtualBRL(g.classes)),
+        Meta: Math.round(sumMetaBRL(g.classes)),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ativosAtuais, ativosRecomendados, patrimonio]
   );
 
-  const { totalAportes, totalResgates, saldoLiquido } = useMemo(() => {
-    const aportes = planoAcao.filter((p) => p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-    const resgates = planoAcao.filter((p) => p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
-    return { totalAportes: aportes, totalResgates: resgates, saldoLiquido: aportes - resgates };
-  }, [planoAcao]);
+  // Plano resumo
+  const aportes = planoAcao.filter(
+    (p) => p.tipo === "aportar" || p.tipo === "novo_ativo"
+  );
+  const resgates = planoAcao.filter(
+    (p) => p.tipo === "resgatar_parcial" || p.tipo === "resgatar_total"
+  );
+  const mantidos = planoAcao.filter((p) => p.tipo === "manter");
 
-  const groupedPlano = useMemo(() => {
-    const map = new Map<string, PlanoAcaoItem[]>();
-    for (const item of planoAcao) {
-      const list = map.get(item.klass) ?? [];
-      list.push(item);
-      map.set(item.klass, list);
-    }
-    return map;
-  }, [planoAcao]);
+  const totalAportes = aportes.reduce((s, p) => s + p.movimentacaoBRL, 0);
+  const totalResgates = resgates.reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
 
-  function getAtualValorBRL(nome: string): number {
-    const a = ativosAtuais.find((x) => x.nome.trim().toLowerCase() === nome.trim().toLowerCase());
-    return a ? valorAtivoBRL(a) : 0;
-  }
+  // Comparison table totals
+  const totalAtualBRL = ativosAtuais.reduce((s, a) => s + a.valorBRL, 0);
+  const totalMetaBRL = (ativosRecomendados.reduce((s, a) => s + (a.pctMeta ?? 0), 0) / 100) * patrimonio;
 
   return (
     <div className="space-y-8">
-      {/* Client header */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl font-bold">{clientName || "Cliente"}</h2>
-          {clientProfile && (
-            <p className="text-sm text-muted-foreground capitalize">Perfil: {clientProfile}</p>
+      {/* SECTION 1: Two pie charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Carteira Atual */}
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          <h3 className="font-semibold text-sm">
+            Carteira Atual — {formatBRL(patrimonio)}
+          </h3>
+          {pieAtualData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={pieAtualData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="50%"
+                    outerRadius="80%"
+                    paddingAngle={2}
+                  >
+                    {pieAtualData.map((entry, index) => (
+                      <Cell key={index} fill={entry.cor} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [formatPct(v), ""]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {pieAtualData.map((entry) => (
+                  <div key={entry.name} className="flex items-center gap-1 text-xs">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: entry.cor }}
+                    />
+                    <span className="text-muted-foreground">
+                      {entry.name} | {formatPct(entry.value)} |{" "}
+                      {formatBRL((entry.value / 100) * patrimonio)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Sem ativos na carteira atual.
+            </p>
           )}
-          <p className="text-sm text-muted-foreground">Patrimônio total: {formatBRL(patrimonio)}</p>
+        </div>
+
+        {/* Carteira Recomendada */}
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          <h3 className="font-semibold text-sm">
+            Proposta — {formatBRL(patrimonio)}
+          </h3>
+          {pieMetaData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={pieMetaData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius="50%"
+                    outerRadius="80%"
+                    paddingAngle={2}
+                  >
+                    {pieMetaData.map((entry, index) => (
+                      <Cell key={index} fill={entry.cor} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [formatPct(v), ""]} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {pieMetaData.map((entry) => (
+                  <div key={entry.name} className="flex items-center gap-1 text-xs">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: entry.cor }}
+                    />
+                    <span className="text-muted-foreground">
+                      {entry.name} | {formatPct(entry.value)} |{" "}
+                      {formatBRL((entry.value / 100) * patrimonio)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Sem ativos na carteira recomendada.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Section 1: PieCharts */}
-      <div>
-        <h3 className="font-semibold mb-4">Composição da carteira</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Atual */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-center">Carteira Atual</p>
-            {pieAtual.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={pieAtual}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius="55%"
-                      outerRadius="80%"
-                      paddingAngle={2}
-                    >
-                      {pieAtual.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {pieAtual.map((entry) => (
-                    <div key={entry.name} className="flex items-center gap-1 text-xs">
-                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                      <span>{entry.name}</span>
-                      <span className="text-muted-foreground">{entry.value.toFixed(1)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">Sem dados</div>
-            )}
-          </div>
-
-          {/* Meta */}
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-center">Carteira Proposta</p>
-            {pieMeta.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={pieMeta}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius="55%"
-                      outerRadius="80%"
-                      paddingAngle={2}
-                    >
-                      {pieMeta.map((entry) => (
-                        <Cell key={entry.name} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, ""]} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {pieMeta.map((entry) => (
-                    <div key={entry.name} className="flex items-center gap-1 text-xs">
-                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-                      <span>{entry.name}</span>
-                      <span className="text-muted-foreground">{entry.value.toFixed(1)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">Sem dados</div>
-            )}
-          </div>
+      {/* SECTION 2: Comparison table */}
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="px-4 py-3 border-b">
+          <h3 className="font-semibold text-sm">Comparativo por classe</h3>
         </div>
-      </div>
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-muted text-muted-foreground font-normal">
+              <th className="text-left px-4 py-2 font-normal">Grupo</th>
+              <th className="text-right px-3 py-2 font-normal">% Atual</th>
+              <th className="text-right px-3 py-2 font-normal">R$ Atual</th>
+              <th className="text-right px-3 py-2 font-normal">% Meta</th>
+              <th className="text-right px-3 py-2 font-normal">R$ Meta</th>
+              <th className="text-right px-3 py-2 font-normal">Dif R$</th>
+              <th className="text-right px-3 py-2 font-normal">Dif %</th>
+            </tr>
+          </thead>
+          <tbody>
+            {GRUPOS_DISPLAY.map((g) => {
+              const atualBRL = sumAtualBRL(g.classes);
+              const atualPct = sumAtualPct(g.classes);
+              const metaPct = sumMetaPct(g.classes);
+              const metaBRL = sumMetaBRL(g.classes);
+              const difBRL = metaBRL - atualBRL;
+              const difPct = metaPct - atualPct;
+              const isOpen = openGroups.has(g.nome);
 
-      {/* Section 2: Comparison table */}
-      <div>
-        <h3 className="font-semibold mb-3">Comparativo por classe</h3>
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left font-normal">Classe</th>
-                <th className="px-3 py-2 text-right font-normal">% Atual</th>
-                <th className="px-3 py-2 text-right font-normal">R$ Atual</th>
-                <th className="px-3 py-2 text-right font-normal">% Meta</th>
-                <th className="px-3 py-2 text-right font-normal">R$ Meta</th>
-                <th className="px-3 py-2 text-right font-normal">Δ R$</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MACRO_CLASSES.map((c) => {
-                const pctA = macroAtual[c.key];
-                const pctM = macroMeta[c.key];
-                if (pctA === 0 && pctM === 0) return null;
-                const rA = (pctA / 100) * patrimonio;
-                const rM = (pctM / 100) * patrimonio;
-                const delta = rM - rA;
-                return (
-                  <tr key={c.key} className="border-t border-border/40">
-                    <td className="px-3 py-2">
+              return (
+                <>
+                  <tr
+                    key={g.nome}
+                    className="border-t cursor-pointer hover:bg-muted/40 font-medium"
+                    onClick={() => toggleGroup(g.nome)}
+                  >
+                    <td className="px-4 py-2">
                       <div className="flex items-center gap-2">
-                        <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
-                        {c.label}
+                        <span className="text-muted-foreground text-xs">
+                          {isOpen ? "▼" : "▶"}
+                        </span>
+                        <span
+                          className="inline-block h-2 w-2 rounded-full"
+                          style={{ backgroundColor: g.cor }}
+                        />
+                        {g.nome}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right text-muted-foreground">{formatPct(pctA)}</td>
-                    <td className="px-3 py-2 text-right text-muted-foreground">{formatBRL(rA)}</td>
-                    <td className="px-3 py-2 text-right text-muted-foreground">{formatPct(pctM)}</td>
-                    <td className="px-3 py-2 text-right text-muted-foreground">{formatBRL(rM)}</td>
-                    <td className={cn("px-3 py-2 text-right font-medium", delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-muted-foreground")}>
-                      {delta === 0 ? "—" : `${delta > 0 ? "+" : ""}${formatBRL(delta)}`}
+                    <td className="px-3 py-2 text-right">{formatPct(atualPct)}</td>
+                    <td className="px-3 py-2 text-right">{formatBRL(atualBRL)}</td>
+                    <td className="px-3 py-2 text-right">{formatPct(metaPct)}</td>
+                    <td className="px-3 py-2 text-right">{formatBRL(metaBRL)}</td>
+                    <td
+                      className={cn(
+                        "px-3 py-2 text-right",
+                        difBRL > 0 ? "text-green-600" : difBRL < 0 ? "text-red-600" : ""
+                      )}
+                    >
+                      {difBRL !== 0
+                        ? (difBRL > 0 ? "+" : "") + formatBRL(difBRL)
+                        : "—"}
+                    </td>
+                    <td
+                      className={cn(
+                        "px-3 py-2 text-right",
+                        difPct > 0 ? "text-green-600" : difPct < 0 ? "text-red-600" : ""
+                      )}
+                    >
+                      {difPct !== 0
+                        ? (difPct > 0 ? "+" : "") + formatPct(difPct)
+                        : "—"}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-            <tfoot className="bg-muted/50 border-t border-border font-semibold">
-              <tr>
-                <td className="px-3 py-2">Total</td>
-                <td className="px-3 py-2 text-right">
-                  {formatPct(MACRO_CLASSES.reduce((s, c) => s + macroAtual[c.key], 0))}
-                </td>
-                <td className="px-3 py-2 text-right">{formatBRL(patrimonio)}</td>
-                <td className="px-3 py-2 text-right">
-                  {formatPct(MACRO_CLASSES.reduce((s, c) => s + macroMeta[c.key], 0))}
-                </td>
-                <td className="px-3 py-2 text-right">{formatBRL(MACRO_CLASSES.reduce((s, c) => s + (macroMeta[c.key] / 100) * patrimonio, 0))}</td>
-                <td className="px-3 py-2 text-right text-muted-foreground">—</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      {/* Section 3: BarChart */}
-      {barData.length > 0 && (
-        <div>
-          <h3 className="font-semibold mb-3">Atual vs. Proposto (R$)</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={barData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={formatBRLShort} tick={{ fontSize: 11 }} width={64} />
-              <Tooltip formatter={(v: number) => formatBRL(v)} />
-              <Legend />
-              <Bar dataKey="Atual" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Meta" fill="#10b981" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      {/* Section 4: Detalhamento por ativo */}
-      {planoAcao.length > 0 && (
-        <div>
-          <h3 className="font-semibold mb-3">Detalhamento por ativo</h3>
-          <div className="space-y-4">
-            {MACRO_CLASSES.map((c) => {
-              const items = groupedPlano.get(c.key);
-              if (!items || items.length === 0) return null;
-              const sorted = [...items].sort((a, b) => Math.abs(b.movimentacaoBRL) - Math.abs(a.movimentacaoBRL));
-              return (
-                <div key={c.key} className="rounded-lg border overflow-hidden">
-                  <div className="bg-muted px-3 py-2 flex items-center gap-2">
-                    <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: c.color }} />
-                    <span className="text-sm font-semibold">{c.label}</span>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead className="text-muted-foreground border-b border-border/60">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-normal">Ativo</th>
-                          <th className="px-3 py-2 text-right font-normal whitespace-nowrap">Atual R$</th>
-                          <th className="px-3 py-2 text-right font-normal whitespace-nowrap">Meta R$</th>
-                          <th className="px-3 py-2 text-left font-normal whitespace-nowrap">Ação</th>
-                          <th className="px-3 py-2 text-right font-normal whitespace-nowrap">Δ R$</th>
+                  {isOpen &&
+                    g.subclasses.map((sub) => {
+                      const subAtualBRL = sumAtualBRL([sub.key]);
+                      const subAtualPct = sumAtualPct([sub.key]);
+                      const subMetaPct = sumMetaPct([sub.key]);
+                      const subMetaBRL = sumMetaBRL([sub.key]);
+                      const subDifBRL = subMetaBRL - subAtualBRL;
+                      const subDifPct = subMetaPct - subAtualPct;
+                      return (
+                        <tr key={sub.key} className="border-t bg-muted/20 text-muted-foreground">
+                          <td className="px-4 py-1.5 pl-10">{sub.label}</td>
+                          <td className="px-3 py-1.5 text-right">{formatPct(subAtualPct)}</td>
+                          <td className="px-3 py-1.5 text-right">{formatBRL(subAtualBRL)}</td>
+                          <td className="px-3 py-1.5 text-right">{formatPct(subMetaPct)}</td>
+                          <td className="px-3 py-1.5 text-right">{formatBRL(subMetaBRL)}</td>
+                          <td
+                            className={cn(
+                              "px-3 py-1.5 text-right",
+                              subDifBRL > 0 ? "text-green-600" : subDifBRL < 0 ? "text-red-600" : ""
+                            )}
+                          >
+                            {subDifBRL !== 0
+                              ? (subDifBRL > 0 ? "+" : "") + formatBRL(subDifBRL)
+                              : "—"}
+                          </td>
+                          <td
+                            className={cn(
+                              "px-3 py-1.5 text-right",
+                              subDifPct > 0 ? "text-green-600" : subDifPct < 0 ? "text-red-600" : ""
+                            )}
+                          >
+                            {subDifPct !== 0
+                              ? (subDifPct > 0 ? "+" : "") + formatPct(subDifPct)
+                              : "—"}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {sorted.map((item) => {
-                          const atualVal = item.valorAtualBRL > 0 ? item.valorAtualBRL : getAtualValorBRL(item.nomeAtivo);
-                          const delta = item.movimentacaoBRL;
-                          return (
-                            <tr key={item.ativoId} className="border-t border-border/40">
-                              <td className="px-3 py-2 font-medium">{item.nomeAtivo || "—"}</td>
-                              <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{formatBRL(atualVal)}</td>
-                              <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">{formatBRL(item.valorMetaBRL)}</td>
-                              <td className="px-3 py-2"><AcaoBadge acao={item.acao} /></td>
-                              <td className={cn("px-3 py-2 text-right font-medium whitespace-nowrap", delta > 0 ? "text-green-600" : delta < 0 ? "text-red-600" : "text-muted-foreground")}>
-                                {delta === 0 ? "—" : `${delta > 0 ? "+" : "-"}${formatBRL(Math.abs(delta))}`}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                      );
+                    })}
+                </>
               );
             })}
+            {/* Total row */}
+            <tr className="border-t-2 font-bold">
+              <td className="px-4 py-2">TOTAL</td>
+              <td className="px-3 py-2 text-right">
+                {formatPct(patrimonio > 0 ? (totalAtualBRL / patrimonio) * 100 : 0)}
+              </td>
+              <td className="px-3 py-2 text-right">{formatBRL(totalAtualBRL)}</td>
+              <td className="px-3 py-2 text-right">
+                {formatPct(
+                  ativosRecomendados.reduce((s, a) => s + (a.pctMeta ?? 0), 0)
+                )}
+              </td>
+              <td className="px-3 py-2 text-right">{formatBRL(totalMetaBRL)}</td>
+              <td
+                className={cn(
+                  "px-3 py-2 text-right",
+                  totalMetaBRL - totalAtualBRL > 0 ? "text-green-600" : "text-red-600"
+                )}
+              >
+                {formatBRL(totalMetaBRL - totalAtualBRL)}
+              </td>
+              <td className="px-3 py-2 text-right">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* SECTION 3: Bar chart */}
+      <div className="rounded-lg border bg-card p-4 space-y-2">
+        <h3 className="font-semibold text-sm">Atual vs. Proposta por grupo (R$)</h3>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={barData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis dataKey="nome" tick={{ fontSize: 11 }} />
+            <YAxis tickFormatter={formatBRLAbbr} tick={{ fontSize: 11 }} width={60} />
+            <Tooltip formatter={(v: number) => formatBRL(v)} />
+            <Legend />
+            <Bar dataKey="Atual" fill="#94a3b8" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Meta" fill="#2563eb" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* SECTION 4: Plano resumo */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Aportes e novos */}
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          <h3 className="font-semibold text-sm text-green-700">Aportes e novos</h3>
+          <div className="space-y-1">
+            {aportes.map((item) => (
+              <div key={item.id} className="flex justify-between text-xs">
+                <span className="truncate mr-2">{item.nomeAtivo}</span>
+                <span className="text-green-600 font-medium whitespace-nowrap">
+                  +{formatBRL(item.movimentacaoBRL)}
+                </span>
+              </div>
+            ))}
+            {aportes.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum</p>
+            )}
           </div>
+          {aportes.length > 0 && (
+            <div className="border-t pt-2">
+              <div className="flex justify-between text-xs font-bold">
+                <span>Total</span>
+                <span className="text-green-600">+{formatBRL(totalAportes)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Resgates */}
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          <h3 className="font-semibold text-sm text-red-700">Resgates</h3>
+          <div className="space-y-1">
+            {resgates.map((item) => (
+              <div key={item.id} className="flex justify-between text-xs">
+                <span className="truncate mr-2">{item.nomeAtivo}</span>
+                <span className="text-red-600 font-medium whitespace-nowrap">
+                  {formatBRL(item.movimentacaoBRL)}
+                </span>
+              </div>
+            ))}
+            {resgates.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum</p>
+            )}
+          </div>
+          {resgates.length > 0 && (
+            <div className="border-t pt-2">
+              <div className="flex justify-between text-xs font-bold">
+                <span>Total</span>
+                <span className="text-red-600">-{formatBRL(totalResgates)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mantidos */}
+        <div className="rounded-lg border bg-card p-4 space-y-2">
+          <h3 className="font-semibold text-sm text-muted-foreground">Mantidos</h3>
+          <div className="space-y-1">
+            {mantidos.map((item) => (
+              <div key={item.id} className="flex justify-between text-xs">
+                <span className="truncate mr-2">{item.nomeAtivo}</span>
+                <span className="text-muted-foreground whitespace-nowrap">
+                  {formatBRL(item.valorAtualBRL)}
+                </span>
+              </div>
+            ))}
+            {mantidos.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhum</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 5: Nota do consultor */}
+      {notaConsultor && (
+        <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-sm">Notas do consultor</h3>
+            <Button variant="ghost" size="sm" onClick={onGoToEtapa3}>
+              Editar
+            </Button>
+          </div>
+          <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+            {notaConsultor}
+          </p>
         </div>
       )}
 
-      {/* Section 5: Resumo */}
-      <div className="space-y-4">
-        <h3 className="font-semibold">Resumo financeiro</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total aportes</p>
-            <p className="text-lg font-semibold text-green-600">{formatBRL(totalAportes)}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total resgates</p>
-            <p className="text-lg font-semibold text-red-600">{formatBRL(totalResgates)}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground mb-1">Saldo líquido</p>
-            <p className={cn("text-lg font-semibold", saldoLiquido >= 0 ? "text-green-600" : "text-red-600")}>
-              {formatBRL(saldoLiquido)}
-            </p>
-          </div>
-        </div>
-
-        {observacoes && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Observações gerais</label>
-            <Textarea className="min-h-[100px] text-sm" value={observacoes} readOnly />
-          </div>
-        )}
-      </div>
-
       {/* Action buttons */}
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-3 pt-4 border-t">
         <Button onClick={onSave}>Salvar carteira</Button>
-        <Button variant="outline" onClick={() => window.print()}>Imprimir</Button>
+        <Button variant="outline" onClick={() => window.print()}>
+          Imprimir / PDF
+        </Button>
       </div>
     </div>
   );
