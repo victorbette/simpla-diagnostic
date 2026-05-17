@@ -90,32 +90,19 @@ export function HomePage() {
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
   const [salvando, setSalvando] = useState(false);
 
-  // ── Navigation overlays ──────────────────────────────────────────────────
-
-  if (clienteSelecionado && overlay === "fp") {
-    return (
-      <FinancialPlanningPage
-        clientId={clienteSelecionado.id}
-        clientName={clienteSelecionado.nome}
-        onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
-      />
+  // useMemo MUST be before any conditional return — Rules of Hooks
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return clientStore.clients;
+    return clientStore.clients.filter(
+      (c) =>
+        c.nome.toLowerCase().includes(q) ||
+        (c.email ?? "").toLowerCase().includes(q)
     );
-  }
+  }, [clientStore.clients, search]);
 
-  if (clienteSelecionado && overlay === "estrategia") {
-    const plan = planStore.getLatestPlan(clienteSelecionado.id);
-    if (plan) {
-      return (
-        <EstrategiaInicialPage
-          plan={plan}
-          clientName={clienteSelecionado.nome}
-          onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
-        />
-      );
-    }
-    // No plan yet — fall through to open FP instead
-    setOverlay("fp");
-  }
+  const userLabel = user?.email?.split("@")[0] ?? "Consultor";
+  const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -178,24 +165,40 @@ export function HomePage() {
     setOverlay("estrategia");
   }
 
-  // ── Filtered clients ─────────────────────────────────────────────────────
+  // ── Navigation overlays — conditional returns AFTER all hooks ─────────────
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return clientStore.clients;
-    return clientStore.clients.filter(
-      (c) =>
-        c.nome.toLowerCase().includes(q) ||
-        (c.email ?? "").toLowerCase().includes(q)
+  if (clienteSelecionado && overlay === "fp") {
+    return (
+      <FinancialPlanningPage
+        clientId={clienteSelecionado.id}
+        clientName={clienteSelecionado.nome}
+        onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
+      />
     );
-  }, [clientStore.clients, search]);
+  }
 
-  // ── User display ──────────────────────────────────────────────────────────
+  if (clienteSelecionado && overlay === "estrategia") {
+    const plan = planStore.getLatestPlan(clienteSelecionado.id);
+    if (plan) {
+      return (
+        <EstrategiaInicialPage
+          plan={plan}
+          clientName={clienteSelecionado.nome}
+          onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
+        />
+      );
+    }
+    // No plan yet — render FP directly (never call setState during render)
+    return (
+      <FinancialPlanningPage
+        clientId={clienteSelecionado.id}
+        clientName={clienteSelecionado.nome}
+        onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
+      />
+    );
+  }
 
-  const userLabel = user?.email?.split("@")[0] ?? "Consultor";
-  const userInitials = userLabel.slice(0, 2).toUpperCase();
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── CRM view ──────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
