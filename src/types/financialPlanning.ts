@@ -540,7 +540,7 @@ export interface FinancialPlan {
   protecao: ProtecaoSimplificada;
   fiscal: PlanejamentoFiscal;
   sucessorio: PlanejamentoSucessorio;
-  notasAssessor: string;
+  notasConsultor: string;
   status: "rascunho" | "completo";
 }
 
@@ -554,7 +554,7 @@ export function initialFinancialPlan(clientId: string): FinancialPlan {
     protecao: { ...initialProtecaoSimplificada },
     fiscal: { ...initialPlanejamentoFiscal },
     sucessorio: { ...initialPlanejamentoSucessorio },
-    notasAssessor: "",
+    notasConsultor: "",
     status: "rascunho",
   };
 }

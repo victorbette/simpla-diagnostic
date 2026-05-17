@@ -44,7 +44,7 @@ function rowToPlan(row: PlanRow): FinancialPlan {
     protecao: row.protecao as unknown as ProtecaoSimplificada,
     fiscal: row.fiscal as unknown as PlanejamentoFiscal,
     sucessorio: row.sucessorio as unknown as PlanejamentoSucessorio,
-    notasAssessor: row.notas_assessor,
+    notasConsultor: row.notas_assessor,
     status: row.status as FinancialPlan["status"],
   };
 }
@@ -97,7 +97,7 @@ export function useFinancialPlanStore() {
         protecao: plan.protecao as unknown as Record<string, unknown>,
         fiscal: plan.fiscal as unknown as Record<string, unknown>,
         sucessorio: plan.sucessorio as unknown as Record<string, unknown>,
-        notas_assessor: plan.notasAssessor ?? "",
+        notas_assessor: plan.notasConsultor ?? "",
         status: plan.status ?? "rascunho",
         updated_at: new Date().toISOString(),
       };

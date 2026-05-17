@@ -121,7 +121,7 @@ export function SecaoProximosPassos({
           {/* Passos editáveis */}
           <div className="rounded-lg border p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Próximos passos do assessor</h3>
+              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Próximos passos do consultor</h3>
               {!disabled && (
                 <Button variant="outline" size="sm" onClick={addPasso}>
                   <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar passo

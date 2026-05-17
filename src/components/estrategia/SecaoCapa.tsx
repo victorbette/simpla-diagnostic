@@ -15,8 +15,8 @@ interface Props {
   plan: FinancialPlan;
   logoBase64: string | null;
   onLogoChange: (b64: string | null) => void;
-  nomeAssessor: string;
-  onNomeAssessorChange: (v: string) => void;
+  nomeConsultor: string;
+  onNomeConsultorChange: (v: string) => void;
   apresentacao: string;
   onApresentacaoChange: (v: string) => void;
   status: SectionStatus;
@@ -27,8 +27,8 @@ export function SecaoCapa({
   plan,
   logoBase64,
   onLogoChange,
-  nomeAssessor,
-  onNomeAssessorChange,
+  nomeConsultor,
+  onNomeConsultorChange,
   apresentacao,
   onApresentacaoChange,
   status,
@@ -79,11 +79,11 @@ export function SecaoCapa({
 
       {/* Nome do assessor */}
       <div className="space-y-2">
-        <Label htmlFor="nomeAssessor">Nome do assessor responsável</Label>
+        <Label htmlFor="nomeConsultor">Nome do consultor responsável</Label>
         <Input
-          id="nomeAssessor"
-          value={nomeAssessor}
-          onChange={(e) => onNomeAssessorChange(e.target.value)}
+          id="nomeConsultor"
+          value={nomeConsultor}
+          onChange={(e) => onNomeConsultorChange(e.target.value)}
           placeholder="Seu nome completo"
           disabled={disabled}
         />
@@ -131,7 +131,7 @@ export function SecaoCapa({
             </Button>
           </>
         ) : (
-          <Button onClick={() => onStatusChange("concluido")} disabled={!nomeAssessor.trim()}>
+          <Button onClick={() => onStatusChange("concluido")} disabled={!nomeConsultor.trim()}>
             Marcar como concluída
           </Button>
         )}

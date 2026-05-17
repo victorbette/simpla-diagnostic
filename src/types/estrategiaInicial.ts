@@ -1,7 +1,7 @@
 export interface SecaoEstrategia {
   id: string;
   titulo: string;
-  conteudoAssessor: string;
+  conteudoConsultor: string;
   dados: Record<string, unknown>;
   completa: boolean;
 }
@@ -15,7 +15,7 @@ export interface EstrategiaInicial {
   logoUrl?: string;
   logoBase64?: string;
   apresentacao: string;
-  nomeAssessor: string;
+  nomeConsultor: string;
   secoes: {
     assetAllocation: SecaoEstrategia;
     aposentadoria: SecaoEstrategia;
@@ -28,7 +28,7 @@ export interface EstrategiaInicial {
 }
 
 export function initialSecao(id: string, titulo: string): SecaoEstrategia {
-  return { id, titulo, conteudoAssessor: '', dados: {}, completa: false };
+  return { id, titulo, conteudoConsultor: '', dados: {}, completa: false };
 }
 
 export function initialEstrategia(clientId: string, financialPlanId?: string): EstrategiaInicial {
@@ -36,7 +36,7 @@ export function initialEstrategia(clientId: string, financialPlanId?: string): E
     clientId,
     financialPlanId,
     apresentacao: '',
-    nomeAssessor: '',
+    nomeConsultor: '',
     secoes: {
       assetAllocation: initialSecao('assetAllocation', 'Asset Allocation'),
       aposentadoria: initialSecao('aposentadoria', 'Aposentadoria / IF'),

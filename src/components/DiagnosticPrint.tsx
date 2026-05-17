@@ -157,13 +157,13 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       )}
 
       {/* Assessor notes */}
-      {answers.assessorNotes && (
+      {answers.consultorNotes && (
         <>
           <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-gray-500">
-            Notas do assessor
+            Notas do consultor
           </h2>
           <p className="mb-8 whitespace-pre-wrap rounded border border-gray-200 bg-gray-50 p-3 text-xs">
-            {answers.assessorNotes}
+            {answers.consultorNotes}
           </p>
         </>
       )}
@@ -171,7 +171,7 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       {/* Footer */}
       <div className="border-t border-gray-300 pt-3 text-xs text-gray-500">
         <span>Gerado em {formatDate(result.createdAt)}</span>
-        <span className="ml-4 font-semibold">Uso restrito ao assessor</span>
+        <span className="ml-4 font-semibold">Uso restrito ao consultor</span>
       </div>
     </div>
   );
@@ -279,8 +279,8 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
       {/* Footer */}
       <div className="border-t border-gray-300 pt-3 mt-8 text-xs text-gray-500">
         <span>Gerado em {formatDate(result.createdAt)}</span>
-        {advisorName && <span className="ml-4">Assessor: {advisorName}</span>}
-        <span className="ml-4">Documento preparado pelo seu assessor financeiro</span>
+        {advisorName && <span className="ml-4">Consultor: {advisorName}</span>}
+        <span className="ml-4">Documento preparado pelo seu consultor financeiro</span>
       </div>
     </div>
   );

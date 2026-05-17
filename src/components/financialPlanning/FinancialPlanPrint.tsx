@@ -102,7 +102,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
               Simpla · Planejamento Financeiro
             </div>
             <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
-              Uso restrito ao assessor
+              Uso restrito ao consultor
             </div>
           </div>
           <div style={{ textAlign: "right", fontSize: 10, color: "#6b7280" }}>
@@ -194,15 +194,15 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
         </PrintSection>
 
         {/* Notas */}
-        {plan.notasAssessor && (
-          <PrintSection title="Notas do assessor">
-            <p style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>{plan.notasAssessor}</p>
+        {plan.notasConsultor && (
+          <PrintSection title="Notas do consultor">
+            <p style={{ fontSize: 11, whiteSpace: "pre-wrap" }}>{plan.notasConsultor}</p>
           </PrintSection>
         )}
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 8, fontSize: 9, color: "#9ca3af", textAlign: "center" }}>
-          Uso restrito ao assessor · {formatDate(new Date())} · Simpla Diagnóstico
+          Uso restrito ao consultor · {formatDate(new Date())} · Simpla Financial Planning
         </div>
       </div>
     </div>
@@ -366,7 +366,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
             textAlign: "center",
           }}
         >
-          {formatDate(new Date())} · Simpla Diagnóstico · Este documento é pessoal e intransferível.
+          {formatDate(new Date())} · Simpla Financial Planning · Este documento é pessoal e intransferível.
         </div>
       </div>
     </div>

@@ -32,7 +32,7 @@ export interface DiagnosticAnswers {
   currentAge: number;
   totalInvestedAssets: number;
   // Notas
-  assessorNotes: string;
+  consultorNotes: string;
 }
 
 export const initialAnswers: DiagnosticAnswers = {
@@ -59,7 +59,7 @@ export const initialAnswers: DiagnosticAnswers = {
   fireTargetAge: 60,
   currentAge: 35,
   totalInvestedAssets: 0,
-  assessorNotes: "",
+  consultorNotes: "",
 };
 
 export interface CategoryResult {
@@ -129,7 +129,7 @@ function scoreEstrategia(a: DiagnosticAnswers) {
   if (a.hasInternationalAssets) { pts += 20; findings.push("Exposição internacional presente."); }
   else { recommendations.push("Considerar alocação em ativos internacionais."); }
   if (a.hasAlternativeAssets) { pts += 15; findings.push("Ativos alternativos na carteira."); }
-  if (a.reviewsPortfolioRegularly) { pts += 15; findings.push("Revisão periódica com assessor."); }
+  if (a.reviewsPortfolioRegularly) { pts += 15; findings.push("Revisão periódica com consultor."); }
   else { recommendations.push("Estabelecer ciclo regular de revisão de carteira."); }
   return { score: clamp(pts), findings, recommendations };
 }

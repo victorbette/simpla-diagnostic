@@ -304,7 +304,7 @@ export function FinancialPlanningPage({
               onEdit={() => setStep("suitability")}
               onSave={() => handleSave("completo")}
               onPrint={handlePrint}
-              onNotasChange={(notas) => updatePlan({ notasAssessor: notas })}
+              onNotasChange={(notas) => updatePlan({ notasConsultor: notas })}
               onAvancarEstrategia={() => setMostrarEstrategia(true)}
             />
           )}

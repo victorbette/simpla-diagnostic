@@ -33,7 +33,7 @@ const STEP_TITLES = [
   "Inflação",
   "Objetivos de Vida",
   "Liberdade Financeira",
-  "Notas do Assessor",
+  "Notas do Consultor",
 ];
 
 function SwitchRow({
@@ -177,7 +177,7 @@ export function DiagnosticForm({ answers, onChange, onFinish, onCancel }: Diagno
             />
             <SwitchRow
               id="reviewsPortfolioRegularly"
-              label="Revisa a carteira regularmente com assessor?"
+              label="Revisa a carteira regularmente com consultor?"
               checked={answers.reviewsPortfolioRegularly}
               onCheckedChange={(v) => onChange("reviewsPortfolioRegularly", v)}
             />
@@ -315,13 +315,13 @@ export function DiagnosticForm({ answers, onChange, onFinish, onCancel }: Diagno
 
         {step === 8 && (
           <div className="space-y-2">
-            <Label htmlFor="assessorNotes">Observações do assessor</Label>
+            <Label htmlFor="consultorNotes">Observações do consultor</Label>
             <Textarea
-              id="assessorNotes"
+              id="consultorNotes"
               rows={8}
               placeholder="Registre informações relevantes sobre o cliente, contexto do diagnóstico ou observações adicionais..."
-              value={answers.assessorNotes}
-              onChange={(e) => onChange("assessorNotes", e.target.value)}
+              value={answers.consultorNotes}
+              onChange={(e) => onChange("consultorNotes", e.target.value)}
             />
           </div>
         )}

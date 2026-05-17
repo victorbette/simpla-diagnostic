@@ -456,7 +456,7 @@ export function FinancialPlanDashboard({
             </Button>
             <Button variant="outline" size="sm" onClick={() => onPrint("advisor")}>
               <Printer className="mr-1.5 h-3.5 w-3.5" />
-              PDF Assessor
+              PDF Consultor
             </Button>
             <Button variant="outline" size="sm" onClick={() => onPrint("client")}>
               <Printer className="mr-1.5 h-3.5 w-3.5" />
@@ -890,12 +890,12 @@ export function FinancialPlanDashboard({
         </CardContent>
       </Card>
 
-      {/* ── SEÇÃO 9: Notas do assessor ────────────────────────────────────── */}
+      {/* ── SEÇÃO 9: Notas do consultor ────────────────────────────────────── */}
       <Card>
         <CardContent className="pt-5">
-          <h3 className="mb-3 text-base font-semibold">Notas do assessor</h3>
+          <h3 className="mb-3 text-base font-semibold">Notas do consultor</h3>
           <Textarea
-            value={plan.notasAssessor}
+            value={plan.notasConsultor}
             onChange={(e) => onNotasChange(e.target.value)}
             placeholder="Observações, contexto e notas para a próxima reunião..."
             className="min-h-[120px] resize-y"

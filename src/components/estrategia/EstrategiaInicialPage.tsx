@@ -26,7 +26,7 @@ import { SecaoFiscal } from "./SecaoFiscal";
 import { SecaoSucessorio } from "./SecaoSucessorio";
 import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
-import { EstrategiaPrintAssessor, EstrategiaPrintCliente } from "./EstrategiaPrint";
+import { EstrategiaPrintConsultor, EstrategiaPrintCliente } from "./EstrategiaPrint";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ interface StoredState {
   comentarios: Record<SecaoAtiva, string>;
   statusSecoes: Record<SecaoAtiva, SectionStatus>;
   logoBase64: string | null;
-  nomeAssessor: string;
+  nomeConsultor: string;
   apresentacao: string;
   proximosPassos: PassoItem[];
   dataProximaReuniao: string;
@@ -150,8 +150,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
   const [logoBase64, setLogoBase64] = useState<string | null>(
     () => saved.logoBase64 ?? null
   );
-  const [nomeAssessor, setNomeAssessor] = useState<string>(
-    () => saved.nomeAssessor ?? ""
+  const [nomeConsultor, setNomeConsultor] = useState<string>(
+    () => saved.nomeConsultor ?? ""
   );
   const [apresentacao, setApresentacao] = useState<string>(
     () => saved.apresentacao ?? ""
@@ -167,7 +167,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
   );
 
   const [secaoAtiva, setSecaoAtiva] = useState<SecaoAtiva>("capa");
-  const [printMode, setPrintMode] = useState<"assessor" | "cliente" | null>(null);
+  const [printMode, setPrintMode] = useState<"consultor" | "cliente" | null>(null);
 
   // ─── Debounced autosave ───────────────────────────────────────────────────
 
@@ -183,7 +183,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
             comentarios,
             statusSecoes,
             logoBase64,
-            nomeAssessor,
+            nomeConsultor,
             apresentacao,
             proximosPassos,
             dataProximaReuniao,
@@ -199,7 +199,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
     comentarios,
     statusSecoes,
     logoBase64,
-    nomeAssessor,
+    nomeConsultor,
     apresentacao,
     proximosPassos,
     dataProximaReuniao,
@@ -229,7 +229,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
           comentarios,
           statusSecoes,
           logoBase64,
-          nomeAssessor,
+          nomeConsultor,
           apresentacao,
           proximosPassos,
           dataProximaReuniao,
@@ -241,7 +241,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
     }
   }
 
-  function handlePrint(type: "assessor" | "cliente") {
+  function handlePrint(type: "consultor" | "cliente") {
     setPrintMode(type);
     setTimeout(() => {
       window.print();
@@ -257,7 +257,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
     plan,
     clientName,
     logoBase64,
-    nomeAssessor,
+    nomeConsultor,
     apresentacao,
     comentarios,
     statusSecoes,
@@ -280,9 +280,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
             <Save className="h-4 w-4 mr-1.5" />
             Salvar rascunho
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handlePrint("assessor")}>
+          <Button variant="outline" size="sm" onClick={() => handlePrint("consultor")}>
             <Printer className="h-4 w-4 mr-1.5" />
-            PDF Assessor
+            PDF Consultor
           </Button>
           <Button variant="outline" size="sm" onClick={() => handlePrint("cliente")}>
             <Printer className="h-4 w-4 mr-1.5" />
@@ -347,8 +347,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
               plan={plan}
               logoBase64={logoBase64}
               onLogoChange={setLogoBase64}
-              nomeAssessor={nomeAssessor}
-              onNomeAssessorChange={setNomeAssessor}
+              nomeConsultor={nomeConsultor}
+              onNomeConsultorChange={setNomeConsultor}
               apresentacao={apresentacao}
               onApresentacaoChange={setApresentacao}
               status={statusSecoes.capa}
@@ -428,14 +428,14 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
               statusSecoes={statusSecoes}
               comentarios={comentarios}
               onNavigate={setSecaoAtiva}
-              onGerarDocumento={() => handlePrint("assessor")}
+              onGerarDocumento={() => handlePrint("consultor")}
             />
           )}
         </main>
       </div>
 
       {/* Print layers */}
-      {printMode === "assessor" && <EstrategiaPrintAssessor {...printProps} />}
+      {printMode === "consultor" && <EstrategiaPrintConsultor {...printProps} />}
       {printMode === "cliente" && <EstrategiaPrintCliente {...printProps} />}
     </div>
   );

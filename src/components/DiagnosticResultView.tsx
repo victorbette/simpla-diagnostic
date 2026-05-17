@@ -339,7 +339,7 @@ function FIRECard({ answers }: { answers: DiagnosticAnswers }) {
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="text-xs text-amber-700 dark:text-amber-300">
               Com {yearsLeft} anos disponíveis e patrimônio em {Math.round(assetProgress)}% da meta,
-              é recomendável revisar a estratégia ou o prazo-alvo com seu assessor.
+              é recomendável revisar a estratégia ou o prazo-alvo com seu consultor.
             </p>
           </div>
         )}
@@ -423,7 +423,7 @@ export function DiagnosticResultView({
           </Button>
           <Button size="sm" variant="outline" onClick={onPrintAdvisor}>
             <Printer className="mr-1.5 h-3.5 w-3.5" />
-            PDF assessor
+            PDF consultor
           </Button>
           <Button size="sm" onClick={onSave}>
             <Save className="mr-1.5 h-3.5 w-3.5" />
@@ -496,14 +496,14 @@ export function DiagnosticResultView({
       {answers.targetPassiveIncome > 0 && <FIRECard answers={answers} />}
 
       {/* ── Assessor notes ── */}
-      {answers.assessorNotes && (
+      {answers.consultorNotes && (
         <Card className="bg-muted/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Notas do assessor</CardTitle>
+            <CardTitle className="text-base">Notas do consultor</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-              {answers.assessorNotes}
+              {answers.consultorNotes}
             </p>
           </CardContent>
         </Card>

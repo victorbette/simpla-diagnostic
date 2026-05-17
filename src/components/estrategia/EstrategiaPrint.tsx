@@ -18,7 +18,7 @@ interface PrintProps {
   plan: FinancialPlan;
   clientName: string;
   logoBase64: string | null;
-  nomeAssessor: string;
+  nomeConsultor: string;
   apresentacao: string;
   comentarios: Record<SecaoAtiva, string>;
   statusSecoes: Record<SecaoAtiva, SectionStatus>;
@@ -49,8 +49,8 @@ function formatCurr(v: number): string {
 
 // ─── Assessor print ───────────────────────────────────────────────────────────
 
-export function EstrategiaPrintAssessor({
-  plan, clientName, logoBase64, nomeAssessor, apresentacao,
+export function EstrategiaPrintConsultor({
+  plan, clientName, logoBase64, nomeConsultor, apresentacao,
   comentarios, statusSecoes, proximosPassos, dataProximaReuniao, consideracoesFinais,
 }: PrintProps) {
   const logoSrc = logoBase64 ?? logoSimpla;
@@ -68,7 +68,7 @@ export function EstrategiaPrintAssessor({
         <img src={logoSrc} alt="Logo" style={{ maxHeight: 80, maxWidth: 280, objectFit: "contain", marginBottom: 40 }} />
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Estratégia Inicial de Financial Planning</h1>
         <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 32, color: "#1d4ed8" }}>{clientName}</h2>
-        <p style={{ fontSize: 14, marginBottom: 4 }}>Assessor: {nomeAssessor || "—"}</p>
+        <p style={{ fontSize: 14, marginBottom: 4 }}>Consultor: {nomeConsultor || "—"}</p>
         <p style={{ fontSize: 14, color: "#555", marginBottom: 32 }}>Data de elaboração: {formatDateBR()}</p>
         {plan.suitability && (
           <div style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: "12px 24px", display: "inline-block" }}>
@@ -82,7 +82,7 @@ export function EstrategiaPrintAssessor({
           </div>
         )}
         <div style={{ position: "absolute", bottom: 20, width: "100%", textAlign: "center", fontSize: 10, color: "#9ca3af" }}>
-          CONFIDENCIAL — Uso restrito ao assessor | Simpla Wealth
+          CONFIDENCIAL — Uso restrito ao consultor | Simpla Wealth
         </div>
       </div>
 
@@ -132,14 +132,14 @@ export function EstrategiaPrintAssessor({
             {/* Assessor text */}
             {comentario && (
               <div style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#374151", marginBottom: 8 }}>Estratégia do assessor</p>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#374151", marginBottom: 8 }}>Estratégia do consultor</p>
                 <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{comentario}</p>
               </div>
             )}
 
             <div style={{ borderTop: "1px solid #e5e7eb", marginTop: 32 }} />
             <div style={{ position: "fixed", bottom: 20, right: 40, fontSize: 10, color: "#9ca3af" }}>
-              CONFIDENCIAL — Uso restrito ao assessor | Simpla Wealth
+              CONFIDENCIAL — Uso restrito ao consultor | Simpla Wealth
             </div>
           </div>
         );
@@ -185,7 +185,7 @@ export function EstrategiaPrintAssessor({
 // ─── Client print ─────────────────────────────────────────────────────────────
 
 export function EstrategiaPrintCliente({
-  plan: _plan, clientName, logoBase64, nomeAssessor, apresentacao,
+  plan: _plan, clientName, logoBase64, nomeConsultor, apresentacao,
   comentarios, statusSecoes, proximosPassos, dataProximaReuniao,
 }: PrintProps) {
   const logoSrc = logoBase64 ?? logoSimpla;
@@ -198,7 +198,7 @@ export function EstrategiaPrintCliente({
         <img src={logoSrc} alt="Logo" style={{ maxHeight: 80, maxWidth: 280, objectFit: "contain", marginBottom: 40 }} />
         <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8, color: "#1d4ed8" }}>Seu Planejamento Financeiro</h1>
         <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32 }}>{clientName}</h2>
-        <p style={{ fontSize: 14, marginBottom: 4 }}>Assessor: {nomeAssessor || "—"}</p>
+        <p style={{ fontSize: 14, marginBottom: 4 }}>Consultor: {nomeConsultor || "—"}</p>
         <p style={{ fontSize: 14, color: "#555" }}>Data: {formatDateBR()}</p>
         {apresentacao && (
           <div style={{ marginTop: 40, maxWidth: 500, textAlign: "left", backgroundColor: "#f0f9ff", padding: 20, borderRadius: 8, border: "1px solid #bae6fd" }}>

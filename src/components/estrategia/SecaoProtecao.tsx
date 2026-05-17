@@ -91,7 +91,7 @@ export function SecaoProtecao({ plan, comentario, onComentarioChange, status, on
         {/* Right */}
         <div className="space-y-3">
           <div className="rounded-lg border p-4 space-y-3">
-            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do assessor</h3>
+            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do consultor</h3>
             <p className="text-xs text-muted-foreground">Análise e estratégia para esta área</p>
             <Textarea
               value={comentario}
