@@ -1,0 +1,1 @@
+export { EstrategiaInicialPage } from './EstrategiaInicialPage';

@@ -10,6 +10,7 @@ import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicial
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Simulation } from "@/hooks/useClientStore";
+import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -24,6 +25,7 @@ type ActiveTab = "simulator" | "clients" | "diagnostic" | "financial-planning" |
 export function HomePage() {
   const { signOut } = useAuth();
   const clientStore = useClientStore();
+  const planStore = useFinancialPlanStore();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("clients");
   const [diagnosticClientId, setDiagnosticClientId] = useState<string | undefined>(undefined);
@@ -80,14 +82,22 @@ export function HomePage() {
 
   // EstrategiaInicialPage takes over the full viewport when active
   if (activeTab === "estrategia" && estrategiaClientId) {
-    return (
-      <EstrategiaInicialPage
-        clientId={estrategiaClientId}
-        clientName={estrategiaClientName}
-        financialPlan={null}
-        onClose={() => setActiveTab("clients")}
-      />
-    );
+    const latestPlan = planStore.getLatestPlan(estrategiaClientId);
+    if (latestPlan) {
+      return (
+        <EstrategiaInicialPage
+          plan={latestPlan}
+          clientName={estrategiaClientName}
+          onClose={() => setActiveTab("clients")}
+        />
+      );
+    }
+    // No plan yet — open financial planning instead
+    if (!fpClientId) {
+      setFpClientId(estrategiaClientId);
+      setFpClientName(estrategiaClientName);
+      setActiveTab("financial-planning");
+    }
   }
 
   return (

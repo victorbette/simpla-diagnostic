@@ -65,6 +65,7 @@ interface FinancialPlanDashboardProps {
   onSave: () => void;
   onPrint: (type: "advisor" | "client") => void;
   onNotasChange: (notas: string) => void;
+  onAvancarEstrategia: () => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -289,6 +290,7 @@ export function FinancialPlanDashboard({
   onSave,
   onPrint,
   onNotasChange,
+  onAvancarEstrategia,
 }: FinancialPlanDashboardProps) {
   const [modalAberto, setModalAberto] = useState<ModalAberto>(null);
 
@@ -400,6 +402,28 @@ export function FinancialPlanDashboard({
 
   return (
     <div className="space-y-8">
+      {/* ── Banner Diagnóstico Inicial ─────────────────────────────────────── */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-blue-900">
+              Diagnóstico inicial gerado automaticamente a partir dos dados coletados.
+            </p>
+            <p className="text-xs text-blue-700 mt-0.5">
+              Revise os resultados abaixo e, quando pronto, avance para montar a Estratégia Inicial.
+            </p>
+          </div>
+        </div>
+        <Button
+          onClick={onAvancarEstrategia}
+          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+          size="sm"
+        >
+          Montar Estratégia Inicial →
+        </Button>
+      </div>
+
       {/* ── SEÇÃO 1: Cabeçalho ────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>

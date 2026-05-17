@@ -1,196 +1,153 @@
+import { useState, useMemo } from "react";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
-import type { SecaoEstrategia } from "@/types/estrategiaInicial";
+import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
+import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { calcularIF } from "@/types/financialPlanning";
 
+type SectionStatus = "pendente" | "revisando" | "concluido";
+
 interface Props {
-  secao: SecaoEstrategia;
-  onChange: (s: SecaoEstrategia) => void;
-  financialPlan: FinancialPlan | null;
+  plan: FinancialPlan;
+  comentario: string;
+  onComentarioChange: (v: string) => void;
+  status: SectionStatus;
+  onStatusChange: (s: SectionStatus) => void;
 }
 
-function generateProjectionData(
-  idadeAtual: number,
-  idadeMeta: number,
-  patrimonioAtual: number,
-  aporteMensal: number,
-  taxaRetornoAnual: number
-): { idade: number; patrimonio: number }[] {
-  const totalAnos = Math.max(1, idadeMeta - idadeAtual);
-  const numPoints = 10;
-  const taxaMensal = taxaRetornoAnual / 100 / 12;
-  const points: { idade: number; patrimonio: number }[] = [];
+function scoreBadge(score: number) {
+  if (score >= 70) return { label: "Adequado", cls: "bg-emerald-100 text-emerald-800" };
+  if (score >= 40) return { label: "Atenção", cls: "bg-amber-100 text-amber-800" };
+  return { label: "Risco", cls: "bg-red-100 text-red-800" };
+}
 
-  for (let i = 0; i <= numPoints; i++) {
-    const fracao = i / numPoints;
-    const anos = fracao * totalAnos;
-    const meses = anos * 12;
-    const idade = idadeAtual + anos;
-
-    let patrimonio: number;
-    if (taxaMensal === 0) {
-      patrimonio = patrimonioAtual + aporteMensal * meses;
-    } else {
-      const fv = patrimonioAtual * Math.pow(1 + taxaMensal, meses);
-      const aportesFV = aporteMensal * ((Math.pow(1 + taxaMensal, meses) - 1) / taxaMensal);
-      patrimonio = fv + aportesFV;
-    }
-
-    points.push({ idade: Math.round(idade * 10) / 10, patrimonio });
+function buildProj(p: FinancialPlan["planejamentoIF"], meta: number) {
+  const anos = Math.max(1, p.idadeMeta - p.idadeAtual);
+  const taxaMensal = p.taxaRetornoAnual / 100 / 12;
+  const data: { idade: string; projecao: number; meta: number }[] = [];
+  let pat = p.patrimonioAtual;
+  for (let i = 0; i <= anos; i++) {
+    data.push({ idade: String(p.idadeAtual + i), projecao: Math.round(pat), meta: Math.round(meta) });
+    for (let m = 0; m < 12; m++) pat = pat * (1 + taxaMensal) + p.aporteMensal;
   }
-
-  return points;
+  return data;
 }
 
-export function SecaoAposentadoria({ secao, onChange, financialPlan }: Props) {
-  const plan = financialPlan;
-  const pIF = plan?.planejamentoIF;
-  const resultado = pIF ? calcularIF(pIF) : null;
+function formatAxis(v: number): string {
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+  return String(v);
+}
 
-  const projData =
-    pIF && resultado
-      ? generateProjectionData(
-          pIF.idadeAtual,
-          pIF.idadeMeta,
-          pIF.patrimonioAtual,
-          pIF.aporteMensal,
-          pIF.taxaRetornoAnual
-        )
-      : [];
-
-  const anosRestantes = pIF ? Math.max(0, pIF.idadeMeta - pIF.idadeAtual) : 0;
+export function SecaoAposentadoria({ plan, comentario, onComentarioChange, status, onStatusChange }: Props) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const ifResult = useMemo(() => calcularIF(plan.planejamentoIF), [plan.planejamentoIF]);
+  const score = Math.round(ifResult.percentualIF);
+  const sb = scoreBadge(score);
+  const projData = useMemo(() => buildProj(plan.planejamentoIF, ifResult.patrimonioNecessario), [plan.planejamentoIF, ifResult.patrimonioNecessario]);
+  const disabled = status === "concluido";
+  const p = plan.planejamentoIF;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Aposentadoria / Independência Financeira</h2>
-      </div>
-
-      {resultado && pIF ? (
-        <>
-          {/* Key metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Idade atual</p>
-              <p className="font-semibold">{pIF.idadeAtual} anos</p>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Aposentadoria / Independência Financeira</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6">
+        {/* Left */}
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/40 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Diagnóstico inicial</h3>
+              <Badge className={sb.cls}>{sb.label}</Badge>
             </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Idade meta</p>
-              <p className="font-semibold">{pIF.idadeMeta} anos ({anosRestantes} restantes)</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {[
+                { label: "Idade atual", value: `${p.idadeAtual} anos` },
+                { label: "Meta de IF", value: `${p.idadeMeta} anos` },
+                { label: "Patrimônio atual", value: formatCurrency(p.patrimonioAtual) },
+                { label: "Aporte mensal", value: formatCurrency(p.aporteMensal) },
+                { label: "Patrimônio necessário", value: formatCurrency(ifResult.patrimonioNecessario) },
+                { label: "Gap", value: formatCurrency(ifResult.gap), red: ifResult.gap > 0 },
+              ].map(({ label, value, red }) => (
+                <div key={label}>
+                  <p className="text-muted-foreground text-xs">{label}</p>
+                  <p className={`font-semibold ${red ? "text-destructive" : ""}`}>{value}</p>
+                </div>
+              ))}
             </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Progresso IF</p>
-              <p className="font-semibold">{resultado.percentualIF.toFixed(1)}%</p>
-            </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Patrimônio necessário</p>
-              <p className="font-semibold">{formatCurrency(resultado.patrimonioNecessario)}</p>
-            </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Projeção com aportes</p>
-              <p className="font-semibold">{formatCurrency(resultado.patrimonioProjetado)}</p>
-            </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Gap</p>
-              <p
-                className={cn(
-                  "font-semibold",
-                  resultado.gap > 0 ? "text-red-600" : "text-green-600"
-                )}
-              >
-                {resultado.gap > 0 ? "-" : "+"}{formatCurrency(Math.abs(resultado.gap))}
-              </p>
-            </div>
-          </div>
-
-          {/* Projection chart */}
-          {projData.length > 0 && (
             <div>
-              <p className="text-sm font-medium mb-2 text-muted-foreground">
-                Projeção patrimonial
-              </p>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={projData}>
-                  <XAxis
-                    dataKey="idade"
-                    tickFormatter={(v: number) => `${v.toFixed(0)}`}
-                    tick={{ fontSize: 11 }}
-                  />
-                  <YAxis
-                    tickFormatter={(v: number) =>
-                      v >= 1_000_000
-                        ? `${(v / 1_000_000).toFixed(1)}M`
-                        : v >= 1_000
-                        ? `${(v / 1_000).toFixed(0)}k`
-                        : String(v)
-                    }
-                    tick={{ fontSize: 11 }}
-                    width={60}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [formatCurrency(value), "Patrimônio"]}
-                    labelFormatter={(label: number) => `Idade: ${label.toFixed(1)}`}
-                  />
-                  <ReferenceLine
-                    y={resultado.patrimonioNecessario}
-                    stroke="#ef4444"
-                    strokeDasharray="4 4"
-                    label={{ value: "Meta IF", position: "insideTopRight", fontSize: 11, fill: "#ef4444" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="patrimonio"
-                    stroke="#3b82f6"
-                    fill="#bfdbfe"
-                    strokeWidth={2}
-                  />
+              <p className="text-xs text-muted-foreground mb-1">Projeção patrimonial</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <AreaChart data={projData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradIF2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="idade" tick={{ fontSize: 9 }} />
+                  <YAxis tickFormatter={formatAxis} tick={{ fontSize: 9 }} />
+                  <Tooltip formatter={(v) => formatCurrency(v as number)} labelFormatter={(l) => `Idade ${l}`} />
+                  <ReferenceLine y={ifResult.patrimonioNecessario} stroke="#ef4444" strokeDasharray="4 4"
+                    label={{ value: "Meta", position: "right", fontSize: 9, fill: "#ef4444" }} />
+                  <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#3b82f6" fill="url(#gradIF2)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          )}
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Nenhum dado de planejamento disponível. Preencha o plano financeiro primeiro.
-        </p>
-      )}
+            {ifResult.gap > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Principais gaps</p>
+                <p className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1">
+                  Gap de {formatCurrency(ifResult.gap)} — aporte mensal insuficiente para atingir a meta
+                </p>
+              </div>
+            )}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
+            Abrir ferramenta IF →
+          </Button>
+        </div>
 
-      {/* Editable area */}
-      <div className="space-y-2">
-        <Label htmlFor="apoConteudo">
-          Estratégia de acumulação e produtos recomendados
-        </Label>
-        <Textarea
-          id="apoConteudo"
-          value={secao.conteudoAssessor}
-          onChange={(ev) =>
-            onChange({ ...secao, conteudoAssessor: ev.target.value })
-          }
-          placeholder="Descreva a estratégia de acumulação e os produtos recomendados..."
-          className="min-h-[140px]"
-          disabled={secao.completa}
-        />
+        {/* Right */}
+        <div className="space-y-3">
+          <div className="rounded-lg border p-4 space-y-3">
+            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do assessor</h3>
+            <p className="text-xs text-muted-foreground">Análise e estratégia para esta área</p>
+            <Textarea
+              value={comentario}
+              onChange={(e) => onComentarioChange(e.target.value)}
+              placeholder="Ex: Para atingir a IF aos 60 anos, o cliente precisa aumentar os aportes mensais de R$ X para R$ Y. Recomendamos revisar a alocação para buscar maior rentabilidade real..."
+              className="min-h-[200px]"
+              disabled={disabled}
+            />
+            <div className="flex items-center gap-2">
+              {status === "concluido" ? (
+                <>
+                  <Badge className="bg-green-100 text-green-800 gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={() => onStatusChange("revisando")}>Editar</Button>
+                </>
+              ) : (
+                <Button onClick={() => onStatusChange("concluido")}>Marcar como concluída</Button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Button
-        variant={secao.completa ? "outline" : "default"}
-        onClick={() => onChange({ ...secao, completa: !secao.completa })}
-      >
-        {secao.completa ? "Editar" : "Marcar como completa"}
-      </Button>
+      <FerramentaModal open={modalOpen} onClose={() => setModalOpen(false)} title="Liberdade Financeira">
+        <FerramentaLiberdadeFinanceira
+          planejamentoIF={plan.planejamentoIF}
+          onSave={() => setModalOpen(false)}
+        />
+      </FerramentaModal>
     </div>
   );
 }

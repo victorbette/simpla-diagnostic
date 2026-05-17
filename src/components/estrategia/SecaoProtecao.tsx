@@ -1,149 +1,127 @@
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
+import { CheckCircle2, Circle } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
-import type { SecaoEstrategia } from "@/types/estrategiaInicial";
+import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
+import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { calcularProtecao } from "@/types/financialPlanning";
 
+type SectionStatus = "pendente" | "revisando" | "concluido";
+
 interface Props {
-  secao: SecaoEstrategia;
-  onChange: (s: SecaoEstrategia) => void;
-  financialPlan: FinancialPlan | null;
+  plan: FinancialPlan;
+  comentario: string;
+  onComentarioChange: (v: string) => void;
+  status: SectionStatus;
+  onStatusChange: (s: SectionStatus) => void;
 }
 
-interface CheckItem {
-  label: string;
-  ok: boolean;
+function scoreBadge(score: number) {
+  if (score >= 70) return { label: "Adequado", cls: "bg-emerald-100 text-emerald-800" };
+  if (score >= 40) return { label: "Atenção", cls: "bg-amber-100 text-amber-800" };
+  return { label: "Risco", cls: "bg-red-100 text-red-800" };
 }
 
-export function SecaoProtecao({ secao, onChange, financialPlan }: Props) {
-  const prot = financialPlan?.protecao ?? null;
-  const resultado = prot ? calcularProtecao(prot) : null;
+export function SecaoProtecao({ plan, comentario, onComentarioChange, status, onStatusChange }: Props) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const result = useMemo(() => calcularProtecao(plan.protecao), [plan.protecao]);
+  const score = Math.round(result.percentualCoberto);
+  const sb = scoreBadge(score);
+  const disabled = status === "concluido";
 
-  const checkItems: CheckItem[] = prot
-    ? [
-        { label: "Possui seguro de vida", ok: prot.possuiSeguroVida },
-        {
-          label: "Capital segurado adequado",
-          ok:
-            prot.possuiSeguroVida &&
-            resultado !== null &&
-            resultado.gap === 0,
-        },
-        { label: "Possui seguro de invalidez", ok: prot.possuiSeguroInvalidez },
-        { label: "Possui plano de saúde", ok: prot.possuiPlanoSaude },
-      ]
-    : [];
+  const checks = [
+    { label: "Possui seguro de vida", ok: plan.protecao.possuiSeguroVida },
+    { label: "Capital adequado (≥ 80%)", ok: result.percentualCoberto >= 80 },
+    { label: "Possui seguro invalidez", ok: plan.protecao.possuiSeguroInvalidez },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Proteção</h2>
-      </div>
-
-      {resultado && prot ? (
-        <>
-          {/* Key metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Capital necessário</p>
-              <p className="font-semibold">{formatCurrency(resultado.capitalNecessario)}</p>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Proteção e Seguros</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6">
+        {/* Left */}
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/40 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Diagnóstico inicial</h3>
+              <Badge className={sb.cls}>{sb.label}</Badge>
             </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Capital atual</p>
-              <p className="font-semibold">{formatCurrency(resultado.capitalAtual)}</p>
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Cobertura atual</span>
+                <span>{score}%</span>
+              </div>
+              <Progress value={Math.min(100, score)} className="h-2" />
             </div>
-            <div className="border rounded p-3 space-y-1">
-              <p className="text-xs text-muted-foreground">Gap</p>
-              <p
-                className={cn(
-                  "font-semibold",
-                  resultado.gap > 0 ? "text-red-600" : "text-green-600"
-                )}
-              >
-                {resultado.gap > 0 ? "-" : ""}
-                {formatCurrency(resultado.gap)}
-              </p>
-            </div>
-          </div>
-
-          {/* Coverage progress */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Cobertura atual</span>
-              <span className="font-medium">{resultado.percentualCoberto.toFixed(1)}%</span>
-            </div>
-            <Progress value={resultado.percentualCoberto} className="h-3" />
-          </div>
-
-          {/* Checklist */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Checklist de proteção</p>
-            <ul className="space-y-1">
-              {checkItems.map((item) => (
-                <li key={item.label} className="flex items-center gap-2 text-sm">
-                  <span
-                    className={cn(
-                      "font-bold",
-                      item.ok ? "text-green-600" : "text-red-500"
-                    )}
-                  >
-                    {item.ok ? "✓" : "✗"}
-                  </span>
-                  <span className={item.ok ? "" : "text-muted-foreground"}>
-                    {item.label}
-                  </span>
-                </li>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {[
+                { label: "Capital necessário", value: formatCurrency(result.capitalNecessario) },
+                { label: "Capital segurado", value: formatCurrency(result.capitalAtual) },
+                { label: "Gap de cobertura", value: formatCurrency(result.gap), red: result.gap > 0 },
+              ].map(({ label, value, red }) => (
+                <div key={label}>
+                  <p className="text-muted-foreground text-xs">{label}</p>
+                  <p className={`font-semibold ${red ? "text-destructive" : ""}`}>{value}</p>
+                </div>
               ))}
-            </ul>
-          </div>
-
-          {/* Recommendations */}
-          {resultado.recomendacoes.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Recomendações automáticas</p>
-              <ul className="list-disc list-inside space-y-1">
-                {resultado.recomendacoes.map((rec) => (
-                  <li key={rec} className="text-sm text-muted-foreground">
-                    {rec}
-                  </li>
-                ))}
-              </ul>
             </div>
-          )}
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Nenhum dado de proteção disponível. Preencha o plano financeiro primeiro.
-        </p>
-      )}
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">Checklist</p>
+              {checks.map(({ label, ok }) => (
+                <div key={label} className="flex items-center gap-2 text-sm">
+                  {ok ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground/40 shrink-0" />
+                  )}
+                  <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
+            Abrir ferramenta de seguros →
+          </Button>
+        </div>
 
-      {/* Editable area */}
-      <div className="space-y-2">
-        <Label htmlFor="protConteudo">
-          Estratégia de proteção e encaminhamentos
-        </Label>
-        <Textarea
-          id="protConteudo"
-          value={secao.conteudoAssessor}
-          onChange={(ev) =>
-            onChange({ ...secao, conteudoAssessor: ev.target.value })
-          }
-          placeholder="Descreva a estratégia de proteção e os encaminhamentos necessários..."
-          className="min-h-[140px]"
-          disabled={secao.completa}
-        />
+        {/* Right */}
+        <div className="space-y-3">
+          <div className="rounded-lg border p-4 space-y-3">
+            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do assessor</h3>
+            <p className="text-xs text-muted-foreground">Análise e estratégia para esta área</p>
+            <Textarea
+              value={comentario}
+              onChange={(e) => onComentarioChange(e.target.value)}
+              placeholder="Ex: Identificamos uma lacuna de cobertura de R$ X. Recomendamos contratar apólice de vida por R$ Y, com cobertura de invalidez incluída. Sugerimos revisão anual..."
+              className="min-h-[200px]"
+              disabled={disabled}
+            />
+            <div className="flex items-center gap-2">
+              {status === "concluido" ? (
+                <>
+                  <Badge className="bg-green-100 text-green-800 gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={() => onStatusChange("revisando")}>Editar</Button>
+                </>
+              ) : (
+                <Button onClick={() => onStatusChange("concluido")}>Marcar como concluída</Button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Button
-        variant={secao.completa ? "outline" : "default"}
-        onClick={() => onChange({ ...secao, completa: !secao.completa })}
-      >
-        {secao.completa ? "Editar" : "Marcar como completa"}
-      </Button>
+      <FerramentaModal open={modalOpen} onClose={() => setModalOpen(false)} title="Análise de Seguros">
+        <FerramentaSeguro
+          protecao={plan.protecao}
+          onSave={() => setModalOpen(false)}
+        />
+      </FerramentaModal>
     </div>
   );
 }

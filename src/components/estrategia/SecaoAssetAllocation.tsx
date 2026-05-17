@@ -1,166 +1,177 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
-import type { SecaoEstrategia } from "@/types/estrategiaInicial";
-import type { FinancialPlan } from "@/types/financialPlanning";
+import type { FinancialPlan, MacroalocacaoAlvo } from "@/types/financialPlanning";
 import {
   PERFIL_LABELS,
   ALOCACAO_ALVO,
   calcularAlocacaoAtual,
 } from "@/types/financialPlanning";
 
+type SectionStatus = "pendente" | "revisando" | "concluido";
+
 interface Props {
-  secao: SecaoEstrategia;
-  onChange: (s: SecaoEstrategia) => void;
-  financialPlan: FinancialPlan | null;
+  plan: FinancialPlan;
+  comentario: string;
+  onComentarioChange: (v: string) => void;
+  status: SectionStatus;
+  onStatusChange: (s: SectionStatus) => void;
 }
 
-type AssetKey = "rendaFixa" | "acoes" | "fiis" | "rvGlobal" | "rfGlobal" | "cripto";
-
+type AssetKey = keyof MacroalocacaoAlvo;
 const ASSET_LABELS: Record<AssetKey, string> = {
-  rendaFixa: "Renda Fixa",
-  acoes: "Ações",
-  fiis: "FIIs",
-  rvGlobal: "RV Global",
-  rfGlobal: "RF Global",
-  cripto: "Cripto",
+  rendaFixa: "Renda Fixa", acoes: "Ações", fiis: "FIIs",
+  rvGlobal: "RV Global", rfGlobal: "RF Global", cripto: "Cripto",
 };
-
 const ASSET_KEYS: AssetKey[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
-
 const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#14b8a6", "#f97316"];
 
-export function SecaoAssetAllocation({ secao, onChange, financialPlan }: Props) {
-  const plan = financialPlan;
+function scoreBadge(score: number) {
+  if (score >= 70) return { label: "Adequado", cls: "bg-emerald-100 text-emerald-800" };
+  if (score >= 40) return { label: "Atenção", cls: "bg-amber-100 text-amber-800" };
+  return { label: "Risco", cls: "bg-red-100 text-red-800" };
+}
 
-  const ativos = plan?.ativosAtuais;
-  const total = ativos?.total ?? 0;
-  const alocacaoAtual = ativos ? calcularAlocacaoAtual(ativos) : null;
-  const perfil = plan?.suitability?.perfil;
-  const alocacaoAlvo = perfil
-    ? (plan?.alocacaoPersonalizada ?? ALOCACAO_ALVO[perfil])
-    : null;
+export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, status, onStatusChange }: Props) {
+  const total =
+    plan.ativosAtuais.total ||
+    ASSET_KEYS.reduce((s, k) => s + (plan.ativosAtuais[k] ?? 0), 0);
 
-  const pieData = alocacaoAtual
-    ? ASSET_KEYS.map((key, i) => ({
-        name: ASSET_LABELS[key],
-        value: alocacaoAtual[key],
-        color: PIE_COLORS[i],
-      })).filter((d) => d.value > 0)
+  const alocacaoAtual = useMemo(
+    () => calcularAlocacaoAtual({ ...plan.ativosAtuais, total: total || 1 }),
+    [plan.ativosAtuais, total]
+  );
+
+  const alvo = plan.suitability ? ALOCACAO_ALVO[plan.suitability.perfil] : null;
+  const gapTotal = alvo ? ASSET_KEYS.reduce((s, k) => s + Math.abs(alocacaoAtual[k] - alvo[k]), 0) : 0;
+  const score = Math.max(0, Math.round(100 - gapTotal));
+  const sb = scoreBadge(score);
+
+  const pieData = ASSET_KEYS.filter((k) => alocacaoAtual[k] > 0).map((k, i) => ({
+    name: ASSET_LABELS[k], value: parseFloat(alocacaoAtual[k].toFixed(1)), color: PIE_COLORS[i],
+  }));
+
+  const barData = ASSET_KEYS.map((k) => ({
+    name: ASSET_LABELS[k], Atual: parseFloat(alocacaoAtual[k].toFixed(1)), Alvo: alvo ? alvo[k] : 0,
+  }));
+
+  const gaps = alvo
+    ? ASSET_KEYS.filter((k) => Math.abs(alocacaoAtual[k] - alvo[k]) > 5).map(
+        (k) => `${ASSET_LABELS[k]}: atual ${alocacaoAtual[k].toFixed(0)}% / alvo ${alvo[k]}%`
+      )
     : [];
 
+  const disabled = status === "concluido";
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold mb-1">Asset Allocation</h2>
-        {perfil && (
-          <Badge variant="secondary">
-            Perfil: {PERFIL_LABELS[perfil]}
-          </Badge>
-        )}
-      </div>
-
-      {alocacaoAtual && alocacaoAlvo ? (
-        <>
-          {/* Allocation table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 pr-4 font-medium">Classe</th>
-                  <th className="text-right py-2 pr-4 font-medium">Valor R$</th>
-                  <th className="text-right py-2 pr-4 font-medium">% Atual</th>
-                  <th className="text-right py-2 pr-4 font-medium">% Alvo</th>
-                  <th className="text-right py-2 font-medium">Gap</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ASSET_KEYS.map((key) => {
-                  const pct = alocacaoAtual[key];
-                  const alvo = alocacaoAlvo[key];
-                  const gap = alvo - pct;
-                  const valor = total * (pct / 100);
-                  return (
-                    <tr key={key} className="border-b last:border-0">
-                      <td className="py-2 pr-4">{ASSET_LABELS[key]}</td>
-                      <td className="text-right py-2 pr-4">{formatCurrency(valor)}</td>
-                      <td className="text-right py-2 pr-4">{pct.toFixed(1)}%</td>
-                      <td className="text-right py-2 pr-4">{alvo.toFixed(1)}%</td>
-                      <td
-                        className={cn(
-                          "text-right py-2 font-medium",
-                          gap > 0 ? "text-green-600" : gap < 0 ? "text-red-600" : "text-muted-foreground"
-                        )}
-                      >
-                        {gap > 0 ? "+" : ""}{gap.toFixed(1)}%
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pie chart */}
-          <div>
-            <p className="text-sm font-medium mb-2 text-muted-foreground">
-              Alocação atual
-            </p>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, value }: { name: string; value: number }) =>
-                    `${name}: ${value.toFixed(1)}%`
-                  }
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={entry.name} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Asset Allocation</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6">
+        {/* Left */}
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/40 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Diagnóstico inicial</h3>
+              <Badge className={sb.cls}>{sb.label}</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-muted-foreground text-xs">Patrimônio total</p>
+                <p className="font-semibold">{formatCurrency(total)}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs">Perfil</p>
+                <p className="font-semibold">{plan.suitability ? PERFIL_LABELS[plan.suitability.perfil] : "—"}</p>
+              </div>
+            </div>
+            {total > 0 ? (
+              <>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Alocação atual</p>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}
+                        label={({ value }) => `${value}%`} labelLine={false}>
+                        {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip formatter={(v) => [`${v}%`]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {alvo && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Atual vs Alvo (%)</p>
+                    <ResponsiveContainer width="100%" height={140}>
+                      <BarChart data={barData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                        <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                        <YAxis tick={{ fontSize: 9 }} />
+                        <Tooltip formatter={(v) => [`${v}%`]} />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                        <Bar dataKey="Atual" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                        <Bar dataKey="Alvo" fill="#10b981" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Patrimônio não informado.</p>
+            )}
+            {gaps.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Principais gaps</p>
+                <ul className="space-y-1">
+                  {gaps.map((g, i) => (
+                    <li key={i} className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1">{g}</li>
                   ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-              </PieChart>
-            </ResponsiveContainer>
+                </ul>
+              </div>
+            )}
           </div>
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Nenhum dado de alocação disponível. Preencha o plano financeiro primeiro.
-        </p>
-      )}
+        </div>
 
-      {/* Editable area */}
-      <div className="space-y-2">
-        <Label htmlFor="aaConteudo">
-          Estratégia de rebalanceamento e produtos sugeridos
-        </Label>
-        <Textarea
-          id="aaConteudo"
-          value={secao.conteudoAssessor}
-          onChange={(ev) =>
-            onChange({ ...secao, conteudoAssessor: ev.target.value })
-          }
-          placeholder="Descreva a estratégia de rebalanceamento e os produtos recomendados..."
-          className="min-h-[140px]"
-          disabled={secao.completa}
-        />
+        {/* Right */}
+        <div className="space-y-3">
+          <div className="rounded-lg border p-4 space-y-3">
+            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do assessor</h3>
+            <p className="text-xs text-muted-foreground">Análise e estratégia para esta área</p>
+            <Textarea
+              value={comentario}
+              onChange={(e) => onComentarioChange(e.target.value)}
+              placeholder="Ex: Dado o perfil moderado, recomendamos migrar gradualmente para maior exposição internacional, reduzindo renda fixa de X% para Y% ao longo de 12 meses..."
+              className="min-h-[200px]"
+              disabled={disabled}
+            />
+            <div className="flex items-center gap-2">
+              {status === "concluido" ? (
+                <>
+                  <Badge className="bg-green-100 text-green-800 gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={() => onStatusChange("revisando")}>Editar</Button>
+                </>
+              ) : (
+                <Button onClick={() => onStatusChange("concluido")}>Marcar como concluída</Button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-
-      <Button
-        variant={secao.completa ? "outline" : "default"}
-        onClick={() => onChange({ ...secao, completa: !secao.completa })}
-      >
-        {secao.completa ? "Editar" : "Marcar como completa"}
-      </Button>
     </div>
   );
 }
