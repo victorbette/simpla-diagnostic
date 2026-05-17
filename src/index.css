@@ -89,18 +89,16 @@
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
-  /* Hide everything except the print layer */
   body > * { display: none !important; }
   .print\:block { display: block !important; }
 
   @page {
-    margin: 1.5cm;
+    margin: 2cm;
     size: A4;
   }
 
   body {
-    font-family: 'Georgia', serif;
-    font-size: 12pt;
+    font-size: 11pt;
     color: #000;
     background: #fff;
   }
@@ -112,5 +110,16 @@
   * {
     box-shadow: none !important;
     text-shadow: none !important;
+  }
+
+  .print-advisor .confidencial::after {
+    content: "CONFIDENCIAL — USO RESTRITO AO ASSESSOR";
+    display: block;
+    text-align: center;
+    font-size: 8pt;
+    color: #999;
+    margin-top: 2cm;
+    border-top: 0.5px solid #ccc;
+    padding-top: 8px;
   }
 }
