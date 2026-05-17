@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { toast } from "sonner";
 import {
   calcularIF,
   calcularProtecao,
@@ -50,6 +51,10 @@ import type {
   MacroalocacaoAlvo,
   PlanejamentoIF,
 } from "@/types/financialPlanning";
+import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
+import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
+import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
+import { FerramentaPGBL } from "@/components/ferramentas/FerramentaPGBL";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -275,6 +280,8 @@ const URGENCIA_CLS: Record<AcaoItem["urgencia"], string> = {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+type ModalAberto = "seguro" | "liberdade" | "pgbl" | null;
+
 export function FinancialPlanDashboard({
   plan,
   clientName,
@@ -283,6 +290,22 @@ export function FinancialPlanDashboard({
   onPrint,
   onNotasChange,
 }: FinancialPlanDashboardProps) {
+  const [modalAberto, setModalAberto] = useState<ModalAberto>(null);
+
+  function fecharModal() { setModalAberto(null); }
+  function handleSaveFerramentaSeguros() {
+    toast.success("Análise salva no plano!");
+    fecharModal();
+  }
+  function handleSaveFerramentaLiberdade() {
+    toast.success("Análise salva no plano!");
+    fecharModal();
+  }
+  function handleSaveFerramentaPGBL() {
+    toast.success("Análise salva no plano!");
+    fecharModal();
+  }
+
   const ifResult = useMemo(() => calcularIF(plan.planejamentoIF), [plan.planejamentoIF]);
   const protResult = useMemo(() => calcularProtecao(plan.protecao), [plan.protecao]);
   const fiscalResult = useMemo(() => calcularFiscal(plan.fiscal), [plan.fiscal]);
@@ -510,7 +533,12 @@ export function FinancialPlanDashboard({
       {/* ── SEÇÃO 4: Aposentadoria e IF ───────────────────────────────────── */}
       <Card>
         <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Aposentadoria e liberdade financeira</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-base font-semibold">Aposentadoria e liberdade financeira</h3>
+            <Button variant="outline" size="sm" onClick={() => setModalAberto("liberdade")}>
+              Simulador completo de IF →
+            </Button>
+          </div>
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Métricas */}
             <div className="space-y-3">
@@ -578,7 +606,12 @@ export function FinancialPlanDashboard({
       {/* ── SEÇÃO 5: Proteção ─────────────────────────────────────────────── */}
       <Card>
         <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Proteção</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-base font-semibold">Proteção</h3>
+            <Button variant="outline" size="sm" onClick={() => setModalAberto("seguro")}>
+              Aprofundar análise de seguro →
+            </Button>
+          </div>
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Gauge + métricas */}
             <div className="flex flex-col items-center gap-4">
@@ -650,7 +683,12 @@ export function FinancialPlanDashboard({
       {/* ── SEÇÃO 6: Fiscal ───────────────────────────────────────────────── */}
       <Card>
         <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Planejamento fiscal</h3>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-base font-semibold">Planejamento fiscal</h3>
+            <Button variant="outline" size="sm" onClick={() => setModalAberto("pgbl")}>
+              Calculadora PGBL completa →
+            </Button>
+          </div>
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Métricas */}
             <div className="space-y-2">
@@ -840,6 +878,40 @@ export function FinancialPlanDashboard({
           />
         </CardContent>
       </Card>
+
+      {/* ── Modais das ferramentas ─────────────────────────────────────────── */}
+      <FerramentaModal
+        open={modalAberto === "seguro"}
+        onClose={fecharModal}
+        title="Análise completa de seguro de vida"
+      >
+        <FerramentaSeguro
+          protecao={plan.protecao}
+          onSave={handleSaveFerramentaSeguros}
+        />
+      </FerramentaModal>
+
+      <FerramentaModal
+        open={modalAberto === "liberdade"}
+        onClose={fecharModal}
+        title="Simulador de liberdade financeira"
+      >
+        <FerramentaLiberdadeFinanceira
+          planejamentoIF={plan.planejamentoIF}
+          onSave={handleSaveFerramentaLiberdade}
+        />
+      </FerramentaModal>
+
+      <FerramentaModal
+        open={modalAberto === "pgbl"}
+        onClose={fecharModal}
+        title="Calculadora PGBL completa"
+      >
+        <FerramentaPGBL
+          fiscal={plan.fiscal}
+          onSave={handleSaveFerramentaPGBL}
+        />
+      </FerramentaModal>
     </div>
   );
 }
