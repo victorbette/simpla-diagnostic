@@ -169,7 +169,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
           <Row label="Teto PGBL (12%)" value={formatCurrency(fiscalResult.tetoPGBL)} />
           <Row
             label="PGBL aportado"
-            value={formatCurrency(plan.fiscal.contribuiPGBL ? plan.fiscal.aportePGBLAnual : 0)}
+            value={formatCurrency(plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)}
           />
           <Row label="Economia tributária potencial" value={`${formatCurrency(fiscalResult.economiaFiscalPotencial)}/ano`} />
           <Row label="Economia realizada" value={`${formatCurrency(fiscalResult.economiaFiscalAtual)}/ano`} />

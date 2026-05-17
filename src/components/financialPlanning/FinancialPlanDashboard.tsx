@@ -372,7 +372,7 @@ export function FinancialPlanDashboard({
 
   const pgblPct =
     fiscalResult.tetoPGBL > 0
-      ? Math.min(100, (plan.fiscal.aportePGBLAnual / fiscalResult.tetoPGBL) * 100)
+      ? Math.min(100, (plan.fiscal.valorPGBLAnual / fiscalResult.tetoPGBL) * 100)
       : 0;
 
   return (
@@ -659,11 +659,11 @@ export function FinancialPlanDashboard({
                 { label: "Teto PGBL (12%)", value: formatCurrency(fiscalResult.tetoPGBL) },
                 {
                   label: "PGBL aportado atualmente",
-                  value: formatCurrency(plan.fiscal.contribuiPGBL ? plan.fiscal.aportePGBLAnual : 0),
+                  value: formatCurrency(plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0),
                 },
                 {
                   label: "Espaço disponível no PGBL",
-                  value: formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.contribuiPGBL ? plan.fiscal.aportePGBLAnual : 0))),
+                  value: formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0))),
                   cls: "text-amber-600",
                 },
                 {

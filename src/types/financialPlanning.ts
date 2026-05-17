@@ -363,57 +363,109 @@ export function calcularProtecao(p: ProtecaoSimplificada): ResultadoProtecao {
 
 export interface PlanejamentoFiscal {
   rendaBrutaAnual: number;
-  contribuiPGBL: boolean;
-  aportePGBLAnual: number;
-  declaraCompleto: boolean;
+  tipoDeclaracao: "simplificada" | "completa" | "nao_sei";
+  temPGBL: boolean;
+  valorPGBLAnual: number;
+  temVGBL: boolean;
+  valorVGBLAnual: number;
+  temEmpresa: boolean;
+  recebeProlabore: boolean;
+  recebeDividendos: boolean;
   temRendimentosIsentos: boolean;
   valorRendimentosIsentos: number;
 }
 
 export const initialPlanejamentoFiscal: PlanejamentoFiscal = {
   rendaBrutaAnual: 0,
-  contribuiPGBL: false,
-  aportePGBLAnual: 0,
-  declaraCompleto: false,
+  tipoDeclaracao: "nao_sei",
+  temPGBL: false,
+  valorPGBLAnual: 0,
+  temVGBL: false,
+  valorVGBLAnual: 0,
+  temEmpresa: false,
+  recebeProlabore: false,
+  recebeDividendos: false,
   temRendimentosIsentos: false,
   valorRendimentosIsentos: 0,
 };
 
 export interface ResultadoFiscal {
+  rendaAnualBruta: number;
   tetoPGBL: number;
-  aportePGBLIdeal: number;
+  pgblAtual: number;
+  espacoPGBL: number;
+  economiaEstimadaPGBL: number;
+  vgblAtual: number;
+  pgblAtingidoTeto: boolean;
+  recomendaCompleta: boolean;
+  recomendaPGBL: boolean;
+  recomendaVGBL: boolean;
+  analisePrevidencia: string;
+  // compat aliases used by Dashboard and Print
   economiaFiscalPotencial: number;
   economiaFiscalAtual: number;
+  aportePGBLIdeal: number;
   gapEconomia: number;
   recomendacoes: string[];
 }
 
-export function calcularFiscal(p: PlanejamentoFiscal): ResultadoFiscal {
-  const tetoPGBL = p.rendaBrutaAnual * 0.12;
+export function calcularFiscal(f: PlanejamentoFiscal): ResultadoFiscal {
+  const rendaAnualBruta = f.rendaBrutaAnual;
+
+  const tetoPGBL = f.tipoDeclaracao === "completa" ? rendaAnualBruta * 0.12 : 0;
+  const pgblAtual = f.temPGBL ? (f.valorPGBLAnual ?? 0) : 0;
+  const espacoPGBL = Math.max(0, tetoPGBL - pgblAtual);
+  const economiaEstimadaPGBL = espacoPGBL * 0.275;
+
+  const vgblAtual = f.temVGBL ? (f.valorVGBLAnual ?? 0) : 0;
+  const pgblAtingidoTeto = pgblAtual >= tetoPGBL && tetoPGBL > 0;
+
+  const recomendaCompleta = rendaAnualBruta > 40000 || f.temEmpresa;
+  const recomendaPGBL = f.tipoDeclaracao === "completa" && espacoPGBL > 0;
+  const recomendaVGBL = !recomendaPGBL || pgblAtingidoTeto;
+
+  const fmt = (v: number) =>
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  let analisePrevidencia = "";
+  if (f.tipoDeclaracao === "completa" && !f.temPGBL) {
+    analisePrevidencia =
+      "Cliente faz declaração completa — PGBL é mais vantajoso pois permite dedução de até " +
+      fmt(tetoPGBL) + " da base de cálculo do IR.";
+  } else if (f.tipoDeclaracao === "completa" && f.temPGBL && pgblAtingidoTeto && !f.temVGBL) {
+    analisePrevidencia =
+      "Cliente já atingiu o teto do PGBL. Para aportes adicionais, o VGBL é mais indicado.";
+  } else if (f.tipoDeclaracao === "simplificada" && !f.temVGBL) {
+    analisePrevidencia =
+      "Cliente faz declaração simplificada — VGBL é mais indicado pois o PGBL não gera benefício fiscal neste caso.";
+  } else if (f.tipoDeclaracao === "simplificada" && f.temPGBL) {
+    analisePrevidencia =
+      "Atenção: cliente tem PGBL mas faz declaração simplificada. O benefício fiscal do PGBL não está sendo aproveitado. Avaliar migração para VGBL ou mudança de tipo de declaração.";
+  }
+
+  // backward-compatible aliases
+  const economiaFiscalPotencial = tetoPGBL * 0.275;
+  const economiaFiscalAtual = pgblAtual * 0.275;
   const aportePGBLIdeal = tetoPGBL;
-  const economiaFiscalPotencial = aportePGBLIdeal * 0.275;
-  const economiaFiscalAtual = p.contribuiPGBL
-    ? Math.min(p.aportePGBLAnual, tetoPGBL) * 0.275
-    : 0;
   const gapEconomia = economiaFiscalPotencial - economiaFiscalAtual;
 
-  const recomendacoes: string[] = [];
-  if (!p.declaraCompleto)
-    recomendacoes.push("Avaliar migração para declaração completa do IR");
-  if (!p.contribuiPGBL && p.rendaBrutaAnual > 0)
-    recomendacoes.push(`Contribuir para PGBL até o teto de 12% da renda bruta (R$ ${tetoPGBL.toLocaleString("pt-BR", { minimumFractionDigits: 2 })})`);
-  else if (p.contribuiPGBL && p.aportePGBLAnual < tetoPGBL)
-    recomendacoes.push(`Aumentar aporte no PGBL para aproveitar o teto fiscal de R$ ${tetoPGBL.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`);
-  if (!p.temRendimentosIsentos)
-    recomendacoes.push("Ampliar exposição a ativos com rendimentos isentos (LCI/LCA, dividendos, FIIs)");
-
   return {
+    rendaAnualBruta,
     tetoPGBL,
-    aportePGBLIdeal,
+    pgblAtual,
+    espacoPGBL,
+    economiaEstimadaPGBL,
+    vgblAtual,
+    pgblAtingidoTeto,
+    recomendaCompleta,
+    recomendaPGBL,
+    recomendaVGBL,
+    analisePrevidencia,
     economiaFiscalPotencial,
     economiaFiscalAtual,
+    aportePGBLIdeal,
     gapEconomia,
-    recomendacoes,
+    recomendacoes: [],
   };
 }
 
