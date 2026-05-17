@@ -1,13 +1,13 @@
-import type { ClasseAtivo } from "./types";
+import type { SimplaCardId } from "./segmentos";
 
 export interface AtivoExtraido {
   nome: string;
   valorBRL: number;
-  classeInferida?: ClasseAtivo;
+  cardInferido?: SimplaCardId;
 }
 
 interface ExtractedResponse {
-  ativos: { nome: string; valorBRL: number; classeInferida?: string }[];
+  ativos: { nome: string; valorBRL: number; cardInferido?: string }[];
 }
 
 async function fileToBase64(file: File): Promise<string> {
@@ -64,25 +64,23 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações:
     {
       "nome": "nome ou ticker exato do ativo",
       "valorBRL": 15000.00,
-      "classeInferida": "rf_rapido"
+      "cardInferido": "resgate_rapido"
     }
   ]
 }
 
-Classes válidas para classeInferida:
-- "rf_rapido": CDB, LCI, LCA, Tesouro Selic, fundos DI, poupança
-- "rf_longo": Tesouro IPCA+, NTN-B, CRI, CRA, debêntures IPCA, Tesouro Prefixado
-- "rv_acoes": ações BR (PETR4, VALE3, BBAS3 etc.)
-- "rv_fiis": FIIs (HGLG11, XPML11 etc.)
-- "internacional_rv": ETFs, stocks, REITs USD (VOO, QQQM, VNQ etc.)
-- "internacional_rf": bonds, treasuries, RF exterior
-- "multi": fundos multimercado, macro, long&short, hedge
-- "cripto": BTC, ETH, criptoativos
+Cards válidos para cardInferido (padrão Simpla Wealth):
+- "resgate_rapido": CDB, LCI, LCA, Tesouro Selic, fundos DI, poupança (liquidez imediata)
+- "resgate_longo": Tesouro IPCA+, NTN-B, CRI, CRA, debêntures IPCA, Tesouro Prefixado (prazo longo)
+- "acoes": ações BR (PETR4, VALE3, BBAS3, ITUB4 etc.)
+- "fiis": fundos imobiliários (HGLG11, XPML11, MXRF11 etc.)
+- "exterior": ativos internacionais em USD (ETFs: VOO, QQQM, VNQ; stocks; bonds; treasuries)
+- "cripto": Bitcoin (BTC), Ethereum (ETH), demais criptoativos
 
 Regras importantes:
 - Se valor estiver em USD, converta pela taxa ~5.0 (ou use o valor em BRL se disponível)
 - Inclua TODOS os ativos visíveis, não deixe nenhum de fora
-- Se não souber a classe, omita classeInferida
+- Se não souber o card, omita cardInferido
 - valorBRL deve ser número (sem R$ ou formatação)`;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,32 +89,22 @@ type ContentBlock = Record<string, any>;
 async function buildContentBlock(file: File): Promise<ContentBlock[]> {
   if (isImage(file)) {
     const b64 = await fileToBase64(file);
-    return [{
-      type: "image",
-      source: { type: "base64", media_type: getMediaType(file), data: b64 },
-    }];
+    return [{ type: "image", source: { type: "base64", media_type: getMediaType(file), data: b64 } }];
   }
   if (isPDF(file)) {
     const b64 = await fileToBase64(file);
-    return [{
-      type: "document",
-      source: { type: "base64", media_type: "application/pdf", data: b64 },
-    }];
+    return [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } }];
   }
   if (isText(file)) {
     const text = await fileToText(file);
     return [{ type: "text", text: `Arquivo: ${file.name}\n\n${text}` }];
   }
-  // fallback: try text
   try {
     const text = await fileToText(file);
     return [{ type: "text", text: `Arquivo: ${file.name}\n\n${text}` }];
   } catch {
     const b64 = await fileToBase64(file);
-    return [{
-      type: "image",
-      source: { type: "base64", media_type: "image/jpeg", data: b64 },
-    }];
+    return [{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } }];
   }
 }
 
@@ -134,11 +122,7 @@ export async function lerCarteiraClaude(
     const blocks = await buildContentBlock(file);
     contentBlocks.push(...blocks);
   }
-
-  contentBlocks.push({
-    type: "text",
-    text: "Extraia todos os ativos da carteira dos arquivos acima e retorne o JSON conforme instruído.",
-  });
+  contentBlocks.push({ type: "text", text: "Extraia todos os ativos da carteira dos arquivos acima e retorne o JSON conforme instruído." });
 
   onProgress?.("Analisando com IA...");
 
@@ -177,16 +161,13 @@ export async function lerCarteiraClaude(
   const parsed = JSON.parse(jsonMatch[0]) as ExtractedResponse;
   if (!Array.isArray(parsed.ativos)) throw new Error("Formato inesperado na resposta da IA.");
 
-  const VALID_CLASSES: ClasseAtivo[] = [
-    "rf_rapido", "rf_longo", "rv_acoes", "rv_fiis",
-    "internacional_rv", "internacional_rf", "multi", "cripto",
-  ];
+  const VALID_CARDS: SimplaCardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto"];
 
   return parsed.ativos.map((a) => ({
     nome: String(a.nome ?? ""),
     valorBRL: Number(a.valorBRL) || 0,
-    classeInferida: VALID_CLASSES.includes(a.classeInferida as ClasseAtivo)
-      ? (a.classeInferida as ClasseAtivo)
+    cardInferido: VALID_CARDS.includes(a.cardInferido as SimplaCardId)
+      ? (a.cardInferido as SimplaCardId)
       : undefined,
   }));
 }

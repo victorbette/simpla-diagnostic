@@ -1,18 +1,15 @@
-import type { Ativo, ClasseAtivo, ItemPlanoAcao, MacroResumo } from "./types";
-import { CLASSES } from "./types";
+import type { Ativo, ItemPlanoAcao, MacroResumo } from "./types";
+import type { SimplaCardId } from "./segmentos";
+import { SIMPLA_CARDS, getCard } from "./segmentos";
 
 export function calcularValorBRL(ativo: Ativo, usdBrl = 5): number {
-  switch (ativo.classe) {
-    case "rf_rapido":
-    case "rf_longo":
-    case "internacional_rf":
-    case "multi":
+  const inputTipo = getCard(ativo.card).inputTipo;
+  switch (inputTipo) {
+    case "posicao_brl":
       return Number(ativo.posicaoBRL) || 0;
-    case "rv_acoes":
-    case "rv_fiis":
-    case "cripto":
+    case "qtde_cotacao_brl":
       return (Number(ativo.quantidade) || 0) * (Number(ativo.cotacaoBRL) || 0);
-    case "internacional_rv":
+    case "qtde_cotacao_usd":
       return (Number(ativo.quantidade) || 0) * (Number(ativo.cotacaoUSD) || 0) * usdBrl;
     default:
       return 0;
@@ -39,45 +36,42 @@ export function derivarMacroResumo(ativos: Ativo[], usdBrl = 5): MacroResumo {
   const total = calcularPatrimonio(ativos, usdBrl);
   if (total <= 0) return { rendaFixa: 0, rendaVariavelBrasil: 0, internacional: 0, multimercados: 0, cripto: 0 };
 
-  function pctClasses(classes: ClasseAtivo[]): number {
-    const sum = ativos.filter((a) => classes.includes(a.classe)).reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
+  function pctCards(cards: SimplaCardId[]): number {
+    const sum = ativos
+      .filter((a) => cards.includes(a.card))
+      .reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
     return Math.round((sum / total) * 1000) / 10;
   }
 
   return {
-    rendaFixa: pctClasses(["rf_rapido", "rf_longo"]),
-    rendaVariavelBrasil: pctClasses(["rv_acoes", "rv_fiis"]),
-    internacional: pctClasses(["internacional_rv", "internacional_rf"]),
-    multimercados: pctClasses(["multi"]),
-    cripto: pctClasses(["cripto"]),
+    rendaFixa: pctCards(["resgate_rapido", "resgate_longo"]),
+    rendaVariavelBrasil: pctCards(["acoes", "fiis"]),
+    internacional: pctCards(["exterior"]),
+    multimercados: 0, // multimercados is separate in v2
+    cripto: pctCards(["cripto"]),
   };
 }
 
 type Perfil = "conservador" | "conservador_moderado" | "moderado" | "arrojado";
 
-export const ALOCACAO_PADRAO: Record<Perfil, Record<ClasseAtivo, number>> = {
+export const ALOCACAO_PADRAO: Record<Perfil, Record<SimplaCardId, number>> = {
   conservador: {
-    rf_rapido: 50, rf_longo: 42, rv_acoes: 2, rv_fiis: 2,
-    internacional_rv: 4, internacional_rf: 0, multi: 0, cripto: 0,
+    resgate_rapido: 50, resgate_longo: 42, acoes: 2, fiis: 2, exterior: 4, cripto: 0,
   },
   conservador_moderado: {
-    rf_rapido: 35, rf_longo: 43, rv_acoes: 7, rv_fiis: 6,
-    internacional_rv: 9, internacional_rf: 0, multi: 0, cripto: 0,
+    resgate_rapido: 35, resgate_longo: 43, acoes: 7, fiis: 6, exterior: 9, cripto: 0,
   },
   moderado: {
-    rf_rapido: 25, rf_longo: 41, rv_acoes: 13, rv_fiis: 7,
-    internacional_rv: 13, internacional_rf: 0, multi: 0, cripto: 1,
+    resgate_rapido: 25, resgate_longo: 41, acoes: 13, fiis: 7, exterior: 13, cripto: 1,
   },
   arrojado: {
-    rf_rapido: 15, rf_longo: 37, rv_acoes: 20, rv_fiis: 9,
-    internacional_rv: 17.5, internacional_rf: 0, multi: 0, cripto: 1.5,
+    resgate_rapido: 15, resgate_longo: 37, acoes: 20, fiis: 9, exterior: 17.5, cripto: 1.5,
   },
 };
 
-export function alocacaoPadraoPorPerfil(perfil: string): Record<ClasseAtivo, number> {
+export function alocacaoPadraoPorPerfil(perfil: string): Record<SimplaCardId, number> {
   return ALOCACAO_PADRAO[perfil as Perfil] ?? {
-    rf_rapido: 0, rf_longo: 0, rv_acoes: 0, rv_fiis: 0,
-    internacional_rv: 0, internacional_rf: 0, multi: 0, cripto: 0,
+    resgate_rapido: 0, resgate_longo: 0, acoes: 0, fiis: 0, exterior: 0, cripto: 0,
   };
 }
 
@@ -88,14 +82,15 @@ export function genId(): string {
 
 export function ativosIniciais(perfil: string | null, patrimonio: number): Ativo[] {
   const padrao = perfil ? alocacaoPadraoPorPerfil(perfil) : null;
-  return CLASSES.filter((c) => !padrao || padrao[c.key] > 0).map((c) => ({
+  return SIMPLA_CARDS.filter((c) => !padrao || padrao[c.id] > 0).map((c) => ({
     id: genId(),
-    classe: c.key,
+    card: c.id,
+    segmento: c.segmentoPadrao,
     nome: c.label,
-    valorBRL: padrao ? ((padrao[c.key] / 100) * patrimonio) : 0,
+    valorBRL: padrao ? (padrao[c.id] / 100) * patrimonio : 0,
     pctCarteira: 0,
-    pctMeta: padrao ? padrao[c.key] : 0,
-    valorMetaBRL: padrao ? ((padrao[c.key] / 100) * patrimonio) : 0,
+    pctMeta: padrao ? padrao[c.id] : 0,
+    valorMetaBRL: padrao ? (padrao[c.id] / 100) * patrimonio : 0,
   }));
 }
 
@@ -128,7 +123,8 @@ export function gerarPlanoAcao(
 
     plano.push({
       id: genId(),
-      classe: rec.classe,
+      card: rec.card,
+      segmento: rec.segmento,
       nomeAtivo: rec.nome,
       tipo,
       valorAtualBRL,
@@ -147,7 +143,8 @@ export function gerarPlanoAcao(
       const vBRL = calcularValorBRL(atual, usdBrl);
       plano.push({
         id: genId(),
-        classe: atual.classe,
+        card: atual.card,
+        segmento: atual.segmento,
         nomeAtivo: atual.nome,
         tipo: "resgatar_total",
         valorAtualBRL: vBRL,
@@ -161,6 +158,9 @@ export function gerarPlanoAcao(
 
   return plano;
 }
+
+// Re-export for convenience
+export { SIMPLA_CARDS, getCard };
 
 export const formatBRL = (n: number): string =>
   (Number(n) || 0).toLocaleString("pt-BR", {
