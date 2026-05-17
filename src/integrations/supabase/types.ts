@@ -88,14 +88,14 @@ export interface Database {
         Row: {
           id: string;
           client_id: string;
-          perfil: Json;
-          patrimonio: Json;
-          objetivos: Json;
+          suitability: Json | null;
+          ativos_atuais: Json;
+          alocacao_personalizada: Json | null;
+          planejamento_if: Json;
           protecao: Json;
-          sucessao: Json;
-          cambio: Json;
-          liberdade_financeira: Json;
-          notas: string;
+          fiscal: Json;
+          sucessorio: Json;
+          notas_assessor: string;
           status: string;
           created_at: string;
           updated_at: string;
@@ -103,14 +103,14 @@ export interface Database {
         Insert: {
           id?: string;
           client_id: string;
-          perfil?: Json;
-          patrimonio?: Json;
-          objetivos?: Json;
+          suitability?: Json | null;
+          ativos_atuais?: Json;
+          alocacao_personalizada?: Json | null;
+          planejamento_if?: Json;
           protecao?: Json;
-          sucessao?: Json;
-          cambio?: Json;
-          liberdade_financeira?: Json;
-          notas?: string;
+          fiscal?: Json;
+          sucessorio?: Json;
+          notas_assessor?: string;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -118,14 +118,14 @@ export interface Database {
         Update: {
           id?: string;
           client_id?: string;
-          perfil?: Json;
-          patrimonio?: Json;
-          objetivos?: Json;
+          suitability?: Json | null;
+          ativos_atuais?: Json;
+          alocacao_personalizada?: Json | null;
+          planejamento_if?: Json;
           protecao?: Json;
-          sucessao?: Json;
-          cambio?: Json;
-          liberdade_financeira?: Json;
-          notas?: string;
+          fiscal?: Json;
+          sucessorio?: Json;
+          notas_assessor?: string;
           status?: string;
           created_at?: string;
           updated_at?: string;
