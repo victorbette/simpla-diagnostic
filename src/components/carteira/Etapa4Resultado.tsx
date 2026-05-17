@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { Fragment, useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
 import {
   PieChart,
   Pie,
@@ -12,10 +13,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Ativo, ClasseAtivo, ItemPlanoAcao } from "@/lib/carteira/types";
-import { formatBRL, formatPct } from "@/lib/carteira/calculos";
+import type { Ativo, ItemPlanoAcao } from "@/lib/carteira/types";
+import { GRUPO_CORES } from "@/lib/carteira/types";
+import { calcularValorBRL, formatBRL, formatPct } from "@/lib/carteira/calculos";
 
 interface Props {
   ativosAtuais: Ativo[];
@@ -30,51 +31,45 @@ interface Props {
   onSave: () => void;
 }
 
-const GRUPOS_DISPLAY = [
+const PERFIL_LABELS_LOCAL: Record<string, string> = {
+  conservador: "Conservador",
+  conservador_moderado: "Conservador Moderado",
+  moderado: "Moderado",
+  arrojado: "Arrojado",
+};
+
+const GRUPOS_DEF = [
   {
     nome: "Renda Fixa",
-    classes: ["rf_rapido", "rf_longo"] as ClasseAtivo[],
-    cor: "#2563EB",
-    subclasses: [
-      { key: "rf_rapido" as ClasseAtivo, label: "Resgate Rápido" },
-      { key: "rf_longo" as ClasseAtivo, label: "Resgate Longo" },
-    ],
+    classes: ["rf_rapido", "rf_longo"] as const,
+    cor: GRUPO_CORES["Renda Fixa"],
   },
   {
-    nome: "RV Brasil",
-    classes: ["rv_acoes", "rv_fiis"] as ClasseAtivo[],
-    cor: "#16A34A",
-    subclasses: [
-      { key: "rv_acoes" as ClasseAtivo, label: "Ações" },
-      { key: "rv_fiis" as ClasseAtivo, label: "FIIs" },
-    ],
+    nome: "Renda Variável Brasil",
+    classes: ["rv_acoes", "rv_fiis"] as const,
+    cor: GRUPO_CORES["Renda Variável Brasil"],
   },
   {
     nome: "Internacional",
-    classes: ["internacional_rv", "internacional_rf"] as ClasseAtivo[],
-    cor: "#D97706",
-    subclasses: [
-      { key: "internacional_rv" as ClasseAtivo, label: "RV Exterior" },
-      { key: "internacional_rf" as ClasseAtivo, label: "RF Exterior" },
-    ],
+    classes: ["internacional_rv", "internacional_rf"] as const,
+    cor: GRUPO_CORES["Internacional"],
   },
   {
     nome: "Multimercados",
-    classes: ["multi"] as ClasseAtivo[],
-    cor: "#7C3AED",
-    subclasses: [{ key: "multi" as ClasseAtivo, label: "Multimercados" }],
+    classes: ["multi"] as const,
+    cor: GRUPO_CORES["Multimercados"],
   },
   {
     nome: "Criptoativos",
-    classes: ["cripto"] as ClasseAtivo[],
-    cor: "#EA580C",
-    subclasses: [{ key: "cripto" as ClasseAtivo, label: "Criptoativos" }],
+    classes: ["cripto"] as const,
+    cor: GRUPO_CORES["Criptoativos"],
   },
-];
+] as const;
 
-function formatBRLAbbr(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`;
+function fmtK(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (abs >= 1000) return `${(n / 1000).toFixed(0)}K`;
   return formatBRL(n);
 }
 
@@ -84,9 +79,9 @@ export function Etapa4Resultado({
   planoAcao,
   patrimonio,
   notaConsultor,
-  clientName: _clientName,
-  clientProfile: _clientProfile,
-  usdBrl: _usdBrl,
+  clientName,
+  clientProfile,
+  usdBrl,
   onGoToEtapa3,
   onSave,
 }: Props) {
@@ -94,67 +89,47 @@ export function Etapa4Resultado({
 
   function toggleGroup(nome: string) {
     setOpenGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(nome)) next.delete(nome);
-      else next.add(nome);
-      return next;
+      const n = new Set(prev);
+      n.has(nome) ? n.delete(nome) : n.add(nome);
+      return n;
     });
   }
 
-  // Helpers
-  function sumAtualBRL(classes: ClasseAtivo[]) {
-    return ativosAtuais
-      .filter((a) => classes.includes(a.classe))
-      .reduce((s, a) => s + a.valorBRL, 0);
-  }
-  function sumAtualPct(classes: ClasseAtivo[]) {
-    return patrimonio > 0 ? (sumAtualBRL(classes) / patrimonio) * 100 : 0;
-  }
-  function sumMetaPct(classes: ClasseAtivo[]) {
-    return ativosRecomendados
-      .filter((a) => classes.includes(a.classe))
-      .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
-  }
-  function sumMetaBRL(classes: ClasseAtivo[]) {
-    return (sumMetaPct(classes) / 100) * patrimonio;
-  }
-
-  // Pie chart data
-  const pieAtualData = useMemo(
+  const grupoAtual = useMemo(
     () =>
-      GRUPOS_DISPLAY.map((g) => ({
-        name: g.nome,
-        value: sumAtualPct(g.classes),
-        cor: g.cor,
-      })).filter((d) => d.value > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ativosAtuais, patrimonio]
+      GRUPOS_DEF.map((g) => {
+        const v = ativosAtuais
+          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
+        const pct = patrimonio > 0 ? (v / patrimonio) * 100 : 0;
+        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor };
+      }),
+    [ativosAtuais, usdBrl, patrimonio]
   );
 
-  const pieMetaData = useMemo(
+  const grupoMeta = useMemo(
     () =>
-      GRUPOS_DISPLAY.map((g) => ({
-        name: g.nome,
-        value: sumMetaPct(g.classes),
-        cor: g.cor,
-      })).filter((d) => d.value > 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ativosRecomendados, patrimonio]
+      GRUPOS_DEF.map((g) => {
+        const v = ativosRecomendados
+          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .reduce((s, a) => s + (a.valorMetaBRL ?? 0), 0);
+        const pct = ativosRecomendados
+          .filter((a) => (g.classes as readonly string[]).includes(a.classe))
+          .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
+        return { nome: g.nome, valor: v, pct: Math.round(pct * 10) / 10, cor: g.cor };
+      }),
+    [ativosRecomendados]
   );
 
-  // Bar chart data
-  const barData = useMemo(
-    () =>
-      GRUPOS_DISPLAY.map((g) => ({
-        nome: g.nome,
-        Atual: Math.round(sumAtualBRL(g.classes)),
-        Meta: Math.round(sumMetaBRL(g.classes)),
-      })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ativosAtuais, ativosRecomendados, patrimonio]
-  );
+  const pieAtual = grupoAtual.filter((g) => g.pct > 0);
+  const pieMeta = grupoMeta.filter((g) => g.pct > 0);
 
-  // Plano resumo
+  const barData = GRUPOS_DEF.map((g, i) => ({
+    name: g.nome.split(" ")[0] + (g.nome.includes("Variável") ? " BR" : ""),
+    Atual: grupoAtual[i].valor,
+    Meta: grupoMeta[i].valor,
+  })).filter((d) => d.Atual > 0 || d.Meta > 0);
+
   const aportes = planoAcao.filter(
     (p) => p.tipo === "aportar" || p.tipo === "novo_ativo"
   );
@@ -163,257 +138,215 @@ export function Etapa4Resultado({
   );
   const mantidos = planoAcao.filter((p) => p.tipo === "manter");
 
-  const totalAportes = aportes.reduce((s, p) => s + p.movimentacaoBRL, 0);
-  const totalResgates = resgates.reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
-
-  // Comparison table totals
-  const totalAtualBRL = ativosAtuais.reduce((s, a) => s + a.valorBRL, 0);
-  const totalMetaBRL = (ativosRecomendados.reduce((s, a) => s + (a.pctMeta ?? 0), 0) / 100) * patrimonio;
-
   return (
-    <div className="space-y-8">
-      {/* SECTION 1: Two pie charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Carteira Atual */}
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <h3 className="font-semibold text-sm">
-            Carteira Atual — {formatBRL(patrimonio)}
-          </h3>
-          {pieAtualData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={pieAtualData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius="50%"
-                    outerRadius="80%"
-                    paddingAngle={2}
-                  >
-                    {pieAtualData.map((entry, index) => (
-                      <Cell key={index} fill={entry.cor} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => [formatPct(v), ""]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {pieAtualData.map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-1 text-xs">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ backgroundColor: entry.cor }}
-                    />
-                    <span className="text-muted-foreground">
-                      {entry.name} | {formatPct(entry.value)} |{" "}
-                      {formatBRL((entry.value / 100) * patrimonio)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Sem ativos na carteira atual.
-            </p>
-          )}
-        </div>
-
-        {/* Carteira Recomendada */}
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <h3 className="font-semibold text-sm">
-            Proposta — {formatBRL(patrimonio)}
-          </h3>
-          {pieMetaData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={pieMetaData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius="50%"
-                    outerRadius="80%"
-                    paddingAngle={2}
-                  >
-                    {pieMetaData.map((entry, index) => (
-                      <Cell key={index} fill={entry.cor} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v: number) => [formatPct(v), ""]} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {pieMetaData.map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-1 text-xs">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ backgroundColor: entry.cor }}
-                    />
-                    <span className="text-muted-foreground">
-                      {entry.name} | {formatPct(entry.value)} |{" "}
-                      {formatBRL((entry.value / 100) * patrimonio)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Sem ativos na carteira recomendada.
-            </p>
-          )}
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="space-y-2 mb-4">
+        <h2 className="text-xl font-bold">{clientName}</h2>
+        {clientProfile && (
+          <p className="text-sm text-muted-foreground">
+            Perfil: {PERFIL_LABELS_LOCAL[clientProfile] ?? clientProfile}
+          </p>
+        )}
       </div>
 
-      {/* SECTION 2: Comparison table */}
-      <div className="rounded-lg border bg-card overflow-hidden">
-        <div className="px-4 py-3 border-b">
+      {/* SECTION 1 — Two Pie Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(
+          [
+            { title: "Carteira Atual", data: pieAtual, subtit: formatBRL(patrimonio) },
+            { title: "Carteira Recomendada", data: pieMeta, subtit: formatBRL(patrimonio) },
+          ] as const
+        ).map(({ title, data, subtit }) => (
+          <div key={title} className="rounded-lg border bg-card p-4">
+            <h3 className="font-semibold text-sm mb-0.5">{title}</h3>
+            <p className="text-xs text-muted-foreground mb-3">{subtit}</p>
+            {data.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={data}
+                      dataKey="pct"
+                      nameKey="nome"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="50%"
+                      outerRadius="80%"
+                      paddingAngle={2}
+                    >
+                      {data.map((d, i) => (
+                        <Cell key={i} fill={d.cor} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => formatPct(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                  {data.map((d) => (
+                    <div key={d.nome} className="flex items-center gap-1 text-xs">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: d.cor }}
+                      />
+                      <span>{d.nome}</span>
+                      <span className="text-muted-foreground">{formatPct(d.pct)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-sm text-muted-foreground">
+                Sem dados
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* SECTION 2 — Comparison Table */}
+      <div className="rounded-lg border overflow-hidden">
+        <div className="bg-muted px-4 py-2">
           <h3 className="font-semibold text-sm">Comparativo por classe</h3>
         </div>
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="bg-muted text-muted-foreground font-normal">
-              <th className="text-left px-4 py-2 font-normal">Grupo</th>
-              <th className="text-right px-3 py-2 font-normal">% Atual</th>
-              <th className="text-right px-3 py-2 font-normal">R$ Atual</th>
-              <th className="text-right px-3 py-2 font-normal">% Meta</th>
-              <th className="text-right px-3 py-2 font-normal">R$ Meta</th>
-              <th className="text-right px-3 py-2 font-normal">Dif R$</th>
-              <th className="text-right px-3 py-2 font-normal">Dif %</th>
+        <table className="w-full text-sm">
+          <thead className="text-muted-foreground border-b text-xs">
+            <tr>
+              <th className="px-4 py-2 text-left font-normal">Grupo</th>
+              <th className="px-4 py-2 text-right font-normal">% Atual</th>
+              <th className="px-4 py-2 text-right font-normal">R$ Atual</th>
+              <th className="px-4 py-2 text-right font-normal">% Meta</th>
+              <th className="px-4 py-2 text-right font-normal">R$ Meta</th>
+              <th className="px-4 py-2 text-right font-normal">Dif R$</th>
+              <th className="px-4 py-2 text-right font-normal">Dif %</th>
             </tr>
           </thead>
           <tbody>
-            {GRUPOS_DISPLAY.map((g) => {
-              const atualBRL = sumAtualBRL(g.classes);
-              const atualPct = sumAtualPct(g.classes);
-              const metaPct = sumMetaPct(g.classes);
-              const metaBRL = sumMetaBRL(g.classes);
-              const difBRL = metaBRL - atualBRL;
-              const difPct = metaPct - atualPct;
+            {GRUPOS_DEF.map((g, i) => {
+              const atual = grupoAtual[i];
+              const meta = grupoMeta[i];
+              const difR = meta.valor - atual.valor;
+              const difP = meta.pct - atual.pct;
               const isOpen = openGroups.has(g.nome);
-
               return (
-                <>
+                <Fragment key={g.nome}>
                   <tr
-                    key={g.nome}
-                    className="border-t cursor-pointer hover:bg-muted/40 font-medium"
+                    className="border-t font-semibold cursor-pointer hover:bg-muted/50"
                     onClick={() => toggleGroup(g.nome)}
                   >
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground text-xs">
-                          {isOpen ? "▼" : "▶"}
-                        </span>
                         <span
-                          className="inline-block h-2 w-2 rounded-full"
+                          className="inline-block h-2.5 w-2.5 rounded-full"
                           style={{ backgroundColor: g.cor }}
                         />
                         {g.nome}
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right">{formatPct(atualPct)}</td>
-                    <td className="px-3 py-2 text-right">{formatBRL(atualBRL)}</td>
-                    <td className="px-3 py-2 text-right">{formatPct(metaPct)}</td>
-                    <td className="px-3 py-2 text-right">{formatBRL(metaBRL)}</td>
+                    <td className="px-4 py-2.5 text-right">{formatPct(atual.pct)}</td>
+                    <td className="px-4 py-2.5 text-right">{formatBRL(atual.valor)}</td>
+                    <td className="px-4 py-2.5 text-right">{formatPct(meta.pct)}</td>
+                    <td className="px-4 py-2.5 text-right">{formatBRL(meta.valor)}</td>
                     <td
                       className={cn(
-                        "px-3 py-2 text-right",
-                        difBRL > 0 ? "text-green-600" : difBRL < 0 ? "text-red-600" : ""
+                        "px-4 py-2.5 text-right",
+                        difR > 0
+                          ? "text-green-600"
+                          : difR < 0
+                          ? "text-red-600"
+                          : "text-muted-foreground"
                       )}
                     >
-                      {difBRL !== 0
-                        ? (difBRL > 0 ? "+" : "") + formatBRL(difBRL)
-                        : "—"}
+                      {difR === 0 ? "—" : `${difR > 0 ? "+" : ""}${formatBRL(difR)}`}
                     </td>
                     <td
                       className={cn(
-                        "px-3 py-2 text-right",
-                        difPct > 0 ? "text-green-600" : difPct < 0 ? "text-red-600" : ""
+                        "px-4 py-2.5 text-right",
+                        difP > 0
+                          ? "text-green-600"
+                          : difP < 0
+                          ? "text-red-600"
+                          : "text-muted-foreground"
                       )}
                     >
-                      {difPct !== 0
-                        ? (difPct > 0 ? "+" : "") + formatPct(difPct)
-                        : "—"}
+                      {difP === 0 ? "—" : `${difP > 0 ? "+" : ""}${formatPct(difP)}`}
                     </td>
                   </tr>
                   {isOpen &&
-                    g.subclasses.map((sub) => {
-                      const subAtualBRL = sumAtualBRL([sub.key]);
-                      const subAtualPct = sumAtualPct([sub.key]);
-                      const subMetaPct = sumMetaPct([sub.key]);
-                      const subMetaBRL = sumMetaBRL([sub.key]);
-                      const subDifBRL = subMetaBRL - subAtualBRL;
-                      const subDifPct = subMetaPct - subAtualPct;
+                    g.classes.map((classe) => {
+                      const aV = ativosAtuais
+                        .filter((a) => a.classe === classe)
+                        .reduce((s, a) => s + calcularValorBRL(a, usdBrl), 0);
+                      const mV = ativosRecomendados
+                        .filter((a) => a.classe === classe)
+                        .reduce((s, a) => s + (a.valorMetaBRL ?? 0), 0);
+                      const aP = patrimonio > 0 ? (aV / patrimonio) * 100 : 0;
+                      const mP = ativosRecomendados
+                        .filter((a) => a.classe === classe)
+                        .reduce((s, a) => s + (a.pctMeta ?? 0), 0);
+                      const dR = mV - aV;
+                      const dP = mP - aP;
                       return (
-                        <tr key={sub.key} className="border-t bg-muted/20 text-muted-foreground">
-                          <td className="px-4 py-1.5 pl-10">{sub.label}</td>
-                          <td className="px-3 py-1.5 text-right">{formatPct(subAtualPct)}</td>
-                          <td className="px-3 py-1.5 text-right">{formatBRL(subAtualBRL)}</td>
-                          <td className="px-3 py-1.5 text-right">{formatPct(subMetaPct)}</td>
-                          <td className="px-3 py-1.5 text-right">{formatBRL(subMetaBRL)}</td>
+                        <tr
+                          key={classe}
+                          className="border-t bg-muted/20 text-xs text-muted-foreground"
+                        >
+                          <td className="px-4 py-2 pl-10">{classe}</td>
+                          <td className="px-4 py-2 text-right">{formatPct(aP)}</td>
+                          <td className="px-4 py-2 text-right">{formatBRL(aV)}</td>
+                          <td className="px-4 py-2 text-right">{formatPct(mP)}</td>
+                          <td className="px-4 py-2 text-right">{formatBRL(mV)}</td>
                           <td
                             className={cn(
-                              "px-3 py-1.5 text-right",
-                              subDifBRL > 0 ? "text-green-600" : subDifBRL < 0 ? "text-red-600" : ""
+                              "px-4 py-2 text-right",
+                              dR > 0 ? "text-green-600" : dR < 0 ? "text-red-600" : ""
                             )}
                           >
-                            {subDifBRL !== 0
-                              ? (subDifBRL > 0 ? "+" : "") + formatBRL(subDifBRL)
-                              : "—"}
+                            {dR === 0 ? "—" : `${dR > 0 ? "+" : ""}${formatBRL(dR)}`}
                           </td>
                           <td
                             className={cn(
-                              "px-3 py-1.5 text-right",
-                              subDifPct > 0 ? "text-green-600" : subDifPct < 0 ? "text-red-600" : ""
+                              "px-4 py-2 text-right",
+                              dP > 0 ? "text-green-600" : dP < 0 ? "text-red-600" : ""
                             )}
                           >
-                            {subDifPct !== 0
-                              ? (subDifPct > 0 ? "+" : "") + formatPct(subDifPct)
-                              : "—"}
+                            {dP === 0 ? "—" : `${dP > 0 ? "+" : ""}${formatPct(dP)}`}
                           </td>
                         </tr>
                       );
                     })}
-                </>
+                </Fragment>
               );
             })}
-            {/* Total row */}
-            <tr className="border-t-2 font-bold">
-              <td className="px-4 py-2">TOTAL</td>
-              <td className="px-3 py-2 text-right">
-                {formatPct(patrimonio > 0 ? (totalAtualBRL / patrimonio) * 100 : 0)}
-              </td>
-              <td className="px-3 py-2 text-right">{formatBRL(totalAtualBRL)}</td>
-              <td className="px-3 py-2 text-right">
-                {formatPct(
-                  ativosRecomendados.reduce((s, a) => s + (a.pctMeta ?? 0), 0)
-                )}
-              </td>
-              <td className="px-3 py-2 text-right">{formatBRL(totalMetaBRL)}</td>
-              <td
-                className={cn(
-                  "px-3 py-2 text-right",
-                  totalMetaBRL - totalAtualBRL > 0 ? "text-green-600" : "text-red-600"
-                )}
-              >
-                {formatBRL(totalMetaBRL - totalAtualBRL)}
-              </td>
-              <td className="px-3 py-2 text-right">—</td>
-            </tr>
           </tbody>
+          <tfoot className="border-t-2 font-bold">
+            <tr>
+              <td className="px-4 py-2.5">Total</td>
+              <td className="px-4 py-2.5 text-right">
+                {formatPct(grupoAtual.reduce((s, g) => s + g.pct, 0))}
+              </td>
+              <td className="px-4 py-2.5 text-right">{formatBRL(patrimonio)}</td>
+              <td className="px-4 py-2.5 text-right">
+                {formatPct(grupoMeta.reduce((s, g) => s + g.pct, 0))}
+              </td>
+              <td className="px-4 py-2.5 text-right">
+                {formatBRL(grupoMeta.reduce((s, g) => s + g.valor, 0))}
+              </td>
+              <td className="px-4 py-2.5 text-right text-muted-foreground">—</td>
+              <td className="px-4 py-2.5 text-right text-muted-foreground">—</td>
+            </tr>
+          </tfoot>
         </table>
       </div>
 
-      {/* SECTION 3: Bar chart */}
-      <div className="rounded-lg border bg-card p-4 space-y-2">
-        <h3 className="font-semibold text-sm">Atual vs. Proposta por grupo (R$)</h3>
+      {/* SECTION 3 — Bar Chart */}
+      <div className="rounded-lg border bg-card p-4">
+        <h3 className="font-semibold text-sm mb-3">Atual vs. Proposta por grupo (R$)</h3>
         <ResponsiveContainer width="100%" height={260}>
-          <BarChart data={barData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="nome" tick={{ fontSize: 11 }} />
-            <YAxis tickFormatter={formatBRLAbbr} tick={{ fontSize: 11 }} width={60} />
+          <BarChart data={barData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+            <YAxis tickFormatter={fmtK} tick={{ fontSize: 11 }} width={56} />
             <Tooltip formatter={(v: number) => formatBRL(v)} />
             <Legend />
             <Bar dataKey="Atual" fill="#94a3b8" radius={[3, 3, 0, 0]} />
@@ -422,80 +355,72 @@ export function Etapa4Resultado({
         </ResponsiveContainer>
       </div>
 
-      {/* SECTION 4: Plano resumo */}
+      {/* SECTION 4 — Plan Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Aportes e novos */}
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <h3 className="font-semibold text-sm text-green-700">Aportes e novos</h3>
-          <div className="space-y-1">
-            {aportes.map((item) => (
-              <div key={item.id} className="flex justify-between text-xs">
-                <span className="truncate mr-2">{item.nomeAtivo}</span>
-                <span className="text-green-600 font-medium whitespace-nowrap">
-                  +{formatBRL(item.movimentacaoBRL)}
+        <div className="rounded-lg border p-4 space-y-2">
+          <h4 className="font-semibold text-sm text-green-700">Aportes e novos</h4>
+          {aportes.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum</p>
+          ) : (
+            <>
+              {aportes.map((item) => (
+                <div key={item.id} className="flex justify-between text-xs">
+                  <span className="truncate">{item.nomeAtivo}</span>
+                  <span className="text-green-600 font-medium ml-2 shrink-0">
+                    +{formatBRL(item.movimentacaoBRL)}
+                  </span>
+                </div>
+              ))}
+              <div className="border-t pt-1 flex justify-between text-xs font-semibold">
+                <span>Total</span>
+                <span className="text-green-600">
+                  {formatBRL(aportes.reduce((s, p) => s + p.movimentacaoBRL, 0))}
                 </span>
               </div>
-            ))}
-            {aportes.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum</p>
-            )}
-          </div>
-          {aportes.length > 0 && (
-            <div className="border-t pt-2">
-              <div className="flex justify-between text-xs font-bold">
-                <span>Total</span>
-                <span className="text-green-600">+{formatBRL(totalAportes)}</span>
-              </div>
-            </div>
+            </>
           )}
         </div>
-
-        {/* Resgates */}
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <h3 className="font-semibold text-sm text-red-700">Resgates</h3>
-          <div className="space-y-1">
-            {resgates.map((item) => (
-              <div key={item.id} className="flex justify-between text-xs">
-                <span className="truncate mr-2">{item.nomeAtivo}</span>
-                <span className="text-red-600 font-medium whitespace-nowrap">
-                  {formatBRL(item.movimentacaoBRL)}
+        <div className="rounded-lg border p-4 space-y-2">
+          <h4 className="font-semibold text-sm text-red-700">Resgates</h4>
+          {resgates.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum</p>
+          ) : (
+            <>
+              {resgates.map((item) => (
+                <div key={item.id} className="flex justify-between text-xs">
+                  <span className="truncate">{item.nomeAtivo}</span>
+                  <span className="text-red-600 font-medium ml-2 shrink-0">
+                    {formatBRL(item.movimentacaoBRL)}
+                  </span>
+                </div>
+              ))}
+              <div className="border-t pt-1 flex justify-between text-xs font-semibold">
+                <span>Total</span>
+                <span className="text-red-600">
+                  {formatBRL(resgates.reduce((s, p) => s + p.movimentacaoBRL, 0))}
                 </span>
               </div>
-            ))}
-            {resgates.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum</p>
-            )}
-          </div>
-          {resgates.length > 0 && (
-            <div className="border-t pt-2">
-              <div className="flex justify-between text-xs font-bold">
-                <span>Total</span>
-                <span className="text-red-600">-{formatBRL(totalResgates)}</span>
-              </div>
-            </div>
+            </>
           )}
         </div>
-
-        {/* Mantidos */}
-        <div className="rounded-lg border bg-card p-4 space-y-2">
-          <h3 className="font-semibold text-sm text-muted-foreground">Mantidos</h3>
-          <div className="space-y-1">
-            {mantidos.map((item) => (
+        <div className="rounded-lg border p-4 space-y-2">
+          <h4 className="font-semibold text-sm text-muted-foreground">Mantidos</h4>
+          {mantidos.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Nenhum</p>
+          ) : (
+            mantidos.map((item) => (
               <div key={item.id} className="flex justify-between text-xs">
-                <span className="truncate mr-2">{item.nomeAtivo}</span>
-                <span className="text-muted-foreground whitespace-nowrap">
+                <span className="truncate">{item.nomeAtivo}</span>
+                <span className="text-muted-foreground ml-2 shrink-0">
                   {formatBRL(item.valorAtualBRL)}
                 </span>
               </div>
-            ))}
-            {mantidos.length === 0 && (
-              <p className="text-xs text-muted-foreground">Nenhum</p>
-            )}
-          </div>
+            ))
+          )}
         </div>
       </div>
 
-      {/* SECTION 5: Nota do consultor */}
+      {/* SECTION 5 — Nota */}
       {notaConsultor && (
         <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
           <div className="flex items-center justify-between">
@@ -504,13 +429,11 @@ export function Etapa4Resultado({
               Editar
             </Button>
           </div>
-          <p className="text-sm whitespace-pre-wrap text-muted-foreground">
-            {notaConsultor}
-          </p>
+          <p className="text-sm whitespace-pre-wrap text-muted-foreground">{notaConsultor}</p>
         </div>
       )}
 
-      {/* Action buttons */}
+      {/* Action Buttons */}
       <div className="flex gap-3 pt-4 border-t">
         <Button onClick={onSave}>Salvar carteira</Button>
         <Button variant="outline" onClick={() => window.print()}>
