@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -21,31 +22,13 @@ interface PlanejamentoIFFormProps {
   onChange: (v: PlanejamentoIF) => void;
 }
 
-function campo<K extends keyof PlanejamentoIF>(
-  value: PlanejamentoIF,
-  onChange: (v: PlanejamentoIF) => void,
-  key: K,
-  val: PlanejamentoIF[K]
-) {
-  onChange({ ...value, [key]: val });
-}
-
 export function PlanejamentoIFForm({ value, onChange }: PlanejamentoIFFormProps) {
-  const set = <K extends keyof PlanejamentoIF>(key: K, val: PlanejamentoIF[K]) =>
-    campo(value, onChange, key, val);
+  const [possuiPrevidencia, setPossuiPrevidencia] = useState(false);
+  const [contribuiINSS, setContribuiINSS] = useState(false);
+  const [temAluguel, setTemAluguel] = useState(false);
 
-  const [possuiPrevidencia, setPossuiPrevidencia] = [
-    (value as unknown as { _possuiPrevidencia?: boolean })._possuiPrevidencia ?? false,
-    (v: boolean) => onChange({ ...value, ...{ _possuiPrevidencia: v } } as PlanejamentoIF),
-  ];
-  const [contribuiINSS, setContribuiINSS] = [
-    (value as unknown as { _contribuiINSS?: boolean })._contribuiINSS ?? false,
-    (v: boolean) => onChange({ ...value, ...{ _contribuiINSS: v } } as PlanejamentoIF),
-  ];
-  const [temAluguel, setTemAluguel] = [
-    (value as unknown as { _temAluguel?: boolean })._temAluguel ?? false,
-    (v: boolean) => onChange({ ...value, ...{ _temAluguel: v } } as PlanejamentoIF),
-  ];
+  const set = <K extends keyof PlanejamentoIF>(key: K, val: PlanejamentoIF[K]) =>
+    onChange({ ...value, [key]: val });
 
   const resultado = calcularIF(value);
   const anosRestantes = Math.max(0, value.idadeMeta - value.idadeAtual);
@@ -187,7 +170,10 @@ export function PlanejamentoIFForm({ value, onChange }: PlanejamentoIFFormProps)
             <div className="ml-8 space-y-3">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-sm">Valor acumulado na previdência</Label>
-                <CurrencyInput value={0} onChange={() => {}} />
+                <CurrencyInput
+                  value={value.valorPrevidencia ?? 0}
+                  onChange={(v) => set("valorPrevidencia", v)}
+                />
               </div>
             </div>
           )}
@@ -217,8 +203,8 @@ export function PlanejamentoIFForm({ value, onChange }: PlanejamentoIFFormProps)
             <div className="ml-8 flex flex-col gap-1.5">
               <Label className="text-sm">Renda de aluguel mensal</Label>
               <CurrencyInput
-                value={value.rendaPassivaAtual}
-                onChange={(v) => set("rendaPassivaAtual", v)}
+                value={value.rendaAluguelMensal ?? 0}
+                onChange={(v) => set("rendaAluguelMensal", v)}
               />
             </div>
           )}

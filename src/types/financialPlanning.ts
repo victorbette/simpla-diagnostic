@@ -247,6 +247,8 @@ export interface PlanejamentoIF {
   taxaRetornoAnual: number;
   inflacaoAnual: number;
   metodologia: "regra4porcento" | "renda_perpetua" | "renda_temporaria";
+  valorPrevidencia: number;
+  rendaAluguelMensal: number;
 }
 
 export const initialPlanejamentoIF: PlanejamentoIF = {
@@ -259,6 +261,8 @@ export const initialPlanejamentoIF: PlanejamentoIF = {
   taxaRetornoAnual: 6,
   inflacaoAnual: 4,
   metodologia: "regra4porcento",
+  valorPrevidencia: 0,
+  rendaAluguelMensal: 0,
 };
 
 export interface ResultadoIF {
