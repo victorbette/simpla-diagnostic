@@ -359,6 +359,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
           {secaoAtiva === "assetAllocation" && (
             <SecaoAssetAllocation
               plan={plan}
+              clientName={clientName}
               comentario={comentarios.assetAllocation}
               onComentarioChange={(v) => setComentario("assetAllocation", v)}
               status={statusSecoes.assetAllocation}

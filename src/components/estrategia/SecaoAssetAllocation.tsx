@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   PieChart,
   Pie,
@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Layers } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan, MacroalocacaoAlvo } from "@/types/financialPlanning";
 import {
@@ -22,11 +22,14 @@ import {
   ALOCACAO_ALVO,
   calcularAlocacaoAtual,
 } from "@/types/financialPlanning";
+import { FerramentaCarteira } from "@/components/carteira";
+import type { CarteiraResultado } from "@/lib/carteira/types";
 
 type SectionStatus = "pendente" | "revisando" | "concluido";
 
 interface Props {
   plan: FinancialPlan;
+  clientName: string;
   comentario: string;
   onComentarioChange: (v: string) => void;
   status: SectionStatus;
@@ -47,7 +50,25 @@ function scoreBadge(score: number) {
   return { label: "Risco", cls: "bg-red-100 text-red-800" };
 }
 
-export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, status, onStatusChange }: Props) {
+function getCarteiraTimestamp(clientId: string): string | null {
+  try {
+    const raw = localStorage.getItem(`carteira_${clientId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { savedAt?: string };
+    return parsed.savedAt ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function SecaoAssetAllocation({
+  plan, clientName, comentario, onComentarioChange, status, onStatusChange,
+}: Props) {
+  const [mostrarCarteira, setMostrarCarteira] = useState(false);
+  const [carteiraSalvaEm, setCarteiraSalvaEm] = useState<string | null>(
+    () => getCarteiraTimestamp(plan.clientId)
+  );
+
   const total =
     plan.ativosAtuais.total ||
     ASSET_KEYS.reduce((s, k) => s + (plan.ativosAtuais[k] ?? 0), 0);
@@ -77,6 +98,25 @@ export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, sta
     : [];
 
   const disabled = status === "concluido";
+
+  function handleCarteiraSave(_resultado: CarteiraResultado) {
+    const ts = getCarteiraTimestamp(plan.clientId);
+    setCarteiraSalvaEm(ts);
+    setMostrarCarteira(false);
+  }
+
+  if (mostrarCarteira) {
+    return (
+      <FerramentaCarteira
+        clientName={clientName}
+        clientId={plan.clientId}
+        clientProfile={plan.suitability?.perfil ?? null}
+        patrimonyInicial={total}
+        onClose={() => setMostrarCarteira(false)}
+        onSave={handleCarteiraSave}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -142,6 +182,20 @@ export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, sta
                 </ul>
               </div>
             )}
+
+            {/* Carteira tool button */}
+            <div className="pt-1 flex items-center gap-3 flex-wrap">
+              <Button variant="outline" size="sm" onClick={() => setMostrarCarteira(true)}>
+                <Layers className="h-3.5 w-3.5 mr-1.5" />
+                Montar carteira completa →
+              </Button>
+              {carteiraSalvaEm && (
+                <Badge className="bg-emerald-100 text-emerald-800 text-xs gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Carteira montada em {new Date(carteiraSalvaEm).toLocaleDateString("pt-BR")}
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
