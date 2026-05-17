@@ -27,3 +27,4 @@ App de diagnóstico financeiro para assessores de investimento.
 ## Deploy
 O projeto está configurado para Vercel.
 Adicione as variáveis de ambiente no painel da Vercel.
+
