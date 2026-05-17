@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { Users, Activity, LogOut } from "lucide-react";
+import { Users, Activity, LogOut, FileBarChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientsPage } from "@/components/ClientsPage";
 import { DiagnosticPage } from "@/components/DiagnosticPage";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Simulation } from "@/hooks/useClientStore";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-type ActiveTab = "simulator" | "clients" | "diagnostic";
+type ActiveTab = "simulator" | "clients" | "diagnostic" | "financial-planning";
 
 export function HomePage() {
   const { signOut } = useAuth();
@@ -18,6 +26,8 @@ export function HomePage() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("clients");
   const [diagnosticClientId, setDiagnosticClientId] = useState<string | undefined>(undefined);
+  const [fpClientId, setFpClientId] = useState<string | undefined>(undefined);
+  const [fpClientName, setFpClientName] = useState<string>("");
 
   function handleNewDiagnostic(clientId: string) {
     setDiagnosticClientId(clientId);
@@ -28,10 +38,36 @@ export function HomePage() {
     setActiveTab("simulator");
   }
 
+  function handleNewFinancialPlan(clientId: string, clientName: string) {
+    setFpClientId(clientId);
+    setFpClientName(clientName);
+    setActiveTab("financial-planning");
+  }
+
+  function handleFpClientSelect(clientId: string) {
+    const client = clientStore.clients.find((c) => c.id === clientId);
+    if (client) {
+      setFpClientId(clientId);
+      setFpClientName(client.nome);
+    }
+  }
+
   const navItems: { id: ActiveTab; label: string; Icon: React.ElementType }[] = [
     { id: "clients", label: "Clientes", Icon: Users },
     { id: "diagnostic", label: "Diagnóstico", Icon: Activity },
+    { id: "financial-planning", label: "Planejamento", Icon: FileBarChart },
   ];
+
+  // FinancialPlanningPage takes over the full viewport when active
+  if (activeTab === "financial-planning" && fpClientId) {
+    return (
+      <FinancialPlanningPage
+        clientId={fpClientId}
+        clientName={fpClientName}
+        onClose={() => setActiveTab("clients")}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,7 +111,6 @@ export function HomePage() {
 
       {/* ── Main content ── */}
       <main className="mx-auto max-w-5xl px-4 py-6">
-        {/* Global loading state while client data is fetching */}
         {clientStore.loading ? (
           <LoadingSpinner text="Carregando dados..." />
         ) : (
@@ -90,6 +125,7 @@ export function HomePage() {
                 onLoadSimulation={handleLoadSimulation}
                 onGeneratePdf={() => {}}
                 onNewDiagnostic={handleNewDiagnostic}
+                onNewFinancialPlan={handleNewFinancialPlan}
               />
             )}
 
@@ -100,6 +136,36 @@ export function HomePage() {
                 getClientSimulations={clientStore.getClientSimulations}
                 initialClientId={diagnosticClientId}
               />
+            )}
+
+            {activeTab === "financial-planning" && !fpClientId && (
+              <div className="flex flex-col items-center gap-4 py-16">
+                <FileBarChart className="h-10 w-10 text-muted-foreground" />
+                <h2 className="text-xl font-semibold">Planejamento financeiro</h2>
+                <p className="text-sm text-muted-foreground">
+                  Selecione um cliente para iniciar o planejamento
+                </p>
+                {clientStore.clients.length > 0 ? (
+                  <Select onValueChange={handleFpClientSelect}>
+                    <SelectTrigger className="w-64">
+                      <SelectValue placeholder="Selecionar cliente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientStore.clients.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <EmptyState
+                    icon={Users}
+                    title="Nenhum cliente cadastrado"
+                    description="Cadastre um cliente na aba Clientes primeiro."
+                  />
+                )}
+              </div>
             )}
 
             {activeTab === "simulator" && (

@@ -84,6 +84,53 @@ export interface Database {
           created_at?: string;
         };
       };
+      financial_plans: {
+        Row: {
+          id: string;
+          client_id: string;
+          suitability: Json | null;
+          ativos_atuais: Json;
+          alocacao_personalizada: Json | null;
+          planejamento_if: Json;
+          protecao: Json;
+          fiscal: Json;
+          sucessorio: Json;
+          notas_assessor: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          client_id: string;
+          suitability?: Json | null;
+          ativos_atuais?: Json;
+          alocacao_personalizada?: Json | null;
+          planejamento_if?: Json;
+          protecao?: Json;
+          fiscal?: Json;
+          sucessorio?: Json;
+          notas_assessor?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          client_id?: string;
+          suitability?: Json | null;
+          ativos_atuais?: Json;
+          alocacao_personalizada?: Json | null;
+          planejamento_if?: Json;
+          protecao?: Json;
+          fiscal?: Json;
+          sucessorio?: Json;
+          notas_assessor?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
