@@ -1,10 +1,7 @@
-import { useState } from "react";
-import { Briefcase, User, Building2, BadgeCheck, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Briefcase, User, Building2, BadgeCheck, Shield, TrendingUp, BarChart2, Zap } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -14,14 +11,8 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { FPSectionHeader } from "./layout/FPSectionHeader";
-import { cn } from "@/lib/utils";
-import {
-  SUITABILITY_PERGUNTAS,
-  ALOCACAO_ALVO,
-  PERFIL_LABELS,
-  calcularPerfil,
-} from "@/types/financialPlanning";
-import type { DadosCliente, SuitabilityResposta, PerfilRisco } from "@/types/financialPlanning";
+import { ALOCACAO_PADRAO } from "@/lib/carteira/calculos";
+import type { DadosCliente, PerfilRisco } from "@/types/financialPlanning";
 import { formatCurrency as _formatCurrency } from "@/lib/format";
 
 const DARK = "#041A20";
@@ -33,13 +24,6 @@ const UFS = [
   "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
 
-const PROFILE_COLORS: Record<PerfilRisco, string> = {
-  conservador: "bg-blue-100 text-blue-800",
-  conservador_moderado: "bg-teal-100 text-teal-800",
-  moderado: "bg-amber-100 text-amber-800",
-  arrojado: "bg-rose-100 text-rose-800",
-};
-
 const VINCULO_OPTIONS: { key: DadosCliente["tipoTrabalho"]; label: string; Icon: React.ElementType }[] = [
   { key: "clt", label: "CLT", Icon: Briefcase },
   { key: "autonomo", label: "Autônomo", Icon: User },
@@ -47,8 +31,61 @@ const VINCULO_OPTIONS: { key: DadosCliente["tipoTrabalho"]; label: string; Icon:
   { key: "concursado", label: "Concursado", Icon: BadgeCheck },
 ];
 
-const inputCls =
-  "w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#041A20] focus:ring-2 focus:ring-[rgba(4,26,32,0.1)] bg-white";
+const PERFIL_CARDS: {
+  perfil: PerfilRisco;
+  label: string;
+  alocacao: string;
+  descricao: string;
+  color: string;
+  bgSelected: string;
+  icon: React.ElementType;
+}[] = [
+  {
+    perfil: "conservador",
+    label: "Conservador",
+    alocacao: "RF 92% · RV 4% · Internacional 4%",
+    descricao: "Foco em preservação de capital e liquidez. Baixa tolerância a risco.",
+    color: "#46BDC6",
+    bgSelected: "#F0FDFA",
+    icon: Shield,
+  },
+  {
+    perfil: "conservador_moderado",
+    label: "Conservador Moderado",
+    alocacao: "RF 78% · RV 13% · Internacional 9%",
+    descricao: "Equilíbrio com predominância em renda fixa e alguma exposição a RV.",
+    color: "#3B82F6",
+    bgSelected: "#EFF6FF",
+    icon: TrendingUp,
+  },
+  {
+    perfil: "moderado",
+    label: "Moderado",
+    alocacao: "RF 66% · RV 20% · Internacional 13%",
+    descricao: "Equilíbrio entre segurança e crescimento. Aceita volatilidade moderada.",
+    color: "#F59E0B",
+    bgSelected: "#FFFBEB",
+    icon: BarChart2,
+  },
+  {
+    perfil: "arrojado",
+    label: "Arrojado",
+    alocacao: "RF 52% · RV 29% · Internacional 17,5%",
+    descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.",
+    color: "#F87171",
+    bgSelected: "#FEF2F2",
+    icon: Zap,
+  },
+];
+
+const CARD_LABELS: Record<string, string> = {
+  resgate_rapido: "Resgate Rápido",
+  resgate_longo: "Resgate Longo",
+  acoes: "Ações",
+  fiis: "FIIs",
+  exterior: "Internacional",
+  cripto: "Cripto",
+};
 
 interface Props {
   value: DadosCliente;
@@ -60,62 +97,28 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
   const set = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
     onChange({ ...value, [key]: val });
 
-  const [qIndex, setQIndex] = useState(0);
-  const [respostas, setRespostas] = useState<Map<string, SuitabilityResposta>>(() => {
-    const m = new Map<string, SuitabilityResposta>();
-    value.suitabilityRespostas.forEach((r) => m.set(r.perguntaId, r));
-    return m;
-  });
-  const [suitResult, setSuitResult] = useState<PerfilRisco | null>(
-    value.suitabilityPerfil
-  );
-
-  // Calculated age
   const calculatedAge = value.dataNascimento
     ? new Date().getFullYear() - new Date(value.dataNascimento).getFullYear()
     : null;
 
-  const total = SUITABILITY_PERGUNTAS.length;
-  const pergunta = SUITABILITY_PERGUNTAS[qIndex];
-  const respostaSelecionada = respostas.get(pergunta?.id ?? "");
-  const isLastQ = qIndex === total - 1;
-  const progressPct = ((qIndex + 1) / total) * 100;
-
-  function selectOption(valor: number) {
-    setRespostas((prev) => {
-      const next = new Map(prev);
-      next.set(pergunta.id, { perguntaId: pergunta.id, valor });
-      return next;
-    });
+  function selectPerfil(perfil: PerfilRisco) {
+    onChange({ ...value, suitabilityPerfil: perfil });
   }
 
-  function handleSuitNext() {
-    if (!respostaSelecionada) return;
-    if (isLastQ) {
-      const allRespostas = Array.from(respostas.values());
-      const calc = calcularPerfil(allRespostas);
-      setSuitResult(calc.perfil);
-      onChange({
-        ...value,
-        suitabilityRespostas: allRespostas,
-        suitabilityPerfil: calc.perfil,
-        suitabilityPontuacao: calc.totalPontos,
-      });
-    } else {
-      setQIndex((i) => i + 1);
-    }
-  }
-
-  function handleConfirmarPerfil() {
-    const updated: DadosCliente = {
-      ...value,
-      suitabilityRespostas: Array.from(respostas.values()),
-    };
-    onComplete(updated);
+  function handleConfirmar() {
+    onComplete(value);
   }
 
   const fieldCls = "flex flex-col gap-1.5";
   const labelCls = "text-[13px] font-medium text-[#374151]";
+  const inputCls = "w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#041A20] focus:ring-2 focus:ring-[rgba(4,26,32,0.1)] bg-white";
+
+  const selectedCard = value.suitabilityPerfil
+    ? PERFIL_CARDS.find((c) => c.perfil === value.suitabilityPerfil)
+    : null;
+  const alocacaoSelecionada = value.suitabilityPerfil
+    ? ALOCACAO_PADRAO[value.suitabilityPerfil]
+    : null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
@@ -129,7 +132,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-          {/* Data de nascimento */}
           <div className={fieldCls}>
             <Label className={labelCls}>Data de nascimento</Label>
             <Input
@@ -140,7 +142,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             />
           </div>
 
-          {/* Idade calculada */}
           <div className={fieldCls}>
             <Label className={labelCls}>Idade</Label>
             <div className="flex items-center gap-2">
@@ -158,7 +159,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </div>
           </div>
 
-          {/* Estado civil */}
           <div className={fieldCls}>
             <Label className={labelCls}>Estado civil</Label>
             <Select
@@ -178,7 +178,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </Select>
           </div>
 
-          {/* Tem filhos */}
           <div className={fieldCls} style={{ justifyContent: "center" }}>
             <Label className={labelCls}>Tem filhos?</Label>
             <div style={{ display: "flex", alignItems: "center", gap: 12, height: 40 }}>
@@ -200,7 +199,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </div>
           </div>
 
-          {/* Cidade */}
           <div className={fieldCls}>
             <Label className={labelCls}>Cidade</Label>
             <Input
@@ -210,7 +208,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             />
           </div>
 
-          {/* Estado */}
           <div className={fieldCls}>
             <Label className={labelCls}>Estado (UF)</Label>
             <Select
@@ -269,56 +266,29 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
           borderColor="#F87171"
         />
 
-        <div
-          style={{
-            borderRadius: 10,
-            border: "1px solid #E5E7EB",
-            padding: "16px 20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-          }}
-        >
-          {/* Seguro vida */}
+        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Switch
-                checked={value.temSeguroVida}
-                onCheckedChange={(v) => set("temSeguroVida", v)}
-              />
-              <Label className={labelCls + " cursor-pointer"}>
-                Possui seguro de vida?
-              </Label>
+              <Switch checked={value.temSeguroVida} onCheckedChange={(v) => set("temSeguroVida", v)} />
+              <Label className={labelCls + " cursor-pointer"}>Possui seguro de vida?</Label>
             </div>
             {value.temSeguroVida && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280 }} className={fieldCls}>
                 <Label className="text-[12px] text-[#6B7280]">Valor da apólice</Label>
-                <CurrencyInput
-                  value={value.valorApoliceVida}
-                  onChange={(v) => set("valorApoliceVida", v)}
-                />
+                <CurrencyInput value={value.valorApoliceVida} onChange={(v) => set("valorApoliceVida", v)} />
               </div>
             )}
           </div>
 
-          {/* Seguro invalidez */}
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Switch
-                checked={value.temSeguroInvalidez}
-                onCheckedChange={(v) => set("temSeguroInvalidez", v)}
-              />
-              <Label className={labelCls + " cursor-pointer"}>
-                Possui seguro de invalidez?
-              </Label>
+              <Switch checked={value.temSeguroInvalidez} onCheckedChange={(v) => set("temSeguroInvalidez", v)} />
+              <Label className={labelCls + " cursor-pointer"}>Possui seguro de invalidez?</Label>
             </div>
             {value.temSeguroInvalidez && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280 }} className={fieldCls}>
                 <Label className="text-[12px] text-[#6B7280]">Valor da apólice</Label>
-                <CurrencyInput
-                  value={value.valorApoliceInvalidez}
-                  onChange={(v) => set("valorApoliceInvalidez", v)}
-                />
+                <CurrencyInput value={value.valorApoliceInvalidez} onChange={(v) => set("valorApoliceInvalidez", v)} />
               </div>
             )}
           </div>
@@ -357,23 +327,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                 }}
               >
                 {selected && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      backgroundColor: GOLD,
-                      borderRadius: "50%",
-                      width: 18,
-                      height: 18,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      color: DARK,
-                      fontWeight: 700,
-                    }}
-                  >
+                  <span style={{ position: "absolute", top: 8, right: 8, backgroundColor: GOLD, borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: DARK, fontWeight: 700 }}>
                     ✓
                   </span>
                 )}
@@ -388,213 +342,96 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
       {/* ══ Perfil de Risco ══ */}
       <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <FPSectionHeader
-          title="Perfil de Risco — Suitability ANBIMA"
-          subtitle="Responda as perguntas para definir o perfil de investidor"
+          title="Perfil de Risco"
+          subtitle="Selecione o perfil de risco do cliente conforme análise do consultor"
           borderColor={AMBER}
         />
 
-        {!suitResult ? (
-          <div
-            style={{
-              border: "1.5px solid #FDE68A",
-              borderRadius: 10,
-              padding: 20,
-              backgroundColor: "white",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            {/* Progress */}
-            <div>
-              <div
+        {/* 4 profile cards in 2x2 grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {PERFIL_CARDS.map(({ perfil, label, alocacao, descricao, color, bgSelected, icon: Icon }) => {
+            const selected = value.suitabilityPerfil === perfil;
+            return (
+              <button
+                key={perfil}
+                type="button"
+                onClick={() => selectPerfil(perfil)}
                 style={{
+                  border: selected ? `2px solid ${color}` : "1.5px solid #E5E7EB",
+                  borderRadius: 10,
+                  padding: "16px 18px",
+                  backgroundColor: selected ? bgSelected : "white",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  position: "relative",
+                  transition: "all 0.15s",
                   display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 12,
-                  color: "#6B7280",
-                  marginBottom: 6,
+                  flexDirection: "column",
+                  gap: 8,
                 }}
               >
-                <span>Pergunta {qIndex + 1} de {total}</span>
-                <Badge
-                  style={{
-                    backgroundColor: "#FEF3C7",
-                    color: "#B45309",
-                    fontSize: 11,
-                    border: "none",
-                  }}
-                >
-                  {Math.round(progressPct)}%
-                </Badge>
-              </div>
-              <Progress
-                value={progressPct}
-                className="h-1.5"
-                style={{ "--progress-background": AMBER } as React.CSSProperties}
-              />
-            </div>
+                {selected && (
+                  <span style={{ position: "absolute", top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>
+                    ✓
+                  </span>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Icon style={{ width: 20, height: 20, color }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: DARK }}>{label}</span>
+                </div>
+                <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
+                <p style={{ fontSize: 12, color: "#374151", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
+              </button>
+            );
+          })}
+        </div>
 
-            {/* Question */}
-            <p style={{ fontSize: 15, fontWeight: 600, color: DARK, margin: 0 }}>
-              {pergunta.pergunta}
+        {/* Confirmation card */}
+        {selectedCard && alocacaoSelecionada && (
+          <div style={{ border: `1.5px solid ${selectedCard.color}`, borderRadius: 10, padding: "16px 20px", backgroundColor: selectedCard.bgSelected, display: "flex", flexDirection: "column", gap: 14 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: selectedCard.color, margin: 0 }}>
+              ✓ Perfil selecionado: {selectedCard.label}
             </p>
 
-            {/* Options */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {pergunta.opcoes.map((opcao) => {
-                const selected = respostaSelecionada?.valor === opcao.valor;
-                return (
-                  <button
-                    key={opcao.valor}
-                    type="button"
-                    onClick={() => selectOption(opcao.valor)}
-                    style={{
-                      border: selected ? `2px solid ${AMBER}` : "1.5px solid #E5E7EB",
-                      borderRadius: 8,
-                      padding: "12px 16px",
-                      backgroundColor: selected ? "#FFFBEB" : "white",
-                      color: selected ? "#92400E" : "#374151",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontSize: 14,
-                      fontWeight: selected ? 600 : 400,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      transition: "all 0.1s",
-                    }}
-                  >
-                    {opcao.texto}
-                    {selected && <CheckCircle2 size={16} color={AMBER} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <button
-                type="button"
-                onClick={() => qIndex > 0 && setQIndex((i) => i - 1)}
-                disabled={qIndex === 0}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: qIndex === 0 ? "#D1D5DB" : AMBER,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: qIndex === 0 ? "not-allowed" : "pointer",
-                }}
-              >
-                ← Anterior
-              </button>
-              <button
-                type="button"
-                disabled={!respostaSelecionada}
-                onClick={handleSuitNext}
-                style={{
-                  backgroundColor: respostaSelecionada ? AMBER : "#E5E7EB",
-                  color: respostaSelecionada ? "white" : "#9CA3AF",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 20px",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: respostaSelecionada ? "pointer" : "not-allowed",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                {isLastQ ? "Ver resultado" : "Próxima"}
-                {!isLastQ && <ChevronRight size={16} />}
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Result card */
-          <div
-            style={{
-              border: `1.5px solid #FDE68A`,
-              borderRadius: 10,
-              padding: 20,
-              backgroundColor: "#FFFBEB",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <p style={{ fontSize: 15, fontWeight: 700, color: DARK, margin: 0 }}>
-                Perfil identificado:
+            {/* Allocation table */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
+                Alocação recomendada (Padrão Simpla)
               </p>
-              <span
-                className={cn("px-3 py-1 rounded-full text-sm font-bold", PROFILE_COLORS[suitResult])}
-              >
-                {PERFIL_LABELS[suitResult]}
-              </span>
-            </div>
-
-            {/* Macroalocação */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>
-                Macroalocação sugerida
-              </p>
-              {(Object.entries(ALOCACAO_ALVO[suitResult]) as [string, number][]).filter(([,v]) => v > 0).map(([key, pct]) => (
-                <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
-                  <span style={{ width: 120, color: "#6B7280", flexShrink: 0 }}>
-                    {key === "rendaFixa" ? "Renda Fixa" : key === "rvGlobal" ? "RV Global" : key.charAt(0).toUpperCase() + key.slice(1)}
-                  </span>
-                  <div style={{ flex: 1, height: 6, backgroundColor: "#E5E7EB", borderRadius: 3 }}>
-                    <div style={{ height: "100%", width: `${pct}%`, backgroundColor: AMBER, borderRadius: 3 }} />
-                  </div>
-                  <span style={{ width: 36, textAlign: "right", fontWeight: 600 }}>{pct}%</span>
+              <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F8F9FA", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" }}>
+                  <span>Classe</span>
+                  <span>% Recomendado</span>
                 </div>
-              ))}
+                {Object.entries(alocacaoSelecionada)
+                  .filter(([, v]) => v > 0)
+                  .map(([key, pct], i, arr) => (
+                    <div
+                      key={key}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr auto",
+                        padding: "8px 12px",
+                        backgroundColor: "white",
+                        borderTop: i === 0 ? "1px solid #E5E7EB" : undefined,
+                        borderBottom: i < arr.length - 1 ? "1px solid #F3F4F6" : undefined,
+                        fontSize: 13,
+                      }}
+                    >
+                      <span style={{ color: "#374151" }}>{CARD_LABELS[key] ?? key}</span>
+                      <span style={{ fontWeight: 700, color: selectedCard.color }}>{pct}%</span>
+                    </div>
+                  ))}
+              </div>
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setSuitResult(null);
-                  setQIndex(0);
-                }}
-                style={{
-                  border: "1.5px solid #E5E7EB",
-                  backgroundColor: "white",
-                  color: "#374151",
-                  borderRadius: 8,
-                  padding: "8px 16px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Refazer
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmarPerfil}
-                style={{
-                  backgroundColor: AMBER,
-                  color: "white",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 20px",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
-              >
-                <CheckCircle2 size={16} />
-                Confirmar perfil e continuar
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleConfirmar}
+              style={{ alignSelf: "flex-start", backgroundColor: selectedCard.color, color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+            >
+              Confirmar perfil e continuar →
+            </button>
           </div>
         )}
       </section>

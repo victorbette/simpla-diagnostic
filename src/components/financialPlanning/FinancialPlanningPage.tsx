@@ -113,9 +113,9 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       dadosCliente,
       suitability: dadosCliente.suitabilityPerfil
         ? {
-            respostas: dadosCliente.suitabilityRespostas,
-            totalPontos: dadosCliente.suitabilityPontuacao,
-            percentual: (dadosCliente.suitabilityPontuacao / 35) * 100,
+            respostas: [],
+            totalPontos: 0,
+            percentual: 0,
             perfil: dadosCliente.suitabilityPerfil,
             dataResposta: new Date().toISOString(),
           }
@@ -273,7 +273,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
             onEdit={() => setStep("coleta")}
             onSave={() => handleSave("completo")}
             onPrint={handlePrint}
-            onNotasChange={(notas) => updatePlan({ notasConsultor: notas })}
             onAvancarEstrategia={() => setMostrarEstrategia(true)}
             allStepsDone={allFormsDone}
           />

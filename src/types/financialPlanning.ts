@@ -547,9 +547,7 @@ export interface DadosCliente {
   temSeguroInvalidez: boolean;
   valorApoliceInvalidez: number;
   tipoTrabalho: "clt" | "autonomo" | "empresario" | "concursado" | "";
-  suitabilityRespostas: SuitabilityResposta[];
   suitabilityPerfil: PerfilRisco | null;
-  suitabilityPontuacao: number;
 }
 
 export const initialDadosCliente: DadosCliente = {
@@ -571,9 +569,7 @@ export const initialDadosCliente: DadosCliente = {
   temSeguroInvalidez: false,
   valorApoliceInvalidez: 0,
   tipoTrabalho: "",
-  suitabilityRespostas: [],
   suitabilityPerfil: null,
-  suitabilityPontuacao: 0,
 };
 
 // ─── Financial Plan (raiz) ────────────────────────────────────────────────────

@@ -1,23 +1,18 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   AreaChart, Area, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import {
-  Edit2, Save, Printer, Download, CheckCircle, Plus,
+  Edit2, Save, Printer, Download, CheckCircle,
   TrendingUp, PieChart as PieIcon, Shield, Receipt, GitBranch,
 } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import { toast } from "sonner";
 import {
   calcularIF, calcularProtecao, calcularFiscal, calcularSucessorio,
   calcularAlocacaoAtual, calcularGapAlocacao, ALOCACAO_ALVO, PERFIL_LABELS,
 } from "@/types/financialPlanning";
 import type { FinancialPlan, MacroalocacaoAlvo, PlanejamentoIF } from "@/types/financialPlanning";
-import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
-import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
-import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
-import { FerramentaPGBL } from "@/components/ferramentas/FerramentaPGBL";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -27,7 +22,6 @@ interface FinancialPlanDashboardProps {
   onEdit: () => void;
   onSave: () => void;
   onPrint: (type: "advisor" | "client") => void;
-  onNotasChange: (notas: string) => void;
   onAvancarEstrategia: () => void;
   allStepsDone?: boolean;
 }
@@ -196,46 +190,7 @@ function Row({ label, value, color }: { label: string; value: string; color?: st
   );
 }
 
-// ─── Action items ──────────────────────────────────────────────────────────────
-
-interface AcaoItem {
-  id: string;
-  area: string;
-  descricao: string;
-  urgencia: "alta" | "media" | "baixa";
-}
-
-const URGENCIA: Record<AcaoItem["urgencia"], { bg: string; color: string; label: string }> = {
-  alta:  { bg: "#FEE2E2", color: "#DC2626", label: "ALTA" },
-  media: { bg: "#FEF3C7", color: "#B45309", label: "MÉDIA" },
-  baixa: { bg: "#F3F4F6", color: "#6B7280", label: "BAIXA" },
-};
-
-function gerarAcoes(
-  gap: MacroalocacaoAlvo | null,
-  ifGap: number,
-  protGap: number,
-  fiscalGapEcon: number,
-  sucScore_: number,
-): AcaoItem[] {
-  const acoes: AcaoItem[] = [];
-  let id = 1;
-  if (gap && ASSET_KEYS.some((k) => Math.abs(gap[k]) > 10))
-    acoes.push({ id: String(id++), area: "Asset Allocation", descricao: "Rebalancear carteira para alinhamento com o perfil de risco", urgencia: "alta" });
-  if (protGap > 0)
-    acoes.push({ id: String(id++), area: "Proteção", descricao: `Contratar ou aumentar seguro de vida — gap de ${formatCurrency(protGap)}`, urgencia: "alta" });
-  if (fiscalGapEcon > 5000)
-    acoes.push({ id: String(id++), area: "Fiscal", descricao: `Aportar no PGBL para economia tributária estimada de ${formatCurrency(fiscalGapEcon)}/ano`, urgencia: "media" });
-  if (sucScore_ < 50)
-    acoes.push({ id: String(id++), area: "Sucessório", descricao: "Iniciar planejamento sucessório — elaborar testamento e avaliar holding", urgencia: "media" });
-  if (ifGap > 0)
-    acoes.push({ id: String(id++), area: "Aposentadoria", descricao: "Aumentar aportes mensais para atingir a meta de IF", urgencia: "media" });
-  return acoes;
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
-
-type ModalAberto = "seguro" | "liberdade" | "pgbl" | null;
 
 export function FinancialPlanDashboard({
   plan,
@@ -243,16 +198,9 @@ export function FinancialPlanDashboard({
   onEdit,
   onSave,
   onPrint,
-  onNotasChange,
   onAvancarEstrategia,
   allStepsDone: _allStepsDone,
 }: FinancialPlanDashboardProps) {
-  const [modalAberto, setModalAberto] = useState<ModalAberto>(null);
-  const [novaAcao, setNovaAcao] = useState("");
-
-  function fecharModal() { setModalAberto(null); }
-  function handleSaveModal() { toast.success("Análise salva no plano!"); fecharModal(); }
-
   // ── Calculations ──────────────────────────────────────────────────────────
   const ifResult = useMemo(() => calcularIF(plan.planejamentoIF), [plan.planejamentoIF]);
   const protResult = useMemo(() => calcularProtecao(plan.protecao), [plan.protecao]);
@@ -308,17 +256,6 @@ export function FinancialPlanDashboard({
     { name: "No inventário", value: patrimonioInv, color: "#ef4444" },
     { name: "Fora do inventário", value: patrimonioFora, color: "#10b981" },
   ].filter((d) => d.value > 0);
-
-  // ── Ações ─────────────────────────────────────────────────────────────────
-  const [acoes, setAcoes] = useState<AcaoItem[]>(() =>
-    gerarAcoes(gapAloc, ifResult.gap, protResult.gap, fiscalResult.gapEconomia, sucS)
-  );
-
-  function addAcao() {
-    if (!novaAcao.trim()) return;
-    setAcoes((prev) => [...prev, { id: String(Date.now()), area: "Customizado", descricao: novaAcao.trim(), urgencia: "baixa" }]);
-    setNovaAcao("");
-  }
 
   // ── Header ────────────────────────────────────────────────────────────────
   const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
@@ -436,7 +373,7 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 5. Aposentadoria / IF detail ────────────────────────────────────── */}
-      <SectionCard title="Aposentadoria / IF" score={ifS} color="#22C55E" onAprofundar={() => setModalAberto("liberdade")}>
+      <SectionCard title="Aposentadoria / IF" score={ifS} color="#22C55E">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
@@ -483,7 +420,7 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 6. Proteção detail ─────────────────────────────────────────────── */}
-      <SectionCard title="Proteção" score={protS} color="#F87171" semDados={semDadosProtecao} onAprofundar={() => setModalAberto("seguro")}>
+      <SectionCard title="Proteção" score={protS} color="#F87171" semDados={semDadosProtecao}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Row label="Capital necessário" value={formatCurrency(protResult.capitalNecessario)} />
@@ -518,7 +455,7 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 7. Fiscal detail ───────────────────────────────────────────────── */}
-      <SectionCard title="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal} onAprofundar={() => setModalAberto("pgbl")}>
+      <SectionCard title="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Row label="Renda anual bruta" value={formatCurrency(plan.fiscal.rendaBrutaAnual)} />
@@ -588,61 +525,6 @@ export function FinancialPlanDashboard({
           </div>
         </div>
       </SectionCard>
-
-      {/* ── 9. Plano de ação ───────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: `4px solid ${DARK}`, overflow: "hidden" }}>
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid #F3F4F6" }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: 0 }}>Plano de Ação Prioritário</p>
-        </div>
-        <div>
-          {acoes.map((acao) => {
-            const u = URGENCIA[acao.urgencia];
-            return (
-              <div key={acao.id} style={{ padding: "14px 24px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0, marginTop: 1 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: u.bg, color: u.color }}>{u.label}</span>
-                  <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#374151" }}>{acao.area}</span>
-                </div>
-                <p style={{ fontSize: 13, color: "#374151", margin: 0, flex: 1 }}>{acao.descricao}</p>
-              </div>
-            );
-          })}
-        </div>
-        <div style={{ padding: "14px 24px", display: "flex", gap: 8 }}>
-          <input
-            value={novaAcao}
-            onChange={(e) => setNovaAcao(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addAcao()}
-            placeholder="Adicionar ação personalizada..."
-            style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "2px dashed #D1D5DB", fontSize: 13, outline: "none", fontFamily: "inherit", backgroundColor: "transparent", color: DARK }}
-          />
-          <button onClick={addAcao} style={{ padding: "8px 14px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "white", cursor: "pointer", color: "#374151" }}>
-            <Plus style={{ width: 16, height: 16 }} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── 10. Notas do consultor ─────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #BBA866" }}>
-        <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: "0 0 12px" }}>Notas do Consultor</p>
-        <textarea
-          value={plan.notasConsultor}
-          onChange={(e) => onNotasChange(e.target.value)}
-          placeholder="Adicione observações sobre o diagnóstico..."
-          style={{ width: "100%", minHeight: 120, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: DARK, resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
-        />
-      </div>
-
-      {/* ── Modais ────────────────────────────────────────────────────────── */}
-      <FerramentaModal open={modalAberto === "seguro"} onClose={fecharModal} title="Análise completa de seguro de vida">
-        <FerramentaSeguro protecao={plan.protecao} onSave={handleSaveModal} />
-      </FerramentaModal>
-      <FerramentaModal open={modalAberto === "liberdade"} onClose={fecharModal} title="Simulador de liberdade financeira">
-        <FerramentaLiberdadeFinanceira planejamentoIF={plan.planejamentoIF} onSave={handleSaveModal} />
-      </FerramentaModal>
-      <FerramentaModal open={modalAberto === "pgbl"} onClose={fecharModal} title="Calculadora PGBL completa">
-        <FerramentaPGBL fiscal={plan.fiscal} onSave={handleSaveModal} />
-      </FerramentaModal>
 
       {/* Spacer para o nav footer do FPLayout não cobrir o último card */}
       <div style={{ height: 8 }} />
