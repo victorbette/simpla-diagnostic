@@ -220,6 +220,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         saving={saving}
         onBack={handleBack}
         onNext={handleNext}
+        onAvancarEstrategia={() => setMostrarEstrategia(true)}
         showNextButton={step !== "coleta"}
       >
         {step === "coleta" && (

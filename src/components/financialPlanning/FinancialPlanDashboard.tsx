@@ -1,62 +1,25 @@
 import { useState, useMemo } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  AreaChart,
-  Area,
-  ResponsiveContainer,
-  ReferenceLine,
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  AreaChart, Area, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import {
-  Edit,
-  Save,
-  Printer,
-  ChevronUp,
-  ChevronDown,
-  Plus,
-  ShieldAlert,
-  TrendingUp,
-  PieChart as PieIcon,
-  Shield,
-  Receipt,
-  GitBranch,
+  Edit2, Save, Printer, Download, CheckCircle, Plus,
+  TrendingUp, PieChart as PieIcon, Shield, Receipt, GitBranch,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { toast } from "sonner";
 import {
-  calcularIF,
-  calcularProtecao,
-  calcularFiscal,
-  calcularSucessorio,
-  calcularAlocacaoAtual,
-  calcularGapAlocacao,
-  ALOCACAO_ALVO,
-  PERFIL_LABELS,
+  calcularIF, calcularProtecao, calcularFiscal, calcularSucessorio,
+  calcularAlocacaoAtual, calcularGapAlocacao, ALOCACAO_ALVO, PERFIL_LABELS,
 } from "@/types/financialPlanning";
-import type {
-  FinancialPlan,
-  MacroalocacaoAlvo,
-  PlanejamentoIF,
-} from "@/types/financialPlanning";
+import type { FinancialPlan, MacroalocacaoAlvo, PlanejamentoIF } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import { FerramentaPGBL } from "@/components/ferramentas/FerramentaPGBL";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// ─── Props ─────────────────────────────────────────────────────────────────────
 
 interface FinancialPlanDashboardProps {
   plan: FinancialPlan;
@@ -69,7 +32,9 @@ interface FinancialPlanDashboardProps {
   allStepsDone?: boolean;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants ─────────────────────────────────────────────────────────────────
+
+const DARK = "#041A20";
 
 const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
   rendaFixa: "Renda Fixa",
@@ -91,18 +56,25 @@ const ASSET_COLORS: Record<keyof MacroalocacaoAlvo, string> = {
 
 const ASSET_KEYS = Object.keys(ASSET_LABELS) as (keyof MacroalocacaoAlvo)[];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function scoreLabel(score: number): { text: string; cls: string } {
-  if (score >= 70) return { text: "Adequado", cls: "bg-emerald-100 text-emerald-800" };
-  if (score >= 40) return { text: "Atenção", cls: "bg-amber-100 text-amber-800" };
-  return { text: "Risco", cls: "bg-red-100 text-red-800" };
-}
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function scoreColor(score: number): string {
-  if (score >= 70) return "#10b981";
-  if (score >= 40) return "#f59e0b";
-  return "#ef4444";
+  if (score >= 70) return "#22C55E";
+  if (score >= 40) return "#F59E0B";
+  return "#EF4444";
+}
+
+function scoreBadge(score: number, semDados: boolean): { text: string; bg: string; color: string } {
+  if (semDados) return { text: "Sem dados", bg: "#F3F4F6", color: "#6B7280" };
+  if (score >= 70) return { text: "Adequado", bg: "#F0FDF4", color: "#16A34A" };
+  if (score >= 40) return { text: "Atenção", bg: "#FFFBEB", color: "#B45309" };
+  return { text: "Risco", bg: "#FEF2F2", color: "#DC2626" };
+}
+
+function perfilStyle(perfil: string): { bg: string; color: string } {
+  if (perfil === "conservador") return { bg: "#F0FDFA", color: "#0F766E" };
+  if (perfil === "moderado" || perfil === "conservador_moderado") return { bg: "#FFFBEB", color: "#B45309" };
+  return { bg: "#FEF2F2", color: "#DC2626" };
 }
 
 function aaScore(gap: MacroalocacaoAlvo | null): number {
@@ -146,72 +118,85 @@ function gerarProjecao(p: PlanejamentoIF, meta: number) {
   return data;
 }
 
-// ─── Small SVG Gauge ──────────────────────────────────────────────────────────
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
-function SmallGauge({ score }: { score: number }) {
-  const r = 36;
-  const cx = 46;
-  const cy = 44;
+function Gauge({ score, color, semDados }: { score: number; color: string; semDados?: boolean }) {
+  const r = 36, cx = 46, cy = 44;
   const circumference = Math.PI * r;
-  const filled = (Math.min(100, Math.max(0, score)) / 100) * circumference;
-  const color = scoreColor(score);
-
+  const filled = semDados ? 0 : (Math.min(100, Math.max(0, score)) / 100) * circumference;
   return (
     <svg width="92" height="52" viewBox="0 0 92 52">
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none"
-        stroke="#e5e7eb"
-        strokeWidth="8"
-        strokeLinecap="round"
-      />
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none"
-        stroke={color}
-        strokeWidth="8"
-        strokeLinecap="round"
-        strokeDasharray={`${filled} ${circumference}`}
-      />
-      <text
-        x={cx}
-        y={cy - 10}
-        textAnchor="middle"
-        fontSize="15"
-        fontWeight="700"
-        fill={color}
-      >
-        {score}
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E5E7EB" strokeWidth="8" strokeLinecap="round" />
+      {!semDados && (
+        <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${filled} ${circumference}`} />
+      )}
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="16" fontWeight="700" fill={semDados ? "#9CA3AF" : color}>
+        {semDados ? "—" : score}
       </text>
     </svg>
   );
 }
 
-// ─── Score Card ───────────────────────────────────────────────────────────────
-
-function ScoreCard({
-  icon: Icon,
-  label,
-  score,
-}: {
-  icon: React.ElementType;
-  label: string;
-  score: number;
+function ScoreCard({ icon: Icon, label, score, color, semDados }: {
+  icon: React.ElementType; label: string; score: number; color: string; semDados?: boolean;
 }) {
-  const sl = scoreLabel(score);
+  const badge = scoreBadge(score, semDados ?? false);
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-2 pt-5 pb-4">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-        <SmallGauge score={score} />
-        <p className="text-xs font-medium text-center leading-tight">{label}</p>
-        <Badge className={`text-xs ${sl.cls}`}>{sl.text}</Badge>
-      </CardContent>
-    </Card>
+    <div style={{ backgroundColor: "white", borderRadius: 12, padding: 20, borderTop: `3px solid ${color}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <Icon style={{ width: 22, height: 22, color }} />
+      <Gauge score={score} color={color} semDados={semDados} />
+      <p style={{ fontSize: 12, color: "#374151", textAlign: "center", margin: 0, fontWeight: 500 }}>{label}</p>
+      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color }}>
+        {badge.text}
+      </span>
+      {semDados && <p style={{ fontSize: 10, color: "#9CA3AF", textAlign: "center", margin: 0 }}>Complete a etapa</p>}
+    </div>
   );
 }
 
-// ─── Action Plan ──────────────────────────────────────────────────────────────
+function SectionCard({ title, score, color, semDados, onAprofundar, children }: {
+  title: string; score: number; color: string; semDados?: boolean; onAprofundar?: () => void; children: React.ReactNode;
+}) {
+  const badge = scoreBadge(score, semDados ?? false);
+  return (
+    <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: `4px solid ${color}` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: 0 }}>{title}</p>
+          {!semDados && (
+            <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, backgroundColor: "#F3F4F6", color: "#374151" }}>
+              {score}/100
+            </span>
+          )}
+          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color }}>
+            {badge.text}
+          </span>
+        </div>
+        {onAprofundar && (
+          <button onClick={onAprofundar} style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "transparent", color: "#374151", cursor: "pointer", flexShrink: 0 }}>
+            Aprofundar →
+          </button>
+        )}
+      </div>
+      {semDados ? (
+        <div style={{ textAlign: "center", padding: "32px 16px", backgroundColor: "#F8F9FA", borderRadius: 8 }}>
+          <p style={{ margin: 0, fontSize: 13, color: "#9CA3AF" }}>Complete a etapa para ver o diagnóstico</p>
+        </div>
+      ) : children}
+    </div>
+  );
+}
+
+function Row({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, paddingBottom: 8, borderBottom: "1px solid #F3F4F6", marginBottom: 0 }}>
+      <span style={{ color: "#6B7280" }}>{label}</span>
+      <span style={{ fontWeight: 600, color: color ?? DARK, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── Action items ──────────────────────────────────────────────────────────────
 
 interface AcaoItem {
   id: string;
@@ -219,6 +204,12 @@ interface AcaoItem {
   descricao: string;
   urgencia: "alta" | "media" | "baixa";
 }
+
+const URGENCIA: Record<AcaoItem["urgencia"], { bg: string; color: string; label: string }> = {
+  alta:  { bg: "#FEE2E2", color: "#DC2626", label: "ALTA" },
+  media: { bg: "#FEF3C7", color: "#B45309", label: "MÉDIA" },
+  baixa: { bg: "#F3F4F6", color: "#6B7280", label: "BAIXA" },
+};
 
 function gerarAcoes(
   gap: MacroalocacaoAlvo | null,
@@ -229,58 +220,20 @@ function gerarAcoes(
 ): AcaoItem[] {
   const acoes: AcaoItem[] = [];
   let id = 1;
-
-  if (gap && ASSET_KEYS.some((k) => Math.abs(gap[k]) > 10)) {
-    acoes.push({
-      id: String(id++),
-      area: "Asset Allocation",
-      descricao: "Rebalancear carteira para alinhamento com o perfil de risco",
-      urgencia: "alta",
-    });
-  }
-  if (protGap > 0) {
-    acoes.push({
-      id: String(id++),
-      area: "Proteção",
-      descricao: `Contratar ou aumentar seguro de vida — gap de ${formatCurrency(protGap)}`,
-      urgencia: "alta",
-    });
-  }
-  if (fiscalGapEcon > 5000) {
-    acoes.push({
-      id: String(id++),
-      area: "Fiscal",
-      descricao: `Aportar no PGBL para economia tributária estimada de ${formatCurrency(fiscalGapEcon)}/ano`,
-      urgencia: "media",
-    });
-  }
-  if (sucScore_ < 50) {
-    acoes.push({
-      id: String(id++),
-      area: "Sucessório",
-      descricao: "Iniciar planejamento sucessório — elaborar testamento e avaliar holding",
-      urgencia: "media",
-    });
-  }
-  if (ifGap > 0) {
-    acoes.push({
-      id: String(id++),
-      area: "Aposentadoria",
-      descricao: `Aumentar aportes mensais para atingir a meta de IF`,
-      urgencia: "media",
-    });
-  }
-
+  if (gap && ASSET_KEYS.some((k) => Math.abs(gap[k]) > 10))
+    acoes.push({ id: String(id++), area: "Asset Allocation", descricao: "Rebalancear carteira para alinhamento com o perfil de risco", urgencia: "alta" });
+  if (protGap > 0)
+    acoes.push({ id: String(id++), area: "Proteção", descricao: `Contratar ou aumentar seguro de vida — gap de ${formatCurrency(protGap)}`, urgencia: "alta" });
+  if (fiscalGapEcon > 5000)
+    acoes.push({ id: String(id++), area: "Fiscal", descricao: `Aportar no PGBL para economia tributária estimada de ${formatCurrency(fiscalGapEcon)}/ano`, urgencia: "media" });
+  if (sucScore_ < 50)
+    acoes.push({ id: String(id++), area: "Sucessório", descricao: "Iniciar planejamento sucessório — elaborar testamento e avaliar holding", urgencia: "media" });
+  if (ifGap > 0)
+    acoes.push({ id: String(id++), area: "Aposentadoria", descricao: "Aumentar aportes mensais para atingir a meta de IF", urgencia: "media" });
   return acoes;
 }
 
-const URGENCIA_CLS: Record<AcaoItem["urgencia"], string> = {
-  alta: "bg-red-100 text-red-800",
-  media: "bg-amber-100 text-amber-800",
-  baixa: "bg-emerald-100 text-emerald-800",
-};
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ────────────────────────────────────────────────────────────
 
 type ModalAberto = "seguro" | "liberdade" | "pgbl" | null;
 
@@ -295,21 +248,12 @@ export function FinancialPlanDashboard({
   allStepsDone: _allStepsDone,
 }: FinancialPlanDashboardProps) {
   const [modalAberto, setModalAberto] = useState<ModalAberto>(null);
+  const [novaAcao, setNovaAcao] = useState("");
 
   function fecharModal() { setModalAberto(null); }
-  function handleSaveFerramentaSeguros() {
-    toast.success("Análise salva no plano!");
-    fecharModal();
-  }
-  function handleSaveFerramentaLiberdade() {
-    toast.success("Análise salva no plano!");
-    fecharModal();
-  }
-  function handleSaveFerramentaPGBL() {
-    toast.success("Análise salva no plano!");
-    fecharModal();
-  }
+  function handleSaveModal() { toast.success("Análise salva no plano!"); fecharModal(); }
 
+  // ── Calculations ──────────────────────────────────────────────────────────
   const ifResult = useMemo(() => calcularIF(plan.planejamentoIF), [plan.planejamentoIF]);
   const protResult = useMemo(() => calcularProtecao(plan.protecao), [plan.protecao]);
   const fiscalResult = useMemo(() => calcularFiscal(plan.fiscal), [plan.fiscal]);
@@ -317,12 +261,8 @@ export function FinancialPlanDashboard({
 
   const ativosTotal =
     plan.ativosAtuais.total ||
-    plan.ativosAtuais.rendaFixa +
-      plan.ativosAtuais.acoes +
-      plan.ativosAtuais.fiis +
-      plan.ativosAtuais.rvGlobal +
-      plan.ativosAtuais.rfGlobal +
-      plan.ativosAtuais.cripto;
+    plan.ativosAtuais.rendaFixa + plan.ativosAtuais.acoes + plan.ativosAtuais.fiis +
+    plan.ativosAtuais.rvGlobal + plan.ativosAtuais.rfGlobal + plan.ativosAtuais.cripto;
 
   const alocacaoAtual = useMemo(
     () => calcularAlocacaoAtual({ ...plan.ativosAtuais, total: ativosTotal || 1 }),
@@ -331,613 +271,389 @@ export function FinancialPlanDashboard({
   const alvo = plan.suitability ? ALOCACAO_ALVO[plan.suitability.perfil] : null;
   const gapAloc = alvo ? calcularGapAlocacao(alocacaoAtual, alvo) : null;
 
+  // ── Scores ────────────────────────────────────────────────────────────────
+  const semDadosAA = ativosTotal === 0;
+  const semDadosProtecao = plan.protecao.rendaMensal === 0;
+  const semDadosFiscal = plan.fiscal.rendaBrutaAnual === 0;
+  const semDadosSucessorio = plan.sucessorio.patrimonioTotal === 0;
+
   const aaS = aaScore(gapAloc);
+  const ifS = Math.round(ifResult.percentualIF);
+  const protS = Math.round(protResult.percentualCoberto);
   const fiscS = fiscalScore(fiscalResult.economiaFiscalAtual, fiscalResult.economiaFiscalPotencial);
   const sucS = sucScore(plan, sucResult.percentualCusto);
-  const overallScore = Math.round(
-    (aaS + Math.round(ifResult.percentualIF) + Math.round(protResult.percentualCoberto) + fiscS + sucS) / 5
-  );
 
+  const overallScore = Math.round(
+    (aaS + ifS + protS + (semDadosFiscal ? 0 : fiscS) + (semDadosSucessorio ? 0 : sucS)) /
+    (5 - (semDadosFiscal ? 1 : 0) - (semDadosSucessorio ? 1 : 0))
+  );
+  const overallBadge = scoreBadge(overallScore, false);
+  const overallColor = scoreColor(overallScore);
+
+  // ── Chart data ────────────────────────────────────────────────────────────
   const projecaoData = useMemo(
     () => gerarProjecao(plan.planejamentoIF, ifResult.patrimonioNecessario),
     [plan.planejamentoIF, ifResult.patrimonioNecessario]
   );
-
-  const [acoes, setAcoes] = useState<AcaoItem[]>(() =>
-    gerarAcoes(gapAloc, ifResult.gap, protResult.gap, fiscalResult.gapEconomia, sucS)
-  );
-  const [novaAcao, setNovaAcao] = useState("");
-
-  const overallSL = scoreLabel(overallScore);
-
-  // ── Pie data for allocation ──────────────────────────────────────────────
   const pieData = ASSET_KEYS.filter((k) => alocacaoAtual[k] > 0).map((k) => ({
-    name: ASSET_LABELS[k],
-    value: parseFloat(alocacaoAtual[k].toFixed(1)),
-    color: ASSET_COLORS[k],
-    valor: plan.ativosAtuais[k],
+    name: ASSET_LABELS[k], value: parseFloat(alocacaoAtual[k].toFixed(1)),
+    color: ASSET_COLORS[k], valor: plan.ativosAtuais[k],
   }));
-
-  // ── Bar data for current vs target ──────────────────────────────────────
   const barData = ASSET_KEYS.map((k) => ({
-    name: ASSET_LABELS[k],
-    atual: parseFloat(alocacaoAtual[k].toFixed(1)),
-    alvo: alvo ? alvo[k] : 0,
+    name: ASSET_LABELS[k], atual: parseFloat(alocacaoAtual[k].toFixed(1)), alvo: alvo ? alvo[k] : 0,
   }));
-
-  // ── Succession pie ───────────────────────────────────────────────────────
-  const patrimonioFora = plan.sucessorio.possuiSeguroVidaSucessao
-    ? plan.sucessorio.capitalSeguroVidaSucessao
-    : 0;
+  const patrimonioFora = plan.sucessorio.possuiSeguroVidaSucessao ? plan.sucessorio.capitalSeguroVidaSucessao : 0;
   const patrimonioInv = Math.max(0, plan.sucessorio.patrimonioTotal - patrimonioFora);
   const sucPieData = [
     { name: "No inventário", value: patrimonioInv, color: "#ef4444" },
     { name: "Fora do inventário", value: patrimonioFora, color: "#10b981" },
   ].filter((d) => d.value > 0);
 
-  // ── Action plan helpers ──────────────────────────────────────────────────
-  function moveAcao(idx: number, dir: -1 | 1) {
-    const next = [...acoes];
-    const target = idx + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    setAcoes(next);
-  }
-
-  function editAcao(idx: number, descricao: string) {
-    setAcoes((prev) => prev.map((a, i) => (i === idx ? { ...a, descricao } : a)));
-  }
+  // ── Ações ─────────────────────────────────────────────────────────────────
+  const [acoes, setAcoes] = useState<AcaoItem[]>(() =>
+    gerarAcoes(gapAloc, ifResult.gap, protResult.gap, fiscalResult.gapEconomia, sucS)
+  );
 
   function addAcao() {
     if (!novaAcao.trim()) return;
-    setAcoes((prev) => [
-      ...prev,
-      { id: String(Date.now()), area: "Customizado", descricao: novaAcao.trim(), urgencia: "baixa" },
-    ]);
+    setAcoes((prev) => [...prev, { id: String(Date.now()), area: "Customizado", descricao: novaAcao.trim(), urgencia: "baixa" }]);
     setNovaAcao("");
   }
 
-  const pgblPct =
-    fiscalResult.tetoPGBL > 0
-      ? Math.min(100, (plan.fiscal.valorPGBLAnual / fiscalResult.tetoPGBL) * 100)
-      : 0;
+  // ── Header ────────────────────────────────────────────────────────────────
+  const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const pStyle = perfil ? perfilStyle(perfil) : { bg: "#F3F4F6", color: "#6B7280" };
+  const pgblPct = fiscalResult.tetoPGBL > 0
+    ? Math.min(100, (plan.fiscal.valorPGBLAnual / fiscalResult.tetoPGBL) * 100) : 0;
 
   return (
-    <div className="space-y-8">
-      {/* ── Banner Diagnóstico Inicial ─────────────────────────────────────── */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+      {/* ── 1. Banner ─────────────────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #22C55E", borderRadius: 12, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <CheckCircle style={{ width: 20, height: 20, color: "#16A34A", flexShrink: 0, marginTop: 2 }} />
           <div>
-            <p className="text-sm font-medium text-blue-900">
-              Diagnóstico inicial gerado automaticamente a partir dos dados coletados.
-            </p>
-            <p className="text-xs text-blue-700 mt-0.5">
-              Revise os resultados abaixo e, quando pronto, avance para montar a Estratégia Inicial.
-            </p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#14532D", margin: "0 0 2px" }}>Diagnóstico inicial gerado com sucesso.</p>
+            <p style={{ fontSize: 13, color: "#15803D", margin: 0 }}>Revise os resultados abaixo e, quando pronto, avance para montar a Estratégia Inicial.</p>
           </div>
         </div>
-        <Button
-          onClick={onAvancarEstrategia}
-          className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
-          size="sm"
-        >
+        <button onClick={onAvancarEstrategia} style={{ backgroundColor: DARK, color: "white", border: "none", borderRadius: 8, padding: "12px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
           Montar Estratégia Inicial →
-        </Button>
+        </button>
       </div>
 
-      {/* ── SEÇÃO 1: Cabeçalho ────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">{clientName}</h2>
-          <p className="text-sm text-muted-foreground">
-            Plano financeiro · {new Date().toLocaleDateString("pt-BR")}
-          </p>
-          {plan.suitability && (
-            <Badge className="mt-2" variant="secondary">
-              Perfil: {PERFIL_LABELS[plan.suitability.perfil]}
-            </Badge>
-          )}
+      {/* ── 2. Header card ────────────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+          {/* Left */}
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: DARK, margin: "0 0 4px" }}>{clientName}</h2>
+            <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 8px" }}>Plano financeiro · {hoje}</p>
+            {perfil && (
+              <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999, backgroundColor: pStyle.bg, color: pStyle.color }}>
+                Perfil: {PERFIL_LABELS[perfil]}
+              </span>
+            )}
+          </div>
+          {/* Right */}
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {([
+                { icon: Edit2, label: "Editar", onClick: onEdit },
+                { icon: Save, label: "Salvar", onClick: onSave },
+                { icon: Printer, label: "PDF Consultor", onClick: () => onPrint("advisor") },
+                { icon: Download, label: "PDF Cliente", onClick: () => onPrint("client") },
+              ] as const).map(({ icon: Icon, label, onClick }) => (
+                <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "white", color: "#374151", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                  <Icon style={{ width: 13, height: 13 }} />
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* Score */}
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Score geral</p>
+              <p style={{ fontSize: 48, fontWeight: 800, color: DARK, margin: "0 0 4px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{overallScore}</p>
+              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: overallBadge.bg, color: overallBadge.color }}>
+                {overallBadge.text}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl font-black tabular-nums">{overallScore}</span>
-            <div>
-              <p className="text-xs text-muted-foreground">Score geral</p>
-              <Badge className={overallSL.cls}>{overallSL.text}</Badge>
+      </div>
+
+      {/* ── 3. Score cards grid ────────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+        <ScoreCard icon={PieIcon}    label="Asset Allocation"  score={aaS}   color="#7C3AED" semDados={semDadosAA} />
+        <ScoreCard icon={TrendingUp} label="Aposentadoria / IF" score={ifS}  color="#22C55E" />
+        <ScoreCard icon={Shield}     label="Proteção"           score={protS} color="#F87171" semDados={semDadosProtecao} />
+        <ScoreCard icon={Receipt}    label="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal} />
+        <ScoreCard icon={GitBranch}  label="Sucessório"         score={sucS}  color="#3B82F6" semDados={semDadosSucessorio} />
+      </div>
+
+      {/* ── 4. Asset Allocation detail ─────────────────────────────────────── */}
+      <SectionCard title="Asset Allocation" score={aaS} color="#7C3AED" semDados={semDadosAA}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div>
+            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>Alocação atual</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name} ${value}%`} labelLine={false}>
+                  {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                </Pie>
+                <Tooltip formatter={(value, name, props) => [`${value}% (${formatCurrency((props.payload as { valor?: number }).valor ?? 0)})`, name]} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+              {pieData.map((d) => (
+                <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
+                  {d.name} {d.value}%
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onEdit}>
-              <Edit className="mr-1.5 h-3.5 w-3.5" />
-              Editar
-            </Button>
-            <Button variant="outline" size="sm" onClick={onSave}>
-              <Save className="mr-1.5 h-3.5 w-3.5" />
-              Salvar
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onPrint("advisor")}>
-              <Printer className="mr-1.5 h-3.5 w-3.5" />
-              PDF Consultor
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onPrint("client")}>
-              <Printer className="mr-1.5 h-3.5 w-3.5" />
-              PDF Cliente
-            </Button>
+          <div>
+            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>
+              Atual vs. alvo{alvo && plan.suitability ? ` (${PERFIL_LABELS[plan.suitability.perfil]})` : ""}
+            </p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={barData} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={64} />
+                <Tooltip formatter={(v) => `${v}%`} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="atual" name="Atual" fill="#7C3AED" radius={[0, 2, 2, 0]} />
+                <Bar dataKey="alvo" name="Alvo" fill="#DDD6FE" radius={[0, 2, 2, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
-      {/* ── SEÇÃO 2: Score cards ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <ScoreCard icon={PieIcon} label="Asset Allocation" score={aaS} />
-        <ScoreCard
-          icon={TrendingUp}
-          label="Aposentadoria / IF"
-          score={Math.round(ifResult.percentualIF)}
-        />
-        <ScoreCard
-          icon={Shield}
-          label="Proteção"
-          score={Math.round(protResult.percentualCoberto)}
-        />
-        <ScoreCard icon={Receipt} label="Fiscal" score={fiscS} />
-        <ScoreCard icon={GitBranch} label="Sucessório" score={sucS} />
-      </div>
-
-      {/* ── SEÇÃO 3: Asset Allocation ─────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Asset Allocation</h3>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Pie chart */}
-            <div>
-              <p className="mb-2 text-sm text-muted-foreground">Alocação atual</p>
-              {ativosTotal > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label={({ name, value }) => `${name} ${value}%`}
-                        labelLine={false}
-                      >
-                        {pieData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value, name, props) => [
-                          `${value}% (${formatCurrency((props.payload as { valor?: number }).valor ?? 0)})`,
-                          name,
-                        ]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                    {pieData.map((d) => (
-                      <div key={d.name} className="flex items-center gap-1 text-xs">
-                        <span
-                          className="inline-block h-2 w-2 rounded-full"
-                          style={{ background: d.color }}
-                        />
-                        {d.name} {d.value}%
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">Patrimônio não informado.</p>
-              )}
-            </div>
-            {/* Bar chart: atual vs alvo */}
-            <div>
-              <p className="mb-2 text-sm text-muted-foreground">
-                Atual vs. alvo{alvo && plan.suitability ? ` (${PERFIL_LABELS[plan.suitability.perfil]})` : ""}
-              </p>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={barData} layout="vertical" margin={{ left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10 }} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={64} />
-                  <Tooltip formatter={(v) => `${v}%`} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="atual" name="Atual" fill="#3b82f6" radius={[0, 2, 2, 0]} />
-                  <Bar dataKey="alvo" name="Alvo" fill="#d1d5db" radius={[0, 2, 2, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SEÇÃO 4: Aposentadoria e IF ───────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-base font-semibold">Aposentadoria e liberdade financeira</h3>
-            <Button variant="outline" size="sm" onClick={() => setModalAberto("liberdade")}>
-              Simulador completo de IF →
-            </Button>
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Métricas */}
-            <div className="space-y-3">
+      {/* ── 5. Aposentadoria / IF detail ────────────────────────────────────── */}
+      <SectionCard title="Aposentadoria / IF" score={ifS} color="#22C55E" onAprofundar={() => setModalAberto("liberdade")}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               {[
-                { label: "Patrimônio necessário para IF", value: formatCurrency(ifResult.patrimonioNecessario), cls: "" },
-                { label: "Projeção com aportes atuais", value: formatCurrency(ifResult.patrimonioProjetado), cls: "text-primary" },
-                {
-                  label: ifResult.gap > 0 ? "Gap (falta)" : "Superávit",
-                  value: formatCurrency(Math.abs(ifResult.gap)),
-                  cls: ifResult.gap > 0 ? "text-destructive" : "text-emerald-600",
-                },
-                { label: "Renda mensal atingível", value: formatCurrency(ifResult.rendaMensalAtingivel), cls: "" },
-                { label: "Renda mensal desejada", value: formatCurrency(plan.planejamentoIF.rendaMensalDesejada), cls: "" },
-                { label: "Anos restantes", value: `${ifResult.anosParaMeta} anos`, cls: "" },
-              ].map(({ label, value, cls }) => (
-                <div key={label} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                  <span className={`text-sm font-semibold tabular-nums ${cls}`}>{value}</span>
-                </div>
-              ))}
-              <div className="pt-1 space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Progresso</span>
-                  <span>{formatNumber(ifResult.percentualIF, 0)}%</span>
-                </div>
-                <Progress value={ifResult.percentualIF} className="h-2" />
-              </div>
-            </div>
-            {/* AreaChart */}
-            <div>
-              <p className="mb-2 text-xs text-muted-foreground">Projeção patrimonial por idade</p>
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={projecaoData}>
-                  <defs>
-                    <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="idade" tick={{ fontSize: 10 }} />
-                  <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10 }} />
-                  <Tooltip formatter={(v) => formatCurrency(v as number)} labelFormatter={(l) => `Idade ${l}`} />
-                  <ReferenceLine
-                    y={ifResult.patrimonioNecessario}
-                    stroke="#ef4444"
-                    strokeDasharray="4 4"
-                    label={{ value: "Meta", position: "right", fontSize: 10, fill: "#ef4444" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="projecao"
-                    name="Projeção"
-                    stroke="#3b82f6"
-                    fill="url(#gradIF)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SEÇÃO 5: Proteção ─────────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-base font-semibold">Proteção</h3>
-            <Button variant="outline" size="sm" onClick={() => setModalAberto("seguro")}>
-              Aprofundar análise de seguro →
-            </Button>
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Gauge + métricas */}
-            <div className="flex flex-col items-center gap-4">
-              <SmallGauge score={Math.round(protResult.percentualCoberto)} />
-              <div className="w-full space-y-2">
-                {[
-                  { label: "Capital necessário", value: formatCurrency(protResult.capitalNecessario) },
-                  { label: "Capital segurado atual", value: formatCurrency(protResult.capitalAtual) },
-                  { label: "Gap de cobertura", value: formatCurrency(protResult.gap), cls: "text-destructive" },
-                ].map(({ label, value, cls }) => (
-                  <div key={label} className="flex justify-between border-b pb-1.5 last:border-0">
-                    <span className="text-sm text-muted-foreground">{label}</span>
-                    <span className={`text-sm font-semibold tabular-nums ${cls ?? ""}`}>{value}</span>
-                  </div>
-                ))}
-              </div>
-              {protResult.gap > 0 && (
-                <Badge variant="outline" className="flex items-center gap-1.5 text-amber-700 border-amber-300 bg-amber-50 w-full justify-center py-2">
-                  <ShieldAlert className="h-3.5 w-3.5" />
-                  Encaminhar para análise completa de seguros
-                </Badge>
-              )}
-            </div>
-            {/* Checklist */}
-            <div className="space-y-3">
-              {[
-                {
-                  label: "Possui seguro de vida",
-                  ok: plan.protecao.possuiSeguroVida,
-                  detail: plan.protecao.possuiSeguroVida
-                    ? formatCurrency(plan.protecao.capitalSeguradoVida)
-                    : "Não contratado",
-                },
-                {
-                  label: "Capital adequado (≥ necessário)",
-                  ok: protResult.capitalAtual >= protResult.capitalNecessario,
-                  detail: `${formatNumber(protResult.percentualCoberto, 0)}% coberto`,
-                },
-                {
-                  label: "Possui seguro de invalidez",
-                  ok: plan.protecao.possuiSeguroInvalidez,
-                  detail: plan.protecao.possuiSeguroInvalidez ? "Sim" : "Não contratado",
-                },
-                {
-                  label: "Possui plano de saúde",
-                  ok: plan.protecao.possuiPlanoSaude,
-                  detail: plan.protecao.possuiPlanoSaude ? "Sim" : "Não contratado",
-                },
-              ].map(({ label, ok, detail }) => (
-                <div key={label} className="flex items-center gap-3 rounded-lg border p-3">
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      ok ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {ok ? "✓" : "✗"}
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{label}</p>
-                    <p className="text-xs text-muted-foreground">{detail}</p>
-                  </div>
+                { label: "Patrimônio necessário", value: formatCurrency(ifResult.patrimonioNecessario) },
+                { label: "Projeção com aportes", value: formatCurrency(ifResult.patrimonioProjetado), color: "#16A34A" },
+                { label: ifResult.gap > 0 ? "Gap (falta)" : "Superávit", value: formatCurrency(Math.abs(ifResult.gap)), color: ifResult.gap > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Renda desejada na IF", value: `${formatCurrency(plan.planejamentoIF.rendaMensalDesejada)}/mês` },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ backgroundColor: "#F8F9FA", borderRadius: 8, padding: "10px 12px" }}>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: color ?? DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>{value}</p>
                 </div>
               ))}
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SEÇÃO 6: Fiscal ───────────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-base font-semibold">Planejamento fiscal</h3>
-            <Button variant="outline" size="sm" onClick={() => setModalAberto("pgbl")}>
-              Calculadora PGBL completa →
-            </Button>
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Métricas */}
-            <div className="space-y-2">
-              {[
-                { label: "Renda anual bruta", value: formatCurrency(plan.fiscal.rendaBrutaAnual) },
-                { label: "Teto PGBL (12%)", value: formatCurrency(fiscalResult.tetoPGBL) },
-                {
-                  label: "PGBL aportado atualmente",
-                  value: formatCurrency(plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0),
-                },
-                {
-                  label: "Espaço disponível no PGBL",
-                  value: formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0))),
-                  cls: "text-amber-600",
-                },
-                {
-                  label: "Economia tributária potencial",
-                  value: formatCurrency(fiscalResult.economiaFiscalPotencial) + "/ano",
-                  cls: "text-emerald-600",
-                },
-                {
-                  label: "Economia atual realizada",
-                  value: formatCurrency(fiscalResult.economiaFiscalAtual) + "/ano",
-                  cls: "text-primary",
-                },
-              ].map(({ label, value, cls }) => (
-                <div key={label} className="flex justify-between border-b pb-1.5 last:border-0">
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                  <span className={`text-sm font-semibold tabular-nums ${cls ?? ""}`}>{value}</span>
-                </div>
-              ))}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: "#6B7280" }}>Progresso rumo à IF</span>
+              <span style={{ fontWeight: 600, color: "#16A34A" }}>{formatNumber(ifResult.percentualIF, 0)}%</span>
             </div>
-            {/* PGBL barra + recomendações */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">PGBL utilizado vs. teto</span>
-                  <span className="tabular-nums">{formatNumber(pgblPct, 0)}%</span>
-                </div>
-                <Progress value={pgblPct} className="h-3" />
+            <div style={{ height: 8, backgroundColor: "#E5E7EB", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${Math.min(100, ifResult.percentualIF)}%`, backgroundColor: "#22C55E", borderRadius: 4, transition: "width 0.4s" }} />
+            </div>
+          </div>
+          <div>
+            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>Projeção patrimonial por idade</p>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={projecaoData}>
+                <defs>
+                  <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="idade" tick={{ fontSize: 10 }} />
+                <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10 }} />
+                <Tooltip formatter={(v) => formatCurrency(v as number)} labelFormatter={(l) => `Idade ${l}`} />
+                <ReferenceLine y={ifResult.patrimonioNecessario} stroke="#EF4444" strokeDasharray="4 4" label={{ value: "Meta", position: "right", fontSize: 10, fill: "#EF4444" }} />
+                <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#22C55E" fill="url(#gradIF)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ── 6. Proteção detail ─────────────────────────────────────────────── */}
+      <SectionCard title="Proteção" score={protS} color="#F87171" semDados={semDadosProtecao} onAprofundar={() => setModalAberto("seguro")}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Row label="Capital necessário" value={formatCurrency(protResult.capitalNecessario)} />
+            <Row label="Capital segurado atual" value={formatCurrency(protResult.capitalAtual)} />
+            <Row label="Gap de cobertura" value={formatCurrency(protResult.gap)} color={protResult.gap > 0 ? "#DC2626" : "#16A34A"} />
+            <Row label="Cobertura" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} color={protResult.percentualCoberto >= 100 ? "#16A34A" : "#DC2626"} />
+            {protResult.gap > 0 && (
+              <div style={{ marginTop: 8, padding: "10px 14px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#DC2626" }}>
+                ⚠ Encaminhar para análise completa de seguros
               </div>
-              {fiscalResult.recomendacoes.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-muted-foreground">Recomendações</p>
-                  {fiscalResult.recomendacoes.map((r, i) => (
-                    <p key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <span className="shrink-0 text-primary mt-0.5">•</span>
-                      {r}
-                    </p>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SEÇÃO 7: Sucessório ───────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Planejamento sucessório</h3>
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Métricas */}
-            <div className="space-y-2">
-              {[
-                { label: "ITCMD estimado (4%)", value: formatCurrency(sucResult.itcmdEstimado), cls: "text-destructive" },
-                { label: "Custo do inventário (6%)", value: formatCurrency(sucResult.custoInventarioEstimado), cls: "text-destructive" },
-                { label: "Total de custos estimados", value: formatCurrency(sucResult.custoTotal), cls: "text-destructive font-bold" },
-                { label: "Patrimônio líquido aos herdeiros", value: formatCurrency(sucResult.patrimonioLiquidoHerdeiros), cls: "text-emerald-600" },
-                { label: "% patrimônio fora do inventário", value: `${formatNumber(patrimonioFora > 0 && plan.sucessorio.patrimonioTotal > 0 ? (patrimonioFora / plan.sucessorio.patrimonioTotal) * 100 : 0, 1)}%`, cls: "text-emerald-600" },
-              ].map(({ label, value, cls }) => (
-                <div key={label} className="flex justify-between border-b pb-1.5 last:border-0">
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                  <span className={`text-sm tabular-nums ${cls ?? ""}`}>{value}</span>
-                </div>
-              ))}
-            </div>
-            {/* PieChart + checklist */}
-            <div className="space-y-4">
-              {sucPieData.length > 0 && (
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
-                    <Pie
-                      data={sucPieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={60}
-                    >
-                      {sucPieData.map((d, i) => (
-                        <Cell key={i} fill={d.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v) => formatCurrency(v as number)} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-              <div className="space-y-1.5">
-                {[
-                  { label: "Testamento", ok: plan.sucessorio.possuiTestamento },
-                  { label: "Holding familiar", ok: plan.sucessorio.possuiHolding },
-                  { label: "Seguro com beneficiário", ok: plan.sucessorio.possuiSeguroVidaSucessao },
-                ].map(({ label, ok }) => (
-                  <div key={label} className="flex items-center gap-2 text-sm">
-                    <span className={`font-bold ${ok ? "text-emerald-600" : "text-red-500"}`}>
-                      {ok ? "✓" : "✗"}
-                    </span>
-                    <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── SEÇÃO 8: Plano de ação ────────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <h3 className="mb-4 text-base font-semibold">Plano de ação priorizado</h3>
-          <div className="space-y-2">
-            {acoes.map((acao, idx) => (
-              <div key={acao.id} className="flex items-start gap-3 rounded-lg border p-3">
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold">
-                  {idx + 1}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { label: "Possui seguro de vida", ok: plan.protecao.possuiSeguroVida, detail: plan.protecao.possuiSeguroVida ? formatCurrency(plan.protecao.capitalSeguradoVida) : "Não contratado" },
+              { label: "Capital adequado", ok: protResult.capitalAtual >= protResult.capitalNecessario, detail: `${formatNumber(protResult.percentualCoberto, 0)}% coberto` },
+              { label: "Seguro de invalidez", ok: plan.protecao.possuiSeguroInvalidez, detail: plan.protecao.possuiSeguroInvalidez ? "Sim" : "Não contratado" },
+              { label: "Plano de saúde", ok: plan.protecao.possuiPlanoSaude, detail: plan.protecao.possuiPlanoSaude ? "Sim" : "Não contratado" },
+            ].map(({ label, ok, detail }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "1px solid #F3F4F6" }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: ok ? "#F0FDF4" : "#FEF2F2", color: ok ? "#16A34A" : "#DC2626", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                  {ok ? "✓" : "✗"}
                 </span>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">{acao.area}</Badge>
-                    <Badge className={`text-xs ${URGENCIA_CLS[acao.urgencia]}`}>{acao.urgencia}</Badge>
-                  </div>
-                  <Textarea
-                    value={acao.descricao}
-                    onChange={(e) => editAcao(idx, e.target.value)}
-                    className="min-h-[40px] text-sm resize-none border-0 p-0 shadow-none focus-visible:ring-0"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0"
-                    onClick={() => moveAcao(idx, -1)}
-                    disabled={idx === 0}
-                  >
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 w-6 p-0"
-                    onClick={() => moveAcao(idx, 1)}
-                    disabled={idx === acoes.length - 1}
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: DARK, margin: 0 }}>{label}</p>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>{detail}</p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
-              placeholder="Adicionar recomendação customizada..."
-              value={novaAcao}
-              onChange={(e) => setNovaAcao(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addAcao()}
-            />
-            <Button size="sm" variant="outline" onClick={addAcao}>
-              <Plus className="h-4 w-4" />
-            </Button>
+        </div>
+      </SectionCard>
+
+      {/* ── 7. Fiscal detail ───────────────────────────────────────────────── */}
+      <SectionCard title="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal} onAprofundar={() => setModalAberto("pgbl")}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Row label="Renda anual bruta" value={formatCurrency(plan.fiscal.rendaBrutaAnual)} />
+            <Row label="Teto PGBL (12%)" value={formatCurrency(fiscalResult.tetoPGBL)} />
+            <Row label="PGBL aportado" value={formatCurrency(plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)} />
+            <Row label="Espaço disponível PGBL" value={formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)))} color="#B45309" />
+            <Row label="Economia potencial" value={`${formatCurrency(fiscalResult.economiaFiscalPotencial)}/ano`} color="#16A34A" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>PGBL utilizado vs. teto</p>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: "#6B7280" }}>Aproveitamento</span>
+                <span style={{ fontWeight: 600, color: "#B45309" }}>{formatNumber(pgblPct, 0)}%</span>
+              </div>
+              <div style={{ height: 10, backgroundColor: "#FEF3C7", borderRadius: 5, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pgblPct}%`, backgroundColor: "#F59E0B", borderRadius: 5 }} />
+              </div>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 999, backgroundColor: fiscalResult.recomendaPGBL ? "#F0FDF4" : "#EFF6FF", color: fiscalResult.recomendaPGBL ? "#16A34A" : "#2563EB" }}>
+              {fiscalResult.recomendaPGBL ? "PGBL recomendado" : "VGBL recomendado"}
+            </span>
+            {fiscalResult.recomendacoes.length > 0 && (
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
+                {fiscalResult.recomendacoes.map((r, i) => (
+                  <p key={i} style={{ fontSize: 12, color: "#374151", margin: 0 }}>• {r}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </SectionCard>
 
-      {/* ── SEÇÃO 9: Notas do consultor ────────────────────────────────────── */}
-      <Card>
-        <CardContent className="pt-5">
-          <h3 className="mb-3 text-base font-semibold">Notas do consultor</h3>
-          <Textarea
-            value={plan.notasConsultor}
-            onChange={(e) => onNotasChange(e.target.value)}
-            placeholder="Observações, contexto e notas para a próxima reunião..."
-            className="min-h-[120px] resize-y"
+      {/* ── 8. Sucessório detail ───────────────────────────────────────────── */}
+      <SectionCard title="Planejamento Sucessório" score={sucS} color="#3B82F6" semDados={semDadosSucessorio}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Row label="ITCMD estimado (4%)" value={formatCurrency(sucResult.itcmdEstimado)} color="#DC2626" />
+            <Row label="Custo inventário (6%)" value={formatCurrency(sucResult.custoInventarioEstimado)} color="#DC2626" />
+            <Row label="Total de custos" value={formatCurrency(sucResult.custoTotal)} color="#DC2626" />
+            <Row label="Patrimônio líquido aos herdeiros" value={formatCurrency(sucResult.patrimonioLiquidoHerdeiros)} color="#16A34A" />
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+              {[
+                { label: "Testamento", ok: plan.sucessorio.possuiTestamento },
+                { label: "Holding familiar", ok: plan.sucessorio.possuiHolding },
+                { label: "Seguro com beneficiário", ok: plan.sucessorio.possuiSeguroVidaSucessao },
+              ].map(({ label, ok }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                  <span style={{ fontWeight: 700, color: ok ? "#16A34A" : "#EF4444" }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? DARK : "#9CA3AF" }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            {sucPieData.length > 0 && (
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={sucPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}>
+                    {sucPieData.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(v) => formatCurrency(v as number)} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* ── 9. Plano de ação ───────────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: `4px solid ${DARK}`, overflow: "hidden" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid #F3F4F6" }}>
+          <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: 0 }}>Plano de Ação Prioritário</p>
+        </div>
+        <div>
+          {acoes.map((acao) => {
+            const u = URGENCIA[acao.urgencia];
+            return (
+              <div key={acao.id} style={{ padding: "14px 24px", borderBottom: "1px solid #F3F4F6", display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0, marginTop: 1 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: u.bg, color: u.color }}>{u.label}</span>
+                  <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#374151" }}>{acao.area}</span>
+                </div>
+                <p style={{ fontSize: 13, color: "#374151", margin: 0, flex: 1 }}>{acao.descricao}</p>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{ padding: "14px 24px", display: "flex", gap: 8 }}>
+          <input
+            value={novaAcao}
+            onChange={(e) => setNovaAcao(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addAcao()}
+            placeholder="Adicionar ação personalizada..."
+            style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "2px dashed #D1D5DB", fontSize: 13, outline: "none", fontFamily: "inherit", backgroundColor: "transparent", color: DARK }}
           />
-        </CardContent>
-      </Card>
+          <button onClick={addAcao} style={{ padding: "8px 14px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "white", cursor: "pointer", color: "#374151" }}>
+            <Plus style={{ width: 16, height: 16 }} />
+          </button>
+        </div>
+      </div>
 
-      {/* ── Modais das ferramentas ─────────────────────────────────────────── */}
-      <FerramentaModal
-        open={modalAberto === "seguro"}
-        onClose={fecharModal}
-        title="Análise completa de seguro de vida"
-      >
-        <FerramentaSeguro
-          protecao={plan.protecao}
-          onSave={handleSaveFerramentaSeguros}
+      {/* ── 10. Notas do consultor ─────────────────────────────────────────── */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #BBA866" }}>
+        <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: "0 0 12px" }}>Notas do Consultor</p>
+        <textarea
+          value={plan.notasConsultor}
+          onChange={(e) => onNotasChange(e.target.value)}
+          placeholder="Adicione observações sobre o diagnóstico..."
+          style={{ width: "100%", minHeight: 120, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: DARK, resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
         />
+      </div>
+
+      {/* ── Modais ────────────────────────────────────────────────────────── */}
+      <FerramentaModal open={modalAberto === "seguro"} onClose={fecharModal} title="Análise completa de seguro de vida">
+        <FerramentaSeguro protecao={plan.protecao} onSave={handleSaveModal} />
+      </FerramentaModal>
+      <FerramentaModal open={modalAberto === "liberdade"} onClose={fecharModal} title="Simulador de liberdade financeira">
+        <FerramentaLiberdadeFinanceira planejamentoIF={plan.planejamentoIF} onSave={handleSaveModal} />
+      </FerramentaModal>
+      <FerramentaModal open={modalAberto === "pgbl"} onClose={fecharModal} title="Calculadora PGBL completa">
+        <FerramentaPGBL fiscal={plan.fiscal} onSave={handleSaveModal} />
       </FerramentaModal>
 
-      <FerramentaModal
-        open={modalAberto === "liberdade"}
-        onClose={fecharModal}
-        title="Simulador de liberdade financeira"
-      >
-        <FerramentaLiberdadeFinanceira
-          planejamentoIF={plan.planejamentoIF}
-          onSave={handleSaveFerramentaLiberdade}
-        />
-      </FerramentaModal>
+      {/* Spacer para o nav footer do FPLayout não cobrir o último card */}
+      <div style={{ height: 8 }} />
 
-      <FerramentaModal
-        open={modalAberto === "pgbl"}
-        onClose={fecharModal}
-        title="Calculadora PGBL completa"
-      >
-        <FerramentaPGBL
-          fiscal={plan.fiscal}
-          onSave={handleSaveFerramentaPGBL}
-        />
-      </FerramentaModal>
+      {/* Score geral em destaque — linha decorativa */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "8px 0" }}>
+        <div style={{ height: 1, flex: 1, backgroundColor: "#E5E7EB" }} />
+        <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Score consolidado: {overallScore}/100</span>
+        <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: overallColor }} />
+        <div style={{ height: 1, flex: 1, backgroundColor: "#E5E7EB" }} />
+      </div>
     </div>
   );
 }

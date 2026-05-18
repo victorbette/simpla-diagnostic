@@ -59,6 +59,7 @@ interface Props {
   saving: boolean;
   onBack: () => void;
   onNext: () => void;
+  onAvancarEstrategia?: () => void;
   showNextButton: boolean;
   children: React.ReactNode;
 }
@@ -74,6 +75,7 @@ export function FPLayout({
   saving,
   onBack,
   onNext,
+  onAvancarEstrategia,
   showNextButton,
   children,
 }: Props) {
@@ -243,93 +245,110 @@ export function FPLayout({
             </button>
           </div>
 
-          {/* Card branco principal */}
-          <div
-            style={{
-              backgroundColor: "white",
-              borderRadius: 12,
-              padding: 28,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              flex: isResultStep ? 1 : undefined,
-            }}
-          >
-            {children}
-          </div>
-
-          {/* Navigation footer */}
-          {!isResultStep && (
+          {/* Card branco principal (não usado no resultado) */}
+          {isResultStep ? (
+            children
+          ) : (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingTop: 4,
+                backgroundColor: "white",
+                borderRadius: 12,
+                padding: 28,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}
             >
-              {/* Back */}
+              {children}
+            </div>
+          )}
+
+          {/* Navigation footer */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingTop: 4,
+            }}
+          >
+            {/* Back */}
+            <button
+              onClick={onBack}
+              disabled={stepIndex === 0}
+              style={{
+                border: `1.5px solid ${DARK}`,
+                backgroundColor: "white",
+                color: stepIndex === 0 ? "#9CA3AF" : DARK,
+                borderColor: stepIndex === 0 ? "#E5E7EB" : DARK,
+                borderRadius: 8,
+                padding: "10px 20px",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: stepIndex === 0 ? "not-allowed" : "pointer",
+              }}
+            >
+              {isResultStep ? "← Etapa anterior: Fiscal" : "← Etapa anterior"}
+            </button>
+
+            {/* Dots */}
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {dots.map((d) => (
+                <span
+                  key={d.index}
+                  style={{
+                    width: d.active ? 22 : 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: d.active
+                      ? DARK
+                      : d.complete
+                      ? "#22C55E"
+                      : "#D1D5DB",
+                    display: "inline-block",
+                    transition: "width 0.2s",
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Next / Montar Estratégia */}
+            {isResultStep ? (
               <button
-                onClick={onBack}
-                disabled={stepIndex === 0}
+                onClick={onAvancarEstrategia}
                 style={{
-                  border: `1.5px solid ${DARK}`,
-                  backgroundColor: "white",
-                  color: stepIndex === 0 ? "#9CA3AF" : DARK,
-                  borderColor: stepIndex === 0 ? "#E5E7EB" : DARK,
+                  backgroundColor: DARK,
+                  color: "white",
+                  border: "none",
                   borderRadius: 8,
                   padding: "10px 20px",
                   fontSize: 14,
                   fontWeight: 600,
-                  cursor: stepIndex === 0 ? "not-allowed" : "pointer",
+                  cursor: "pointer",
                 }}
               >
-                ← Etapa anterior
+                Montar Estratégia Inicial →
               </button>
-
-              {/* Dots */}
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                {dots.map((d) => (
-                  <span
-                    key={d.index}
-                    style={{
-                      width: d.active ? 22 : 8,
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: d.active
-                        ? DARK
-                        : d.complete
-                        ? "#22C55E"
-                        : "#D1D5DB",
-                      display: "inline-block",
-                      transition: "width 0.2s",
-                    }}
-                  />
-                ))}
-              </div>
-
-              {/* Next */}
-              {showNextButton ? (
-                <button
-                  onClick={onNext}
-                  style={{
-                    backgroundColor: DARK,
-                    color: "white",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "10px 20px",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
-                >
-                  {meta.next
-                    ? `Próxima etapa: ${meta.next} →`
-                    : "Gerar diagnóstico →"}
-                </button>
-              ) : (
-                <div style={{ width: 180 }} />
-              )}
-            </div>
-          )}
+            ) : showNextButton ? (
+              <button
+                onClick={onNext}
+                style={{
+                  backgroundColor: DARK,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 20px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {meta.next
+                  ? `Próxima etapa: ${meta.next} →`
+                  : "Gerar diagnóstico →"}
+              </button>
+            ) : (
+              <div style={{ width: 180 }} />
+            )}
+          </div>
         </main>
       </div>
     </div>
