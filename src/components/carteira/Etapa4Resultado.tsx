@@ -1,5 +1,4 @@
 import { Fragment, useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
 import {
   PieChart,
   Pie,
@@ -13,7 +12,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { cn } from "@/lib/utils";
 import type { Ativo, ItemPlanoAcao } from "@/lib/carteira/types";
 import { calcularValorBRL, formatBRL, formatPct } from "@/lib/carteira/calculos";
 import { getCard } from "@/lib/carteira/segmentos";
@@ -138,7 +136,7 @@ export function Etapa4Resultado({
             { title: "Carteira Recomendada", data: pieMeta, subtit: formatBRL(patrimonio) },
           ] as const
         ).map(({ title, data, subtit }) => (
-          <div key={title} className="rounded-lg border bg-card p-4">
+          <div key={title} style={{ borderRadius: 12, border: "1px solid #E5E7EB", borderTop: "3px solid #22C55E", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <h3 className="font-semibold text-sm mb-0.5">{title}</h3>
             <p className="text-xs text-muted-foreground mb-3">{subtit}</p>
             {data.length > 0 ? (
@@ -185,20 +183,20 @@ export function Etapa4Resultado({
       </div>
 
       {/* SECTION 2 — Comparison Table (collapsible groups + card level) */}
-      <div className="rounded-lg border overflow-hidden">
-        <div className="bg-muted px-4 py-2">
-          <h3 className="font-semibold text-sm">Comparativo por grupo</h3>
+      <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <div style={{ backgroundColor: "#F8F9FA", padding: "8px 16px", borderBottom: "1px solid #F3F4F6" }}>
+          <h3 style={{ fontWeight: 700, fontSize: 14, color: "#041A20", margin: 0 }}>Comparativo por grupo</h3>
         </div>
         <table className="w-full text-sm">
-          <thead className="text-muted-foreground border-b text-xs">
+          <thead style={{ backgroundColor: "#041A20" }}>
             <tr>
-              <th className="px-4 py-2 text-left font-normal">Grupo</th>
-              <th className="px-4 py-2 text-right font-normal">% Atual</th>
-              <th className="px-4 py-2 text-right font-normal">R$ Atual</th>
-              <th className="px-4 py-2 text-right font-normal">% Meta</th>
-              <th className="px-4 py-2 text-right font-normal">R$ Meta</th>
-              <th className="px-4 py-2 text-right font-normal">Dif R$</th>
-              <th className="px-4 py-2 text-right font-normal">Dif %</th>
+              <th style={{ padding: "8px 16px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Grupo</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>% Atual</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>R$ Atual</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>% Meta</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>R$ Meta</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>Dif R$</th>
+              <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>Dif %</th>
             </tr>
           </thead>
           <tbody>
@@ -211,7 +209,7 @@ export function Etapa4Resultado({
               return (
                 <Fragment key={g.nome}>
                   <tr
-                    className="border-t font-semibold cursor-pointer hover:bg-muted/50"
+                    style={{ borderTop: "1px solid #F3F4F6", fontWeight: 600, cursor: "pointer" }}
                     onClick={() => toggleGroup(g.nome)}
                   >
                     <td className="px-4 py-2.5">
@@ -227,28 +225,10 @@ export function Etapa4Resultado({
                     <td className="px-4 py-2.5 text-right">{formatBRL(atual.valor)}</td>
                     <td className="px-4 py-2.5 text-right">{formatPct(meta.pct)}</td>
                     <td className="px-4 py-2.5 text-right">{formatBRL(meta.valor)}</td>
-                    <td
-                      className={cn(
-                        "px-4 py-2.5 text-right",
-                        difR > 0
-                          ? "text-green-600"
-                          : difR < 0
-                          ? "text-red-600"
-                          : "text-muted-foreground"
-                      )}
-                    >
+                    <td style={{ padding: "10px 16px", textAlign: "right", color: difR > 0 ? "#15803D" : difR < 0 ? "#DC2626" : "#9CA3AF" }}>
                       {difR === 0 ? "—" : `${difR > 0 ? "+" : ""}${formatBRL(difR)}`}
                     </td>
-                    <td
-                      className={cn(
-                        "px-4 py-2.5 text-right",
-                        difP > 0
-                          ? "text-green-600"
-                          : difP < 0
-                          ? "text-red-600"
-                          : "text-muted-foreground"
-                      )}
-                    >
+                    <td style={{ padding: "10px 16px", textAlign: "right", color: difP > 0 ? "#15803D" : difP < 0 ? "#DC2626" : "#9CA3AF" }}>
                       {difP === 0 ? "—" : `${difP > 0 ? "+" : ""}${formatPct(difP)}`}
                     </td>
                   </tr>
@@ -270,27 +250,17 @@ export function Etapa4Resultado({
                       return (
                         <tr
                           key={cardId}
-                          className="border-t bg-muted/20 text-xs text-muted-foreground"
+                          style={{ borderTop: "1px solid #F3F4F6", backgroundColor: "#FAFAFA", fontSize: 11, color: "#6B7280" }}
                         >
                           <td className="px-4 py-2 pl-10">{card.label}</td>
                           <td className="px-4 py-2 text-right">{formatPct(aP)}</td>
                           <td className="px-4 py-2 text-right">{formatBRL(aV)}</td>
                           <td className="px-4 py-2 text-right">{formatPct(mP)}</td>
                           <td className="px-4 py-2 text-right">{formatBRL(mV)}</td>
-                          <td
-                            className={cn(
-                              "px-4 py-2 text-right",
-                              dR > 0 ? "text-green-600" : dR < 0 ? "text-red-600" : ""
-                            )}
-                          >
+                          <td style={{ padding: "8px 16px", textAlign: "right", color: dR > 0 ? "#15803D" : dR < 0 ? "#DC2626" : undefined }}>
                             {dR === 0 ? "—" : `${dR > 0 ? "+" : ""}${formatBRL(dR)}`}
                           </td>
-                          <td
-                            className={cn(
-                              "px-4 py-2 text-right",
-                              dP > 0 ? "text-green-600" : dP < 0 ? "text-red-600" : ""
-                            )}
-                          >
+                          <td style={{ padding: "8px 16px", textAlign: "right", color: dP > 0 ? "#15803D" : dP < 0 ? "#DC2626" : undefined }}>
                             {dP === 0 ? "—" : `${dP > 0 ? "+" : ""}${formatPct(dP)}`}
                           </td>
                         </tr>
@@ -321,25 +291,25 @@ export function Etapa4Resultado({
       </div>
 
       {/* SECTION 3 — Bar Chart */}
-      <div className="rounded-lg border bg-card p-4">
-        <h3 className="font-semibold text-sm mb-3">Atual vs. Proposta por grupo (R$)</h3>
+      <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <h3 style={{ fontWeight: 700, fontSize: 14, color: "#041A20", marginBottom: 12 }}>Atual vs. Proposta por grupo (R$)</h3>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={barData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={fmtK} tick={{ fontSize: 11 }} width={56} />
-            <Tooltip formatter={(v: number) => formatBRL(v)} />
+            <Tooltip formatter={(v: number) => formatBRL(v)} contentStyle={{ borderRadius: 8, border: "1px solid #E5E7EB", backgroundColor: "white" }} />
             <Legend />
-            <Bar dataKey="Atual" fill="#94a3b8" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="Meta" fill="#2563eb" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Atual" fill="#9CA3AF" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Meta" fill="#041A20" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* SECTION 4 — Plan Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-lg border p-4 space-y-2">
-          <h4 className="font-semibold text-sm text-green-700">Aportes e novos</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", borderTop: "3px solid #22C55E", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#15803D", marginBottom: 8 }}>Aportes e novos</h4>
           {aportes.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -372,8 +342,8 @@ export function Etapa4Resultado({
             </>
           )}
         </div>
-        <div className="rounded-lg border p-4 space-y-2">
-          <h4 className="font-semibold text-sm text-red-700">Resgates</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", borderTop: "3px solid #F87171", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#DC2626", marginBottom: 8 }}>Resgates</h4>
           {resgates.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -406,8 +376,8 @@ export function Etapa4Resultado({
             </>
           )}
         </div>
-        <div className="rounded-lg border p-4 space-y-2">
-          <h4 className="font-semibold text-sm text-muted-foreground">Mantidos</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", borderTop: "3px solid #041A20", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#6B7280", marginBottom: 8 }}>Mantidos</h4>
           {mantidos.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -436,23 +406,25 @@ export function Etapa4Resultado({
 
       {/* SECTION 5 — Nota */}
       {notaConsultor && (
-        <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-sm">Notas do consultor</h3>
-            <Button variant="ghost" size="sm" onClick={onGoToEtapa3}>
+        <div style={{ borderRadius: 12, border: "1px solid #E5E7EB", backgroundColor: "#FAFAFA", padding: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <h3 style={{ fontWeight: 600, fontSize: 14, color: "#041A20", margin: 0 }}>Notas do consultor</h3>
+            <button onClick={onGoToEtapa3} style={{ background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 13 }}>
               Editar
-            </Button>
+            </button>
           </div>
-          <p className="text-sm whitespace-pre-wrap text-muted-foreground">{notaConsultor}</p>
+          <p style={{ fontSize: 13, whiteSpace: "pre-wrap", color: "#6B7280", margin: 0 }}>{notaConsultor}</p>
         </div>
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4 border-t">
-        <Button onClick={onSave}>Salvar carteira</Button>
-        <Button variant="outline" onClick={() => window.print()}>
+      <div style={{ display: "flex", gap: 12, paddingTop: 16, borderTop: "1px solid #E5E7EB" }}>
+        <button onClick={onSave} style={{ backgroundColor: "#22C55E", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          Salvar carteira
+        </button>
+        <button onClick={() => window.print()} style={{ backgroundColor: "white", color: "#041A20", border: "1.5px solid #041A20", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
           Imprimir / PDF
-        </Button>
+        </button>
       </div>
     </div>
   );

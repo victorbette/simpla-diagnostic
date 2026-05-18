@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, CheckCircle2, Circle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Ativo, ItemPlanoAcao, CarteiraResultado, SimplaCardId } from "@/lib/carteira/types";
 import {
@@ -185,35 +184,52 @@ export function FerramentaCarteira({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F8F9FA" }}>
       {/* Header */}
-      <header className="shrink-0 border-b bg-background shadow-sm">
+      <header className="shrink-0" style={{ backgroundColor: "#041A20" }}>
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="sm" onClick={onClose} className="shrink-0">
-            <X className="h-4 w-4" />
-          </Button>
+          <button
+            onClick={onClose}
+            className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-colors"
+            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)")}
+            aria-label="Fechar"
+          >
+            <X className="h-4 w-4 text-white" />
+          </button>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-semibold">Gestão de Carteira</span>
-              <span className="text-muted-foreground text-sm">{clientName}</span>
+              <span className="font-bold text-white" style={{ fontSize: "18px" }}>
+                Gestão de Carteira
+              </span>
+              <span className="text-sm font-medium" style={{ color: "#BBA866" }}>
+                {clientName}
+              </span>
               {clientProfile && (
-                <span className="rounded-full bg-primary/10 text-primary text-xs px-2 py-0.5">
+                <span
+                  className="rounded-full text-xs px-2 py-0.5 text-white"
+                  style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+                >
                   {PERFIL_LABELS[clientProfile] ?? clientProfile}
                 </span>
               )}
             </div>
           </div>
           {patrimonio > 0 && (
-            <div className="shrink-0 text-right">
-              <p className="text-xs text-muted-foreground">Patrimônio</p>
-              <p className="font-semibold text-sm">{formatBRL(patrimonio)}</p>
+            <div
+              className="shrink-0 text-right rounded-md px-3 py-1.5 border"
+              style={{ borderColor: "#BBA866" }}
+            >
+              <p className="text-xs" style={{ color: "#BBA866" }}>Patrimônio</p>
+              <p className="font-semibold text-sm text-white">{formatBRL(patrimonio)}</p>
             </div>
           )}
         </div>
 
         {/* Stepper */}
         <div className="px-4 pb-3 overflow-x-auto">
-          <div className="flex items-center gap-1 min-w-max">
+          <div className="flex items-center min-w-max">
             {ETAPAS.map((e, i) => {
               const isCurrent = e.n === etapa;
               const isDone = e.n < etapa;
@@ -223,21 +239,46 @@ export function FerramentaCarteira({
                     onClick={() => e.n <= etapa && goToEtapa(e.n)}
                     disabled={e.n > etapa}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-                      isCurrent ? "bg-primary text-primary-foreground" :
-                      isDone ? "text-foreground hover:bg-muted cursor-pointer" :
-                      "text-muted-foreground cursor-default",
+                      "flex items-center gap-2 px-2 py-1 transition-colors rounded",
+                      e.n > etapa ? "cursor-default" : "cursor-pointer",
                     )}
                   >
-                    {isDone ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                    ) : (
-                      <Circle className={cn("h-3.5 w-3.5 shrink-0", isCurrent ? "" : "opacity-40")} />
-                    )}
-                    {e.n}. {e.label}
+                    {/* Circle indicator */}
+                    <span
+                      className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
+                      style={
+                        isDone
+                          ? { backgroundColor: "#22C55E", color: "#fff" }
+                          : isCurrent
+                          ? { backgroundColor: "#fff", color: "#041A20" }
+                          : { backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", border: "1.5px solid rgba(255,255,255,0.3)" }
+                      }
+                    >
+                      {isDone ? "✓" : e.n}
+                    </span>
+                    {/* Label */}
+                    <span
+                      className="text-xs font-medium whitespace-nowrap"
+                      style={
+                        isCurrent
+                          ? { color: "#fff" }
+                          : isDone
+                          ? { color: "rgba(255,255,255,0.7)" }
+                          : { color: "rgba(255,255,255,0.35)" }
+                      }
+                    >
+                      {e.label}
+                    </span>
                   </button>
                   {i < ETAPAS.length - 1 && (
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground mx-0.5 shrink-0" />
+                    <div
+                      className="mx-1 shrink-0"
+                      style={{
+                        width: "24px",
+                        height: "1.5px",
+                        backgroundColor: isDone ? "#22C55E" : "rgba(255,255,255,0.2)",
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -293,26 +334,43 @@ export function FerramentaCarteira({
       </div>
 
       {/* Footer */}
-      <footer className="shrink-0 border-t bg-background px-4 py-3">
+      <footer
+        className="shrink-0 px-4 py-3 border-t"
+        style={{ backgroundColor: "#fff", borderColor: "#E5E7EB" }}
+      >
         <div className="mx-auto max-w-screen-xl flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
             onClick={etapa === 1 ? onClose : handleBack}
+            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+            style={{ borderColor: "#041A20", color: "#041A20", backgroundColor: "transparent" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(4,26,32,0.05)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            <ChevronLeft className="mr-1 h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
             {etapa === 1 ? "Fechar" : "Anterior"}
-          </Button>
-          <span className="text-xs text-muted-foreground">Etapa {etapa} de 4</span>
+          </button>
+          <span className="text-xs" style={{ color: "#6B7280" }}>Etapa {etapa} de 4</span>
           {etapa < 4 ? (
-            <Button onClick={handleNext} size="sm">
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
+              style={{ backgroundColor: "#041A20" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0a2e38")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#041A20")}
+            >
               {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+              <ChevronRight className="h-4 w-4" />
+            </button>
           ) : (
-            <Button onClick={handleSave} size="sm">
+            <button
+              onClick={handleSave}
+              className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
+              style={{ backgroundColor: "#041A20" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0a2e38")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#041A20")}
+            >
               Salvar carteira
-            </Button>
+            </button>
           )}
         </div>
       </footer>

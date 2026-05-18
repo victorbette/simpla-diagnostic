@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import type { ItemPlanoAcao } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { SIMPLA_CARDS, getCard } from "@/lib/carteira/segmentos";
@@ -18,16 +17,21 @@ interface Props {
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo_ativo";
 
+const ACAO_BADGE_STYLE: Record<ItemPlanoAcao["tipo"], { bg: string; color: string; label: string }> = {
+  manter:          { bg: "#F3F4F6", color: "#374151", label: "Manter" },
+  aportar:         { bg: "#DBEAFE", color: "#1E40AF", label: "Aportar" },
+  resgatar_parcial:{ bg: "#FEF3C7", color: "#92400E", label: "Resgatar parcial" },
+  resgatar_total:  { bg: "#FEE2E2", color: "#991B1B", label: "Resgatar tudo" },
+  novo_ativo:      { bg: "#EDE9FE", color: "#5B21B6", label: "Novo ativo" },
+};
+
 function AcaoBadge({ tipo }: { tipo: ItemPlanoAcao["tipo"] }) {
-  const cfg: Record<ItemPlanoAcao["tipo"], { cls: string; label: string }> = {
-    manter: { cls: "bg-gray-100 text-gray-700", label: "Manter" },
-    aportar: { cls: "bg-blue-100 text-blue-800", label: "Aportar" },
-    resgatar_parcial: { cls: "bg-amber-100 text-amber-800", label: "Resgatar parcial" },
-    resgatar_total: { cls: "bg-red-100 text-red-800", label: "Resgatar tudo" },
-    novo_ativo: { cls: "bg-purple-100 text-purple-800", label: "Novo ativo" },
-  };
-  const { cls, label } = cfg[tipo];
-  return <span className={cn("text-xs rounded px-1.5 py-0.5", cls)}>{label}</span>;
+  const { bg, color, label } = ACAO_BADGE_STYLE[tipo];
+  return (
+    <span style={{ backgroundColor: bg, color, fontSize: 11, borderRadius: 4, padding: "2px 6px" }}>
+      {label}
+    </span>
+  );
 }
 
 export function Etapa3PlanoAcao({
@@ -76,33 +80,26 @@ export function Etapa3PlanoAcao({
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Total aportes</p>
-          <p className="text-base font-semibold text-green-600">{formatBRL(totalAportes)}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #22C55E", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total aportes</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(totalAportes)}</p>
         </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Total resgates</p>
-          <p className="text-base font-semibold text-red-600">{formatBRL(totalResgates)}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #F87171", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total resgates</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#DC2626", margin: 0 }}>{formatBRL(totalResgates)}</p>
         </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Saldo líquido</p>
-          <p
-            className={cn(
-              "text-base font-semibold",
-              saldoLiquido >= 0 ? "text-green-600" : "text-red-600"
-            )}
-          >
-            {formatBRL(saldoLiquido)}
-          </p>
+        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: `3px solid ${saldoLiquido >= 0 ? "#22C55E" : "#F87171"}`, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Saldo líquido</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#DC2626", margin: 0 }}>{formatBRL(saldoLiquido)}</p>
         </div>
-        <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">Movimentações</p>
-          <p className="text-base font-semibold">{nMovs}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #041A20", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Movimentações</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: 0 }}>{nMovs}</p>
         </div>
       </div>
 
       {/* Filter buttons */}
-      <div className="flex gap-1 flex-wrap">
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {(
           [
             ["todos", "Todos"],
@@ -115,12 +112,16 @@ export function Etapa3PlanoAcao({
           <button
             key={f}
             onClick={() => setFiltro(f)}
-            className={cn(
-              "px-3 py-1 rounded-md text-xs font-medium transition-colors border",
-              filtro === f
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-muted-foreground hover:bg-muted"
-            )}
+            style={{
+              padding: "4px 12px",
+              borderRadius: 6,
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: "pointer",
+              border: filtro === f ? "1.5px solid #041A20" : "1px solid #E5E7EB",
+              backgroundColor: filtro === f ? "#041A20" : "white",
+              color: filtro === f ? "white" : "#6B7280",
+            }}
           >
             {label}
           </button>
@@ -135,25 +136,17 @@ export function Etapa3PlanoAcao({
 
         return (
           <div key={cardId} className="rounded-lg border overflow-hidden">
-            <div className="bg-muted px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div style={{ backgroundColor: "#F8F9FA", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span
-                  className="inline-block h-2.5 w-2.5 rounded-full"
-                  style={{ backgroundColor: card.cor }}
+                  style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: card.cor }}
                 />
-                <span className="font-semibold text-sm">
+                <span style={{ fontWeight: 600, fontSize: 14, color: "#041A20" }}>
                   {card.grupo} — {card.label}
                 </span>
               </div>
               <span
-                className={cn(
-                  "text-sm font-medium",
-                  groupTotal > 0
-                    ? "text-green-600"
-                    : groupTotal < 0
-                    ? "text-red-600"
-                    : "text-muted-foreground"
-                )}
+                style={{ fontSize: 13, fontWeight: 500, color: groupTotal > 0 ? "#15803D" : groupTotal < 0 ? "#DC2626" : "#9CA3AF" }}
               >
                 {groupTotal === 0
                   ? "—"
@@ -162,17 +155,15 @@ export function Etapa3PlanoAcao({
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="text-muted-foreground border-b">
+                <thead style={{ backgroundColor: "#041A20" }}>
                   <tr>
-                    <th className="px-3 py-2 text-left font-normal">Ativo</th>
-                    <th className="px-3 py-2 text-right font-normal whitespace-nowrap">Atual R$</th>
-                    <th className="px-3 py-2 text-right font-normal whitespace-nowrap">Meta R$</th>
-                    <th className="px-3 py-2 text-right font-normal whitespace-nowrap">
-                      Movimentação
-                    </th>
-                    <th className="px-3 py-2 text-left font-normal">Ação</th>
-                    <th className="px-3 py-2 text-left font-normal">Observação</th>
-                    <th className="px-3 py-2 text-left font-normal">Prioridade</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Ativo</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Atual R$</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Meta R$</th>
+                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Movimentação</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Ação</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Observação</th>
+                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Prioridade</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -203,14 +194,7 @@ export function Etapa3PlanoAcao({
                         {formatBRL(item.valorMetaBRL)}
                       </td>
                       <td
-                        className={cn(
-                          "px-3 py-2 text-right font-medium whitespace-nowrap",
-                          item.movimentacaoBRL > 0
-                            ? "text-green-600"
-                            : item.movimentacaoBRL < 0
-                            ? "text-red-600"
-                            : "text-muted-foreground"
-                        )}
+                        style={{ padding: "8px 12px", textAlign: "right", fontWeight: 500, whiteSpace: "nowrap", color: item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#DC2626" : "#9CA3AF" }}
                       >
                         {item.movimentacaoBRL === 0
                           ? "—"

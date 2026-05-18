@@ -1,6 +1,5 @@
 import { useState, useRef, useMemo } from "react";
 import { Upload, X, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Ativo } from "@/lib/carteira/types";
@@ -112,14 +111,17 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
       {/* LEFT SIDE */}
       <div className="space-y-6">
         {/* AI Import Panel */}
-        <div className="rounded-lg border bg-card">
+        <div
+          className="rounded-lg border bg-card"
+          style={{ borderTop: "3px solid #46BDC6", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+        >
           <button
             onClick={() => setIaOpen(!iaOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500" />
-              Importar com IA
+              <Sparkles className="h-4 w-4" style={{ color: "#46BDC6" }} />
+              <span style={{ fontWeight: 600, color: "#041A20" }}>Importar com IA</span>
               <span className="text-xs text-muted-foreground font-normal">
                 — envie extratos, prints, PDF ou planilhas
               </span>
@@ -134,6 +136,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
               {/* Drop zone */}
               <div
                 className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                style={{ borderColor: "#E5E7EB" }}
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -181,10 +184,22 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                 </div>
               )}
 
-              <Button
-                size="sm"
+              <button
                 disabled={iaArquivos.length === 0 || iaLoading}
                 onClick={handleAnalisarIA}
+                style={{
+                  backgroundColor: "#46BDC6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  opacity: (iaArquivos.length === 0 || iaLoading) ? 0.5 : 1,
+                }}
               >
                 {iaLoading ? (
                   <>
@@ -194,7 +209,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                 ) : (
                   "Analisar com IA"
                 )}
-              </Button>
+              </button>
               {iaProgress && (
                 <p className="text-xs text-muted-foreground">{iaProgress}</p>
               )}
@@ -206,13 +221,13 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                   <p className="text-sm font-medium">Ativos extraídos — revise e confirme</p>
                   <div className="overflow-x-auto rounded border">
                     <table className="w-full text-xs">
-                      <thead className="bg-muted text-muted-foreground">
+                      <thead style={{ backgroundColor: "#041A20" }}>
                         <tr>
-                          <th className="px-2 py-1.5 w-8"></th>
-                          <th className="px-2 py-1.5 text-left font-normal">Nome</th>
-                          <th className="px-2 py-1.5 text-left font-normal">Valor R$</th>
-                          <th className="px-2 py-1.5 text-left font-normal">Card</th>
-                          <th className="px-2 py-1.5 text-left font-normal">Segmento</th>
+                          <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }} className="w-8"></th>
+                          <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }}>Nome</th>
+                          <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }}>Valor R$</th>
+                          <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }}>Card</th>
+                          <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }}>Segmento</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -293,9 +308,20 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                       </tbody>
                     </table>
                   </div>
-                  <Button size="sm" onClick={handleAdicionarSelecionados}>
+                  <button
+                    onClick={handleAdicionarSelecionados}
+                    style={{
+                      backgroundColor: "#041A20",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "6px 14px",
+                      cursor: "pointer",
+                      fontSize: 13,
+                    }}
+                  >
                     Adicionar selecionados à carteira
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -315,8 +341,11 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
           return (
             <div key={grupoNome} className="rounded-lg border overflow-hidden">
               {/* Group header */}
-              <div className="flex items-center justify-between px-4 py-2 bg-muted border-b">
-                <span className="font-semibold text-sm">{grupoNome}</span>
+              <div
+                className="flex items-center justify-between px-4 py-2 border-b"
+                style={{ backgroundColor: "#F8F9FA" }}
+              >
+                <span style={{ fontWeight: 600, color: "#041A20", fontSize: 14 }}>{grupoNome}</span>
                 <div className="text-right text-xs text-muted-foreground">
                   {grupoNome === "Internacional" && (
                     <span className="mr-3 inline-flex items-center gap-1.5">
@@ -362,13 +391,21 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
 
       {/* RIGHT SIDE */}
       <div className="sticky top-20 space-y-4">
-        <div className="rounded-lg border bg-card p-4 space-y-4">
-          <h3 className="font-semibold text-sm">Resumo da carteira atual</h3>
+        <div
+          className="rounded-lg border bg-card p-4 space-y-4"
+          style={{ borderTop: "3px solid #BBA866", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+        >
+          <h3 className="font-semibold text-sm" style={{ fontWeight: 700, color: "#041A20", fontSize: 14 }}>Resumo da carteira atual</h3>
 
           {/* Patrimônio */}
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Patrimônio total</p>
-            <p className="text-2xl font-bold">{formatBRL(patrimonio)}</p>
+            <p
+              className="text-xs text-muted-foreground mb-0.5"
+              style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}
+            >
+              Patrimônio total
+            </p>
+            <p className="text-2xl font-bold" style={{ color: "#041A20" }}>{formatBRL(patrimonio)}</p>
           </div>
 
           {/* Stacked bar */}
@@ -442,4 +479,3 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
     </div>
   );
 }
-

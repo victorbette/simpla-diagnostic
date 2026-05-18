@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -27,7 +26,6 @@ import {
   type LivingPolicy,
 } from "@/lib/insuranceCalc";
 import type { ProtecaoSimplificada } from "@/types/financialPlanning";
-import { cn } from "@/lib/utils";
 
 type Tab = "imediatas" | "continuas" | "vida" | "apolices";
 
@@ -115,12 +113,12 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+            className="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+            style={
               tab === t.id
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
+                ? { borderColor: "#F87171", color: "#041A20" }
+                : { borderColor: "transparent", color: "#6B7280" }
+            }
           >
             {t.label}
           </button>
@@ -159,13 +157,20 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Dívidas</Label>
-                <Button size="sm" variant="outline" onClick={addDebt}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar</Button>
+                <button
+                  onClick={addDebt}
+                  style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
+                >
+                  <Plus className="h-3.5 w-3.5" />Adicionar
+                </button>
               </div>
               {data.debts.map(d => (
                 <div key={d.id} className="flex gap-2 items-center">
                   <Input placeholder="Nome" value={d.name} onChange={e => updateDebt(d.id, { name: e.target.value })} className="flex-1" />
                   <div className="w-40"><CurrencyInput value={d.value} onChange={v => updateDebt(d.id, { value: v })} /></div>
-                  <Button size="icon" variant="ghost" onClick={() => removeDebt(d.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <button onClick={() => removeDebt(d.id)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </button>
                 </div>
               ))}
               {data.debts.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma dívida cadastrada.</p>}
@@ -176,20 +181,27 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Ativos do inventário</Label>
-                <Button size="sm" variant="outline" onClick={addAsset}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar</Button>
+                <button
+                  onClick={addAsset}
+                  style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
+                >
+                  <Plus className="h-3.5 w-3.5" />Adicionar
+                </button>
               </div>
               {data.assets.map(a => (
                 <div key={a.id} className="flex gap-2 items-center">
                   <Input placeholder="Nome" value={a.name} onChange={e => updateAsset(a.id, { name: e.target.value })} className="flex-1" />
                   <div className="w-40"><CurrencyInput value={a.value} onChange={v => updateAsset(a.id, { value: v })} /></div>
-                  <Button size="icon" variant="ghost" onClick={() => removeAsset(a.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <button onClick={() => removeAsset(a.id)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </button>
                 </div>
               ))}
               {data.assets.length === 0 && <p className="text-xs text-muted-foreground">Nenhum ativo cadastrado.</p>}
             </div>
-            <Card>
+            <Card style={{ borderTop: "3px solid #F87171", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <CardContent className="pt-4 space-y-1.5">
-                <p className="text-xs font-semibold text-muted-foreground">Resumo imediato</p>
+                <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo imediato</p>
                 {[
                   { label: "Total de ativos", value: resultado.totalAssets },
                   { label: "Total de dívidas", value: resultado.totalDebts },
@@ -198,8 +210,8 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
                   { label: "Total imediato", value: resultado.immediateTotal, bold: true },
                 ].map(({ label, value, bold }) => (
                   <div key={label} className="flex justify-between text-sm">
-                    <span className={bold ? "font-semibold" : "text-muted-foreground"}>{label}</span>
-                    <span className={`tabular-nums ${bold ? "font-semibold" : ""}`}>{formatCurrency(value)}</span>
+                    <span style={{ color: bold ? "#041A20" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                    <span className="tabular-nums" style={{ color: bold ? "#041A20" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                   </div>
                 ))}
               </CardContent>
@@ -229,14 +241,21 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Filhos</Label>
-                <Button size="sm" variant="outline" onClick={addChild}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar</Button>
+                <button
+                  onClick={addChild}
+                  style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
+                >
+                  <Plus className="h-3.5 w-3.5" />Adicionar
+                </button>
               </div>
               {data.children.map(c => (
                 <Card key={c.id}>
                   <CardContent className="pt-3 pb-3 space-y-2">
                     <div className="flex items-center gap-2">
                       <Input placeholder="Nome" value={c.name} onChange={e => updateChild(c.id, { name: e.target.value })} className="flex-1" />
-                      <Button size="icon" variant="ghost" onClick={() => removeChild(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <button onClick={() => removeChild(c.id)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </button>
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
@@ -258,9 +277,9 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             </div>
           </div>
 
-          <Card>
+          <Card style={{ borderTop: "3px solid #F87171", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">Resumo contínuo</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo contínuo</p>
               {[
                 { label: "Gap de renda mensal", value: Math.max(0, data.familyExpenses - data.spouseIncome) },
                 { label: "Cobertura de estilo de vida", value: resultado.lifestyleTotal },
@@ -268,8 +287,8 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
                 { label: "Total contínuo", value: resultado.ongoingTotal, bold: true },
               ].map(({ label, value, bold }) => (
                 <div key={label} className="flex justify-between text-sm">
-                  <span className={bold ? "font-semibold" : "text-muted-foreground"}>{label}</span>
-                  <span className={`tabular-nums ${bold ? "font-semibold" : ""}`}>{formatCurrency(value)}</span>
+                  <span style={{ color: bold ? "#041A20" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                  <span className="tabular-nums" style={{ color: bold ? "#041A20" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                 </div>
               ))}
             </CardContent>
@@ -295,7 +314,12 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Coberturas em vida (IPA/DG/MA)</Label>
-                <Button size="sm" variant="outline" onClick={addLivingPolicy}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar</Button>
+                <button
+                  onClick={addLivingPolicy}
+                  style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
+                >
+                  <Plus className="h-3.5 w-3.5" />Adicionar
+                </button>
               </div>
               {data.livingPolicies.map(p => (
                 <div key={p.id} className="flex gap-2 items-center">
@@ -309,7 +333,9 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
                   </Select>
                   <Input placeholder="Nome" value={p.name} onChange={e => updateLivingPolicy(p.id, { name: e.target.value })} className="flex-1" />
                   <div className="w-36"><CurrencyInput value={p.value} onChange={v => updateLivingPolicy(p.id, { value: v })} /></div>
-                  <Button size="icon" variant="ghost" onClick={() => removeLivingPolicy(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <button onClick={() => removeLivingPolicy(p.id)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -334,20 +360,20 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
             </div>
           </div>
 
-          <Card>
+          <Card style={{ borderTop: "3px solid #F87171", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
-              <p className="text-xs font-semibold text-muted-foreground">Necessidades em vida</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Necessidades em vida</p>
               {[
-                { label: "Necessidade de invalidez (5 anos)", value: resultado.disabilityTotal },
-                { label: "Cobertura invalidez atual", value: resultado.disabilityCoverage },
-                { label: "Gap invalidez", value: resultado.disabilityGap, cls: resultado.disabilityGap > 0 ? "text-destructive" : "text-emerald-600" },
-                { label: "Necessidade doenças graves (1 ano)", value: resultado.criticalIllnessTotal },
-                { label: "Cobertura DG atual", value: resultado.criticalIllnessCoverage },
-                { label: "Gap DG", value: resultado.criticalIllnessGap, cls: resultado.criticalIllnessGap > 0 ? "text-destructive" : "text-emerald-600" },
-              ].map(({ label, value, cls }) => (
+                { label: "Necessidade de invalidez (5 anos)", value: resultado.disabilityTotal, neg: false },
+                { label: "Cobertura invalidez atual", value: resultado.disabilityCoverage, neg: false },
+                { label: "Gap invalidez", value: resultado.disabilityGap, neg: resultado.disabilityGap > 0 },
+                { label: "Necessidade doenças graves (1 ano)", value: resultado.criticalIllnessTotal, neg: false },
+                { label: "Cobertura DG atual", value: resultado.criticalIllnessCoverage, neg: false },
+                { label: "Gap DG", value: resultado.criticalIllnessGap, neg: resultado.criticalIllnessGap > 0 },
+              ].map(({ label, value, neg }) => (
                 <div key={label} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{label}</span>
-                  <span className={`tabular-nums ${cls ?? ""}`}>{formatCurrency(value)}</span>
+                  <span style={{ color: "#6B7280" }}>{label}</span>
+                  <span className="tabular-nums" style={{ color: neg ? "#F87171" : (resultado.disabilityGap <= 0 && label === "Gap invalidez") || (resultado.criticalIllnessGap <= 0 && label === "Gap DG") ? "#059669" : undefined }}>{formatCurrency(value)}</span>
                 </div>
               ))}
             </CardContent>
@@ -361,43 +387,50 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Apólices de seguro de vida</Label>
-              <Button size="sm" variant="outline" onClick={addPolicy}><Plus className="h-3.5 w-3.5 mr-1" />Adicionar</Button>
+              <button
+                onClick={addPolicy}
+                style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
+              >
+                <Plus className="h-3.5 w-3.5" />Adicionar
+              </button>
             </div>
             {data.policies.map(p => (
               <div key={p.id} className="flex gap-2 items-center">
                 <Input placeholder="Nome da apólice" value={p.name} onChange={e => updatePolicy(p.id, { name: e.target.value })} className="flex-1" />
                 <div className="w-44"><CurrencyInput value={p.value} onChange={v => updatePolicy(p.id, { value: v })} /></div>
-                <Button size="icon" variant="ghost" onClick={() => removePolicy(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <button onClick={() => removePolicy(p.id)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </button>
               </div>
             ))}
             {data.policies.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma apólice cadastrada.</p>}
           </div>
 
-          <Card>
+          <Card style={{ borderTop: "3px solid #F87171", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground">Resumo de cobertura</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo de cobertura</p>
               <div className="space-y-1.5">
                 {[
                   { label: "Capital necessário total", value: resultado.totalNeed, bold: true },
                   { label: "Capital segurado atual", value: resultado.totalCoverage, bold: true },
                 ].map(({ label, value, bold }) => (
                   <div key={label} className="flex justify-between text-sm">
-                    <span className={bold ? "font-semibold" : "text-muted-foreground"}>{label}</span>
-                    <span className={`tabular-nums ${bold ? "font-semibold" : ""}`}>{formatCurrency(value)}</span>
+                    <span style={{ color: bold ? "#041A20" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                    <span className="tabular-nums" style={{ color: bold ? "#041A20" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                   </div>
                 ))}
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Cobertura</span>
+                  <span style={{ color: "#6B7280" }}>Cobertura</span>
                   <span>{formatNumber(coveragePct, 0)}%</span>
                 </div>
                 <Progress value={coveragePct} className="h-2" />
               </div>
               {resultado.gap > 0 ? (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                  <p className="text-xs text-red-700">Gap descoberto</p>
-                  <p className="text-2xl font-bold text-red-700 tabular-nums">{formatCurrency(resultado.gap)}</p>
+                <div style={{ border: "1px solid #FECACA", backgroundColor: "#FFF5F5", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                  <p className="text-xs" style={{ color: "#F87171" }}>Gap descoberto</p>
+                  <p className="tabular-nums" style={{ color: "#F87171", fontSize: 22, fontWeight: 700 }}>{formatCurrency(resultado.gap)}</p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
@@ -410,24 +443,29 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
       )}
 
       {/* Footer fixo */}
-      <div className="sticky bottom-0 -mx-6 -mb-6 flex items-center justify-between gap-4 border-t bg-background px-6 py-4">
+      <div className="sticky bottom-0 -mx-6 -mb-6 flex items-center justify-between gap-4 border-t px-6 py-4" style={{ backgroundColor: "white" }}>
         <div className="flex gap-6">
           <div>
-            <p className="text-xs text-muted-foreground">Capital necessário</p>
-            <p className="text-base font-bold tabular-nums">{formatCurrency(resultado.totalNeed)}</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Capital necessário</p>
+            <p className="text-base font-bold tabular-nums" style={{ color: "#041A20" }}>{formatCurrency(resultado.totalNeed)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Capital segurado</p>
-            <p className="text-base font-bold tabular-nums text-primary">{formatCurrency(resultado.totalCoverage)}</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Capital segurado</p>
+            <p className="text-base font-bold tabular-nums" style={{ color: "#041A20" }}>{formatCurrency(resultado.totalCoverage)}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Gap</p>
-            <p className={`text-base font-bold tabular-nums ${resultado.gap > 0 ? "text-destructive" : "text-emerald-600"}`}>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Gap</p>
+            <p className="text-base font-bold tabular-nums" style={{ color: resultado.gap > 0 ? "#F87171" : "#059669" }}>
               {formatCurrency(resultado.gap)}
             </p>
           </div>
         </div>
-        <Button onClick={handleSave}>Salvar análise</Button>
+        <button
+          onClick={handleSave}
+          style={{ backgroundColor: "#F87171", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+        >
+          Salvar análise
+        </button>
       </div>
     </div>
   );
