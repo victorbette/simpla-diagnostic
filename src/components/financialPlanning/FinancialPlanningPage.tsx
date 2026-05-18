@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { initialFinancialPlan } from "@/types/financialPlanning";
 import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
@@ -33,16 +33,36 @@ interface Props {
 
 export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) {
   const store = useFinancialPlanStore();
-  const [plan, setPlan] = useState<FinancialPlan>(() => {
-    const existing = store.getLatestPlan(clientId);
-    return existing ?? initialFinancialPlan(clientId);
-  });
+  const [plan, setPlan] = useState<FinancialPlan>(() => initialFinancialPlan(clientId));
   const [step, setStep] = useState<FPStep>("coleta");
   const [completedSteps, setCompletedSteps] = useState<Set<FPStep>>(new Set());
   const [saving, setSaving] = useState(false);
   const [printMode, setPrintMode] = useState<"advisor" | "client" | null>(null);
   const [dirty, setDirty] = useState(false);
   const [mostrarEstrategia, setMostrarEstrategia] = useState(false);
+  const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
+  const planInitialized = useRef(false);
+
+  // Load existing plan from Supabase on mount; fall back to blank if none exists
+  useEffect(() => {
+    store.carregarPlano(clientId).then(() => {
+      // sync handled in the effect below
+    }).catch(() => {
+      // carregarPlano already logs the error
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId]);
+
+  // Once carregarPlano resolves, sync store.plan → local plan (only on first load)
+  useEffect(() => {
+    if (!store.loading && !planInitialized.current) {
+      planInitialized.current = true;
+      if (store.plan) {
+        setPlan(store.plan);
+        setDirty(false);
+      }
+    }
+  }, [store.loading, store.plan]);
 
   const updatePlan = useCallback((patch: Partial<FinancialPlan>) => {
     setPlan((prev) => ({ ...prev, ...patch }));
@@ -63,6 +83,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       const saved = await store.savePlan(status ? { ...plan, status } : plan);
       setPlan(saved);
       setDirty(false);
+      setUltimoSalvo(new Date());
       toast.success(status === "completo" ? "Plano finalizado!" : "Rascunho salvo.");
     } catch (err) {
       const supaErr = err as { message?: string; hint?: string; details?: string };
@@ -75,8 +96,17 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     }
   }
 
-  function handleNext() {
+  async function handleNext() {
     markComplete(step);
+    // Auto-save silently before advancing
+    try {
+      const saved = await store.savePlan(plan);
+      setPlan(saved);
+      setDirty(false);
+      setUltimoSalvo(new Date());
+    } catch {
+      // falha silenciosa — usuário pode salvar manualmente
+    }
     const idx = STEP_ORDER.indexOf(step);
     if (idx < STEP_ORDER.length - 1) setStep(STEP_ORDER[idx + 1]);
   }
@@ -105,9 +135,19 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     setStep(target);
   }
 
-  function handleBackToClients() {
-    if (dirty && !window.confirm("Há alterações não salvas. Deseja sair mesmo assim?"))
-      return;
+  async function handleBackToClients() {
+    if (dirty) {
+      const resposta = window.confirm(
+        "Há alterações não salvas. Deseja salvar antes de sair?"
+      );
+      if (resposta) {
+        try {
+          await handleSave();
+        } catch {
+          // erro já exibido em handleSave
+        }
+      }
+    }
     onClose();
   }
 
@@ -230,6 +270,8 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         onStepClick={handleStepClick}
         onSave={() => handleSave()}
         saving={saving}
+        dirty={dirty}
+        ultimoSalvo={ultimoSalvo}
         onBack={handleBack}
         onNext={handleNext}
         onAvancarEstrategia={() => setMostrarEstrategia(true)}

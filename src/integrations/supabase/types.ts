@@ -16,7 +16,11 @@ export interface Database {
           nome: string;
           email: string | null;
           telefone: string | null;
+          cpf: string | null;
+          data_nascimento: string | null;
+          observacoes: string | null;
           data_criacao: string;
+          updated_at: string | null;
         };
         Insert: {
           id?: string;
@@ -24,7 +28,11 @@ export interface Database {
           nome: string;
           email?: string | null;
           telefone?: string | null;
+          cpf?: string | null;
+          data_nascimento?: string | null;
+          observacoes?: string | null;
           data_criacao?: string;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -32,7 +40,11 @@ export interface Database {
           nome?: string;
           email?: string | null;
           telefone?: string | null;
+          cpf?: string | null;
+          data_nascimento?: string | null;
+          observacoes?: string | null;
           data_criacao?: string;
+          updated_at?: string | null;
         };
       };
       simulations: {

@@ -8,7 +8,11 @@ export interface Client {
   nome: string;
   email: string | null;
   telefone: string | null;
+  cpf?: string | null;
+  dataNascimento?: string | null;
+  observacoes?: string | null;
   dataCriacao: string;
+  updatedAt?: string | null;
 }
 
 export interface Simulation {
@@ -19,6 +23,21 @@ export interface Simulation {
   dataSimulacao: string;
 }
 
+function mapRow(row: Record<string, unknown>): Client {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    nome: row.nome as string,
+    email: (row.email as string | null) ?? null,
+    telefone: (row.telefone as string | null) ?? null,
+    cpf: (row.cpf as string | null) ?? null,
+    dataNascimento: (row.data_nascimento as string | null) ?? null,
+    observacoes: (row.observacoes as string | null) ?? null,
+    dataCriacao: row.data_criacao as string,
+    updatedAt: (row.updated_at as string | null) ?? null,
+  };
+}
+
 export function useClientStore() {
   const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
@@ -26,87 +45,143 @@ export function useClientStore() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const carregarClientes = useCallback(async () => {
     if (!user) {
       setClients([]);
-      setSimulations([]);
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("data_criacao", { ascending: false });
 
-    async function load() {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("clients")
-          .select("*")
-          .eq("user_id", user!.id)
-          .order("data_criacao", { ascending: false });
-
-        if (error) throw error;
-
-        setClients(
-          (data ?? []).map((row) => ({
-            id: row.id,
-            userId: row.user_id,
-            nome: row.nome,
-            email: row.email,
-            telefone: row.telefone,
-            dataCriacao: row.data_criacao,
-          }))
-        );
-      } catch (err) {
-        console.error("useClientStore: failed to load clients", err);
-        setError(err instanceof Error ? err.message : "Erro ao carregar clientes");
-      } finally {
-        setLoading(false);
-      }
+      if (err) throw err;
+      setClients((data ?? []).map((row) => mapRow(row as unknown as Record<string, unknown>)));
+    } catch (err) {
+      console.error("useClientStore: carregarClientes failed", err);
+      setError(err instanceof Error ? err.message : "Erro ao carregar clientes");
+    } finally {
+      setLoading(false);
     }
-
-    load();
   }, [user]);
 
-  const addClient = useCallback(
-    async (nome: string, email?: string, telefone?: string): Promise<Client> => {
+  useEffect(() => {
+    carregarClientes();
+  }, [carregarClientes]);
+
+  // ── Criar ─────────────────────────────────────────────────────────────────
+
+  const criarCliente = useCallback(
+    async (dados: {
+      nome: string;
+      email?: string;
+      telefone?: string;
+      cpf?: string;
+      dataNascimento?: string;
+      observacoes?: string;
+    }): Promise<Client> => {
       if (!user) throw new Error("Usuário não autenticado");
 
-      const { data, error } = await supabase
+      const { data, error: err } = await supabase
         .from("clients")
-        .insert({ user_id: user.id, nome, email: email ?? null, telefone: telefone ?? null })
+        .insert({
+          user_id: user.id,
+          nome: dados.nome,
+          email: dados.email ?? null,
+          telefone: dados.telefone ?? null,
+          cpf: dados.cpf ?? null,
+          data_nascimento: dados.dataNascimento ?? null,
+          observacoes: dados.observacoes ?? null,
+        })
         .select()
         .single();
 
-      if (error) {
-        console.error("useClientStore: addClient failed", error);
-        throw error;
+      if (err) {
+        console.error("useClientStore: criarCliente failed", {
+          message: err.message,
+          details: err.details,
+          hint: err.hint,
+          code: err.code,
+        });
+        throw new Error(err.message);
       }
 
-      const client: Client = {
-        id: data.id,
-        userId: data.user_id,
-        nome: data.nome,
-        email: data.email,
-        telefone: data.telefone,
-        dataCriacao: data.data_criacao,
-      };
-
-      setClients((prev) => [client, ...prev]);
-      return client;
+      const novo = mapRow(data as unknown as Record<string, unknown>);
+      setClients((prev) => [novo, ...prev]);
+      return novo;
     },
     [user]
   );
 
-  const deleteClient = useCallback(async (id: string): Promise<void> => {
-    const { error } = await supabase.from("clients").delete().eq("id", id);
+  // Alias para compatibilidade com código existente
+  const addClient = useCallback(
+    (nome: string, email?: string, telefone?: string): Promise<Client> =>
+      criarCliente({ nome, email, telefone }),
+    [criarCliente]
+  );
 
-    if (error) {
-      console.error("useClientStore: deleteClient failed", error);
-      throw error;
+  // ── Atualizar ─────────────────────────────────────────────────────────────
+
+  const atualizarCliente = useCallback(
+    async (
+      id: string,
+      dados: Partial<Omit<Client, "id" | "userId" | "dataCriacao">>
+    ): Promise<void> => {
+      const payload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (dados.nome !== undefined) payload.nome = dados.nome;
+      if (dados.email !== undefined) payload.email = dados.email;
+      if (dados.telefone !== undefined) payload.telefone = dados.telefone;
+      if (dados.cpf !== undefined) payload.cpf = dados.cpf;
+      if (dados.dataNascimento !== undefined) payload.data_nascimento = dados.dataNascimento;
+      if (dados.observacoes !== undefined) payload.observacoes = dados.observacoes;
+
+      const { error: err } = await supabase
+        .from("clients")
+        .update(payload)
+        .eq("id", id);
+
+      if (err) {
+        console.error("useClientStore: atualizarCliente failed", {
+          message: err.message,
+          details: err.details,
+          hint: err.hint,
+          code: err.code,
+        });
+        throw new Error(err.message);
+      }
+
+      setClients((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, ...dados } : c))
+      );
+    },
+    []
+  );
+
+  // ── Deletar ───────────────────────────────────────────────────────────────
+
+  const deletarCliente = useCallback(async (id: string): Promise<void> => {
+    const { error: err } = await supabase.from("clients").delete().eq("id", id);
+
+    if (err) {
+      console.error("useClientStore: deletarCliente failed", err);
+      throw new Error(err.message);
     }
 
     setClients((prev) => prev.filter((c) => c.id !== id));
     setSimulations((prev) => prev.filter((s) => s.clientId !== id));
   }, []);
+
+  // Alias para compatibilidade
+  const deleteClient = deletarCliente;
+
+  // ── Simulações ────────────────────────────────────────────────────────────
 
   const addSimulation = useCallback(
     async (
@@ -114,18 +189,18 @@ export function useClientStore() {
       dadosInput: Record<string, unknown>,
       resultadosCalc: Record<string, unknown>
     ): Promise<Simulation> => {
-      const { data, error } = await supabase
+      const { data, error: err } = await supabase
         .from("simulations")
         .insert({ client_id: clientId, dados_input: dadosInput, resultados_calc: resultadosCalc })
         .select()
         .single();
 
-      if (error) {
-        console.error("useClientStore: addSimulation failed", error);
-        throw error;
+      if (err) {
+        console.error("useClientStore: addSimulation failed", err);
+        throw err;
       }
 
-      const simulation: Simulation = {
+      const sim: Simulation = {
         id: data.id,
         clientId: data.client_id,
         dadosInput: data.dados_input as Record<string, unknown>,
@@ -133,27 +208,21 @@ export function useClientStore() {
         dataSimulacao: data.data_simulacao,
       };
 
-      setSimulations((prev) => [simulation, ...prev]);
-      return simulation;
+      setSimulations((prev) => [sim, ...prev]);
+      return sim;
     },
     []
   );
 
   const deleteSimulation = useCallback(async (id: string): Promise<void> => {
-    const { error } = await supabase.from("simulations").delete().eq("id", id);
-
-    if (error) {
-      console.error("useClientStore: deleteSimulation failed", error);
-      throw error;
-    }
-
+    const { error: err } = await supabase.from("simulations").delete().eq("id", id);
+    if (err) throw err;
     setSimulations((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
   const getClientSimulations = useCallback(
-    (clientId: string): Simulation[] => {
-      return simulations.filter((s) => s.clientId === clientId);
-    },
+    (clientId: string): Simulation[] =>
+      simulations.filter((s) => s.clientId === clientId),
     [simulations]
   );
 
@@ -162,6 +231,10 @@ export function useClientStore() {
     simulations,
     loading,
     error,
+    carregarClientes,
+    criarCliente,
+    atualizarCliente,
+    deletarCliente,
     addClient,
     deleteClient,
     addSimulation,

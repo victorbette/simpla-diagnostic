@@ -14,12 +14,13 @@ import type {
 } from "@/types/financialPlanning";
 import { initialDadosCliente } from "@/types/financialPlanning";
 
-// ─── Row shape returned by Supabase ──────────────────────────────────────────
+// ─── DB row → FinancialPlan ───────────────────────────────────────────────────
 
 interface PlanRow {
   id: string;
   client_id: string;
   suitability: Record<string, unknown> | null;
+  dados_cliente: Record<string, unknown> | null;
   ativos_atuais: Record<string, unknown>;
   alocacao_personalizada: Record<string, unknown> | null;
   planejamento_if: Record<string, unknown>;
@@ -27,7 +28,6 @@ interface PlanRow {
   fiscal: Record<string, unknown>;
   sucessorio: Record<string, unknown>;
   notas_assessor: string;
-  dados_cliente: Record<string, unknown> | null;
   estrategia_inicial: Record<string, unknown> | null;
   status: string;
   created_at: string;
@@ -43,14 +43,30 @@ function rowToPlan(row: PlanRow): FinancialPlan {
     suitability: (row.suitability as unknown as SuitabilityResult) ?? null,
     dadosCliente: (row.dados_cliente as unknown as DadosCliente) ?? { ...initialDadosCliente },
     ativosAtuais: row.ativos_atuais as unknown as AtivoAtual,
-    alocacaoPersonalizada:
-      (row.alocacao_personalizada as unknown as MacroalocacaoAlvo) ?? null,
+    alocacaoPersonalizada: (row.alocacao_personalizada as unknown as MacroalocacaoAlvo) ?? null,
     planejamentoIF: row.planejamento_if as unknown as PlanejamentoIF,
     protecao: row.protecao as unknown as ProtecaoSimplificada,
     fiscal: row.fiscal as unknown as PlanejamentoFiscal,
     sucessorio: row.sucessorio as unknown as PlanejamentoSucessorio,
-    notasConsultor: row.notas_assessor,
-    status: row.status as FinancialPlan["status"],
+    notasConsultor: row.notas_assessor ?? "",
+    status: (row.status ?? "rascunho") as FinancialPlan["status"],
+  };
+}
+
+function planToPayload(plan: FinancialPlan): Record<string, unknown> {
+  return {
+    client_id: plan.clientId,
+    suitability: (plan.suitability ?? null) as unknown as Record<string, unknown> | null,
+    dados_cliente: plan.dadosCliente as unknown as Record<string, unknown>,
+    ativos_atuais: plan.ativosAtuais as unknown as Record<string, unknown>,
+    alocacao_personalizada: (plan.alocacaoPersonalizada ?? null) as unknown as Record<string, unknown> | null,
+    planejamento_if: plan.planejamentoIF as unknown as Record<string, unknown>,
+    protecao: plan.protecao as unknown as Record<string, unknown>,
+    fiscal: plan.fiscal as unknown as Record<string, unknown>,
+    sucessorio: plan.sucessorio as unknown as Record<string, unknown>,
+    notas_assessor: plan.notasConsultor ?? "",
+    status: plan.status ?? "rascunho",
+    updated_at: new Date().toISOString(),
   };
 }
 
@@ -58,10 +74,18 @@ function rowToPlan(row: PlanRow): FinancialPlan {
 
 export function useFinancialPlanStore() {
   const { user } = useAuth();
-  const [plans, setPlans] = useState<FinancialPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
+  // Global list — feeds HomePage's status badges via getLatestPlan
+  const [plans, setPlans] = useState<FinancialPlan[]>([]);
+  // Per-client current plan — set by carregarPlano / savePlan
+  const [plan, setPlan] = useState<FinancialPlan | null>(null);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
+
+  // Load all plans for the user on mount (for HomePage's getLatestPlan)
   useEffect(() => {
     if (!user) {
       setPlans([]);
@@ -91,73 +115,132 @@ export function useFinancialPlanStore() {
     load();
   }, [user]);
 
-  const savePlan = useCallback(
-    async (plan: FinancialPlan): Promise<FinancialPlan> => {
-      const payload = {
-        client_id: plan.clientId,
-        suitability: (plan.suitability ?? null) as unknown as Record<string, unknown> | null,
-        dados_cliente: plan.dadosCliente as unknown as Record<string, unknown>,
-        ativos_atuais: plan.ativosAtuais as unknown as Record<string, unknown>,
-        alocacao_personalizada: (plan.alocacaoPersonalizada ?? null) as unknown as Record<string, unknown> | null,
-        planejamento_if: plan.planejamentoIF as unknown as Record<string, unknown>,
-        protecao: plan.protecao as unknown as Record<string, unknown>,
-        fiscal: plan.fiscal as unknown as Record<string, unknown>,
-        sucessorio: plan.sucessorio as unknown as Record<string, unknown>,
-        notas_assessor: plan.notasConsultor ?? "",
-        status: plan.status ?? "rascunho",
-        updated_at: new Date().toISOString(),
-      };
+  // ── Explicit per-client load (for FinancialPlanningPage init) ─────────────
 
-      try {
-        if (plan.id) {
-          const { data, error: updateError } = await supabase
-            .from("financial_plans")
-            .update(payload)
-            .eq("id", plan.id)
-            .select()
-            .single();
+  const carregarPlano = useCallback(async (clientId: string): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("financial_plans")
+        .select("*")
+        .eq("client_id", clientId)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-          if (updateError) {
-            console.error("savePlan (update) — Supabase error:", {
-              message: updateError.message,
-              details: updateError.details,
-              hint: updateError.hint,
-              code: updateError.code,
-            });
-            throw updateError;
-          }
+      if (fetchError) throw fetchError;
+      setPlan(data ? rowToPlan(data as unknown as PlanRow) : null);
+    } catch (err) {
+      console.error("useFinancialPlanStore: carregarPlano failed", err);
+      setError(err instanceof Error ? err.message : "Erro ao carregar plano");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-          const updated = rowToPlan(data as unknown as PlanRow);
-          setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-          return updated;
-        } else {
-          const { data, error: insertError } = await supabase
-            .from("financial_plans")
-            .insert(payload)
-            .select()
-            .single();
+  // ── Create blank plan ─────────────────────────────────────────────────────
 
-          if (insertError) {
-            console.error("savePlan (insert) — Supabase error:", {
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint,
-              code: insertError.code,
-            });
-            throw insertError;
-          }
+  const criarPlano = useCallback(async (clientId: string): Promise<FinancialPlan> => {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) throw new Error("Usuário não autenticado");
 
-          const created = rowToPlan(data as unknown as PlanRow);
-          setPlans((prev) => [created, ...prev]);
-          return created;
+    const { data, error: insertError } = await supabase
+      .from("financial_plans")
+      .insert({
+        client_id: clientId,
+        dados_cliente: {},
+        ativos_atuais: {},
+        alocacao_personalizada: null,
+        planejamento_if: {},
+        protecao: {},
+        fiscal: {},
+        sucessorio: {},
+        notas_assessor: "",
+        status: "rascunho",
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("useFinancialPlanStore: criarPlano failed", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+      });
+      throw new Error(insertError.message);
+    }
+
+    const novo = rowToPlan(data as unknown as PlanRow);
+    setPlan(novo);
+    setPlans((prev) => [novo, ...prev]);
+    return novo;
+  }, []);
+
+  // ── Upsert (save or create) ───────────────────────────────────────────────
+
+  const savePlan = useCallback(async (planAtual: FinancialPlan): Promise<FinancialPlan> => {
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = planToPayload(planAtual);
+
+      if (planAtual.id) {
+        const { data, error: updateError } = await supabase
+          .from("financial_plans")
+          .update(payload)
+          .eq("id", planAtual.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("savePlan (update) — Supabase error:", {
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint,
+            code: updateError.code,
+          });
+          throw updateError;
         }
-      } catch (err) {
-        console.error("useFinancialPlanStore: savePlan failed", err);
-        throw err;
+
+        const updated = rowToPlan(data as unknown as PlanRow);
+        setPlan(updated);
+        setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        setUltimoSalvo(new Date());
+        return updated;
+      } else {
+        const { data, error: insertError } = await supabase
+          .from("financial_plans")
+          .insert(payload)
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("savePlan (insert) — Supabase error:", {
+            message: insertError.message,
+            details: insertError.details,
+            hint: insertError.hint,
+            code: insertError.code,
+          });
+          throw insertError;
+        }
+
+        const created = rowToPlan(data as unknown as PlanRow);
+        setPlan(created);
+        setPlans((prev) => [created, ...prev]);
+        setUltimoSalvo(new Date());
+        return created;
       }
-    },
-    []
-  );
+    } catch (err) {
+      console.error("useFinancialPlanStore: savePlan failed", err);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  const salvarPlano = savePlan;
 
   // ── Estratégia Inicial ────────────────────────────────────────────────────
 
@@ -180,9 +263,13 @@ export function useFinancialPlanStore() {
         });
         throw updateError;
       }
+
+      setUltimoSalvo(new Date());
     },
     []
   );
+
+  const salvarEstrategia = saveEstrategia;
 
   const loadEstrategia = useCallback(
     async (planId: string): Promise<Record<string, unknown> | null> => {
@@ -199,48 +286,51 @@ export function useFinancialPlanStore() {
     []
   );
 
-  // ── Misc ─────────────────────────────────────────────────────────────────
+  // ── Delete ────────────────────────────────────────────────────────────────
 
   const deletePlan = useCallback(async (id: string): Promise<void> => {
-    try {
-      const { error: deleteError } = await supabase
-        .from("financial_plans")
-        .delete()
-        .eq("id", id);
-      if (deleteError) throw deleteError;
-      setPlans((prev) => prev.filter((p) => p.id !== id));
-    } catch (err) {
-      console.error("useFinancialPlanStore: deletePlan failed", err);
-      throw err;
-    }
+    const { error: deleteError } = await supabase
+      .from("financial_plans")
+      .delete()
+      .eq("id", id);
+    if (deleteError) throw deleteError;
+    setPlans((prev) => prev.filter((p) => p.id !== id));
+    setPlan((prev) => (prev?.id === id ? null : prev));
   }, []);
 
+  // ── Synchronous helpers from cached global list ───────────────────────────
+
   const getClientPlans = useCallback(
-    (clientId: string): FinancialPlan[] => {
-      return plans
+    (clientId: string): FinancialPlan[] =>
+      plans
         .filter((p) => p.clientId === clientId)
         .sort(
           (a, b) =>
             new Date(b.updatedAt ?? 0).getTime() -
             new Date(a.updatedAt ?? 0).getTime()
-        );
-    },
+        ),
     [plans]
   );
 
   const getLatestPlan = useCallback(
-    (clientId: string): FinancialPlan | undefined => {
-      return getClientPlans(clientId)[0];
-    },
+    (clientId: string): FinancialPlan | undefined =>
+      getClientPlans(clientId)[0],
     [getClientPlans]
   );
 
   return {
     plans,
+    plan,
     loading,
+    saving,
     error,
+    ultimoSalvo,
+    carregarPlano,
+    criarPlano,
     savePlan,
+    salvarPlano,
     saveEstrategia,
+    salvarEstrategia,
     loadEstrategia,
     deletePlan,
     getClientPlans,

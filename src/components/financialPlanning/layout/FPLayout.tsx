@@ -57,6 +57,8 @@ interface Props {
   onStepClick: (step: FPStep) => void;
   onSave: () => void;
   saving: boolean;
+  dirty?: boolean;
+  ultimoSalvo?: Date | null;
   onBack: () => void;
   onNext: () => void;
   onAvancarEstrategia?: () => void;
@@ -73,6 +75,8 @@ export function FPLayout({
   onStepClick,
   onSave,
   saving,
+  dirty,
+  ultimoSalvo,
   onBack,
   onNext,
   onAvancarEstrategia,
@@ -224,25 +228,37 @@ export function FPLayout({
                 {meta.subtitle}
               </p>
             </div>
-            <button
-              onClick={onSave}
-              disabled={saving}
-              style={{
-                flexShrink: 0,
-                border: `1.5px solid ${DARK}`,
-                backgroundColor: "white",
-                color: DARK,
-                borderRadius: 8,
-                padding: "8px 16px",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: saving ? "not-allowed" : "pointer",
-                opacity: saving ? 0.6 : 1,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {saving ? "Salvando..." : "Salvar rascunho"}
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+              {dirty && !saving && (
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#F59E0B" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#F59E0B", display: "inline-block" }} />
+                  Não salvo
+                </span>
+              )}
+              {ultimoSalvo && !dirty && !saving && (
+                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                  Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+              <button
+                onClick={onSave}
+                disabled={saving}
+                style={{
+                  border: `1.5px solid ${DARK}`,
+                  backgroundColor: "white",
+                  color: DARK,
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: saving ? "not-allowed" : "pointer",
+                  opacity: saving ? 0.6 : 1,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {saving ? "Salvando..." : "Salvar rascunho"}
+              </button>
+            </div>
           </div>
 
           {/* Card branco principal (não usado no resultado) */}

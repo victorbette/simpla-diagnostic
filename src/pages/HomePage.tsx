@@ -205,13 +205,24 @@ export function HomePage() {
     setSalvando(true);
     try {
       if (clienteEditando) {
-        toast.info("Edição de dados básicos ainda não sincroniza com o servidor.");
+        await clientStore.atualizarCliente(clienteEditando.id, {
+          nome: form.nome.trim(),
+          email: form.email.trim() || null,
+          telefone: form.telefone.trim() || null,
+          cpf: form.cpf.trim() || null,
+          dataNascimento: form.nascimento.trim() || null,
+          observacoes: form.observacoes.trim() || null,
+        });
+        toast.success("Cliente atualizado.");
       } else {
-        await clientStore.addClient(
-          form.nome.trim(),
-          form.email.trim() || undefined,
-          form.telefone.trim() || undefined
-        );
+        await clientStore.criarCliente({
+          nome: form.nome.trim(),
+          email: form.email.trim() || undefined,
+          telefone: form.telefone.trim() || undefined,
+          cpf: form.cpf.trim() || undefined,
+          dataNascimento: form.nascimento.trim() || undefined,
+          observacoes: form.observacoes.trim() || undefined,
+        });
         toast.success("Cliente adicionado.");
       }
       setModalAberto(false);
