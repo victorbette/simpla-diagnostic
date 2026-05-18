@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import {
+  FileText,
+  PieChart as PieChartIcon,
+  Flame,
+  Shield,
+  Receipt,
+  ListChecks,
+  ClipboardCheck,
+  type LucideIcon,
+} from "lucide-react";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import {
   calcularIF,
@@ -17,7 +27,13 @@ import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
 import { SecaoFiscal } from "./SecaoFiscal";
 import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
+import { EstrategiaFinalPage } from "./EstrategiaFinalPage";
 import { EstrategiaPrint } from "./EstrategiaPrint";
+
+function hexOpacity(hex: string, opacity: number): string {
+  const alpha = Math.round(opacity * 255).toString(16).padStart(2, "0");
+  return `${hex}${alpha}`;
+}
 
 // ─── Exported Types ────────────────────────────────────────────────────────────
 
@@ -52,6 +68,7 @@ export interface EstrategiaData {
   formatoReuniao: string;
   pautaSugerida: string;
   consideracoesFinais: string;
+  comentarioGeral: string;
   resultados: ResultadosEstrategia;
 }
 
@@ -63,16 +80,17 @@ interface SecaoConfig {
   id: SecaoId;
   label: string;
   color: string;
+  Icon: LucideIcon;
 }
 
 const SECOES: SecaoConfig[] = [
-  { id: "capa", label: "Capa e Identificação", color: "#BBA866" },
-  { id: "assetAllocation", label: "Asset Allocation", color: "#7C3AED" },
-  { id: "aposentadoria", label: "Aposentadoria / IF", color: "#22C55E" },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#F87171" },
-  { id: "fiscal", label: "Planejamento Fiscal", color: "#F59E0B" },
-  { id: "proximosPassos", label: "Próximos Passos", color: "#3B82F6" },
-  { id: "revisao", label: "Revisão Final", color: "#9CA3AF" },
+  { id: "capa",               label: "Capa e Identificação",   color: "#BBA866", Icon: FileText       },
+  { id: "assetAllocation",    label: "Asset Allocation",        color: "#7C3AED", Icon: PieChartIcon   },
+  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#22C55E", Icon: Flame          },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#F87171", Icon: Shield         },
+  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#F59E0B", Icon: Receipt        },
+  { id: "proximosPassos",     label: "Próximos Passos",         color: "#3B82F6", Icon: ListChecks     },
+  { id: "revisao",            label: "Revisão Final",           color: "#041A20", Icon: ClipboardCheck },
 ];
 
 const AVATAR_COLORS = [
@@ -164,6 +182,7 @@ function defaultData(plan: FinancialPlan): EstrategiaData {
     formatoReuniao: "Online",
     pautaSugerida: "",
     consideracoesFinais: "",
+    comentarioGeral: "",
     resultados: defaultResultados,
   };
 }
@@ -188,6 +207,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       if (saved) {
         const parsed = JSON.parse(saved) as EstrategiaData;
         if (!parsed.resultados) parsed.resultados = defaultResultados;
+        if (parsed.comentarioGeral === undefined) parsed.comentarioGeral = "";
         return parsed;
       }
     } catch {
@@ -200,6 +220,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const [printMode, setPrintMode] = useState<"consultor" | "cliente" | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
+  const [mostrarFinal, setMostrarFinal] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -227,6 +248,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       setDataRaw((local) => {
         const merged = { ...local, ...(remoto as Partial<EstrategiaData>) };
         if (!merged.resultados) merged.resultados = defaultResultados;
+        if (merged.comentarioGeral === undefined) merged.comentarioGeral = "";
         try { localStorage.setItem(storageKey, JSON.stringify(merged)); } catch { /**/ }
         return merged;
       });
@@ -424,11 +446,15 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       case "revisao":
         return (
           <SecaoRevisao
-            statusSecoes={data.statusSecoes}
-            comentarios={data.comentarios}
+            estrategia={data}
             resultados={data.resultados}
+            plan={plan}
+            clientName={clientName}
             onNavigate={irParaSecao}
-            onPrint={(type) => setPrintMode(type)}
+            onFinalizar={() => setMostrarFinal(true)}
+            onComentarioGeralChange={(v) =>
+              setData((prev) => ({ ...prev, comentarioGeral: v }))
+            }
           />
         );
       default:
@@ -437,6 +463,20 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   }
 
   const progressPct = (concluidasCount / 6) * 100;
+
+  if (mostrarFinal) {
+    return (
+      <EstrategiaFinalPage
+        estrategia={data}
+        resultados={data.resultados}
+        plan={plan}
+        clientName={clientName}
+        clientProfile={plan.dadosCliente.suitabilityPerfil ?? null}
+        onVoltar={() => setMostrarFinal(false)}
+        onSaveCloud={onSaveCloud ? (d: EstrategiaData) => handleSalvarCloud(d) : undefined}
+      />
+    );
+  }
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
@@ -530,8 +570,22 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                     textAlign: "left",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: secao.color, flexShrink: 0 }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      backgroundColor: hexOpacity(secao.color, isActive ? 0.15 : 0.10),
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <secao.Icon
+                        size={16}
+                        style={{ color: isActive ? secao.color : hexOpacity(secao.color, 0.60) }}
+                      />
+                    </div>
                     <span style={{ fontSize: 13, color: isActive ? "#041A20" : "#374151", fontWeight: isActive ? 600 : 400 }}>
                       {secao.label}
                     </span>

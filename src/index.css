@@ -122,4 +122,30 @@
     border-top: 0.5px solid #ccc;
     padding-top: 8px;
   }
+
+  /* Estratégia Final — versão consultor */
+  .print-consultor .dados-tecnicos { display: block !important; }
+  .print-consultor .disclaimer { display: block !important; }
+
+  /* Estratégia Final — versão cliente */
+  .print-cliente .dados-tecnicos { display: none !important; }
+  .print-cliente .disclaimer { display: block !important; }
+
+  /* Ambas as versões */
+  header, .sidebar, .btn-imprimir { display: none !important; }
+  .estrategia-final-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Quebra de página entre seções da estratégia */
+  .secao-area {
+    page-break-before: always;
+    break-before: page;
+  }
+  .secao-area:first-of-type {
+    page-break-before: avoid;
+    break-before: avoid;
+  }
 }
