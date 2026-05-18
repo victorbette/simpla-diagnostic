@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer, Legend,
+  ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,10 +83,9 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
     ? result.projecao[result.projecao.findIndex(p => p.fase === "decumulacao") - 1]?.patrimonio ?? 0
     : 0;
 
-  const chartData = result.projecao.map((p, i) => ({
+  const chartData = result.projecao.map((p) => ({
     idade: p.idade,
     comObjetivos: p.patrimonio,
-    semObjetivos: result.projecaoSemObjetivos?.[i]?.patrimonio,
   }));
 
   function addObjetivo() {
@@ -438,24 +437,12 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   fontSize: 12,
                 }}
               />
-              <Legend />
               {patrimonioAlvo > 0 && (
                 <ReferenceLine
                   y={patrimonioAlvo}
                   stroke="#ef4444"
                   strokeDasharray="4 4"
                   label={{ value: "Meta IF", position: "right", fontSize: 9, fill: "#ef4444" }}
-                />
-              )}
-              {result.projecaoSemObjetivos && (
-                <Area
-                  type="monotone"
-                  dataKey="semObjetivos"
-                  name="Sem objetivos"
-                  stroke="#94a3b8"
-                  fill="none"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
                 />
               )}
               <Area
