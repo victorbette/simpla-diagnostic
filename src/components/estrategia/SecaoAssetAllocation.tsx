@@ -1,235 +1,259 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Layers } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
-import type { FinancialPlan, MacroalocacaoAlvo } from "@/types/financialPlanning";
+import { Pencil } from "lucide-react";
+import { formatCurrency, formatNumber } from "@/lib/format";
 import {
-  PERFIL_LABELS,
-  ALOCACAO_ALVO,
   calcularAlocacaoAtual,
+  ALOCACAO_ALVO,
+  PERFIL_LABELS,
 } from "@/types/financialPlanning";
-import { FerramentaCarteira } from "@/components/carteira";
-import type { CarteiraResultado } from "@/lib/carteira/types";
-
-type SectionStatus = "pendente" | "revisando" | "concluido";
+import type { FinancialPlan, PerfilRisco, MacroalocacaoAlvo } from "@/types/financialPlanning";
 
 interface Props {
   plan: FinancialPlan;
-  clientName: string;
   comentario: string;
   onComentarioChange: (v: string) => void;
-  status: SectionStatus;
-  onStatusChange: (s: SectionStatus) => void;
+  tags: string[];
+  onTagsChange: (v: string[]) => void;
 }
 
-type AssetKey = keyof MacroalocacaoAlvo;
-const ASSET_LABELS: Record<AssetKey, string> = {
-  rendaFixa: "Renda Fixa", acoes: "Ações", fiis: "FIIs",
+const ASSET_KEYS: (keyof MacroalocacaoAlvo)[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
+const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
+  rendaFixa: "Renda Fixa", acoes: "Ações BR", fiis: "FIIs",
   rvGlobal: "RV Global", rfGlobal: "RF Global", cripto: "Cripto",
 };
-const ASSET_KEYS: AssetKey[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
-const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#14b8a6", "#f97316"];
+const ASSET_COLORS: Record<keyof MacroalocacaoAlvo, string> = {
+  rendaFixa: "#3B82F6", acoes: "#22C55E", fiis: "#A78BFA",
+  rvGlobal: "#F97316", rfGlobal: "#06B6D4", cripto: "#EAB308",
+};
 
-function scoreBadge(score: number) {
-  if (score >= 70) return { label: "Adequado", cls: "bg-emerald-100 text-emerald-800" };
-  if (score >= 40) return { label: "Atenção", cls: "bg-amber-100 text-amber-800" };
-  return { label: "Risco", cls: "bg-red-100 text-red-800" };
+const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
+
+const CARD: React.CSSProperties = {
+  backgroundColor: "white", borderRadius: 12, padding: 24,
+  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+};
+
+function Gauge({ score }: { score: number }) {
+  const r = 36, cx = 46, cy = 44;
+  const circ = Math.PI * r;
+  const filled = (Math.min(100, Math.max(0, score)) / 100) * circ;
+  const color = score >= 70 ? "#22C55E" : score >= 40 ? "#F59E0B" : "#EF4444";
+  return (
+    <svg width="92" height="52" viewBox="0 0 92 52">
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E5E7EB" strokeWidth="8" strokeLinecap="round" />
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${filled} ${circ}`} />
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="14" fontWeight="700" fill={color}>{score}</text>
+    </svg>
+  );
 }
 
-function getCarteiraTimestamp(clientId: string): string | null {
-  try {
-    const raw = localStorage.getItem(`carteira_v2_${clientId}`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { savedAt?: string };
-    return parsed.savedAt ?? null;
-  } catch {
-    return null;
-  }
-}
+export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, tags, onTagsChange }: Props) {
+  const [lastEdit, setLastEdit] = useState<string>("");
 
-type ClientProfile = "conservador" | "conservador_moderado" | "moderado" | "arrojado" | null;
-
-export function SecaoAssetAllocation({
-  plan, clientName, comentario, onComentarioChange, status, onStatusChange,
-}: Props) {
-  const [mostrarCarteira, setMostrarCarteira] = useState(false);
-  const [carteiraSalvaEm, setCarteiraSalvaEm] = useState<string | null>(
-    () => getCarteiraTimestamp(plan.clientId)
-  );
-
-  const total =
-    plan.ativosAtuais.total ||
-    ASSET_KEYS.reduce((s, k) => s + (plan.ativosAtuais[k] ?? 0), 0);
-
-  const alocacaoAtual = useMemo(
-    () => calcularAlocacaoAtual({ ...plan.ativosAtuais, total: total || 1 }),
-    [plan.ativosAtuais, total]
-  );
-
-  const alvo = plan.suitability ? ALOCACAO_ALVO[plan.suitability.perfil] : null;
-  const gapTotal = alvo ? ASSET_KEYS.reduce((s, k) => s + Math.abs(alocacaoAtual[k] - alvo[k]), 0) : 0;
-  const score = Math.max(0, Math.round(100 - gapTotal));
-  const sb = scoreBadge(score);
-
-  const pieData = ASSET_KEYS.filter((k) => alocacaoAtual[k] > 0).map((k, i) => ({
-    name: ASSET_LABELS[k], value: parseFloat(alocacaoAtual[k].toFixed(1)), color: PIE_COLORS[i],
-  }));
-
-  const barData = ASSET_KEYS.map((k) => ({
-    name: ASSET_LABELS[k], Atual: parseFloat(alocacaoAtual[k].toFixed(1)), Alvo: alvo ? alvo[k] : 0,
-  }));
+  const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
+  const total = plan.ativosAtuais.total || ASSET_KEYS.reduce((s, k) => s + plan.ativosAtuais[k], 0);
+  const alocacaoAtual = calcularAlocacaoAtual({ ...plan.ativosAtuais, total: total || 1 });
+  const alvo: MacroalocacaoAlvo | null = perfil ? ALOCACAO_ALVO[perfil as PerfilRisco] : null;
+  const ifScore = Math.round(Math.min(100, total > 0 ? 60 : 0));
 
   const gaps = alvo
-    ? ASSET_KEYS.filter((k) => Math.abs(alocacaoAtual[k] - alvo[k]) > 5).map(
-        (k) => `${ASSET_LABELS[k]}: atual ${alocacaoAtual[k].toFixed(0)}% / alvo ${alvo[k]}%`
-      )
+    ? ASSET_KEYS.filter((k) => Math.abs(alocacaoAtual[k] - alvo[k]) > 5).map((k) => ({
+        key: k,
+        label: ASSET_LABELS[k],
+        diff: alocacaoAtual[k] - alvo[k],
+      }))
     : [];
 
-  const disabled = status === "concluido";
+  const pieData = ASSET_KEYS.filter((k) => plan.ativosAtuais[k] > 0).map((k) => ({
+    name: ASSET_LABELS[k], value: parseFloat(alocacaoAtual[k].toFixed(1)),
+    color: ASSET_COLORS[k], raw: plan.ativosAtuais[k],
+  }));
 
-  function handleCarteiraSave(_resultado: CarteiraResultado) {
-    const ts = getCarteiraTimestamp(plan.clientId);
-    setCarteiraSalvaEm(ts ?? new Date().toISOString());
-    setMostrarCarteira(false);
+  function toggleTag(t: string) {
+    onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
 
-  const perfil = (plan.suitability?.perfil ?? null) as ClientProfile;
-
-  if (mostrarCarteira) {
-    return (
-      <FerramentaCarteira
-        clientName={clientName}
-        clientId={plan.clientId}
-        clientProfile={perfil}
-        patrimonyInicial={total}
-        onClose={() => setMostrarCarteira(false)}
-        onSave={handleCarteiraSave}
-      />
-    );
+  function handleComentario(v: string) {
+    onComentarioChange(v);
+    setLastEdit(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Asset Allocation</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6">
-        {/* Left */}
-        <div className="space-y-4">
-          <div className="rounded-lg border bg-muted/40 p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Diagnóstico inicial</h3>
-              <Badge className={sb.cls}>{sb.label}</Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-muted-foreground text-xs">Patrimônio total</p>
-                <p className="font-semibold">{formatCurrency(total)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Perfil</p>
-                <p className="font-semibold">{plan.suitability ? PERFIL_LABELS[plan.suitability.perfil] : "—"}</p>
-              </div>
-            </div>
-            {total > 0 ? (
-              <>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Alocação atual</p>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <PieChart>
-                      <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}
-                        label={({ value }) => `${value}%`} labelLine={false}>
-                        {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip formatter={(v) => [`${v}%`]} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                {alvo && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Atual vs Alvo (%)</p>
-                    <ResponsiveContainer width="100%" height={140}>
-                      <BarChart data={barData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                        <XAxis dataKey="name" tick={{ fontSize: 9 }} />
-                        <YAxis tick={{ fontSize: 9 }} />
-                        <Tooltip formatter={(v) => [`${v}%`]} />
-                        <Legend wrapperStyle={{ fontSize: 11 }} />
-                        <Bar dataKey="Atual" fill="#3b82f6" radius={[2, 2, 0, 0]} />
-                        <Bar dataKey="Alvo" fill="#10b981" radius={[2, 2, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Patrimônio não informado.</p>
-            )}
-            {gaps.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Principais gaps</p>
-                <ul className="space-y-1">
-                  {gaps.map((g, i) => (
-                    <li key={i} className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1">{g}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+    <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 20 }}>
+      {/* Coluna esquerda */}
+      <div>
+        {/* Diagnóstico card */}
+        <div style={{ ...CARD, borderTop: "3px solid #7C3AED", position: "relative" }}>
+          <span style={{ position: "absolute", top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F5F3FF", color: "#7C3AED" }}>
+            SOMENTE LEITURA
+          </span>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Diagnóstico Inicial
+          </p>
 
-            {/* Carteira tool */}
-            <div className="pt-1 flex items-center gap-3 flex-wrap border-t">
-              <div className="pt-3 flex items-center gap-3 flex-wrap w-full">
-                <Button variant="outline" size="sm" onClick={() => setMostrarCarteira(true)}>
-                  <Layers className="h-3.5 w-3.5 mr-1.5" />
-                  {carteiraSalvaEm ? "Ver / Editar carteira" : "Montar carteira completa →"}
-                </Button>
-                {carteiraSalvaEm && (
-                  <Badge className="bg-emerald-100 text-emerald-800 text-xs gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Montada em {new Date(carteiraSalvaEm).toLocaleDateString("pt-BR")}
-                  </Badge>
-                )}
-              </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 6px", textTransform: "uppercase", fontWeight: 600 }}>Perfil de Risco</p>
+              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: "#F5F3FF", color: "#7C3AED" }}>
+                {perfil ? PERFIL_LABELS[perfil as PerfilRisco] : "Não definido"}
+              </span>
             </div>
+            <div>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Score AA</p>
+              <Gauge score={ifScore} />
+            </div>
+            <div>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#0F766E", margin: 0 }}>{formatCurrency(total)}</p>
+            </div>
+            {alvo && (
+              <div>
+                <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 6px", textTransform: "uppercase", fontWeight: 600 }}>RF Atual vs Meta</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 10, color: "#6B7280", width: 40 }}>Atual</span>
+                    <div style={{ flex: 1, height: 6, backgroundColor: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, alocacaoAtual.rendaFixa)}%`, backgroundColor: "#041A20", borderRadius: 3 }} />
+                    </div>
+                    <span style={{ fontSize: 10, color: "#041A20", fontWeight: 600 }}>{formatNumber(alocacaoAtual.rendaFixa, 0)}%</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 10, color: "#6B7280", width: 40 }}>Meta</span>
+                    <div style={{ flex: 1, height: 6, backgroundColor: "#F3F4F6", borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, alvo.rendaFixa)}%`, backgroundColor: "#BBA866", borderRadius: 3 }} />
+                    </div>
+                    <span style={{ fontSize: 10, color: "#BBA866", fontWeight: 600 }}>{alvo.rendaFixa}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {gaps.length > 0 && (
+            <div style={{ backgroundColor: "#FAFAFA", borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", margin: "0 0 8px", textTransform: "uppercase" }}>Gaps identificados</p>
+              {gaps.map((g) => (
+                <div key={g.key} style={{ fontSize: 12, color: g.diff > 0 ? "#B45309" : "#DC2626", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: g.diff > 0 ? "#F59E0B" : "#EF4444", flexShrink: 0 }} />
+                  {g.label} {g.diff > 0 ? "acima" : "abaixo"} do recomendado: {g.diff > 0 ? "+" : ""}{formatNumber(g.diff, 1)}%
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right */}
-        <div className="space-y-3">
-          <div className="rounded-lg border p-4 space-y-3">
-            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Estratégia do consultor</h3>
-            <p className="text-xs text-muted-foreground">Análise e estratégia para esta área</p>
-            <Textarea
-              value={comentario}
-              onChange={(e) => onComentarioChange(e.target.value)}
-              placeholder="Ex: Dado o perfil moderado, recomendamos migrar gradualmente para maior exposição internacional..."
-              className="min-h-[200px]"
-              disabled={disabled}
-            />
-            <div className="flex items-center gap-2">
-              {status === "concluido" ? (
-                <>
-                  <Badge className="bg-green-100 text-green-800 gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
-                  </Badge>
-                  <Button variant="outline" size="sm" onClick={() => onStatusChange("revisando")}>Editar</Button>
-                </>
-              ) : (
-                <Button onClick={() => onStatusChange("concluido")}>Marcar como concluída</Button>
-              )}
-            </div>
+        {/* Estratégia card */}
+        <div style={{ ...CARD, borderTop: "3px solid #041A20", marginTop: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <Pencil style={{ width: 14, height: 14, color: "#6B7280" }} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: 0 }}>Estratégia e Recomendações</p>
           </div>
+          <div style={{ position: "relative" }}>
+            <textarea
+              value={comentario}
+              onChange={(e) => handleComentario(e.target.value)}
+              placeholder="Descreva a estratégia de asset allocation recomendada: rebalanceamento, classes de ativos prioritários, instrumentos sugeridos..."
+              style={{
+                width: "100%", minHeight: 200, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB",
+                fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+              }}
+            />
+            <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>{comentario.length} caracteres</span>
+          </div>
+
+          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
+            {AVAILABLE_TAGS.map((t) => (
+              <button
+                key={t}
+                onClick={() => toggleTag(t)}
+                style={{
+                  fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer",
+                  border: "1px solid #E5E7EB",
+                  backgroundColor: tags.includes(t) ? "#041A20" : "transparent",
+                  color: tags.includes(t) ? "white" : "#374151",
+                }}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
+            <span style={{ fontSize: 11, color: "#9CA3AF" }}>
+              {lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}
+            </span>
+            <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#041A20", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Coluna direita */}
+      <div>
+        {/* Carteira card */}
+        <div style={{ ...CARD, borderTop: "3px solid #7C3AED" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: 0 }}>Carteira Atual</p>
+            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: total > 0 ? "#F0FDF4" : "#F3F4F6", color: total > 0 ? "#16A34A" : "#6B7280", fontWeight: 600 }}>
+              {total > 0 ? "✓ Com dados" : "Sem dados"}
+            </span>
+          </div>
+
+          {total > 0 && pieData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={70} innerRadius={40} labelLine={false}>
+                    {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip formatter={(v, name) => [`${v}%`, name]} />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
+                {pieData.map((d) => (
+                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", fontSize: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
+                      {d.name}
+                    </div>
+                    <span style={{ color: "#6B7280" }}>{d.value}%</span>
+                    <span style={{ color: "#041A20", fontWeight: 600 }}>{formatCurrency(d.raw)}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", padding: "32px 0", color: "#9CA3AF" }}>
+              <p style={{ fontSize: 13, margin: 0 }}>Carteira não montada ainda</p>
+            </div>
+          )}
+        </div>
+
+        {/* Status card */}
+        <div style={{ ...CARD, marginTop: 16, border: "1px solid #E5E7EB" }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
+          {[
+            { label: "Diagnóstico revisado", ok: true },
+            { label: "Carteira com dados", ok: total > 0 },
+            { label: "Estratégia redigida", ok: comentario.length > 50 },
+          ].map(({ label, ok }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
+              <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#F0FDF4" : "#F3F4F6", color: ok ? "#16A34A" : "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                {ok ? "✓" : "○"}
+              </span>
+              <span style={{ color: ok ? "#374151" : "#9CA3AF" }}>{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

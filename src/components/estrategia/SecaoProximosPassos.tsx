@@ -1,230 +1,194 @@
-import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, ChevronUp, ChevronDown, Plus, Trash2 } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+import type { AcaoItem } from "./EstrategiaInicialPage";
 import type { FinancialPlan } from "@/types/financialPlanning";
-import { calcularIF, calcularProtecao } from "@/types/financialPlanning";
-
-type SectionStatus = "pendente" | "revisando" | "concluido";
-
-export interface PassoItem {
-  id: string;
-  prioridade: "alta" | "media" | "baixa";
-  texto: string;
-  prazo: string;
-}
 
 interface Props {
   plan: FinancialPlan;
-  comentario: string;
-  onComentarioChange: (v: string) => void;
-  status: SectionStatus;
-  onStatusChange: (s: SectionStatus) => void;
-  proximosPassos: PassoItem[];
-  onProximosPassosChange: (items: PassoItem[]) => void;
+  acoes: AcaoItem[];
+  onAcoesChange: (v: AcaoItem[]) => void;
   dataProximaReuniao: string;
-  onDataProximaReuniaoChange: (v: string) => void;
+  onDataChange: (v: string) => void;
+  formatoReuniao: string;
+  onFormatoChange: (v: string) => void;
+  pautaSugerida: string;
+  onPautaChange: (v: string) => void;
   consideracoesFinais: string;
-  onConsideracoesFinaisChange: (v: string) => void;
+  onConsideracoesChange: (v: string) => void;
 }
 
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 9);
-}
-
-const PRIORIDADE_COLORS: Record<PassoItem["prioridade"], string> = {
-  alta: "bg-red-100 text-red-700",
-  media: "bg-amber-100 text-amber-700",
-  baixa: "bg-green-100 text-green-700",
+const CARD: React.CSSProperties = {
+  backgroundColor: "white", borderRadius: 12, padding: 24,
+  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const PRIORIDADE_LABELS: Record<PassoItem["prioridade"], string> = {
-  alta: "Alta", media: "Média", baixa: "Baixa",
+const PRIORIDADE_STYLE: Record<AcaoItem["prioridade"], { bg: string; border: string; badge: string; badgeText: string; label: string }> = {
+  alta:  { bg: "#FEF2F2", border: "#EF4444", badge: "#FEE2E2", badgeText: "#DC2626", label: "ALTA" },
+  media: { bg: "#FFFBEB", border: "#F59E0B", badge: "#FEF3C7", badgeText: "#B45309", label: "MÉDIA" },
+  baixa: { bg: "#F9FAFB", border: "#9CA3AF", badge: "#F3F4F6", badgeText: "#6B7280", label: "BAIXA" },
 };
 
 export function SecaoProximosPassos({
-  plan, comentario: _comentario, onComentarioChange: _onComentarioChange, status, onStatusChange,
-  proximosPassos, onProximosPassosChange,
-  dataProximaReuniao, onDataProximaReuniaoChange,
-  consideracoesFinais, onConsideracoesFinaisChange,
+  plan: _plan,
+  acoes,
+  onAcoesChange,
+  dataProximaReuniao,
+  onDataChange,
+  formatoReuniao,
+  onFormatoChange,
+  pautaSugerida,
+  onPautaChange,
+  consideracoesFinais,
+  onConsideracoesChange,
 }: Props) {
-  const autoAcoes = useMemo(() => {
-    const acoes: { area: string; desc: string; prioridade: PassoItem["prioridade"] }[] = [];
-    const prot = calcularProtecao(plan.protecao);
-    if (prot.gap > 0) acoes.push({ area: "Proteção", desc: `Contratar seguro de vida — gap de ${formatCurrency(prot.gap)}`, prioridade: "alta" });
-    const ifR = calcularIF(plan.planejamentoIF);
-    if (ifR.gap > 0) acoes.push({ area: "Aposentadoria", desc: "Aumentar aportes mensais para atingir a meta de IF", prioridade: "media" });
-    if (!plan.fiscal.temPGBL && plan.fiscal.rendaBrutaAnual > 0) acoes.push({ area: "Fiscal", desc: "Avaliar contribuição ao PGBL", prioridade: "media" });
-    if (!plan.sucessorio.possuiTestamento) acoes.push({ area: "Sucessório", desc: "Elaborar testamento", prioridade: "baixa" });
-    return acoes;
-  }, [plan]);
-
-  const disabled = status === "concluido";
-
-  function updatePasso(id: string, patch: Partial<PassoItem>) {
-    onProximosPassosChange(proximosPassos.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  function updateAcao(id: string, patch: Partial<AcaoItem>) {
+    onAcoesChange(acoes.map((a) => (a.id === id ? { ...a, ...patch } : a)));
   }
 
-  function removePasso(id: string) {
-    onProximosPassosChange(proximosPassos.filter((p) => p.id !== id));
+  function removeAcao(id: string) {
+    onAcoesChange(acoes.filter((a) => a.id !== id));
   }
 
-  function moveUp(index: number) {
-    if (index === 0) return;
-    const next = [...proximosPassos];
-    [next[index - 1], next[index]] = [next[index], next[index - 1]];
-    onProximosPassosChange(next);
-  }
-
-  function moveDown(index: number) {
-    if (index >= proximosPassos.length - 1) return;
-    const next = [...proximosPassos];
-    [next[index], next[index + 1]] = [next[index + 1], next[index]];
-    onProximosPassosChange(next);
-  }
-
-  function addPasso() {
-    onProximosPassosChange([...proximosPassos, { id: generateId(), prioridade: "media", texto: "", prazo: "" }]);
+  function addAcao() {
+    const novo: AcaoItem = {
+      id: `acao_${Date.now()}`,
+      texto: "Nova ação",
+      prioridade: "media",
+      area: "Geral",
+      prazo: "",
+    };
+    onAcoesChange([...acoes, novo]);
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Próximos Passos</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6">
-        {/* Left */}
-        <div className="space-y-4">
-          <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
-            <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Ações identificadas automaticamente</h3>
-            {autoAcoes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma ação automática identificada.</p>
-            ) : (
-              <ul className="space-y-2">
-                {autoAcoes.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <Badge className={`shrink-0 mt-0.5 text-xs ${PRIORIDADE_COLORS[a.prioridade]}`}>
-                      {PRIORIDADE_LABELS[a.prioridade]}
-                    </Badge>
-                    <span><span className="font-medium">[{a.area}]</span> {a.desc}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+    <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Ações prioritárias */}
+      <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          Plano de ação para o cliente
+        </p>
+        <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 20px" }}>
+          Gerado automaticamente dos gaps identificados. Edite, reordene e adicione ações.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {acoes.map((acao) => {
+            const style = PRIORIDADE_STYLE[acao.prioridade];
+            return (
+              <div
+                key={acao.id}
+                style={{
+                  backgroundColor: style.bg,
+                  borderLeft: `4px solid ${style.border}`,
+                  borderRadius: 8,
+                  padding: "12px 14px",
+                  display: "flex",
+                  gap: 12,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span style={{ fontSize: 16, color: "#9CA3AF", cursor: "grab", flexShrink: 0, lineHeight: 1.5 }}>⠿</span>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: style.badge, color: style.badgeText }}>
+                      {style.label}
+                    </span>
+                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#374151" }}>
+                      {acao.area}
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    value={acao.texto}
+                    onChange={(e) => updateAcao(acao.id, { texto: e.target.value })}
+                    style={{ fontSize: 13, color: "#041A20", border: "none", background: "transparent", outline: "none", width: "100%", fontFamily: "inherit" }}
+                  />
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <label style={{ fontSize: 11, color: "#6B7280" }}>Prazo:</label>
+                    <input
+                      type="date"
+                      value={acao.prazo}
+                      onChange={(e) => updateAcao(acao.id, { prazo: e.target.value })}
+                      style={{ fontSize: 12, border: "1px solid #E5E7EB", borderRadius: 4, padding: "2px 6px", color: "#374151" }}
+                    />
+                    <select
+                      value={acao.prioridade}
+                      onChange={(e) => updateAcao(acao.id, { prioridade: e.target.value as AcaoItem["prioridade"] })}
+                      style={{ fontSize: 11, border: "1px solid #E5E7EB", borderRadius: 4, padding: "2px 6px", color: "#374151" }}
+                    >
+                      <option value="alta">Alta</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeAcao(acao.id)}
+                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 16, lineHeight: 1 }}
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Right */}
-        <div className="space-y-4">
-          {/* Passos editáveis */}
-          <div className="rounded-lg border p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">Próximos passos do consultor</h3>
-              {!disabled && (
-                <Button variant="outline" size="sm" onClick={addPasso}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar passo
-                </Button>
-              )}
-            </div>
-            {proximosPassos.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum passo adicionado.</p>
-            )}
-            <ul className="space-y-3">
-              {proximosPassos.map((passo, index) => (
-                <li key={passo.id} className="border rounded p-3 space-y-2 bg-background">
-                  <div className="flex items-center gap-1 justify-end">
-                    {!disabled && (
-                      <>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => moveUp(index)} disabled={index === 0}>
-                          <ChevronUp className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => moveDown(index)} disabled={index === proximosPassos.length - 1}>
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-destructive hover:text-destructive" onClick={() => removePasso(passo.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  {disabled ? (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Badge className={`text-xs ${PRIORIDADE_COLORS[passo.prioridade]}`}>{PRIORIDADE_LABELS[passo.prioridade]}</Badge>
-                      <span>{passo.texto}</span>
-                      {passo.prazo && <span className="text-muted-foreground ml-auto text-xs">{passo.prazo}</span>}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
-                      <select
-                        value={passo.prioridade}
-                        onChange={(e) => updatePasso(passo.id, { prioridade: e.target.value as PassoItem["prioridade"] })}
-                        className="text-xs border rounded px-2 py-1 bg-background"
-                      >
-                        <option value="alta">Alta</option>
-                        <option value="media">Média</option>
-                        <option value="baixa">Baixa</option>
-                      </select>
-                      <Input
-                        value={passo.texto}
-                        onChange={(e) => updatePasso(passo.id, { texto: e.target.value })}
-                        placeholder="Descrição do passo"
-                        className="text-sm"
-                      />
-                      <Input
-                        type="date"
-                        value={passo.prazo}
-                        onChange={(e) => updatePasso(passo.id, { prazo: e.target.value })}
-                        className="text-sm w-36"
-                      />
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <button
+          onClick={addAcao}
+          style={{ marginTop: 14, width: "100%", padding: "10px 0", border: "2px dashed #D1D5DB", borderRadius: 8, backgroundColor: "transparent", color: "#6B7280", fontSize: 13, cursor: "pointer" }}
+        >
+          + Adicionar ação
+        </button>
+      </div>
 
-          {/* Data reunião */}
-          <div className="space-y-2">
-            <Label htmlFor="proximaReuniao">Data da próxima reunião</Label>
-            <Input
-              id="proximaReuniao"
+      {/* Próxima reunião */}
+      <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          Informações da Próxima Reunião
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Data da próxima reunião</label>
+            <input
               type="date"
               value={dataProximaReuniao}
-              onChange={(e) => onDataProximaReuniaoChange(e.target.value)}
-              disabled={disabled}
-              className="max-w-xs"
+              onChange={(e) => onDataChange(e.target.value)}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", boxSizing: "border-box" }}
             />
           </div>
-
-          {/* Considerações finais */}
-          <div className="space-y-2">
-            <Label htmlFor="consideracoes">Considerações finais</Label>
-            <Textarea
-              id="consideracoes"
-              value={consideracoesFinais}
-              onChange={(e) => onConsideracoesFinaisChange(e.target.value)}
-              placeholder="Considerações adicionais para o cliente..."
-              className="min-h-[100px]"
-              disabled={disabled}
-            />
-          </div>
-
-          {/* Status */}
-          <div className="flex items-center gap-2">
-            {status === "concluido" ? (
-              <>
-                <Badge className="bg-green-100 text-green-800 gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Concluída
-                </Badge>
-                <Button variant="outline" size="sm" onClick={() => onStatusChange("revisando")}>Editar</Button>
-              </>
-            ) : (
-              <Button onClick={() => onStatusChange("concluido")}>Marcar como concluída</Button>
-            )}
+          <div>
+            <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Formato</label>
+            <select
+              value={formatoReuniao}
+              onChange={(e) => onFormatoChange(e.target.value)}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", boxSizing: "border-box" }}
+            >
+              <option value="Presencial">Presencial</option>
+              <option value="Online">Online</option>
+              <option value="Telefone">Telefone</option>
+            </select>
           </div>
         </div>
+        <div>
+          <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Pauta sugerida</label>
+          <textarea
+            value={pautaSugerida}
+            onChange={(e) => onPautaChange(e.target.value)}
+            placeholder="Tópicos a discutir na próxima reunião..."
+            style={{ width: "100%", minHeight: 100, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+        </div>
+      </div>
+
+      {/* Considerações finais */}
+      <div style={{ ...CARD, borderTop: "3px solid #041A20" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          Considerações Finais
+        </p>
+        <textarea
+          value={consideracoesFinais}
+          onChange={(e) => onConsideracoesChange(e.target.value)}
+          placeholder="Mensagem final personalizada para o cliente..."
+          style={{ width: "100%", minHeight: 140, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+        />
       </div>
     </div>
   );

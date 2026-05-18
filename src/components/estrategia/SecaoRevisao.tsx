@@ -1,135 +1,125 @@
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-
-type SectionStatus = "pendente" | "revisando" | "concluido";
-type SecaoAtiva =
-  | "capa"
-  | "assetAllocation"
-  | "aposentadoria"
-  | "protecaoSucessorio"
-  | "fiscal"
-  | "proximosPassos"
-  | "revisao";
+import { FileText, FileDown } from "lucide-react";
+import type { SectionStatus, SecaoId } from "./EstrategiaInicialPage";
 
 interface Props {
-  statusSecoes: Record<SecaoAtiva, SectionStatus>;
-  comentarios: Record<SecaoAtiva, string>;
-  onNavigate: (secao: SecaoAtiva) => void;
-  onGerarDocumento: () => void;
+  statusSecoes: Record<SecaoId, SectionStatus>;
+  comentarios: Record<string, string>;
+  onNavigate: (s: SecaoId) => void;
+  onPrint: (type: "consultor" | "cliente") => void;
 }
 
-const SECAO_ITEMS: { id: SecaoAtiva; label: string }[] = [
-  { id: "capa", label: "Capa e apresentação" },
-  { id: "assetAllocation", label: "Asset Allocation" },
-  { id: "aposentadoria", label: "Aposentadoria / IF" },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório" },
-  { id: "fiscal", label: "Planejamento fiscal" },
-  { id: "proximosPassos", label: "Próximos passos" },
+const SECOES_REVISAO: { id: SecaoId; label: string; color: string }[] = [
+  { id: "capa", label: "Capa e Identificação", color: "#BBA866" },
+  { id: "assetAllocation", label: "Asset Allocation", color: "#7C3AED" },
+  { id: "aposentadoria", label: "Aposentadoria / IF", color: "#22C55E" },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#F87171" },
+  { id: "fiscal", label: "Planejamento Fiscal", color: "#F59E0B" },
+  { id: "proximosPassos", label: "Próximos Passos", color: "#3B82F6" },
 ];
 
-function StatusBadge({ status }: { status: SectionStatus }) {
-  if (status === "concluido") return <Badge className="bg-green-100 text-green-800 text-xs">Concluída</Badge>;
-  if (status === "revisando") return <Badge className="bg-amber-100 text-amber-800 text-xs">Em revisão</Badge>;
-  return <Badge variant="secondary" className="text-xs">Pendente</Badge>;
-}
-
-export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onGerarDocumento }: Props) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const completedCount = SECAO_ITEMS.filter((s) => statusSecoes[s.id] === "concluido").length;
-  const canGenerate = completedCount >= 5;
+export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onPrint }: Props) {
+  const pendentes = SECOES_REVISAO.filter((s) => statusSecoes[s.id] !== "concluido").length;
+  const todasConcluidas = pendentes === 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Revisão final</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {completedCount} de {SECAO_ITEMS.length} seções concluídas
-        </p>
+    <div style={{ maxWidth: 900, display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Banner */}
+      <div style={{
+        padding: "16px 20px", borderRadius: 10,
+        backgroundColor: todasConcluidas ? "#F0FDF4" : "#FFFBEB",
+        border: `1px solid ${todasConcluidas ? "#86EFAC" : "#FDE68A"}`,
+        fontSize: 14, fontWeight: 600,
+        color: todasConcluidas ? "#16A34A" : "#B45309",
+      }}>
+        {todasConcluidas
+          ? "✓ Estratégia completa — pronta para geração"
+          : `⚠ ${pendentes} seção${pendentes > 1 ? "ões" : ""} pendente${pendentes > 1 ? "s" : ""} — revise antes de gerar`
+        }
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {SECAO_ITEMS.map(({ id, label }) => {
-          const s = statusSecoes[id];
-          const rawComment = comentarios[id] ?? "";
-          let previewText = rawComment.trim();
-          if (id === "protecaoSucessorio") {
-            try {
-              const p = JSON.parse(rawComment) as { protecao?: string; sucessorio?: string };
-              previewText = (p.protecao || p.sucessorio || "").trim();
-            } catch { /* use raw */ }
-          }
-          const preview = previewText.slice(0, 100);
-          const concluida = s === "concluido";
+      {/* Grid de revisão */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {SECOES_REVISAO.map((secao) => {
+          const status = statusSecoes[secao.id];
+          const isPendente = status !== "concluido";
+          const preview = comentarios[secao.id] ?? "";
           return (
-            <button
-              key={id}
-              onClick={() => onNavigate(id)}
-              className={cn(
-                "text-left rounded-lg border p-4 space-y-2 transition-colors hover:bg-muted/50",
-                concluida ? "border-green-300 bg-green-50/50" : "border-amber-200 bg-amber-50/30"
-              )}
+            <div
+              key={secao.id}
+              onClick={() => onNavigate(secao.id)}
+              style={{
+                backgroundColor: isPendente ? "#FFFBEB" : "white",
+                border: isPendente ? "1.5px dashed #FDE68A" : "1.5px solid #DCFCE7",
+                borderRadius: 10, padding: "14px 16px",
+                cursor: "pointer", transition: "box-shadow 0.15s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-sm">{label}</span>
-                {concluida ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: secao.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#041A20" }}>{secao.label}</span>
+                </div>
+                {status === "concluido" ? (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, backgroundColor: "#F0FDF4", color: "#16A34A" }}>✓ Concluída</span>
+                ) : status === "revisando" ? (
+                  <span style={{ fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 999, backgroundColor: "#FFFBEB", color: "#B45309" }}>Em revisão</span>
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#6B7280" }}>Pendente</span>
                 )}
               </div>
-              <StatusBadge status={s} />
               {preview ? (
-                <p className="text-xs text-muted-foreground line-clamp-2">{preview}{previewText.length > 100 ? "…" : ""}</p>
+                <p style={{ fontSize: 12, color: "#9CA3AF", fontStyle: "italic", margin: 0, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                  {preview.slice(0, 80)}{preview.length > 80 ? "…" : ""}
+                </p>
               ) : (
-                <p className="text-xs text-muted-foreground italic">Sem estratégia registrada</p>
+                <p style={{ fontSize: 12, color: "#D1D5DB", fontStyle: "italic", margin: 0 }}>Sem estratégia redigida</p>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
 
-      <div className="border-t pt-4">
-        <Button
-          size="lg"
-          disabled={!canGenerate}
-          onClick={() => setConfirmOpen(true)}
-          className="w-full sm:w-auto"
-        >
-          Gerar documento final
-        </Button>
-        {!canGenerate && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Complete pelo menos 5 seções para gerar o documento ({completedCount}/5 concluídas).
-          </p>
+      {/* Gerar documento */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: "3px solid #041A20" }}>
+        <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: "0 0 4px" }}>Documento pronto para geração</p>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px" }}>Escolha o formato de entrega ao cliente</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <button
+            onClick={() => onPrint("consultor")}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+              padding: 16, borderRadius: 8, border: "1.5px solid #041A20",
+              backgroundColor: "white", cursor: "pointer",
+            }}
+          >
+            <FileText style={{ width: 24, height: 24, color: "#041A20" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#041A20" }}>Gerar PDF Consultor</span>
+            <span style={{ fontSize: 11, color: "#6B7280" }}>Versão completa com dados técnicos</span>
+          </button>
+
+          <button
+            onClick={() => onPrint("cliente")}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+              padding: 16, borderRadius: 8, border: "none",
+              backgroundColor: "#041A20", cursor: "pointer",
+            }}
+          >
+            <FileDown style={{ width: 24, height: 24, color: "white" }} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Gerar PDF Cliente</span>
+            <span style={{ fontSize: 11, color: "#9CA3AF" }}>Versão simplificada para o cliente</span>
+          </button>
+        </div>
+
+        {!todasConcluidas && (
+          <div style={{ padding: "10px 14px", backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, fontSize: 13, color: "#B45309" }}>
+            ⚠ Seções pendentes não serão incluídas no documento
+          </div>
         )}
       </div>
-
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Gerar documento final</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            O documento será gerado com as {completedCount} seções concluídas. Seções pendentes não serão incluídas.
-          </p>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirmOpen(false)}>Cancelar</Button>
-            <Button onClick={() => { setConfirmOpen(false); onGerarDocumento(); }}>
-              Confirmar e gerar PDF
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
