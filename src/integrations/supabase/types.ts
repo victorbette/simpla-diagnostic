@@ -97,6 +97,7 @@ export interface Database {
           fiscal: Json;
           sucessorio: Json;
           notas_assessor: string;
+          estrategia_inicial: Json | null;
           status: string;
           created_at: string;
           updated_at: string;
@@ -113,6 +114,7 @@ export interface Database {
           fiscal?: Json;
           sucessorio?: Json;
           notas_assessor?: string;
+          estrategia_inicial?: Json | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -129,6 +131,7 @@ export interface Database {
           fiscal?: Json;
           sucessorio?: Json;
           notas_assessor?: string;
+          estrategia_inicial?: Json | null;
           status?: string;
           created_at?: string;
           updated_at?: string;

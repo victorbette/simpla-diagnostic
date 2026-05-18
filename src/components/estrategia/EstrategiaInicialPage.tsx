@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "sonner";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import {
   calcularIF,
@@ -174,9 +175,11 @@ interface Props {
   clientName: string;
   onClose: () => void;
   onSave?: (e: EstrategiaData) => void;
+  onSaveCloud?: (e: EstrategiaData) => Promise<void>;
+  onLoadCloud?: () => Promise<Record<string, unknown> | null>;
 }
 
-export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Props) {
+export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSaveCloud, onLoadCloud }: Props) {
   const storageKey = `estrategia_v2_${plan.clientId}`;
 
   const [data, setDataRaw] = useState<EstrategiaData>(() => {
@@ -195,6 +198,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
 
   const [secaoAtiva, setSecaoAtiva] = useState<SecaoId>("capa");
   const [printMode, setPrintMode] = useState<"consultor" | "cliente" | null>(null);
+  const [salvando, setSalvando] = useState(false);
+  const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -214,23 +219,64 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
     });
   }, [storageKey, onSave]);
 
+  // Carrega do Supabase na montagem — tem prioridade sobre localStorage
+  useEffect(() => {
+    if (!onLoadCloud) return;
+    onLoadCloud().then((remoto) => {
+      if (!remoto) return;
+      setDataRaw((local) => {
+        const merged = { ...local, ...(remoto as Partial<EstrategiaData>) };
+        if (!merged.resultados) merged.resultados = defaultResultados;
+        try { localStorage.setItem(storageKey, JSON.stringify(merged)); } catch { /**/ }
+        return merged;
+      });
+    }).catch(() => {/* falha silenciosa — localStorage é o backup */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
 
+  // ── Save no Supabase ────────────────────────────────────────────────────────
+
+  const handleSalvarCloud = useCallback(async (dataAtual: EstrategiaData) => {
+    if (!onSaveCloud) return;
+    setSalvando(true);
+    try {
+      await onSaveCloud(dataAtual);
+      setUltimoSalvo(new Date());
+    } catch (err) {
+      const supaErr = err as { message?: string };
+      const msg = supaErr.message ?? (err instanceof Error ? err.message : "Erro desconhecido");
+      toast.error(`Erro ao salvar estratégia: ${msg}`);
+      console.error("handleSalvarCloud failed:", err);
+    } finally {
+      setSalvando(false);
+    }
+  }, [onSaveCloud]);
+
   const secaoAtual = SECOES.find((s) => s.id === secaoAtiva)!;
   const secaoIndex = SECOES.findIndex((s) => s.id === secaoAtiva);
 
   const marcarConcluida = () => {
-    setData((prev) => ({
-      ...prev,
-      statusSecoes: {
-        ...prev.statusSecoes,
-        [secaoAtiva]: prev.statusSecoes[secaoAtiva] === "concluido" ? "revisando" : "concluido",
-      },
-    }));
+    setData((prev) => {
+      const novoStatus = prev.statusSecoes[secaoAtiva] === "concluido" ? "revisando" : "concluido";
+      const next = {
+        ...prev,
+        statusSecoes: { ...prev.statusSecoes, [secaoAtiva]: novoStatus },
+      };
+      // Auto-save silencioso no Supabase ao marcar como concluída
+      if (onSaveCloud) {
+        onSaveCloud(next).catch(() => {/* falha silenciosa */});
+      }
+      return next;
+    });
+
+    // stub return to keep the old signature happy — o setData já atualiza
+    return;
   };
 
   const irParaSecao = (id: SecaoId) => setSecaoAtiva(id);
@@ -401,7 +447,21 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {ultimoSalvo && (
+            <span style={{ fontSize: 12, color: "rgba(187,168,102,0.8)" }}>
+              Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          {onSaveCloud && (
+            <button
+              onClick={() => handleSalvarCloud(data)}
+              disabled={salvando}
+              style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #BBA866", backgroundColor: "transparent", color: "#BBA866", fontSize: 13, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.7 : 1 }}
+            >
+              {salvando ? "Salvando…" : "Salvar estratégia"}
+            </button>
+          )}
           <button
             onClick={() => setPrintMode("consultor")}
             style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid white", backgroundColor: "transparent", color: "white", fontSize: 13, cursor: "pointer" }}
@@ -490,6 +550,15 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
             <div style={{ height: 4, backgroundColor: "#F3F4F6", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#BBA866", borderRadius: 2, transition: "width 0.3s" }} />
             </div>
+            {onSaveCloud && (
+              <button
+                onClick={() => handleSalvarCloud(data)}
+                disabled={salvando}
+                style={{ width: "100%", padding: "8px 0", border: "1px solid #BBA866", borderRadius: 6, backgroundColor: "transparent", color: "#BBA866", fontSize: 13, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.7 : 1 }}
+              >
+                {salvando ? "Salvando…" : ultimoSalvo ? `Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Salvar estratégia"}
+              </button>
+            )}
             <button
               onClick={() => setPrintMode("consultor")}
               style={{ width: "100%", padding: "8px 0", border: "1px solid #041A20", borderRadius: 6, backgroundColor: "transparent", color: "#041A20", fontSize: 13, cursor: "pointer", marginBottom: 8 }}

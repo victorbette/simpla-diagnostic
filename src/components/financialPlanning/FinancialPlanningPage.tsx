@@ -64,8 +64,12 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       setPlan(saved);
       setDirty(false);
       toast.success(status === "completo" ? "Plano finalizado!" : "Rascunho salvo.");
-    } catch {
-      toast.error("Erro ao salvar o plano.");
+    } catch (err) {
+      const supaErr = err as { message?: string; hint?: string; details?: string };
+      const msg = supaErr.message ?? (err instanceof Error ? err.message : "Erro desconhecido");
+      const hint = supaErr.hint ? ` (${supaErr.hint})` : "";
+      toast.error(`Erro ao salvar: ${msg}${hint}`);
+      console.error("handleSave failed:", err);
     } finally {
       setSaving(false);
     }
@@ -200,6 +204,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         plan={plan}
         clientName={clientName}
         onClose={() => setMostrarEstrategia(false)}
+        onSaveCloud={async (data) => {
+          if (!plan.id) throw new Error("Salve o Financial Planning antes de salvar a estratégia.");
+          await store.saveEstrategia(plan.id, data as unknown as Record<string, unknown>);
+        }}
+        onLoadCloud={async () => {
+          if (!plan.id) return null;
+          return store.loadEstrategia(plan.id) as Promise<Record<string, unknown> | null>;
+        }}
       />
     );
   }

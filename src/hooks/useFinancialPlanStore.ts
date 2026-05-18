@@ -28,6 +28,7 @@ interface PlanRow {
   sucessorio: Record<string, unknown>;
   notas_assessor: string;
   dados_cliente: Record<string, unknown> | null;
+  estrategia_inicial: Record<string, unknown> | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -116,7 +117,15 @@ export function useFinancialPlanStore() {
             .select()
             .single();
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error("savePlan (update) — Supabase error:", {
+              message: updateError.message,
+              details: updateError.details,
+              hint: updateError.hint,
+              code: updateError.code,
+            });
+            throw updateError;
+          }
 
           const updated = rowToPlan(data as unknown as PlanRow);
           setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
@@ -128,7 +137,15 @@ export function useFinancialPlanStore() {
             .select()
             .single();
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            console.error("savePlan (insert) — Supabase error:", {
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint,
+              code: insertError.code,
+            });
+            throw insertError;
+          }
 
           const created = rowToPlan(data as unknown as PlanRow);
           setPlans((prev) => [created, ...prev]);
@@ -141,6 +158,48 @@ export function useFinancialPlanStore() {
     },
     []
   );
+
+  // ── Estratégia Inicial ────────────────────────────────────────────────────
+
+  const saveEstrategia = useCallback(
+    async (planId: string, estrategia: Record<string, unknown>): Promise<void> => {
+      const { error: updateError } = await supabase
+        .from("financial_plans")
+        .update({
+          estrategia_inicial: estrategia,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", planId);
+
+      if (updateError) {
+        console.error("saveEstrategia — Supabase error:", {
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+          code: updateError.code,
+        });
+        throw updateError;
+      }
+    },
+    []
+  );
+
+  const loadEstrategia = useCallback(
+    async (planId: string): Promise<Record<string, unknown> | null> => {
+      const { data, error: fetchError } = await supabase
+        .from("financial_plans")
+        .select("estrategia_inicial")
+        .eq("id", planId)
+        .single();
+
+      if (fetchError || !data) return null;
+      return (data as unknown as { estrategia_inicial: Record<string, unknown> | null })
+        .estrategia_inicial;
+    },
+    []
+  );
+
+  // ── Misc ─────────────────────────────────────────────────────────────────
 
   const deletePlan = useCallback(async (id: string): Promise<void> => {
     try {
@@ -181,6 +240,8 @@ export function useFinancialPlanStore() {
     loading,
     error,
     savePlan,
+    saveEstrategia,
+    loadEstrategia,
     deletePlan,
     getClientPlans,
     getLatestPlan,
