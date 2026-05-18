@@ -1,9 +1,12 @@
 import { FileText, FileDown } from "lucide-react";
+import { formatCurrency } from "@/lib/format";
 import type { SectionStatus, SecaoId } from "./EstrategiaInicialPage";
+import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
 interface Props {
   statusSecoes: Record<SecaoId, SectionStatus>;
   comentarios: Record<string, string>;
+  resultados: ResultadosEstrategia;
   onNavigate: (s: SecaoId) => void;
   onPrint: (type: "consultor" | "cliente") => void;
 }
@@ -17,7 +20,7 @@ const SECOES_REVISAO: { id: SecaoId; label: string; color: string }[] = [
   { id: "proximosPassos", label: "Próximos Passos", color: "#3B82F6" },
 ];
 
-export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onPrint }: Props) {
+export function SecaoRevisao({ statusSecoes, comentarios, resultados, onNavigate, onPrint }: Props) {
   const pendentes = SECOES_REVISAO.filter((s) => statusSecoes[s.id] !== "concluido").length;
   const todasConcluidas = pendentes === 0;
 
@@ -79,6 +82,64 @@ export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onPrint }:
             </div>
           );
         })}
+      </div>
+
+      {/* Premissas das ferramentas */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: "3px solid #BBA866" }}>
+        <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: "0 0 4px" }}>Premissas das Ferramentas</p>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 16px" }}>Resultados salvos pelos simuladores durante a elaboração da estratégia</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          {/* Simulador IF */}
+          <div style={{ padding: "14px 16px", borderRadius: 8, backgroundColor: resultados.if ? "#F0FDF4" : "#F9FAFB", border: `1px solid ${resultados.if ? "#86EFAC" : "#E5E7EB"}` }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: resultados.if ? "#15803D" : "#9CA3AF", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {resultados.if ? "✓" : "○"} Simulador de IF
+            </p>
+            {resultados.if ? (
+              <>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Patrimônio na apos.:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: "0 0 6px" }}>{formatCurrency(resultados.if.patrimonioAposentadoria)}</p>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Renda sustentável:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: resultados.if.liberdadeAlcancada ? "#16A34A" : "#DC2626", margin: 0 }}>{formatCurrency(resultados.if.rendaSustentavel)}/mês</p>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, fontStyle: "italic" }}>Simulador não executado</p>
+            )}
+          </div>
+
+          {/* Análise de Seguros */}
+          <div style={{ padding: "14px 16px", borderRadius: 8, backgroundColor: resultados.seguro ? "#FFF5F5" : "#F9FAFB", border: `1px solid ${resultados.seguro ? "#FECACA" : "#E5E7EB"}` }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: resultados.seguro ? "#B91C1C" : "#9CA3AF", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {resultados.seguro ? "✓" : "○"} Análise de Seguros
+            </p>
+            {resultados.seguro ? (
+              <>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Capital necessário:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: "0 0 6px" }}>{formatCurrency(resultados.seguro.totalNeed)}</p>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Gap de cobertura:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: resultados.seguro.gap > 0 ? "#DC2626" : "#16A34A", margin: 0 }}>{formatCurrency(resultados.seguro.gap)}</p>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, fontStyle: "italic" }}>Análise não realizada</p>
+            )}
+          </div>
+
+          {/* Calculadora PGBL */}
+          <div style={{ padding: "14px 16px", borderRadius: 8, backgroundColor: resultados.fiscal ? "#FFFBEB" : "#F9FAFB", border: `1px solid ${resultados.fiscal ? "#FDE68A" : "#E5E7EB"}` }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: resultados.fiscal ? "#B45309" : "#9CA3AF", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {resultados.fiscal ? "✓" : "○"} Calculadora PGBL
+            </p>
+            {resultados.fiscal ? (
+              <>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Economia anual:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#16A34A", margin: "0 0 6px" }}>{formatCurrency(resultados.fiscal.economiaAnual)}</p>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Espaço disponível:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: 0 }}>{formatCurrency(resultados.fiscal.espacoDisponivelMensal)}/mês</p>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, fontStyle: "italic" }}>Calculadora não usada</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Gerar documento */}

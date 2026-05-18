@@ -3,6 +3,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularIF, calcularProtecao, calcularFiscal, calcularSucessorio } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { EstrategiaData } from "./EstrategiaInicialPage";
+import { defaultResultados } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
@@ -17,6 +18,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
   const protR = calcularProtecao(plan.protecao);
   const fiscalR = calcularFiscal(plan.fiscal);
   const sucR = calcularSucessorio(plan.sucessorio);
+  const resultados = data.resultados ?? defaultResultados;
   const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   useEffect(() => {
@@ -101,6 +103,44 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
               {data.comentarios.fiscal}
             </p>
           )}
+        </div>
+      )}
+
+      {/* Premissas das ferramentas (consultor only) */}
+      {isConsultor && (resultados.if || resultados.seguro || resultados.fiscal) && (
+        <div style={{ marginBottom: 32 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #BBA866", paddingLeft: 12 }}>
+            Premissas dos Simuladores
+          </h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            {resultados.if && (
+              <div style={{ padding: 14, backgroundColor: "#F0FDF4", borderRadius: 8, border: "1px solid #86EFAC" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#15803D", margin: "0 0 8px", textTransform: "uppercase" }}>Simulador de IF</p>
+                {row("Patrimônio apos.", formatCurrency(resultados.if.patrimonioAposentadoria))}
+                {row("Renda sustentável", `${formatCurrency(resultados.if.rendaSustentavel)}/mês`)}
+                {row("Gap de renda", formatCurrency(resultados.if.gapRenda))}
+                {row("Aporte ajustado", `${formatCurrency(resultados.if.aporteAjustado)}/mês`)}
+                {row("IF atingida?", resultados.if.liberdadeAlcancada ? "Sim" : "Não")}
+              </div>
+            )}
+            {resultados.seguro && (
+              <div style={{ padding: 14, backgroundColor: "#FFF5F5", borderRadius: 8, border: "1px solid #FECACA" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#B91C1C", margin: "0 0 8px", textTransform: "uppercase" }}>Análise de Seguros</p>
+                {row("Capital necessário", formatCurrency(resultados.seguro.totalNeed))}
+                {row("Cobertura atual", formatCurrency(resultados.seguro.totalCoverage))}
+                {row("Gap de cobertura", formatCurrency(resultados.seguro.gap))}
+              </div>
+            )}
+            {resultados.fiscal && (
+              <div style={{ padding: 14, backgroundColor: "#FFFBEB", borderRadius: 8, border: "1px solid #FDE68A" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#B45309", margin: "0 0 8px", textTransform: "uppercase" }}>Calculadora PGBL</p>
+                {row("IR sem PGBL", `${formatCurrency(resultados.fiscal.irSemPGBL)}/ano`)}
+                {row("IR com PGBL", `${formatCurrency(resultados.fiscal.irComPGBL)}/ano`)}
+                {row("Economia anual", formatCurrency(resultados.fiscal.economiaAnual))}
+                {row("Espaço disponível", `${formatCurrency(resultados.fiscal.espacoDisponivelMensal)}/mês`)}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

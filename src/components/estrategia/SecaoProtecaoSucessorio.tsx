@@ -6,6 +6,7 @@ import { calcularProtecao, calcularSucessorio } from "@/types/financialPlanning"
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
+import type { ResultadoSeguro } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
@@ -13,6 +14,8 @@ interface Props {
   onComentarioChange: (v: string) => void;
   tags: string[];
   onTagsChange: (v: string[]) => void;
+  resultadoSeguro: ResultadoSeguro | null;
+  onResultadoSeguro: (r: ResultadoSeguro) => void;
 }
 
 const AVAILABLE_TAGS = ["Seguro de Vida", "Invalidez", "Holding", "ITCMD", "Testamento"];
@@ -35,7 +38,7 @@ function Gauge({ score, color }: { score: number; color: string }) {
   );
 }
 
-export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, tags, onTagsChange }: Props) {
+export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoSeguro, onResultadoSeguro }: Props) {
   const [lastEdit, setLastEdit] = useState("");
   const [seguroModal, setSeguroModal] = useState(false);
 
@@ -226,7 +229,7 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
             <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
             {[
               { label: "Diagnóstico revisado", ok: true },
-              { label: "Análise de seguros feita", ok: prot.capitalAtual > 0 },
+              { label: "Análise de seguros feita", ok: resultadoSeguro !== null },
               { label: "Estratégia redigida", ok: comentario.length > 50 },
             ].map(({ label, ok }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
@@ -237,11 +240,43 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
               </div>
             ))}
           </div>
+
+          {resultadoSeguro && (
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #F87171", backgroundColor: "#FFF5F5" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#B91C1C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                ✓ Resultado da Análise de Seguros
+              </p>
+              {[
+                { label: "Capital necessário", value: formatCurrency(resultadoSeguro.totalNeed) },
+                { label: "Cobertura atual", value: formatCurrency(resultadoSeguro.totalCoverage) },
+                { label: "Gap de cobertura", value: formatCurrency(resultadoSeguro.gap), color: resultadoSeguro.gap > 0 ? "#DC2626" : "#16A34A" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #FECACA", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+                  <span style={{ color: "#6B7280" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+                </div>
+              ))}
+              <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+                Salvo em {new Date(resultadoSeguro.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       <FerramentaModal open={seguroModal} onClose={() => setSeguroModal(false)} title="Análise Completa de Seguros">
-        <FerramentaSeguro protecao={plan.protecao} onSave={() => setSeguroModal(false)} />
+        <FerramentaSeguro
+          protecao={plan.protecao}
+          onSave={(_data, result) => {
+            onResultadoSeguro({
+              totalNeed: result.totalNeed,
+              totalCoverage: result.totalCoverage,
+              gap: result.gap,
+              savedAt: new Date().toISOString(),
+            });
+            setSeguroModal(false);
+          }}
+        />
       </FerramentaModal>
     </>
   );

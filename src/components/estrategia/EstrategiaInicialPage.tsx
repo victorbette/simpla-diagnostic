@@ -7,6 +7,8 @@ import {
   calcularSucessorio,
   PERFIL_LABELS,
 } from "@/types/financialPlanning";
+import type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia } from "@/types/estrategiaResultados";
+import { defaultResultados } from "@/types/estrategiaResultados";
 import { SecaoCapa } from "./SecaoCapa";
 import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
@@ -49,7 +51,10 @@ export interface EstrategiaData {
   formatoReuniao: string;
   pautaSugerida: string;
   consideracoesFinais: string;
+  resultados: ResultadosEstrategia;
 }
+
+export type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia };
 
 // ─── Section config ────────────────────────────────────────────────────────────
 
@@ -158,6 +163,7 @@ function defaultData(plan: FinancialPlan): EstrategiaData {
     formatoReuniao: "Online",
     pautaSugerida: "",
     consideracoesFinais: "",
+    resultados: defaultResultados,
   };
 }
 
@@ -176,7 +182,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
   const [data, setDataRaw] = useState<EstrategiaData>(() => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved) as EstrategiaData;
+      if (saved) {
+        const parsed = JSON.parse(saved) as EstrategiaData;
+        if (!parsed.resultados) parsed.resultados = defaultResultados;
+        return parsed;
+      }
     } catch {
       // ignore
     }
@@ -318,6 +328,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
+            resultadoIF={data.resultados.if}
+            onResultadoIF={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, if: r } }))}
           />
         );
       case "protecaoSucessorio":
@@ -328,6 +340,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
+            resultadoSeguro={data.resultados.seguro}
+            onResultadoSeguro={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, seguro: r } }))}
           />
         );
       case "fiscal":
@@ -338,6 +352,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
+            resultadoFiscal={data.resultados.fiscal}
+            onResultadoFiscal={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, fiscal: r } }))}
           />
         );
       case "proximosPassos":
@@ -361,6 +377,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
           <SecaoRevisao
             statusSecoes={data.statusSecoes}
             comentarios={data.comentarios}
+            resultados={data.resultados}
             onNavigate={irParaSecao}
             onPrint={(type) => setPrintMode(type)}
           />

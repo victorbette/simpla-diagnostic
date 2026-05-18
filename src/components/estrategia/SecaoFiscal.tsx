@@ -5,6 +5,7 @@ import { calcularFiscal } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaPGBL } from "@/components/ferramentas/FerramentaPGBL";
+import type { ResultadoFiscal } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
@@ -12,6 +13,8 @@ interface Props {
   onComentarioChange: (v: string) => void;
   tags: string[];
   onTagsChange: (v: string[]) => void;
+  resultadoFiscal: ResultadoFiscal | null;
+  onResultadoFiscal: (r: ResultadoFiscal) => void;
 }
 
 const AVAILABLE_TAGS = ["PGBL", "VGBL", "IR", "Dedução", "Previdência"];
@@ -27,7 +30,7 @@ const DECL_LABELS: Record<string, string> = {
   nao_sei: "Não informado",
 };
 
-export function SecaoFiscal({ plan, comentario, onComentarioChange, tags, onTagsChange }: Props) {
+export function SecaoFiscal({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoFiscal, onResultadoFiscal }: Props) {
   const [lastEdit, setLastEdit] = useState("");
   const [pgblModal, setPgblModal] = useState(false);
 
@@ -177,6 +180,7 @@ export function SecaoFiscal({ plan, comentario, onComentarioChange, tags, onTags
             <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
             {[
               { label: "Diagnóstico revisado", ok: true },
+              { label: "Calculadora PGBL usada", ok: resultadoFiscal !== null },
               { label: "Oportunidade identificada", ok: r.economiaFiscalPotencial > 0 },
               { label: "Estratégia redigida", ok: comentario.length > 50 },
             ].map(({ label, ok }) => (
@@ -191,11 +195,48 @@ export function SecaoFiscal({ plan, comentario, onComentarioChange, tags, onTags
               Taxa aproveitada: {formatNumber(r.tetoPGBL > 0 ? (r.pgblAtual / r.tetoPGBL) * 100 : 0, 0)}%
             </p>
           </div>
+
+          {resultadoFiscal && (
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #F59E0B", backgroundColor: "#FFFBEB" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#B45309", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                ✓ Resultado da Calculadora PGBL
+              </p>
+              {[
+                { label: "IR sem PGBL", value: `${formatCurrency(resultadoFiscal.irSemPGBL)}/ano`, color: "#DC2626" },
+                { label: "IR com PGBL", value: `${formatCurrency(resultadoFiscal.irComPGBL)}/ano`, color: "#16A34A" },
+                { label: "Economia anual", value: formatCurrency(resultadoFiscal.economiaAnual), color: "#16A34A" },
+                { label: "Espaço mensal disponível", value: `${formatCurrency(resultadoFiscal.espacoDisponivelMensal)}/mês` },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #FDE68A", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+                  <span style={{ color: "#6B7280" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+                </div>
+              ))}
+              <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+                Salvo em {new Date(resultadoFiscal.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       <FerramentaModal open={pgblModal} onClose={() => setPgblModal(false)} title="Calculadora PGBL Completa">
-        <FerramentaPGBL fiscal={plan.fiscal} onSave={() => setPgblModal(false)} />
+        <FerramentaPGBL
+          fiscal={plan.fiscal}
+          onSave={(result) => {
+            onResultadoFiscal({
+              rendaAnual: result.rendaAnual,
+              tetoPGBLAnual: result.tetoPGBLAnual,
+              aporteAnual: result.aporteAnual,
+              irComPGBL: result.irComPGBL,
+              irSemPGBL: result.irSemPGBL,
+              economiaAnual: result.economiaAnual,
+              espacoDisponivelMensal: result.espacoDisponivelMensal,
+              savedAt: new Date().toISOString(),
+            });
+            setPgblModal(false);
+          }}
+        />
       </FerramentaModal>
     </>
   );

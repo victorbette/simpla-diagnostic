@@ -8,6 +8,7 @@ import { calcularIF } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
+import type { ResultadoIF } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
@@ -15,6 +16,8 @@ interface Props {
   onComentarioChange: (v: string) => void;
   tags: string[];
   onTagsChange: (v: string[]) => void;
+  resultadoIF: ResultadoIF | null;
+  onResultadoIF: (r: ResultadoIF) => void;
 }
 
 const AVAILABLE_TAGS = ["IF", "Aposentadoria", "Aportes", "Previdência", "PGBL"];
@@ -45,7 +48,7 @@ function formatAxis(v: number) {
   return String(v);
 }
 
-export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags, onTagsChange }: Props) {
+export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF }: Props) {
   const [lastEdit, setLastEdit] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -207,6 +210,7 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
             {[
               { label: "Diagnóstico revisado", ok: true },
               { label: "Projeção analisada", ok: r.patrimonioNecessario > 0 },
+              { label: "Simulador executado", ok: resultadoIF !== null },
               { label: "Estratégia redigida", ok: comentario.length > 50 },
             ].map(({ label, ok }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
@@ -217,11 +221,47 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
               </div>
             ))}
           </div>
+
+          {resultadoIF && (
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #22C55E", backgroundColor: "#F0FDF4" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#15803D", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                ✓ Resultado do Simulador
+              </p>
+              {[
+                { label: "Patrimônio na aposentadoria", value: formatCurrency(resultadoIF.patrimonioAposentadoria) },
+                { label: "Renda sustentável", value: `${formatCurrency(resultadoIF.rendaSustentavel)}/mês` },
+                { label: "Gap de renda", value: formatCurrency(resultadoIF.gapRenda), color: resultadoIF.gapRenda > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Aporte ajustado", value: `${formatCurrency(resultadoIF.aporteAjustado)}/mês` },
+                { label: "IF atingida?", value: resultadoIF.liberdadeAlcancada ? "Sim ✓" : "Não ✗", color: resultadoIF.liberdadeAlcancada ? "#16A34A" : "#DC2626" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #BBF7D0", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+                  <span style={{ color: "#6B7280" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+                </div>
+              ))}
+              <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+                Salvo em {new Date(resultadoIF.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
       <FerramentaModal open={modalOpen} onClose={() => setModalOpen(false)} title="Simulador de Liberdade Financeira">
-        <FerramentaLiberdadeFinanceira planejamentoIF={plan.planejamentoIF} onSave={() => setModalOpen(false)} />
+        <FerramentaLiberdadeFinanceira
+          planejamentoIF={plan.planejamentoIF}
+          onSave={(_params, _objetivos, result) => {
+            onResultadoIF({
+              patrimonioAposentadoria: result.patrimonioAposentadoria,
+              rendaSustentavel: result.rendaSustentavel,
+              gapRenda: result.gapRenda,
+              liberdadeAlcancada: result.liberdadeAlcancada,
+              aporteAjustado: result.aporteAjustado,
+              savedAt: new Date().toISOString(),
+            });
+            setModalOpen(false);
+          }}
+        />
       </FerramentaModal>
     </>
   );
