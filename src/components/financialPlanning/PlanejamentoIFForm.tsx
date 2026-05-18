@@ -55,9 +55,10 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
     : null;
 
   const isAutoIdade = calculatedAge && value.idadeAtual === calculatedAge;
-  const isAutoRenda = dadosCliente?.rendaMensal && value.rendaMensalDesejada === dadosCliente.rendaMensal;
+  const rendaMensalAtual = dadosCliente?.rendaMensal ?? 0;
   const isAutoPatrimonio = dadosCliente?.patrimonioFinanceiroEstimado && value.patrimonioAtual === dadosCliente.patrimonioFinanceiroEstimado;
   const isAutoAporte = dadosCliente?.aportesMensalMedio && value.aporteMensal === dadosCliente.aportesMensalMedio;
+  const isRendaSugerida = rendaMensalAtual > 0 && value.rendaMensalDesejada === rendaMensalAtual;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
@@ -101,20 +102,33 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             <p className="text-[11px] text-[#9CA3AF] italic">{anosRestantes} anos restantes</p>
           </div>
 
-          {isAutoRenda ? (
+          {rendaMensalAtual > 0 ? (
             <FPAutoField
               label="Renda mensal atual"
-              value={formatCurrency(value.rendaMensalDesejada)}
+              value={formatCurrency(rendaMensalAtual)}
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#374151]">Renda desejada na IF</Label>
-              <CurrencyInput
-                value={value.rendaMensalDesejada}
-                onChange={(v) => set("rendaMensalDesejada", v)}
-              />
+              <Label className="text-[13px] font-medium text-[#374151]">Renda mensal atual</Label>
+              <p className="text-[13px] text-[#9CA3AF] italic">Informe na Coleta de Dados</p>
             </div>
           )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Label className="text-[13px] font-medium text-[#374151]">Renda mensal desejada na IF</Label>
+              {isRendaSugerida && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#F0FDFA", color: "#0D9488", border: "1px solid #99F6E4" }}>
+                  ✓ SUGERIDO
+                </span>
+              )}
+            </div>
+            <CurrencyInput
+              value={value.rendaMensalDesejada}
+              onChange={(v) => set("rendaMensalDesejada", v)}
+            />
+            <p className="text-[11px] text-[#9CA3AF] italic">Quanto o cliente quer receber por mês ao atingir a independência financeira</p>
+          </div>
 
           {isAutoPatrimonio ? (
             <FPAutoField

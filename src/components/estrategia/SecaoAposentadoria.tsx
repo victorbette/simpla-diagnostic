@@ -88,6 +88,8 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
               {[
                 { label: "Idade atual", value: `${p.idadeAtual} anos` },
                 { label: "Idade meta IF", value: `${p.idadeMeta} anos` },
+                { label: "Renda desejada na IF", value: `${formatCurrency(p.rendaMensalDesejada)}/mês`, color: "#0D9488" },
+                { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês`, color: r.rendaMensalAtingivel >= p.rendaMensalDesejada ? "#16A34A" : "#DC2626" },
                 { label: "Patrimônio necessário", value: formatCurrency(r.patrimonioNecessario), color: "#041A20" },
                 { label: "Projeção c/ aportes", value: formatCurrency(r.patrimonioProjetado), color: "#16A34A" },
               ].map(({ label, value, color }) => (
@@ -189,6 +191,7 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
               {[
                 { label: "Anos restantes", value: `${anosRestantes} anos` },
+                { label: "Renda desejada", value: `${formatCurrency(p.rendaMensalDesejada)}/mês` },
                 { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês` },
               ].map(({ label, value }) => (
                 <div key={label} style={{ backgroundColor: "#F8F9FA", borderRadius: 8, padding: "10px 12px" }}>
