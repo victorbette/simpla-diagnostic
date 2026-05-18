@@ -66,6 +66,7 @@ interface FinancialPlanDashboardProps {
   onPrint: (type: "advisor" | "client") => void;
   onNotasChange: (notas: string) => void;
   onAvancarEstrategia: () => void;
+  allStepsDone?: boolean;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -291,6 +292,7 @@ export function FinancialPlanDashboard({
   onPrint,
   onNotasChange,
   onAvancarEstrategia,
+  allStepsDone: _allStepsDone,
 }: FinancialPlanDashboardProps) {
   const [modalAberto, setModalAberto] = useState<ModalAberto>(null);
 

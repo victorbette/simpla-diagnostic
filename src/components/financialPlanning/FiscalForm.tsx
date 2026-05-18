@@ -1,9 +1,6 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -12,19 +9,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { FPSectionHeader } from "./layout/FPSectionHeader";
+import { FPAutoField } from "./layout/FPAutoField";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularFiscal } from "@/types/financialPlanning";
-import type { PlanejamentoFiscal } from "@/types/financialPlanning";
-import { cn } from "@/lib/utils";
+import type { PlanejamentoFiscal, DadosCliente } from "@/types/financialPlanning";
+
+const AMBER = "#F59E0B";
+const DARK = "#041A20";
+
+const TRABALHO_LABELS: Record<string, string> = {
+  clt: "CLT (empregado)",
+  autonomo: "Autônomo / Freelancer",
+  empresario: "Empresário / CNPJ",
+  concursado: "Servidor público",
+};
 
 interface FiscalFormProps {
   value: PlanejamentoFiscal;
   onChange: (v: PlanejamentoFiscal) => void;
+  dadosCliente?: DadosCliente;
 }
 
-export function FiscalForm({ value, onChange }: FiscalFormProps) {
-  const [, setEmpresaExpanded] = useState(false);
-
+export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
   const set = <K extends keyof PlanejamentoFiscal>(key: K, val: PlanejamentoFiscal[K]) =>
     onChange({ ...value, [key]: val });
 
@@ -35,310 +42,375 @@ export function FiscalForm({ value, onChange }: FiscalFormProps) {
       ? Math.min(100, (resultado.pgblAtual / resultado.tetoPGBL) * 100)
       : 0;
 
-  // Determine analisePrevidencia card style
-  const analise = resultado.analisePrevidencia;
-  const isAlerta = analise.startsWith("Atenção");
-  const isPositivo = analise.length > 0 && !isAlerta;
+  const isAutoRenda =
+    dadosCliente?.rendaMensal && value.rendaBrutaAnual === dadosCliente.rendaMensal * 12;
+  const isAutoTrabalho =
+    dadosCliente?.tipoTrabalho != null && dadosCliente.tipoTrabalho.length > 0;
 
   function handleToggleEmpresa(v: boolean) {
     set("temEmpresa", v);
-    if (!v) {
-      onChange({ ...value, temEmpresa: false, recebeProlabore: false, recebeDividendos: false });
-    } else {
-      set("temEmpresa", true);
-      setEmpresaExpanded(true);
-    }
+    if (!v) onChange({ ...value, temEmpresa: false, recebeProlabore: false, recebeDividendos: false });
   }
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-      {/* ── Formulário ── */}
-      <div className="flex flex-1 flex-col gap-5">
-        <h3 className="text-lg font-semibold">Planejamento fiscal e tributário</h3>
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fis-renda">Renda mensal bruta</Label>
-          <CurrencyInput
-            id="fis-renda"
-            value={value.rendaBrutaAnual / 12}
-            onChange={(v) => set("rendaBrutaAnual", v * 12)}
-          />
-          {value.rendaBrutaAnual > 0 && (
-            <p className="text-xs text-muted-foreground">
-              Renda anual: {formatCurrency(value.rendaBrutaAnual)}
-            </p>
-          )}
-        </div>
+      {/* Perfil fiscal */}
+      <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <FPSectionHeader
+          title="Perfil Fiscal"
+          subtitle="Renda, tipo de declaração e vínculo profissional"
+          borderColor={AMBER}
+        />
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="fis-declaracao">Tipo de declaração do IR</Label>
-          <Select
-            value={value.tipoDeclaracao}
-            onValueChange={(v) =>
-              set("tipoDeclaracao", v as PlanejamentoFiscal["tipoDeclaracao"])
-            }
-          >
-            <SelectTrigger id="fis-declaracao">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="simplificada">Simplificada</SelectItem>
-              <SelectItem value="completa">Completa</SelectItem>
-              <SelectItem value="nao_sei">Não sei</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-3 rounded-xl border p-4">
-          {/* PGBL */}
-          <div className="flex items-center gap-3">
-            <Switch
-              id="fis-pgbl"
-              checked={value.temPGBL}
-              onCheckedChange={(v) => set("temPGBL", v)}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {isAutoRenda ? (
+            <FPAutoField
+              label="Renda mensal bruta"
+              value={formatCurrency(value.rendaBrutaAnual / 12)}
             />
-            <Label htmlFor="fis-pgbl" className="cursor-pointer">
-              Tem previdência PGBL?
-            </Label>
-          </div>
-          {value.temPGBL && (
-            <div className="ml-8 flex flex-col gap-1.5">
-              <Label className="text-sm">Valor anual aportado no PGBL</Label>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Label className="text-[13px] font-medium text-[#374151]">Renda mensal bruta</Label>
               <CurrencyInput
-                value={value.valorPGBLAnual ?? 0}
-                onChange={(v) => set("valorPGBLAnual", v)}
+                value={value.rendaBrutaAnual / 12}
+                onChange={(v) => set("rendaBrutaAnual", v * 12)}
               />
             </div>
           )}
+
+          <FPAutoField
+            label="Renda anual bruta"
+            value={formatCurrency(value.rendaBrutaAnual)}
+          />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <Label className="text-[13px] font-medium text-[#374151]">Tipo de declaração IR</Label>
+            <Select
+              value={value.tipoDeclaracao}
+              onValueChange={(v) =>
+                set("tipoDeclaracao", v as PlanejamentoFiscal["tipoDeclaracao"])
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="completa">Declaração completa</SelectItem>
+                <SelectItem value="simplificada">Declaração simplificada</SelectItem>
+                <SelectItem value="nao_sei">Não sei informar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {isAutoTrabalho && dadosCliente?.tipoTrabalho ? (
+            <FPAutoField
+              label="Tipo de vínculo"
+              value={TRABALHO_LABELS[dadosCliente.tipoTrabalho] ?? dadosCliente.tipoTrabalho}
+            />
+          ) : (
+            <div />
+          )}
+        </div>
+      </section>
+
+      {/* Previdência privada */}
+      <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <FPSectionHeader
+          title="Previdência Privada"
+          subtitle="PGBL, VGBL e contribuições ao IR"
+          borderColor={AMBER}
+        />
+
+        <div
+          style={{
+            border: "1px solid #E5E7EB",
+            borderRadius: 10,
+            padding: "16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {/* PGBL */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="fis-pgbl"
+                checked={value.temPGBL}
+                onCheckedChange={(v) => set("temPGBL", v)}
+              />
+              <Label htmlFor="fis-pgbl" className="text-[13px] cursor-pointer">
+                Possui previdência PGBL?
+              </Label>
+            </div>
+            {value.temPGBL && (
+              <div
+                style={{
+                  marginLeft: 44,
+                  marginTop: 12,
+                  maxWidth: 280,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                }}
+              >
+                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
+                <CurrencyInput
+                  value={value.valorPGBLAnual ?? 0}
+                  onChange={(v) => set("valorPGBLAnual", v)}
+                />
+              </div>
+            )}
+          </div>
 
           {/* VGBL */}
-          <div className="flex items-center gap-3">
-            <Switch
-              id="fis-vgbl"
-              checked={value.temVGBL}
-              onCheckedChange={(v) => set("temVGBL", v)}
-            />
-            <Label htmlFor="fis-vgbl" className="cursor-pointer">
-              Tem previdência VGBL?
-            </Label>
-          </div>
-          {value.temVGBL && (
-            <div className="ml-8 flex flex-col gap-1.5">
-              <Label className="text-sm">Valor aportado no VGBL (anual)</Label>
-              <CurrencyInput
-                value={value.valorVGBLAnual ?? 0}
-                onChange={(v) => set("valorVGBLAnual", v)}
-                placeholder="R$ 0,00"
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="fis-vgbl"
+                checked={value.temVGBL}
+                onCheckedChange={(v) => set("temVGBL", v)}
               />
+              <Label htmlFor="fis-vgbl" className="text-[13px] cursor-pointer">
+                Possui previdência VGBL?
+              </Label>
             </div>
-          )}
+            {value.temVGBL && (
+              <div
+                style={{
+                  marginLeft: 44,
+                  marginTop: 12,
+                  maxWidth: 280,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                }}
+              >
+                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
+                <CurrencyInput
+                  value={value.valorVGBLAnual ?? 0}
+                  onChange={(v) => set("valorVGBLAnual", v)}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Empresa */}
-          <div className="flex items-center gap-3">
-            <Switch
-              id="fis-empresa"
-              checked={value.temEmpresa}
-              onCheckedChange={handleToggleEmpresa}
-            />
-            <Label htmlFor="fis-empresa" className="cursor-pointer">
-              Tem empresa (CNPJ)?
-            </Label>
-          </div>
-          {value.temEmpresa && (
-            <div
-              className="ml-8 space-y-2"
-              onClick={() => setEmpresaExpanded(true)}
-            >
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="fis-prolabore"
-                  checked={value.recebeProlabore}
-                  onCheckedChange={(v) => set("recebeProlabore", v)}
-                />
-                <Label htmlFor="fis-prolabore" className="cursor-pointer text-sm">
-                  Recebe pró-labore?
-                </Label>
-              </div>
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="fis-dividendos"
-                  checked={value.recebeDividendos}
-                  onCheckedChange={(v) => set("recebeDividendos", v)}
-                />
-                <Label htmlFor="fis-dividendos" className="cursor-pointer text-sm">
-                  Recebe dividendos?
-                </Label>
-              </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="fis-empresa"
+                checked={value.temEmpresa}
+                onCheckedChange={handleToggleEmpresa}
+              />
+              <Label htmlFor="fis-empresa" className="text-[13px] cursor-pointer">
+                Tem empresa (CNPJ)?
+              </Label>
             </div>
-          )}
+            {value.temEmpresa && (
+              <div
+                style={{
+                  marginLeft: 44,
+                  marginTop: 12,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <Switch
+                    id="fis-prolabore"
+                    checked={value.recebeProlabore}
+                    onCheckedChange={(v) => set("recebeProlabore", v)}
+                  />
+                  <Label htmlFor="fis-prolabore" className="text-[13px] cursor-pointer">
+                    Recebe pró-labore?
+                  </Label>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <Switch
+                    id="fis-dividendos"
+                    checked={value.recebeDividendos}
+                    onCheckedChange={(v) => set("recebeDividendos", v)}
+                  />
+                  <Label htmlFor="fis-dividendos" className="text-[13px] cursor-pointer">
+                    Recebe dividendos?
+                  </Label>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Rendimentos isentos */}
-          <div className="flex items-center gap-3">
-            <Switch
-              id="fis-isentos"
-              checked={value.temRendimentosIsentos}
-              onCheckedChange={(v) => set("temRendimentosIsentos", v)}
-            />
-            <Label htmlFor="fis-isentos" className="cursor-pointer">
-              Tem rendimentos isentos? (LCI/LCA, dividendos, FIIs)
-            </Label>
-          </div>
-          {value.temRendimentosIsentos && (
-            <div className="ml-8 flex flex-col gap-1.5">
-              <Label className="text-sm">Valor anual de rendimentos isentos</Label>
-              <CurrencyInput
-                value={value.valorRendimentosIsentos}
-                onChange={(v) => set("valorRendimentosIsentos", v)}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="fis-isentos"
+                checked={value.temRendimentosIsentos}
+                onCheckedChange={(v) => set("temRendimentosIsentos", v)}
               />
+              <Label htmlFor="fis-isentos" className="text-[13px] cursor-pointer">
+                Tem rendimentos isentos? (LCI/LCA, dividendos, FIIs)
+              </Label>
             </div>
-          )}
-        </div>
-
-        {/* Análise automática */}
-        {analise && (
-          <div
-            className={cn(
-              "rounded-xl border p-4 text-sm",
-              isAlerta
-                ? "border-red-200 bg-red-50 text-red-800"
-                : isPositivo
-                ? "border-blue-200 bg-blue-50 text-blue-800"
-                : "border-border bg-muted text-muted-foreground"
+            {value.temRendimentosIsentos && (
+              <div
+                style={{
+                  marginLeft: 44,
+                  marginTop: 12,
+                  maxWidth: 280,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                }}
+              >
+                <Label className="text-[12px] text-[#6B7280]">Valor anual de rendimentos isentos</Label>
+                <CurrencyInput
+                  value={value.valorRendimentosIsentos}
+                  onChange={(v) => set("valorRendimentosIsentos", v)}
+                />
+              </div>
             )}
-          >
-            {analise}
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {/* ── Painel lateral ── */}
-      <div className="lg:w-72 xl:w-80">
-        <Card className="sticky top-4">
-          <CardContent className="pt-5 space-y-5">
+      {/* Painel resultado */}
+      <div
+        style={{
+          backgroundColor: "#FFFBEB",
+          border: "1px solid #FDE68A",
+          borderRadius: 10,
+          padding: 20,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#92400E",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            margin: 0,
+          }}
+        >
+          Análise tributária
+        </p>
 
-            {/* Seção: Análise de previdência privada */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold">Análise de previdência privada</p>
-
-              {value.tipoDeclaracao === "completa" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                      PGBL recomendado — dedutível no IR
-                    </Badge>
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Teto PGBL</span>
-                      <span className="tabular-nums font-medium">
-                        {formatCurrency(resultado.tetoPGBL)}/ano
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">PGBL atual</span>
-                      <span className="tabular-nums">
-                        {formatCurrency(resultado.pgblAtual)}/ano
-                      </span>
-                    </div>
-                    <Progress value={pgblPct} className="h-1.5" />
-                    {resultado.espacoPGBL > 0 && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Espaço disponível</span>
-                        <span className="tabular-nums font-medium text-amber-600">
-                          {formatCurrency(resultado.espacoPGBL)}/ano
-                        </span>
-                      </div>
-                    )}
-                    {resultado.economiaEstimadaPGBL > 0 && (
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Economia estimada</span>
-                        <span className="tabular-nums font-medium text-emerald-600">
-                          {formatCurrency(resultado.economiaEstimadaPGBL)}/ano
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {value.tipoDeclaracao === "simplificada" && (
-                <div className="space-y-2">
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-300">
-                    VGBL mais indicado para este perfil
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">
-                    Declaração simplificada não permite dedução do PGBL.
-                  </p>
-                  {value.temPGBL && (
-                    <div className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs text-red-700">
-                      Atenção: PGBL sem benefício fiscal — avaliar migração para VGBL
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {value.tipoDeclaracao === "nao_sei" && (
-                <p className="text-xs text-muted-foreground">
-                  Defina o tipo de declaração para análise completa.
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {value.tipoDeclaracao === "completa" && resultado.tetoPGBL > 0 && (
+            <>
+              <div>
+                <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+                  Teto de dedução PGBL
                 </p>
-              )}
-            </div>
-
-            <div className="border-t" />
-
-            {/* Seção: Análise fiscal */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold">Análise fiscal</p>
-
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Renda anual bruta</p>
-                <p className="text-lg font-bold tabular-nums">
-                  {formatCurrency(value.rendaBrutaAnual)}
+                <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {formatCurrency(resultado.tetoPGBL)}/ano
                 </p>
               </div>
-
-              {value.tipoDeclaracao === "completa" && resultado.tetoPGBL > 0 && (
-                <>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      Economia tributária potencial (27,5%)
-                    </p>
-                    <p className="text-base font-bold tabular-nums text-emerald-600">
-                      {formatCurrency(resultado.economiaFiscalPotencial)}/ano
-                    </p>
-                  </div>
-                  {resultado.economiaFiscalAtual > 0 && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Economia atual realizada</p>
-                      <p className="text-base font-medium tabular-nums text-primary">
-                        {formatCurrency(resultado.economiaFiscalAtual)}/ano
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {resultado.recomendaCompleta && value.tipoDeclaracao !== "completa" && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-                  Renda ou perfil sugerem declaração completa — pode ser mais vantajoso.
-                </div>
-              )}
-
-              {value.temRendimentosIsentos && value.valorRendimentosIsentos > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Rendimentos isentos</p>
-                  <p className="text-sm tabular-nums font-medium">
-                    {formatCurrency(value.valorRendimentosIsentos)}/ano
+              <div>
+                <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+                  Economia potencial
+                </p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#16A34A", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  {formatCurrency(resultado.economiaFiscalPotencial)}/ano
+                </p>
+              </div>
+              {resultado.espacoPGBL > 0 && (
+                <div>
+                  <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+                    Espaço disponível
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatNumber((value.valorRendimentosIsentos / Math.max(1, value.rendaBrutaAnual)) * 100, 1)}% da renda — eficiência fiscal positiva
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#B45309", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                    {formatCurrency(resultado.espacoPGBL)}/ano
                   </p>
                 </div>
               )}
+            </>
+          )}
+
+          <div>
+            <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 6px" }}>
+              Recomendação
+            </p>
+            <Badge
+              style={{
+                backgroundColor:
+                  value.tipoDeclaracao === "completa" ? "#F0FDF4" : "#EFF6FF",
+                color: value.tipoDeclaracao === "completa" ? "#16A34A" : "#1D4ED8",
+                border:
+                  value.tipoDeclaracao === "completa"
+                    ? "1px solid #86EFAC"
+                    : "1px solid #BFDBFE",
+                fontSize: 13,
+                fontWeight: 700,
+                padding: "4px 12px",
+              }}
+            >
+              {value.tipoDeclaracao === "completa"
+                ? "PGBL recomendado"
+                : "VGBL mais indicado"}
+            </Badge>
+          </div>
+        </div>
+
+        {value.tipoDeclaracao === "completa" && resultado.tetoPGBL > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                color: "#92400E",
+              }}
+            >
+              <span>Utilização do teto PGBL</span>
+              <span style={{ fontWeight: 600 }}>{formatNumber(pgblPct, 0)}%</span>
             </div>
+            <div
+              style={{
+                height: 6,
+                backgroundColor: "#FDE68A",
+                borderRadius: 3,
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  height: "100%",
+                  width: `${pgblPct}%`,
+                  backgroundColor: AMBER,
+                  borderRadius: 3,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
-          </CardContent>
-        </Card>
+        {resultado.analisePrevidencia && (
+          <p
+            style={{
+              fontSize: 13,
+              color: "#92400E",
+              margin: 0,
+              backgroundColor: "#FEF3C7",
+              padding: "10px 14px",
+              borderRadius: 8,
+            }}
+          >
+            {resultado.analisePrevidencia}
+          </p>
+        )}
       </div>
     </div>
   );

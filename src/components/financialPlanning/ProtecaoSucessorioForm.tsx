@@ -2,9 +2,6 @@ import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,7 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { formatCurrency } from "@/lib/format";
+import { FPSectionHeader } from "./layout/FPSectionHeader";
+import { FPAutoField } from "./layout/FPAutoField";
+import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProtecao,
   calcularSucessorio,
@@ -23,6 +22,10 @@ import type {
   PlanejamentoSucessorio,
   DadosCliente,
 } from "@/types/financialPlanning";
+
+const RED = "#F87171";
+const BLUE = "#3B82F6";
+const DARK = "#041A20";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -54,270 +57,310 @@ export function ProtecaoSucessorioForm({
   const resultSucessorio = useMemo(() => calcularSucessorio(sucessorio), [sucessorio]);
 
   const scoreProtecao = Math.round(resultProtecao.percentualCoberto);
-  const scoreBadgeProtecao =
-    scoreProtecao >= 80
-      ? { label: "Adequado", cls: "bg-emerald-100 text-emerald-800" }
-      : scoreProtecao >= 50
-      ? { label: "Atenção", cls: "bg-amber-100 text-amber-800" }
-      : { label: "Risco", cls: "bg-red-100 text-red-800" };
-
-  const hasPrefill = !!dadosCliente;
+  const isAutoRenda = dadosCliente?.rendaMensal && dadosCliente.rendaMensal > 0 && protecao.rendaMensal === dadosCliente.rendaMensal;
+  const isAutoPatrimonio = dadosCliente?.patrimonioTotalEstimado && dadosCliente.patrimonioTotalEstimado > 0 && sucessorio.patrimonioTotal === dadosCliente.patrimonioTotalEstimado;
 
   return (
-    <div className="flex flex-col gap-10">
-      {/* ══════════════ PROTEÇÃO ══════════════ */}
-      <section className="space-y-5">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold">Proteção e Seguros</h2>
-          {hasPrefill && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              Preenchido automaticamente da coleta
-            </Badge>
-          )}
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
 
-        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-          {/* Form */}
-          <div className="flex-1 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="ps-renda">Renda mensal</Label>
+      {/* ══ PROTEÇÃO ══ */}
+      <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <FPSectionHeader
+          title="Proteção e Seguros"
+          subtitle="Cobertura de vida, invalidez e saúde"
+          borderColor={RED}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {isAutoRenda ? (
+            <FPAutoField
+              label="Renda mensal"
+              value={formatCurrency(protecao.rendaMensal)}
+            />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Label className="text-[13px] font-medium text-[#374151]">Renda mensal</Label>
               <CurrencyInput
-                id="ps-renda"
                 value={protecao.rendaMensal}
                 onChange={(v) => setP("rendaMensal", v)}
               />
-              {hasPrefill && dadosCliente!.rendaMensal > 0 && protecao.rendaMensal === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Sugestão da coleta: {formatCurrency(dadosCliente!.rendaMensal)}/mês
-                </p>
-              )}
             </div>
+          )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="ps-dep">Número de dependentes</Label>
-              <input
-                id="ps-dep"
-                type="number"
-                min={0}
-                max={20}
-                value={protecao.dependentes}
-                onChange={(e) => setP("dependentes", parseInt(e.target.value, 10) || 0)}
-                className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <Label className="text-[13px] font-medium text-[#374151]">Número de dependentes</Label>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              value={protecao.dependentes}
+              onChange={(e) => setP("dependentes", parseInt(e.target.value, 10) || 0)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #E5E7EB",
+            borderRadius: 10,
+            padding: "16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="ps-svida"
+                checked={protecao.possuiSeguroVida}
+                onCheckedChange={(v) => setP("possuiSeguroVida", v)}
               />
+              <Label htmlFor="ps-svida" className="text-[13px] cursor-pointer">
+                Possui seguro de vida?
+              </Label>
             </div>
-
-            <div className="rounded-xl border p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="ps-svida"
-                  checked={protecao.possuiSeguroVida}
-                  onCheckedChange={(v) => setP("possuiSeguroVida", v)}
+            {protecao.possuiSeguroVida && (
+              <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
+                <Label className="text-[12px] text-[#6B7280]">Capital segurado</Label>
+                <CurrencyInput
+                  value={protecao.capitalSeguradoVida}
+                  onChange={(v) => setP("capitalSeguradoVida", v)}
                 />
-                <Label htmlFor="ps-svida" className="cursor-pointer">Possui seguro de vida?</Label>
               </div>
-              {protecao.possuiSeguroVida && (
-                <div className="ml-8 space-y-1.5 max-w-xs">
-                  <Label className="text-sm">Capital segurado</Label>
-                  <CurrencyInput
-                    value={protecao.capitalSeguradoVida}
-                    onChange={(v) => setP("capitalSeguradoVida", v)}
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="ps-sinval"
-                  checked={protecao.possuiSeguroInvalidez}
-                  onCheckedChange={(v) => setP("possuiSeguroInvalidez", v)}
-                />
-                <Label htmlFor="ps-sinval" className="cursor-pointer">Possui seguro de invalidez?</Label>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="ps-saude"
-                  checked={protecao.possuiPlanoSaude}
-                  onCheckedChange={(v) => setP("possuiPlanoSaude", v)}
-                />
-                <Label htmlFor="ps-saude" className="cursor-pointer">Possui plano de saúde?</Label>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Result panel */}
-          <Card className="lg:w-64 xl:w-72 shrink-0">
-            <CardContent className="pt-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">Análise de proteção</p>
-                <Badge className={scoreBadgeProtecao.cls}>{scoreBadgeProtecao.label}</Badge>
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Cobertura</span>
-                  <span>{scoreProtecao}%</span>
-                </div>
-                <Progress value={Math.min(100, scoreProtecao)} className="h-2" />
-              </div>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Capital necessário</p>
-                  <p className="font-semibold">{formatCurrency(resultProtecao.capitalNecessario)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Capital segurado</p>
-                  <p className="font-semibold">{formatCurrency(resultProtecao.capitalAtual)}</p>
-                </div>
-                {resultProtecao.gap > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Gap de cobertura</p>
-                    <p className="font-semibold text-destructive">{formatCurrency(resultProtecao.gap)}</p>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                {[
-                  { label: "Seguro de vida", ok: protecao.possuiSeguroVida },
-                  { label: "Capital ≥ 80%", ok: resultProtecao.percentualCoberto >= 80 },
-                  { label: "Seguro invalidez", ok: protecao.possuiSeguroInvalidez },
-                ].map(({ label, ok }) => (
-                  <div key={label} className="flex items-center gap-2 text-xs">
-                    <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${ok ? "text-green-500" : "text-muted-foreground/30"}`} />
-                    <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              id="ps-sinval"
+              checked={protecao.possuiSeguroInvalidez}
+              onCheckedChange={(v) => setP("possuiSeguroInvalidez", v)}
+            />
+            <Label htmlFor="ps-sinval" className="text-[13px] cursor-pointer">
+              Possui seguro de invalidez?
+            </Label>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              id="ps-saude"
+              checked={protecao.possuiPlanoSaude}
+              onCheckedChange={(v) => setP("possuiPlanoSaude", v)}
+            />
+            <Label htmlFor="ps-saude" className="text-[13px] cursor-pointer">
+              Possui plano de saúde?
+            </Label>
+          </div>
+        </div>
+
+        {/* Resultado proteção */}
+        <div
+          style={{
+            backgroundColor: scoreProtecao >= 80 ? "#F0FDF4" : scoreProtecao >= 50 ? "#FFFBEB" : "#FEF2F2",
+            border: `1px solid ${scoreProtecao >= 80 ? "#86EFAC" : scoreProtecao >= 50 ? "#FDE68A" : "#FECACA"}`,
+            borderRadius: 10,
+            padding: 20,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 16,
+          }}
+        >
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#16A34A" : "#92400E" }}>
+              Capital necessário
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(resultProtecao.capitalNecessario)}
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#16A34A" : "#92400E" }}>
+              Capital segurado
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(resultProtecao.capitalAtual)}
+            </p>
+          </div>
+          {resultProtecao.gap > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#DC2626" }}>
+                Gap de cobertura
+              </p>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#DC2626", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                {formatCurrency(resultProtecao.gap)}
+              </p>
+            </div>
+          )}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 6px", color: scoreProtecao >= 80 ? "#16A34A" : "#92400E" }}>
+              Cobertura atual
+            </p>
+            <Badge
+              style={{
+                backgroundColor: scoreProtecao >= 80 ? "#F0FDF4" : scoreProtecao >= 50 ? "#FFFBEB" : "#FEF2F2",
+                color: scoreProtecao >= 80 ? "#16A34A" : scoreProtecao >= 50 ? "#B45309" : "#DC2626",
+                border: `1px solid ${scoreProtecao >= 80 ? "#86EFAC" : scoreProtecao >= 50 ? "#FDE68A" : "#FECACA"}`,
+                fontSize: 13,
+                fontWeight: 700,
+                padding: "4px 12px",
+              }}
+            >
+              {formatNumber(scoreProtecao, 0)}% — {scoreProtecao >= 80 ? "Adequado" : scoreProtecao >= 50 ? "Atenção" : "Risco"}
+            </Badge>
+          </div>
         </div>
       </section>
 
       {/* Divider */}
-      <div className="border-t" />
+      <div style={{ borderTop: "1px solid #E5E7EB" }} />
 
-      {/* ══════════════ SUCESSÓRIO ══════════════ */}
-      <section className="space-y-5">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold">Planejamento Sucessório</h2>
-          {hasPrefill && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
-              Preenchido automaticamente da coleta
-            </Badge>
-          )}
-        </div>
+      {/* ══ SUCESSÓRIO ══ */}
+      <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <FPSectionHeader
+          title="Planejamento Sucessório"
+          subtitle="Testamento, holding e custos de inventário"
+          borderColor={BLUE}
+        />
 
-        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-          {/* Form */}
-          <div className="flex-1 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="ps-pat">Patrimônio total estimado</Label>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {isAutoPatrimonio ? (
+            <FPAutoField
+              label="Patrimônio total estimado"
+              value={formatCurrency(sucessorio.patrimonioTotal)}
+            />
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Label className="text-[13px] font-medium text-[#374151]">Patrimônio total estimado</Label>
               <CurrencyInput
-                id="ps-pat"
                 value={sucessorio.patrimonioTotal}
-                onChange={(v) => {
-                  onSucessorioChange({ ...sucessorio, patrimonioTotal: v });
-                }}
-              />
-              {hasPrefill && dadosCliente!.patrimonioTotalEstimado > 0 && sucessorio.patrimonioTotal === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  Sugestão da coleta: {formatCurrency(dadosCliente!.patrimonioTotalEstimado)}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="ps-herd">Número de herdeiros</Label>
-              <input
-                id="ps-herd"
-                type="number"
-                min={0}
-                max={30}
-                value={sucessorio.numeroHerdeiros}
-                onChange={(e) => setS("numeroHerdeiros", parseInt(e.target.value, 10) || 0)}
-                className="flex h-10 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onChange={(v) => onSucessorioChange({ ...sucessorio, patrimonioTotal: v })}
               />
             </div>
+          )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor="ps-uf">Estado de residência (ITCMD)</Label>
-              <Select
-                value={sucessorio.estadoResidencia}
-                onValueChange={(v) => setS("estadoResidencia", v)}
-              >
-                <SelectTrigger id="ps-uf" className="max-w-xs">
-                  <SelectValue placeholder="UF..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {UFS.map((uf) => (
-                    <SelectItem key={uf} value={uf}>{uf}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="rounded-xl border p-4 space-y-3">
-              {[
-                { id: "ps-test", label: "Possui testamento?", key: "possuiTestamento" as const },
-                { id: "ps-hold", label: "Possui holding familiar?", key: "possuiHolding" as const },
-                { id: "ps-svsucess", label: "Seguro de vida para sucessão?", key: "possuiSeguroVidaSucessao" as const },
-              ].map(({ id, label, key }) => (
-                <div key={key} className="flex items-center gap-3">
-                  <Switch
-                    id={id}
-                    checked={sucessorio[key] as boolean}
-                    onCheckedChange={(v) => setS(key, v)}
-                  />
-                  <Label htmlFor={id} className="cursor-pointer">{label}</Label>
-                </div>
-              ))}
-              {sucessorio.possuiSeguroVidaSucessao && (
-                <div className="ml-8 space-y-1.5 max-w-xs">
-                  <Label className="text-sm">Capital do seguro para sucessão</Label>
-                  <CurrencyInput
-                    value={sucessorio.capitalSeguroVidaSucessao}
-                    onChange={(v) => setS("capitalSeguroVidaSucessao", v)}
-                  />
-                </div>
-              )}
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <Label className="text-[13px] font-medium text-[#374151]">Número de herdeiros</Label>
+            <input
+              type="number"
+              min={0}
+              max={30}
+              value={sucessorio.numeroHerdeiros}
+              onChange={(e) => setS("numeroHerdeiros", parseInt(e.target.value, 10) || 0)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
           </div>
 
-          {/* Result panel */}
-          <Card className="lg:w-64 xl:w-72 shrink-0">
-            <CardContent className="pt-5 space-y-4">
-              <p className="text-sm font-semibold">Análise sucessória</p>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Patrimônio total</p>
-                  <p className="font-semibold">{formatCurrency(sucessorio.patrimonioTotal)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Custo estimado inventário</p>
-                  <p className="font-semibold text-destructive">{formatCurrency(resultSucessorio.custoInventarioEstimado)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">% do patrimônio</p>
-                  <p className="font-semibold">{resultSucessorio.percentualCusto.toFixed(1)}%</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">ITCMD estimado</p>
-                  <p className="font-semibold">{formatCurrency(resultSucessorio.itcmdEstimado)}</p>
-                </div>
-              </div>
-              <div className="space-y-1">
-                {[
-                  { label: "Possui testamento", ok: sucessorio.possuiTestamento },
-                  { label: "Holding familiar", ok: sucessorio.possuiHolding },
-                  { label: "Seguro p/ sucessão", ok: sucessorio.possuiSeguroVidaSucessao },
-                ].map(({ label, ok }) => (
-                  <div key={label} className="flex items-center gap-2 text-xs">
-                    <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${ok ? "text-green-500" : "text-muted-foreground/30"}`} />
-                    <span className={ok ? "" : "text-muted-foreground"}>{label}</span>
-                  </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <Label className="text-[13px] font-medium text-[#374151]">Estado de residência (ITCMD)</Label>
+            <Select
+              value={sucessorio.estadoResidencia}
+              onValueChange={(v) => setS("estadoResidencia", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="UF..." />
+              </SelectTrigger>
+              <SelectContent>
+                {UFS.map((uf) => (
+                  <SelectItem key={uf} value={uf}>{uf}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div
+          style={{
+            border: "1px solid #E5E7EB",
+            borderRadius: 10,
+            padding: "16px 20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+          }}
+        >
+          {[
+            { id: "ps-test", label: "Possui testamento?", key: "possuiTestamento" as const },
+            { id: "ps-hold", label: "Possui holding familiar?", key: "possuiHolding" as const },
+          ].map(({ id, label, key }) => (
+            <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id={id}
+                checked={sucessorio[key] as boolean}
+                onCheckedChange={(v) => setS(key, v)}
+              />
+              <Label htmlFor={id} className="text-[13px] cursor-pointer">{label}</Label>
+            </div>
+          ))}
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Switch
+                id="ps-svsucess"
+                checked={sucessorio.possuiSeguroVidaSucessao}
+                onCheckedChange={(v) => setS("possuiSeguroVidaSucessao", v)}
+              />
+              <Label htmlFor="ps-svsucess" className="text-[13px] cursor-pointer">
+                Seguro de vida para sucessão?
+              </Label>
+            </div>
+            {sucessorio.possuiSeguroVidaSucessao && (
+              <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
+                <Label className="text-[12px] text-[#6B7280]">Capital do seguro para sucessão</Label>
+                <CurrencyInput
+                  value={sucessorio.capitalSeguroVidaSucessao}
+                  onChange={(v) => setS("capitalSeguroVidaSucessao", v)}
+                />
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+        </div>
+
+        {/* Resultado sucessório */}
+        <div
+          style={{
+            backgroundColor: "#EFF6FF",
+            border: "1px solid #BFDBFE",
+            borderRadius: 10,
+            padding: 20,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 16,
+          }}
+        >
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
+              ITCMD estimado
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#DC2626", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(resultSucessorio.itcmdEstimado)}
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
+              Custo inventário
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#DC2626", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(resultSucessorio.custoInventarioEstimado)}
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
+              % do patrimônio
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {resultSucessorio.percentualCusto.toFixed(1)}%
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
+              Patrimônio líquido
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#16A34A", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {formatCurrency(resultSucessorio.patrimonioLiquidoHerdeiros)}
+            </p>
+          </div>
         </div>
       </section>
     </div>
