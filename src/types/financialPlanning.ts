@@ -526,6 +526,56 @@ export function calcularSucessorio(p: PlanejamentoSucessorio): ResultadoSucessor
   };
 }
 
+// ─── Dados do Cliente ─────────────────────────────────────────────────────────
+
+export interface DadosCliente {
+  dataNascimento: string;
+  estadoCivil: "solteiro" | "casado" | "divorciado" | "viuvo" | "uniao_estavel" | "";
+  temFilhos: boolean;
+  numeroFilhos: number;
+  cidade: string;
+  estado: string;
+  pais: string;
+  patrimonioTotalEstimado: number;
+  patrimonioFinanceiroEstimado: number;
+  rendaMensal: number;
+  custoDeVidaMensal: number;
+  aportesMensalMedio: number;
+  valorFaturaCartao: number;
+  temSeguroVida: boolean;
+  valorApoliceVida: number;
+  temSeguroInvalidez: boolean;
+  valorApoliceInvalidez: number;
+  tipoTrabalho: "clt" | "autonomo" | "empresario" | "concursado" | "";
+  suitabilityRespostas: SuitabilityResposta[];
+  suitabilityPerfil: PerfilRisco | null;
+  suitabilityPontuacao: number;
+}
+
+export const initialDadosCliente: DadosCliente = {
+  dataNascimento: "",
+  estadoCivil: "",
+  temFilhos: false,
+  numeroFilhos: 0,
+  cidade: "",
+  estado: "",
+  pais: "Brasil",
+  patrimonioTotalEstimado: 0,
+  patrimonioFinanceiroEstimado: 0,
+  rendaMensal: 0,
+  custoDeVidaMensal: 0,
+  aportesMensalMedio: 0,
+  valorFaturaCartao: 0,
+  temSeguroVida: false,
+  valorApoliceVida: 0,
+  temSeguroInvalidez: false,
+  valorApoliceInvalidez: 0,
+  tipoTrabalho: "",
+  suitabilityRespostas: [],
+  suitabilityPerfil: null,
+  suitabilityPontuacao: 0,
+};
+
 // ─── Financial Plan (raiz) ────────────────────────────────────────────────────
 
 export interface FinancialPlan {
@@ -534,6 +584,7 @@ export interface FinancialPlan {
   createdAt?: string;
   updatedAt?: string;
   suitability: SuitabilityResult | null;
+  dadosCliente: DadosCliente;
   ativosAtuais: AtivoAtual;
   alocacaoPersonalizada: MacroalocacaoAlvo | null;
   planejamentoIF: PlanejamentoIF;
@@ -548,6 +599,7 @@ export function initialFinancialPlan(clientId: string): FinancialPlan {
   return {
     clientId,
     suitability: null,
+    dadosCliente: { ...initialDadosCliente },
     ativosAtuais: { ...initialAtivoAtual },
     alocacaoPersonalizada: null,
     planejamentoIF: { ...initialPlanejamentoIF },

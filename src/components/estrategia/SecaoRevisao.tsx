@@ -16,9 +16,8 @@ type SecaoAtiva =
   | "capa"
   | "assetAllocation"
   | "aposentadoria"
-  | "protecao"
+  | "protecaoSucessorio"
   | "fiscal"
-  | "sucessorio"
   | "proximosPassos"
   | "revisao";
 
@@ -33,9 +32,8 @@ const SECAO_ITEMS: { id: SecaoAtiva; label: string }[] = [
   { id: "capa", label: "Capa e apresentação" },
   { id: "assetAllocation", label: "Asset Allocation" },
   { id: "aposentadoria", label: "Aposentadoria / IF" },
-  { id: "protecao", label: "Proteção e seguros" },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório" },
   { id: "fiscal", label: "Planejamento fiscal" },
-  { id: "sucessorio", label: "Planejamento sucessório" },
   { id: "proximosPassos", label: "Próximos passos" },
 ];
 
@@ -62,7 +60,15 @@ export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onGerarDoc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SECAO_ITEMS.map(({ id, label }) => {
           const s = statusSecoes[id];
-          const preview = comentarios[id]?.trim().slice(0, 100);
+          const rawComment = comentarios[id] ?? "";
+          let previewText = rawComment.trim();
+          if (id === "protecaoSucessorio") {
+            try {
+              const p = JSON.parse(rawComment) as { protecao?: string; sucessorio?: string };
+              previewText = (p.protecao || p.sucessorio || "").trim();
+            } catch { /* use raw */ }
+          }
+          const preview = previewText.slice(0, 100);
           const concluida = s === "concluido";
           return (
             <button
@@ -83,7 +89,7 @@ export function SecaoRevisao({ statusSecoes, comentarios, onNavigate, onGerarDoc
               </div>
               <StatusBadge status={s} />
               {preview ? (
-                <p className="text-xs text-muted-foreground line-clamp-2">{preview}{comentarios[id].length > 100 ? "…" : ""}</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">{preview}{previewText.length > 100 ? "…" : ""}</p>
               ) : (
                 <p className="text-xs text-muted-foreground italic">Sem estratégia registrada</p>
               )}

@@ -5,7 +5,6 @@ import {
   Sunset,
   Shield,
   Receipt,
-  GitBranch,
   ListChecks,
   ClipboardCheck,
   Save,
@@ -21,9 +20,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import { SecaoCapa } from "./SecaoCapa";
 import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
-import { SecaoProtecao } from "./SecaoProtecao";
+import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
 import { SecaoFiscal } from "./SecaoFiscal";
-import { SecaoSucessorio } from "./SecaoSucessorio";
 import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
 import { EstrategiaPrintConsultor, EstrategiaPrintCliente } from "./EstrategiaPrint";
@@ -36,9 +34,8 @@ export type SecaoAtiva =
   | "capa"
   | "assetAllocation"
   | "aposentadoria"
-  | "protecao"
+  | "protecaoSucessorio"
   | "fiscal"
-  | "sucessorio"
   | "proximosPassos"
   | "revisao";
 
@@ -55,9 +52,8 @@ const STATUS_SECTIONS: SecaoAtiva[] = [
   "capa",
   "assetAllocation",
   "aposentadoria",
-  "protecao",
+  "protecaoSucessorio",
   "fiscal",
-  "sucessorio",
   "proximosPassos",
 ];
 
@@ -65,9 +61,8 @@ const DEFAULT_STATUS: Record<SecaoAtiva, SectionStatus> = {
   capa: "pendente",
   assetAllocation: "pendente",
   aposentadoria: "pendente",
-  protecao: "pendente",
+  protecaoSucessorio: "pendente",
   fiscal: "pendente",
-  sucessorio: "pendente",
   proximosPassos: "pendente",
   revisao: "pendente",
 };
@@ -76,9 +71,8 @@ const DEFAULT_COMENTARIOS: Record<SecaoAtiva, string> = {
   capa: "",
   assetAllocation: "",
   aposentadoria: "",
-  protecao: "",
+  protecaoSucessorio: "",
   fiscal: "",
-  sucessorio: "",
   proximosPassos: "",
   revisao: "",
 };
@@ -93,9 +87,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: "capa", label: "Capa e apresentação", Icon: FileText },
   { id: "assetAllocation", label: "Asset Allocation", Icon: PieChartIcon },
   { id: "aposentadoria", label: "Aposentadoria / IF", Icon: Sunset },
-  { id: "protecao", label: "Proteção e seguros", Icon: Shield },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório", Icon: Shield },
   { id: "fiscal", label: "Planejamento fiscal", Icon: Receipt },
-  { id: "sucessorio", label: "Planejamento sucessório", Icon: GitBranch },
   { id: "proximosPassos", label: "Próximos passos", Icon: ListChecks },
   { id: "revisao", label: "Revisão final", Icon: ClipboardCheck },
 ];
@@ -302,9 +295,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Progresso</span>
-                <span>{completedCount} de 7 seções</span>
+                <span>{completedCount} de 6 seções</span>
               </div>
-              <Progress value={(completedCount / 7) * 100} className="h-2" />
+              <Progress value={(completedCount / 6) * 100} className="h-2" />
             </div>
 
             <nav className="space-y-0.5">
@@ -377,13 +370,13 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
             />
           )}
 
-          {secaoAtiva === "protecao" && (
-            <SecaoProtecao
+          {secaoAtiva === "protecaoSucessorio" && (
+            <SecaoProtecaoSucessorio
               plan={plan}
-              comentario={comentarios.protecao}
-              onComentarioChange={(v) => setComentario("protecao", v)}
-              status={statusSecoes.protecao}
-              onStatusChange={(s) => setStatus("protecao", s)}
+              comentario={comentarios.protecaoSucessorio}
+              onComentarioChange={(v) => setComentario("protecaoSucessorio", v)}
+              status={statusSecoes.protecaoSucessorio}
+              onStatusChange={(s) => setStatus("protecaoSucessorio", s)}
             />
           )}
 
@@ -394,16 +387,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose }: Props) {
               onComentarioChange={(v) => setComentario("fiscal", v)}
               status={statusSecoes.fiscal}
               onStatusChange={(s) => setStatus("fiscal", s)}
-            />
-          )}
-
-          {secaoAtiva === "sucessorio" && (
-            <SecaoSucessorio
-              plan={plan}
-              comentario={comentarios.sucessorio}
-              onComentarioChange={(v) => setComentario("sucessorio", v)}
-              status={statusSecoes.sucessorio}
-              onStatusChange={(s) => setStatus("sucessorio", s)}
             />
           )}
 

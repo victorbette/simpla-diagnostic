@@ -4,8 +4,16 @@ import logoSimpla from "@/assets/logo-simpla.svg";
 
 type SectionStatus = "pendente" | "revisando" | "concluido";
 type SecaoAtiva =
-  | "capa" | "assetAllocation" | "aposentadoria" | "protecao"
-  | "fiscal" | "sucessorio" | "proximosPassos" | "revisao";
+  | "capa" | "assetAllocation" | "aposentadoria" | "protecaoSucessorio"
+  | "fiscal" | "proximosPassos" | "revisao";
+
+function parseProtecaoSucessorioComment(raw: string): { protecao: string; sucessorio: string } {
+  try {
+    const p = JSON.parse(raw) as { protecao: string; sucessorio: string };
+    if (typeof p.protecao === "string") return p;
+  } catch { /* ignore */ }
+  return { protecao: raw ?? "", sucessorio: "" };
+}
 
 export interface PassoItem {
   id: string;
@@ -30,9 +38,8 @@ interface PrintProps {
 const SECAO_ORDER: { id: SecaoAtiva; label: string; labelSimples: string }[] = [
   { id: "assetAllocation", label: "Asset Allocation", labelSimples: "Sua carteira de investimentos" },
   { id: "aposentadoria", label: "Aposentadoria / Independência Financeira", labelSimples: "Sua aposentadoria" },
-  { id: "protecao", label: "Proteção e Seguros", labelSimples: "Sua proteção" },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório", labelSimples: "Sua proteção e sucessão" },
   { id: "fiscal", label: "Planejamento Fiscal", labelSimples: "Sua situação fiscal" },
-  { id: "sucessorio", label: "Planejamento Sucessório", labelSimples: "Sucessão patrimonial" },
 ];
 
 const PRIORIDADE_LABELS: Record<PassoItem["prioridade"], string> = {
@@ -88,7 +95,8 @@ export function EstrategiaPrintConsultor({
 
       {/* Sections */}
       {concluidas.map(({ id, label }) => {
-        const comentario = comentarios[id];
+        const rawComentario = comentarios[id];
+        const pairComment = id === "protecaoSucessorio" ? parseProtecaoSucessorioComment(rawComentario) : null;
         return (
           <div key={id} style={{ pageBreakAfter: "always", padding: "40px 40px" }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, borderBottom: "2px solid #1d4ed8", paddingBottom: 8, marginBottom: 20 }}>{label}</h2>
@@ -104,11 +112,12 @@ export function EstrategiaPrintConsultor({
                   <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Score IF</p><p style={{ margin: 0, fontWeight: 700 }}>{Math.round(ifResult.percentualIF)}%</p></div>
                 </div>
               )}
-              {id === "protecao" && (
+              {id === "protecaoSucessorio" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Capital necessário</p><p style={{ margin: 0, fontWeight: 700 }}>{formatCurr(protResult.capitalNecessario)}</p></div>
                   <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Capital segurado</p><p style={{ margin: 0, fontWeight: 700 }}>{formatCurr(protResult.capitalAtual)}</p></div>
-                  <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Gap</p><p style={{ margin: 0, fontWeight: 700, color: "#dc2626" }}>{formatCurr(protResult.gap)}</p></div>
+                  <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Patrimônio total</p><p style={{ margin: 0, fontWeight: 700 }}>{formatCurr(plan.sucessorio.patrimonioTotal)}</p></div>
+                  <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Custo inventário</p><p style={{ margin: 0, fontWeight: 700, color: "#dc2626" }}>{formatCurr(sucResult.custoInventarioEstimado)}</p></div>
                 </div>
               )}
               {id === "fiscal" && (
@@ -118,24 +127,33 @@ export function EstrategiaPrintConsultor({
                   <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Gap de economia</p><p style={{ margin: 0, fontWeight: 700, color: "#dc2626" }}>{formatCurr(fiscalResult.gapEconomia)}</p></div>
                 </div>
               )}
-              {id === "sucessorio" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Patrimônio total</p><p style={{ margin: 0, fontWeight: 700 }}>{formatCurr(plan.sucessorio.patrimonioTotal)}</p></div>
-                  <div><p style={{ margin: 0, fontSize: 11, color: "#555" }}>Custo inventário</p><p style={{ margin: 0, fontWeight: 700, color: "#dc2626" }}>{formatCurr(sucResult.custoInventarioEstimado)}</p></div>
-                </div>
-              )}
               {id === "assetAllocation" && plan.suitability && (
                 <p style={{ margin: 0, fontSize: 12 }}>Perfil: {PERFIL_LABELS[plan.suitability.perfil]} | Patrimônio: {formatCurr(plan.ativosAtuais.total || 0)}</p>
               )}
             </div>
 
             {/* Assessor text */}
-            {comentario && (
+            {pairComment ? (
+              <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+                {pairComment.protecao && (
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#374151", marginBottom: 4 }}>Estratégia — Proteção</p>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{pairComment.protecao}</p>
+                  </div>
+                )}
+                {pairComment.sucessorio && (
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#374151", marginBottom: 4 }}>Estratégia — Sucessório</p>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{pairComment.sucessorio}</p>
+                  </div>
+                )}
+              </div>
+            ) : rawComentario ? (
               <div style={{ marginBottom: 16 }}>
                 <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#374151", marginBottom: 8 }}>Estratégia do consultor</p>
-                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{comentario}</p>
+                <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", whiteSpace: "pre-wrap" }}>{rawComentario}</p>
               </div>
-            )}
+            ) : null}
 
             <div style={{ borderTop: "1px solid #e5e7eb", marginTop: 32 }} />
             <div style={{ position: "fixed", bottom: 20, right: 40, fontSize: 10, color: "#9ca3af" }}>
@@ -212,18 +230,37 @@ export function EstrategiaPrintCliente({
 
       {/* Sections */}
       {concluidas.map(({ id, labelSimples }) => {
-        const comentario = comentarios[id];
-        if (!comentario) return null;
+        const rawComentario = comentarios[id];
+        const pairComment = id === "protecaoSucessorio" ? parseProtecaoSucessorioComment(rawComentario) : null;
+        const mainText = pairComment ? (pairComment.protecao || pairComment.sucessorio) : rawComentario;
+        if (!mainText) return null;
         return (
           <div key={id} style={{ pageBreakAfter: "always", padding: "40px 40px" }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, borderBottom: "2px solid #1d4ed8", paddingBottom: 8, marginBottom: 20, color: "#1d4ed8" }}>
               {labelSimples}
             </h2>
-            <p style={{ fontSize: 14, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap" }}>{comentario}</p>
+            {pairComment ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {pairComment.protecao && (
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#374151" }}>Proteção e Seguros</p>
+                    <p style={{ fontSize: 14, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap" }}>{pairComment.protecao}</p>
+                  </div>
+                )}
+                {pairComment.sucessorio && (
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#374151" }}>Planejamento Sucessório</p>
+                    <p style={{ fontSize: 14, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap" }}>{pairComment.sucessorio}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p style={{ fontSize: 14, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap" }}>{rawComentario}</p>
+            )}
             <div style={{ marginTop: 24, backgroundColor: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: 16 }}>
               <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#166534", marginBottom: 4 }}>Principal ponto de ação</p>
               <p style={{ margin: 0, fontSize: 13, color: "#166534" }}>
-                {comentario.split(/[.!]\s/)[0].trim()}.
+                {mainText.split(/[.!]\s/)[0].trim()}.
               </p>
             </div>
             <div style={{ position: "fixed", bottom: 20, right: 40, fontSize: 10, color: "#9ca3af" }}>

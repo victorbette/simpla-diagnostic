@@ -1,6 +1,7 @@
-export { SuitabilityForm } from "./SuitabilityForm";
+export { ColetaDadosForm } from "./ColetaDadosForm";
 export { AtivoForm } from "./AtivoForm";
 export { PlanejamentoIFForm } from "./PlanejamentoIFForm";
+export { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 export { ProtecaoForm } from "./ProtecaoForm";
 export { FiscalForm } from "./FiscalForm";
 export { SucessorioForm } from "./SucessorioForm";

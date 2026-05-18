@@ -10,7 +10,9 @@ import type {
   ProtecaoSimplificada,
   PlanejamentoFiscal,
   PlanejamentoSucessorio,
+  DadosCliente,
 } from "@/types/financialPlanning";
+import { initialDadosCliente } from "@/types/financialPlanning";
 
 // ─── Row shape returned by Supabase ──────────────────────────────────────────
 
@@ -25,6 +27,7 @@ interface PlanRow {
   fiscal: Record<string, unknown>;
   sucessorio: Record<string, unknown>;
   notas_assessor: string;
+  dados_cliente: Record<string, unknown> | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -37,6 +40,7 @@ function rowToPlan(row: PlanRow): FinancialPlan {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     suitability: (row.suitability as unknown as SuitabilityResult) ?? null,
+    dadosCliente: (row.dados_cliente as unknown as DadosCliente) ?? { ...initialDadosCliente },
     ativosAtuais: row.ativos_atuais as unknown as AtivoAtual,
     alocacaoPersonalizada:
       (row.alocacao_personalizada as unknown as MacroalocacaoAlvo) ?? null,
@@ -91,6 +95,7 @@ export function useFinancialPlanStore() {
       const payload = {
         client_id: plan.clientId,
         suitability: (plan.suitability ?? null) as unknown as Record<string, unknown> | null,
+        dados_cliente: plan.dadosCliente as unknown as Record<string, unknown>,
         ativos_atuais: plan.ativosAtuais as unknown as Record<string, unknown>,
         alocacao_personalizada: (plan.alocacaoPersonalizada ?? null) as unknown as Record<string, unknown> | null,
         planejamento_if: plan.planejamentoIF as unknown as Record<string, unknown>,

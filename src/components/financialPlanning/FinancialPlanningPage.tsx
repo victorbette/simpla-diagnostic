@@ -6,7 +6,6 @@ import {
   Sunset,
   Shield,
   Receipt,
-  GitBranch,
   CheckCircle2,
   Circle,
   Save,
@@ -19,14 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { initialFinancialPlan } from "@/types/financialPlanning";
-import type { FinancialPlan, SuitabilityResult } from "@/types/financialPlanning";
+import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
-import { SuitabilityForm } from "./SuitabilityForm";
+import { ColetaDadosForm } from "./ColetaDadosForm";
 import { AtivoForm } from "./AtivoForm";
 import { PlanejamentoIFForm } from "./PlanejamentoIFForm";
-import { ProtecaoForm } from "./ProtecaoForm";
+import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 import { FiscalForm } from "./FiscalForm";
-import { SucessorioForm } from "./SucessorioForm";
 import { FinancialPlanDashboard } from "./FinancialPlanDashboard";
 import { FinancialPlanPrintAdvisor, FinancialPlanPrintClient } from "./FinancialPlanPrint";
 import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
@@ -34,21 +32,19 @@ import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicial
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Step =
-  | "suitability"
+  | "coleta"
   | "ativos"
   | "aposentadoria"
-  | "protecao"
+  | "protecaoSucessorio"
   | "fiscal"
-  | "sucessorio"
   | "resultado";
 
 const STEPS: { id: Step; label: string; Icon: React.ElementType }[] = [
-  { id: "suitability", label: "Perfil de risco", Icon: ClipboardList },
+  { id: "coleta", label: "Coleta de dados", Icon: ClipboardList },
   { id: "ativos", label: "Patrimônio atual", Icon: PieChart },
   { id: "aposentadoria", label: "Aposentadoria / IF", Icon: Sunset },
-  { id: "protecao", label: "Proteção", Icon: Shield },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório", Icon: Shield },
   { id: "fiscal", label: "Fiscal", Icon: Receipt },
-  { id: "sucessorio", label: "Sucessório", Icon: GitBranch },
 ];
 
 const FORM_STEPS = STEPS.map((s) => s.id);
@@ -77,7 +73,7 @@ export function FinancialPlanningPage({
     const existing = store.getLatestPlan(clientId);
     return existing ?? initialFinancialPlan(clientId);
   });
-  const [step, setStep] = useState<Step>("suitability");
+  const [step, setStep] = useState<Step>("coleta");
   const [saving, setSaving] = useState(false);
   const [printMode, setPrintMode] = useState<"advisor" | "client" | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -119,7 +115,7 @@ export function FinancialPlanningPage({
 
   function handleBack() {
     if (step === "resultado") {
-      setStep("sucessorio");
+      setStep("fiscal");
       return;
     }
     const idx = stepIndex(step);
@@ -141,10 +137,81 @@ export function FinancialPlanningPage({
     }, 300);
   }
 
-  // ── Suitability completion ────────────────────────────────────────────────
+  // ── Coleta completion ─────────────────────────────────────────────────────
 
-  function handleSuitabilityComplete(result: SuitabilityResult) {
-    updatePlan({ suitability: result });
+  function handleColetaComplete(dadosCliente: DadosCliente) {
+    // Propagate pre-fills to downstream forms
+    const newPlan: FinancialPlan = {
+      ...plan,
+      dadosCliente,
+      suitability: dadosCliente.suitabilityPerfil
+        ? {
+            respostas: dadosCliente.suitabilityRespostas,
+            totalPontos: dadosCliente.suitabilityPontuacao,
+            percentual: (dadosCliente.suitabilityPontuacao / 35) * 100,
+            perfil: dadosCliente.suitabilityPerfil,
+            dataResposta: new Date().toISOString(),
+          }
+        : plan.suitability,
+      planejamentoIF:
+        plan.planejamentoIF.idadeAtual === 35
+          ? {
+              ...plan.planejamentoIF,
+              idadeAtual: dadosCliente.dataNascimento
+                ? new Date().getFullYear() - new Date(dadosCliente.dataNascimento).getFullYear()
+                : plan.planejamentoIF.idadeAtual,
+              rendaMensalDesejada:
+                dadosCliente.rendaMensal > 0
+                  ? dadosCliente.rendaMensal
+                  : plan.planejamentoIF.rendaMensalDesejada,
+              aporteMensal:
+                dadosCliente.aportesMensalMedio > 0
+                  ? dadosCliente.aportesMensalMedio
+                  : plan.planejamentoIF.aporteMensal,
+              patrimonioAtual:
+                dadosCliente.patrimonioFinanceiroEstimado > 0
+                  ? dadosCliente.patrimonioFinanceiroEstimado
+                  : plan.planejamentoIF.patrimonioAtual,
+            }
+          : plan.planejamentoIF,
+      protecao: {
+        ...plan.protecao,
+        rendaMensal:
+          dadosCliente.rendaMensal > 0 && plan.protecao.rendaMensal === 0
+            ? dadosCliente.rendaMensal
+            : plan.protecao.rendaMensal,
+        possuiSeguroVida:
+          dadosCliente.temSeguroVida || plan.protecao.possuiSeguroVida,
+        capitalSeguradoVida:
+          dadosCliente.valorApoliceVida > 0 && plan.protecao.capitalSeguradoVida === 0
+            ? dadosCliente.valorApoliceVida
+            : plan.protecao.capitalSeguradoVida,
+        possuiSeguroInvalidez:
+          dadosCliente.temSeguroInvalidez || plan.protecao.possuiSeguroInvalidez,
+      },
+      sucessorio: {
+        ...plan.sucessorio,
+        patrimonioTotal:
+          dadosCliente.patrimonioTotalEstimado > 0 && plan.sucessorio.patrimonioTotal === 0
+            ? dadosCliente.patrimonioTotalEstimado
+            : plan.sucessorio.patrimonioTotal,
+        estadoResidencia:
+          dadosCliente.estado && !plan.sucessorio.estadoResidencia
+            ? dadosCliente.estado
+            : plan.sucessorio.estadoResidencia,
+      },
+      fiscal: {
+        ...plan.fiscal,
+        rendaBrutaAnual:
+          dadosCliente.rendaMensal > 0 && plan.fiscal.rendaBrutaAnual === 0
+            ? dadosCliente.rendaMensal * 12
+            : plan.fiscal.rendaBrutaAnual,
+        temEmpresa:
+          dadosCliente.tipoTrabalho === "empresario" || plan.fiscal.temEmpresa,
+      },
+    };
+    setPlan(newPlan);
+    setDirty(true);
     setStep("ativos");
   }
 
@@ -202,7 +269,6 @@ export function FinancialPlanningPage({
         {!isResult && (
           <aside className="hidden w-52 shrink-0 lg:block">
             <div className="sticky top-20 space-y-1">
-              {/* Progress bar */}
               <div className="mb-4 space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Progresso</span>
@@ -239,7 +305,6 @@ export function FinancialPlanningPage({
                 );
               })}
 
-              {/* Resultado pill */}
               <button
                 disabled
                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground cursor-default"
@@ -253,18 +318,18 @@ export function FinancialPlanningPage({
 
         {/* ── Content area ── */}
         <div className="flex-1 min-w-0">
-          {/* ── Forms ── */}
-          {step === "suitability" && (
-            <SuitabilityForm
-              onComplete={handleSuitabilityComplete}
-              onCancel={handleClose}
+          {step === "coleta" && (
+            <ColetaDadosForm
+              value={plan.dadosCliente}
+              onChange={(v) => updatePlan({ dadosCliente: v })}
+              onComplete={handleColetaComplete}
             />
           )}
 
           {step === "ativos" && (
             <AtivoForm
               value={plan.ativosAtuais}
-              suitabilityPerfil={plan.suitability?.perfil ?? null}
+              suitabilityPerfil={plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null}
               onChange={(v) => updatePlan({ ativosAtuais: v })}
             />
           )}
@@ -276,10 +341,13 @@ export function FinancialPlanningPage({
             />
           )}
 
-          {step === "protecao" && (
-            <ProtecaoForm
-              value={plan.protecao}
-              onChange={(v) => updatePlan({ protecao: v })}
+          {step === "protecaoSucessorio" && (
+            <ProtecaoSucessorioForm
+              protecao={plan.protecao}
+              onProtecaoChange={(v) => updatePlan({ protecao: v })}
+              sucessorio={plan.sucessorio}
+              onSucessorioChange={(v) => updatePlan({ sucessorio: v })}
+              dadosCliente={plan.dadosCliente}
             />
           )}
 
@@ -290,18 +358,11 @@ export function FinancialPlanningPage({
             />
           )}
 
-          {step === "sucessorio" && (
-            <SucessorioForm
-              value={plan.sucessorio}
-              onChange={(v) => updatePlan({ sucessorio: v })}
-            />
-          )}
-
           {step === "resultado" && (
             <FinancialPlanDashboard
               plan={plan}
               clientName={clientName}
-              onEdit={() => setStep("suitability")}
+              onEdit={() => setStep("coleta")}
               onSave={() => handleSave("completo")}
               onPrint={handlePrint}
               onNotasChange={(notas) => updatePlan({ notasConsultor: notas })}
@@ -317,10 +378,10 @@ export function FinancialPlanningPage({
                 {currentIdx === 0 ? "Cancelar" : "Anterior"}
               </Button>
 
-              {step !== "suitability" && (
-                <Button onClick={step === "sucessorio" ? () => setStep("resultado") : handleNext}>
-                  {step === "sucessorio" ? "Gerar diagnóstico inicial" : "Próximo"}
-                  {step !== "sucessorio" && <ChevronRight className="ml-1 h-4 w-4" />}
+              {step !== "coleta" && (
+                <Button onClick={step === "fiscal" ? () => setStep("resultado") : handleNext}>
+                  {step === "fiscal" ? "Gerar diagnóstico inicial" : "Próximo"}
+                  {step !== "fiscal" && <ChevronRight className="ml-1 h-4 w-4" />}
                 </Button>
               )}
             </div>
@@ -329,7 +390,7 @@ export function FinancialPlanningPage({
           {/* ── Result bottom buttons ── */}
           {isResult && (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-              <Button variant="outline" onClick={() => setStep("suitability")}>
+              <Button variant="outline" onClick={() => setStep("coleta")}>
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Editar plano
               </Button>
