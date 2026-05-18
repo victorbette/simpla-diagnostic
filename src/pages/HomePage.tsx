@@ -1,9 +1,16 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, LogOut, MoreHorizontal, Pencil, Trash2, FileBarChart, ClipboardList } from "lucide-react";
+import {
+  Search,
+  LogOut,
+  MoreHorizontal,
+  UserPlus,
+  Plus,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
-import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
@@ -27,20 +33,24 @@ import type { Client } from "@/hooks/useClientStore";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { toast } from "sonner";
 
-// ─── Avatar colors ────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const DARK = "#041A20";
+const GOLD = "#BBA866";
 
 const AVATAR_COLORS = [
-  "bg-blue-100 text-blue-700",
-  "bg-emerald-100 text-emerald-700",
-  "bg-violet-100 text-violet-700",
-  "bg-amber-100 text-amber-700",
-  "bg-rose-100 text-rose-700",
-  "bg-cyan-100 text-cyan-700",
+  "bg-purple-200 text-purple-700",
+  "bg-teal-200 text-teal-700",
+  "bg-green-200 text-green-700",
+  "bg-amber-200 text-amber-700",
+  "bg-red-200 text-red-700",
+  "bg-indigo-200 text-indigo-700",
 ];
 
-function avatarColor(nome: string): string {
-  const sum = nome.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function avatarColorByIndex(idx: number): string {
+  return AVATAR_COLORS[idx % AVATAR_COLORS.length];
 }
 
 function getInitials(nome: string): string {
@@ -49,16 +59,62 @@ function getInitials(nome: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-// ─── Perfil labels ────────────────────────────────────────────────────────────
+function formatDate(iso: string | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR");
+}
 
-const PERFIL_LABELS: Record<string, string> = {
-  conservador: "Conservador",
-  conservador_moderado: "Cons. Moderado",
-  moderado: "Moderado",
-  arrojado: "Arrojado",
-};
+type FPStatus = "nao_iniciado" | "em_andamento" | "concluido";
 
-// ─── Modal form ───────────────────────────────────────────────────────────────
+interface ProfileConfig {
+  borderColor: string;
+  badgeBg: string;
+  badgeText: string;
+  dotColor: string;
+  label: string;
+}
+
+function profileConfig(perfil: string | null | undefined): ProfileConfig {
+  switch (perfil) {
+    case "moderado":
+      return {
+        borderColor: "#F59E0B",
+        badgeBg: "#FFFBEB",
+        badgeText: "#B45309",
+        dotColor: "#F59E0B",
+        label: "MODERADO",
+      };
+    case "conservador":
+    case "conservador_moderado":
+      return {
+        borderColor: "#46BDC6",
+        badgeBg: "#F0FDFE",
+        badgeText: "#0F766E",
+        dotColor: "#46BDC6",
+        label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
+      };
+    case "arrojado":
+      return {
+        borderColor: "#F87171",
+        badgeBg: "#FFF5F5",
+        badgeText: "#DC2626",
+        dotColor: "#F87171",
+        label: "ARROJADO",
+      };
+    default:
+      return {
+        borderColor: "#9CA3AF",
+        badgeBg: "#F3F4F6",
+        badgeText: "#6B7280",
+        dotColor: "#D1D5DB",
+        label: "SEM PERFIL",
+      };
+  }
+}
+
+// ─── Form types ───────────────────────────────────────────────────────────────
 
 interface ClientForm {
   nome: string;
@@ -70,12 +126,15 @@ interface ClientForm {
 }
 
 const EMPTY_FORM: ClientForm = {
-  nome: "", email: "", telefone: "", cpf: "", nascimento: "", observacoes: "",
+  nome: "",
+  email: "",
+  telefone: "",
+  cpf: "",
+  nascimento: "",
+  observacoes: "",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
-
-type Overlay = "fp" | "estrategia" | null;
 
 export function HomePage() {
   const { user, signOut } = useAuth();
@@ -83,14 +142,14 @@ export function HomePage() {
   const planStore = useFinancialPlanStore();
 
   const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
-  const [overlay, setOverlay] = useState<Overlay>(null);
   const [search, setSearch] = useState("");
   const [modalAberto, setModalAberto] = useState(false);
   const [clienteEditando, setClienteEditando] = useState<Client | null>(null);
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
   const [salvando, setSalvando] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
 
-  // useMemo MUST be before any conditional return — Rules of Hooks
+  // All hooks must be before conditional returns
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return clientStore.clients;
@@ -101,10 +160,23 @@ export function HomePage() {
     );
   }, [clientStore.clients, search]);
 
-  const userLabel = user?.email?.split("@")[0] ?? "Consultor";
+  const userEmail = user?.email ?? "";
+  const userLabel = userEmail.split("@")[0] || "Consultor";
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // ── Overlay ───────────────────────────────────────────────────────────────
+
+  if (clienteSelecionado) {
+    return (
+      <FinancialPlanningPage
+        clientId={clienteSelecionado.id}
+        clientName={clienteSelecionado.nome}
+        onClose={() => setClienteSelecionado(null)}
+      />
+    );
+  }
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
 
   function openNovoCliente() {
     setClienteEditando(null);
@@ -114,7 +186,14 @@ export function HomePage() {
 
   function openEditarCliente(c: Client) {
     setClienteEditando(c);
-    setForm({ nome: c.nome, email: c.email ?? "", telefone: c.telefone ?? "", cpf: "", nascimento: "", observacoes: "" });
+    setForm({
+      nome: c.nome,
+      email: c.email ?? "",
+      telefone: c.telefone ?? "",
+      cpf: "",
+      nascimento: "",
+      observacoes: "",
+    });
     setModalAberto(true);
   }
 
@@ -126,14 +205,12 @@ export function HomePage() {
     setSalvando(true);
     try {
       if (clienteEditando) {
-        // update — clientStore doesn't have updateClient yet; use addClient workaround
-        // For now: delete and re-add is destructive; just notify user
         toast.info("Edição de dados básicos ainda não sincroniza com o servidor.");
       } else {
         await clientStore.addClient(
           form.nome.trim(),
           form.email.trim() || undefined,
-          form.telefone.trim() || undefined,
+          form.telefone.trim() || undefined
         );
         toast.success("Cliente adicionado.");
       }
@@ -145,266 +222,400 @@ export function HomePage() {
     }
   }
 
-  async function handleExcluirCliente(c: Client) {
-    if (!confirm(`Excluir ${c.nome}? Esta ação não pode ser desfeita.`)) return;
+  async function handleConfirmarExcluir() {
+    if (!deleteTarget) return;
     try {
-      await clientStore.deleteClient(c.id);
+      await clientStore.deleteClient(deleteTarget.id);
       toast.success("Cliente excluído.");
     } catch {
       toast.error("Erro ao excluir cliente.");
+    } finally {
+      setDeleteTarget(null);
     }
   }
 
-  function handleAbrirFP(c: Client) {
-    setClienteSelecionado(c);
-    setOverlay("fp");
-  }
+  // ── Render ────────────────────────────────────────────────────────────────
 
-  function handleAbrirEstrategia(c: Client) {
-    setClienteSelecionado(c);
-    setOverlay("estrategia");
-  }
-
-  // ── Navigation overlays — conditional returns AFTER all hooks ─────────────
-
-  if (clienteSelecionado && overlay === "fp") {
-    return (
-      <FinancialPlanningPage
-        clientId={clienteSelecionado.id}
-        clientName={clienteSelecionado.nome}
-        onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
-      />
-    );
-  }
-
-  if (clienteSelecionado && overlay === "estrategia") {
-    const plan = planStore.getLatestPlan(clienteSelecionado.id);
-    if (plan) {
-      return (
-        <EstrategiaInicialPage
-          plan={plan}
-          clientName={clienteSelecionado.nome}
-          onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
-        />
-      );
-    }
-    // No plan yet — render FP directly (never call setState during render)
-    return (
-      <FinancialPlanningPage
-        clientId={clienteSelecionado.id}
-        clientName={clienteSelecionado.nome}
-        onClose={() => { setClienteSelecionado(null); setOverlay(null); }}
-      />
-    );
-  }
-
-  // ── CRM view ──────────────────────────────────────────────────────────────
+  const totalClientes = clientStore.clients.length;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-          <div className="flex-1 min-w-0">
-            <span className="text-lg font-bold tracking-tight">
+    <div className="min-h-screen" style={{ backgroundColor: "#F8F9FA" }}>
+
+      {/* ── Header ── */}
+      <header
+        className="sticky top-0 z-40"
+        style={{ backgroundColor: DARK }}
+      >
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
+          {/* Logo */}
+          <div className="flex-1 flex items-center gap-2">
+            <span style={{ color: GOLD, fontSize: 18 }}>●</span>
+            <span
+              className="font-bold text-white"
+              style={{ fontFamily: "Poppins, sans-serif", fontSize: 17 }}
+            >
               Simpla{" "}
-              <span className="font-light text-muted-foreground">Financial Planning</span>
+              <span style={{ color: GOLD, fontWeight: 400 }}>Financial Planning</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold select-none">
-                {userInitials}
-              </div>
-              <span className="hidden sm:block text-sm text-muted-foreground">{userLabel}</span>
+          {/* User info + logout */}
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="text-right hidden sm:block">
+              <p className="text-white text-sm font-medium leading-tight">
+                {userLabel}
+              </p>
+              <p className="text-gray-400 text-xs leading-tight">
+                Consultor financeiro
+              </p>
             </div>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-1.5">Sair</span>
-            </Button>
+            <div
+              className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 select-none"
+              style={{ backgroundColor: GOLD, color: DARK }}
+            >
+              {userInitials}
+            </div>
+            <button
+              onClick={signOut}
+              className="text-gray-400 hover:text-white transition-colors p-1"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main */}
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      {/* ── Main ── */}
+      <main className="mx-auto max-w-7xl px-6 py-8">
+
         {clientStore.loading ? (
           <LoadingSpinner text="Carregando clientes..." />
         ) : (
           <>
-            {/* Toolbar */}
-            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className="relative flex-1 w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar clientes..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
+            {/* ── Title row ── */}
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-8">
+              <div className="flex-1">
+                <p
+                  className="font-semibold uppercase tracking-widest mb-1"
+                  style={{ color: GOLD, fontSize: 11 }}
+                >
+                  DASHBOARD
+                </p>
+                <div className="flex items-baseline gap-3">
+                  <h1
+                    className="font-bold"
+                    style={{ color: DARK, fontSize: 32 }}
+                  >
+                    Meus Clientes
+                  </h1>
+                  <span style={{ color: "#6B7280", fontSize: 18 }}>
+                    ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
+                  </span>
+                </div>
               </div>
-              <Button onClick={openNovoCliente} className="shrink-0">
-                <Plus className="h-4 w-4 mr-1.5" />
-                Novo Cliente
-              </Button>
+
+              {/* Search + button */}
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="relative">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                    style={{ color: "#9CA3AF" }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+                    style={{ width: 280 }}
+                  />
+                </div>
+                <button
+                  onClick={openNovoCliente}
+                  className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
+                  style={{ backgroundColor: DARK }}
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Novo Cliente
+                </button>
+              </div>
             </div>
 
-            {/* Count */}
-            <p className="text-sm text-muted-foreground mb-4">
-              {filtered.length === 0
-                ? "Nenhum cliente encontrado"
-                : `${filtered.length} cliente${filtered.length !== 1 ? "s" : ""}`}
-            </p>
-
-            {/* Grid */}
-            {filtered.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.map((c) => {
+            {/* ── Grid ── */}
+            {clientStore.clients.length === 0 ? (
+              /* Empty — no clients at all */
+              <div className="flex flex-col items-center gap-4 py-24 text-center">
+                <Users className="h-16 w-16" style={{ color: "#9CA3AF" }} />
+                <h2 className="text-xl font-semibold" style={{ color: "#374151" }}>
+                  Nenhum cliente cadastrado
+                </h2>
+                <p className="text-sm" style={{ color: "#6B7280" }}>
+                  Adicione seu primeiro cliente para começar
+                </p>
+                <button
+                  onClick={openNovoCliente}
+                  className="mt-2 flex items-center gap-2 text-white text-sm font-medium rounded-lg px-6 py-3 transition hover:opacity-90"
+                  style={{ backgroundColor: DARK }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar primeiro cliente
+                </button>
+              </div>
+            ) : filtered.length === 0 ? (
+              /* Empty — search no results */
+              <div className="flex flex-col items-center gap-4 py-24 text-center">
+                <Search className="h-14 w-14" style={{ color: "#9CA3AF" }} />
+                <h2 className="text-lg font-semibold" style={{ color: "#374151" }}>
+                  Nenhum cliente encontrado para &ldquo;{search}&rdquo;
+                </h2>
+                <button
+                  onClick={() => setSearch("")}
+                  className="mt-2 border border-gray-300 text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-gray-50 transition"
+                  style={{ color: "#374151" }}
+                >
+                  Limpar busca
+                </button>
+              </div>
+            ) : (
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                style={{ gap: 24 }}
+              >
+                {filtered.map((c, idx) => {
                   const plan = planStore.getLatestPlan(c.id);
-                  const perfil = plan?.suitability?.perfil;
-                  const fpLabel =
-                    !plan ? "Iniciar Financial Planning"
-                    : plan.status === "completo" ? "Ver Financial Planning"
-                    : "Continuar Financial Planning";
+                  const perfil = plan?.dadosCliente?.suitabilityPerfil ?? plan?.suitability?.perfil ?? null;
+                  const pc = profileConfig(perfil);
+
+                  const fpStatus: FPStatus = !plan
+                    ? "nao_iniciado"
+                    : plan.status === "completo"
+                    ? "concluido"
+                    : "em_andamento";
+
+                  const ultimoContato = plan?.updatedAt ?? c.dataCriacao;
 
                   return (
                     <div
                       key={c.id}
-                      className="rounded-xl border bg-card p-5 flex flex-col gap-4 hover:shadow-sm transition-shadow"
+                      className="bg-white flex flex-col"
+                      style={{
+                        borderRadius: 12,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                        borderLeft: `4px solid ${pc.borderColor}`,
+                        padding: 20,
+                        minHeight: 240,
+                      }}
                     >
-                      {/* Top row */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 select-none ${avatarColor(c.nome)}`}
-                          >
-                            {getInitials(c.nome)}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold truncate">{c.nome}</p>
-                            {c.email && (
-                              <p className="text-xs text-muted-foreground truncate">{c.email}</p>
-                            )}
-                          </div>
+                      {/* Row 1: profile badge + menu */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div
+                          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
+                          style={{ backgroundColor: pc.badgeBg, color: pc.badgeText }}
+                        >
+                          <span
+                            className="h-1.5 w-1.5 rounded-full inline-block shrink-0"
+                            style={{ backgroundColor: pc.dotColor }}
+                          />
+                          {pc.label}
                         </div>
 
-                        {/* More menu */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                            <button
+                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
+                              style={{ color: "#9CA3AF" }}
+                            >
                               <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                            </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => openEditarCliente(c)}>
-                              <Pencil className="h-3.5 w-3.5 mr-2" />
                               Editar cliente
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAbrirFP(c)}>
-                              <FileBarChart className="h-3.5 w-3.5 mr-2" />
-                              Financial Planning
-                            </DropdownMenuItem>
-                            {plan && (
-                              <DropdownMenuItem onClick={() => handleAbrirEstrategia(c)}>
-                                <ClipboardList className="h-3.5 w-3.5 mr-2" />
-                                Estratégia Inicial
-                              </DropdownMenuItem>
-                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleExcluirCliente(c)}
-                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteTarget(c)}
+                              className="text-red-600 focus:text-red-600"
                             >
-                              <Trash2 className="h-3.5 w-3.5 mr-2" />
-                              Excluir
+                              Excluir cliente
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
 
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {perfil && (
-                          <Badge variant="secondary" className="text-xs">
-                            {PERFIL_LABELS[perfil] ?? perfil}
-                          </Badge>
-                        )}
-                        {plan && (
-                          <Badge
-                            className={
-                              plan.status === "completo"
-                                ? "bg-emerald-100 text-emerald-700 text-xs"
-                                : "bg-amber-100 text-amber-700 text-xs"
-                            }
+                      {/* Row 2: avatar + name + date */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div
+                          className={`h-12 w-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 select-none ${avatarColorByIndex(idx)}`}
+                        >
+                          {getInitials(c.nome)}
+                        </div>
+                        <div className="min-w-0">
+                          <p
+                            className="font-semibold truncate"
+                            style={{ fontSize: 16, color: "#111827" }}
                           >
-                            {plan.status === "completo" ? "FP Completo" : "FP em andamento"}
-                          </Badge>
-                        )}
-                        {!plan && (
-                          <Badge variant="outline" className="text-xs text-muted-foreground">
-                            Sem plano
-                          </Badge>
-                        )}
+                            {c.nome}
+                          </p>
+                          <p style={{ fontSize: 12, color: "#9CA3AF" }}>
+                            Cadastrado em {formatDate(c.dataCriacao)}
+                          </p>
+                        </div>
                       </div>
 
-                      {/* CTA */}
-                      <Button
-                        size="sm"
-                        variant={plan ? "default" : "outline"}
-                        className="w-full"
-                        onClick={() => handleAbrirFP(c)}
-                      >
-                        <FileBarChart className="h-3.5 w-3.5 mr-1.5" />
-                        {fpLabel}
-                      </Button>
+                      {/* Divider */}
+                      <div style={{ height: 1, backgroundColor: "#F3F4F6", marginBottom: 16 }} />
+
+                      {/* Row 3: metrics */}
+                      <div className="grid grid-cols-2 gap-4 mb-5 flex-1">
+                        <div>
+                          <p
+                            className="uppercase tracking-wide mb-1"
+                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
+                          >
+                            ÚLTIMO CONTATO
+                          </p>
+                          <p
+                            className="font-semibold"
+                            style={{ fontSize: 13, color: "#374151" }}
+                          >
+                            {ultimoContato ? formatDate(ultimoContato) : "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p
+                            className="uppercase tracking-wide mb-1"
+                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
+                          >
+                            FINANCIAL PLANNING
+                          </p>
+                          <div className="flex items-center gap-1.5">
+                            {fpStatus === "em_andamento" && (
+                              <>
+                                <span
+                                  className="h-2 w-2 rounded-full inline-block shrink-0"
+                                  style={{ backgroundColor: "#46BDC6" }}
+                                />
+                                <span
+                                  className="font-semibold"
+                                  style={{ fontSize: 13, color: "#0891B2" }}
+                                >
+                                  Em andamento
+                                </span>
+                              </>
+                            )}
+                            {fpStatus === "concluido" && (
+                              <>
+                                <span
+                                  className="h-2 w-2 rounded-full inline-block shrink-0"
+                                  style={{ backgroundColor: "#22C55E" }}
+                                />
+                                <span
+                                  className="font-semibold"
+                                  style={{ fontSize: 13, color: "#16A34A" }}
+                                >
+                                  Concluído
+                                </span>
+                              </>
+                            )}
+                            {fpStatus === "nao_iniciado" && (
+                              <>
+                                <span
+                                  className="h-2 w-2 rounded-full inline-block shrink-0"
+                                  style={{ backgroundColor: "#D1D5DB" }}
+                                />
+                                <span
+                                  className="font-semibold"
+                                  style={{ fontSize: 13, color: "#6B7280" }}
+                                >
+                                  Não iniciado
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Row 4: CTA button */}
+                      {fpStatus === "concluido" ? (
+                        <button
+                          onClick={() => setClienteSelecionado(c)}
+                          className="w-full font-medium rounded-lg transition hover:opacity-80"
+                          style={{
+                            border: `1.5px solid ${DARK}`,
+                            color: DARK,
+                            backgroundColor: "transparent",
+                            padding: "10px 0",
+                            fontSize: 14,
+                          }}
+                        >
+                          Ver plano →
+                        </button>
+                      ) : fpStatus === "em_andamento" ? (
+                        <button
+                          onClick={() => setClienteSelecionado(c)}
+                          className="w-full font-medium rounded-lg text-white transition hover:opacity-90"
+                          style={{
+                            backgroundColor: DARK,
+                            padding: "10px 0",
+                            fontSize: 14,
+                          }}
+                        >
+                          Continuar Financial Planning →
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setClienteSelecionado(c)}
+                          className="w-full font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-2"
+                          style={{
+                            border: `1.5px solid ${DARK}`,
+                            color: DARK,
+                            backgroundColor: "transparent",
+                            padding: "10px 0",
+                            fontSize: 14,
+                          }}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Iniciar Financial Planning
+                        </button>
+                      )}
                     </div>
                   );
                 })}
               </div>
-            ) : (
-              clientStore.clients.length === 0 && (
-                <div className="flex flex-col items-center gap-4 py-20 text-center">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                    <Plus className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h2 className="text-xl font-semibold">Nenhum cliente ainda</h2>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    Adicione seu primeiro cliente para iniciar o planejamento financeiro.
-                  </p>
-                  <Button onClick={openNovoCliente}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Novo Cliente
-                  </Button>
-                </div>
-              )
             )}
           </>
         )}
       </main>
 
-      {/* Add/Edit modal */}
+      {/* ── Add/Edit modal ── */}
       <Dialog open={modalAberto} onOpenChange={setModalAberto}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-[480px]" style={{ borderRadius: 12, padding: 32 }}>
           <DialogHeader>
-            <DialogTitle>{clienteEditando ? "Editar cliente" : "Novo cliente"}</DialogTitle>
+            <DialogTitle style={{ fontSize: 20 }}>
+              {clienteEditando ? "Editar cliente" : "Novo Cliente"}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="nome">Nome *</Label>
+              <Label htmlFor="m-nome">
+                Nome completo <span className="text-red-500">*</span>
+              </Label>
               <Input
-                id="nome"
+                id="m-nome"
                 value={form.nome}
                 onChange={(e) => setForm((p) => ({ ...p, nome: e.target.value }))}
                 placeholder="Nome completo"
                 disabled={salvando}
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="m-email">Email</Label>
               <Input
-                id="email"
+                id="m-email"
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
@@ -412,46 +623,92 @@ export function HomePage() {
                 disabled={salvando}
               />
             </div>
+
             <div className="space-y-1.5">
-              <Label htmlFor="telefone">Telefone</Label>
+              <Label htmlFor="m-tel">Telefone</Label>
               <Input
-                id="telefone"
+                id="m-tel"
+                type="tel"
                 value={form.telefone}
                 onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))}
-                placeholder="(11) 99999-9999"
+                placeholder="(99) 99999-9999"
                 disabled={salvando}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="cpf">CPF</Label>
-                <Input
-                  id="cpf"
-                  value={form.cpf}
-                  onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))}
-                  placeholder="000.000.000-00"
-                  disabled={salvando}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="nascimento">Nascimento</Label>
-                <Input
-                  id="nascimento"
-                  type="date"
-                  value={form.nascimento}
-                  onChange={(e) => setForm((p) => ({ ...p, nascimento: e.target.value }))}
-                  disabled={salvando}
-                />
-              </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="m-cpf">CPF</Label>
+              <Input
+                id="m-cpf"
+                value={form.cpf}
+                onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))}
+                placeholder="999.999.999-99"
+                disabled={salvando}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="m-nasc">Data de nascimento</Label>
+              <Input
+                id="m-nasc"
+                type="date"
+                value={form.nascimento}
+                onChange={(e) => setForm((p) => ({ ...p, nascimento: e.target.value }))}
+                disabled={salvando}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="m-obs">Observações</Label>
+              <Textarea
+                id="m-obs"
+                rows={3}
+                value={form.observacoes}
+                onChange={(e) => setForm((p) => ({ ...p, observacoes: e.target.value }))}
+                placeholder="Anotações sobre o cliente..."
+                disabled={salvando}
+              />
             </div>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setModalAberto(false)} disabled={salvando}>
+            <Button
+              variant="outline"
+              onClick={() => setModalAberto(false)}
+              disabled={salvando}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleSalvarCliente} disabled={salvando}>
-              {salvando ? "Salvando..." : clienteEditando ? "Salvar" : "Adicionar"}
+            <Button
+              onClick={handleSalvarCliente}
+              disabled={salvando}
+              style={{ backgroundColor: DARK, color: "white" }}
+            >
+              {salvando ? "Salvando..." : "Salvar cliente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete confirmation modal ── */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <DialogContent className="sm:max-w-md" style={{ borderRadius: 12 }}>
+          <DialogHeader>
+            <DialogTitle>Excluir cliente</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-600 py-2">
+            Tem certeza que deseja excluir <strong>{deleteTarget?.nome}</strong>?
+            Esta ação não pode ser desfeita.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmarExcluir}
+            >
+              Excluir
             </Button>
           </DialogFooter>
         </DialogContent>
