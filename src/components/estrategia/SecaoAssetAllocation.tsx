@@ -14,13 +14,19 @@ import {
   PERFIL_LABELS,
 } from "@/types/financialPlanning";
 import type { FinancialPlan, PerfilRisco, MacroalocacaoAlvo } from "@/types/financialPlanning";
+import { FerramentaCarteira } from "@/components/carteira";
+import type { ResultadoCarteira } from "@/types/estrategiaResultados";
+import type { CarteiraResultado } from "@/lib/carteira/types";
 
 interface Props {
   plan: FinancialPlan;
+  clientName: string;
   comentario: string;
   onComentarioChange: (v: string) => void;
   tags: string[];
   onTagsChange: (v: string[]) => void;
+  resultadoCarteira: ResultadoCarteira | null;
+  onResultadoCarteira: (r: ResultadoCarteira) => void;
 }
 
 const ASSET_KEYS: (keyof MacroalocacaoAlvo)[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
@@ -54,8 +60,26 @@ function Gauge({ score }: { score: number }) {
   );
 }
 
-export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, tags, onTagsChange }: Props) {
+export function SecaoAssetAllocation({ plan, clientName, comentario, onComentarioChange, tags, onTagsChange, resultadoCarteira, onResultadoCarteira }: Props) {
   const [lastEdit, setLastEdit] = useState<string>("");
+  const [carteiraOpen, setCarteiraOpen] = useState(false);
+
+  function handleCarteiraSave(r: CarteiraResultado) {
+    const totalAportar = r.planoAcao
+      .filter((i) => i.tipo === "aportar" || i.tipo === "novo_ativo")
+      .reduce((s, i) => s + i.movimentacaoBRL, 0);
+    const totalResgatar = r.planoAcao
+      .filter((i) => i.tipo === "resgatar_parcial" || i.tipo === "resgatar_total")
+      .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
+    onResultadoCarteira({
+      patrimonio: r.patrimonio,
+      planoAcaoCount: r.planoAcao.length,
+      totalAportar,
+      totalResgatar,
+      savedAt: new Date().toISOString(),
+    });
+    setCarteiraOpen(false);
+  }
 
   const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
   const total = plan.ativosAtuais.total || ASSET_KEYS.reduce((s, k) => s + plan.ativosAtuais[k], 0);
@@ -233,9 +257,24 @@ export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, tag
               </div>
             </>
           ) : (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#9CA3AF" }}>
-              <p style={{ fontSize: 13, margin: 0 }}>Carteira não montada ainda</p>
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#9CA3AF" }}>
+              <p style={{ fontSize: 13, margin: "0 0 12px" }}>Carteira detalhada não montada</p>
+              <button
+                onClick={() => setCarteiraOpen(true)}
+                style={{ padding: "8px 16px", borderRadius: 6, border: "1.5px solid #7C3AED", backgroundColor: "transparent", color: "#7C3AED", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              >
+                Montar carteira detalhada →
+              </button>
             </div>
+          )}
+
+          {total > 0 && (
+            <button
+              onClick={() => setCarteiraOpen(true)}
+              style={{ marginTop: 12, width: "100%", padding: "8px 0", border: "1.5px solid #7C3AED", borderRadius: 6, backgroundColor: "transparent", color: "#7C3AED", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+            >
+              Abrir ferramenta de carteira →
+            </button>
           )}
         </div>
 
@@ -244,6 +283,7 @@ export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, tag
           <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
           {[
             { label: "Diagnóstico revisado", ok: true },
+            { label: "Ferramenta de carteira usada", ok: resultadoCarteira !== null },
             { label: "Carteira com dados", ok: total > 0 },
             { label: "Estratégia redigida", ok: comentario.length > 50 },
           ].map(({ label, ok }) => (
@@ -255,7 +295,40 @@ export function SecaoAssetAllocation({ plan, comentario, onComentarioChange, tag
             </div>
           ))}
         </div>
+
+        {resultadoCarteira && (
+          <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #7C3AED", backgroundColor: "#F5F3FF" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#5B21B6", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              ✓ Resultado da Ferramenta
+            </p>
+            {[
+              { label: "Patrimônio mapeado", value: formatCurrency(resultadoCarteira.patrimonio) },
+              { label: "Itens no plano de ação", value: `${resultadoCarteira.planoAcaoCount}` },
+              { label: "Total a aportar", value: formatCurrency(resultadoCarteira.totalAportar), color: "#16A34A" },
+              { label: "Total a resgatar", value: formatCurrency(resultadoCarteira.totalResgatar), color: "#DC2626" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #DDD6FE", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+                <span style={{ color: "#6B7280" }}>{label}</span>
+                <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+              </div>
+            ))}
+            <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+              Salvo em {new Date(resultadoCarteira.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+            </p>
+          </div>
+        )}
       </div>
+
+      {carteiraOpen && (
+        <FerramentaCarteira
+          clientName={clientName}
+          clientId={plan.clientId}
+          clientProfile={plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null}
+          patrimonyInicial={plan.ativosAtuais.total}
+          onClose={() => setCarteiraOpen(false)}
+          onSave={handleCarteiraSave}
+        />
+      )}
     </div>
   );
 }

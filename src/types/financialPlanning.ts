@@ -340,7 +340,9 @@ export interface ResultadoProtecao {
 }
 
 export function calcularProtecao(p: ProtecaoSimplificada): ResultadoProtecao {
-  const capitalNecessario = p.rendaMensal * 12 * 5;
+  // anos de cobertura: 5 base + 5 por dependente (mín 5, máx 20)
+  const anosCobertura = Math.min(20, Math.max(5, p.dependentes * 5));
+  const capitalNecessario = p.rendaMensal * 12 * anosCobertura;
   const capitalAtual = p.possuiSeguroVida ? p.capitalSeguradoVida : 0;
   const gap = Math.max(0, capitalNecessario - capitalAtual);
   const percentualCoberto =

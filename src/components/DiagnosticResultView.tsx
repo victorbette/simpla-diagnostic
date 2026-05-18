@@ -495,7 +495,7 @@ export function DiagnosticResultView({
       {/* ── FIRE card ── */}
       {answers.targetPassiveIncome > 0 && <FIRECard answers={answers} />}
 
-      {/* ── Assessor notes ── */}
+      {/* ── Consultor notes ── */}
       {answers.consultorNotes && (
         <Card className="bg-muted/30">
           <CardHeader className="pb-2">

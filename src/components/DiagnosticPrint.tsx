@@ -156,7 +156,7 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
         </>
       )}
 
-      {/* Assessor notes */}
+      {/* Consultor notes */}
       {answers.consultorNotes && (
         <>
           <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-gray-500">

@@ -113,7 +113,7 @@
   }
 
   .print-advisor .confidencial::after {
-    content: "CONFIDENCIAL — USO RESTRITO AO ASSESSOR";
+    content: "CONFIDENCIAL — USO RESTRITO AO CONSULTOR";
     display: block;
     text-align: center;
     font-size: 8pt;

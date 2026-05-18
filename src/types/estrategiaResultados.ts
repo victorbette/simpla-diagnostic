@@ -1,3 +1,11 @@
+export interface ResultadoCarteira {
+  patrimonio: number;
+  planoAcaoCount: number;
+  totalAportar: number;
+  totalResgatar: number;
+  savedAt: string;
+}
+
 export interface ResultadoIF {
   patrimonioAposentadoria: number;
   rendaSustentavel: number;
@@ -26,12 +34,14 @@ export interface ResultadoFiscal {
 }
 
 export interface ResultadosEstrategia {
+  carteira: ResultadoCarteira | null;
   if: ResultadoIF | null;
   seguro: ResultadoSeguro | null;
   fiscal: ResultadoFiscal | null;
 }
 
 export const defaultResultados: ResultadosEstrategia = {
+  carteira: null,
   if: null,
   seguro: null,
   fiscal: null,

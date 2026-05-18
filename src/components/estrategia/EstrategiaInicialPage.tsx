@@ -314,10 +314,13 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave }: Pro
         return (
           <SecaoAssetAllocation
             plan={plan}
+            clientName={clientName}
             comentario={comentario}
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
+            resultadoCarteira={data.resultados.carteira}
+            onResultadoCarteira={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, carteira: r } }))}
           />
         );
       case "aposentadoria":

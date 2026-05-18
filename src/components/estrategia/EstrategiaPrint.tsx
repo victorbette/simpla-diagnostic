@@ -107,11 +107,20 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
       )}
 
       {/* Premissas das ferramentas (consultor only) */}
-      {isConsultor && (resultados.if || resultados.seguro || resultados.fiscal) && (
+      {isConsultor && (resultados.carteira || resultados.if || resultados.seguro || resultados.fiscal) && (
         <div style={{ marginBottom: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #BBA866", paddingLeft: 12 }}>
             Premissas dos Simuladores
           </h3>
+          {resultados.carteira && (
+            <div style={{ padding: 14, backgroundColor: "#F5F3FF", borderRadius: 8, border: "1px solid #DDD6FE", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#5B21B6", margin: "0 0 8px", textTransform: "uppercase" }}>Ferramenta de Carteira</p>
+              {row("Patrimônio mapeado", formatCurrency(resultados.carteira.patrimonio))}
+              {row("Total a aportar", formatCurrency(resultados.carteira.totalAportar))}
+              {row("Total a resgatar", formatCurrency(resultados.carteira.totalResgatar))}
+              {row("Ações no plano", String(resultados.carteira.planoAcaoCount))}
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             {resultados.if && (
               <div style={{ padding: 14, backgroundColor: "#F0FDF4", borderRadius: 8, border: "1px solid #86EFAC" }}>

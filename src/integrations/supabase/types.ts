@@ -89,6 +89,7 @@ export interface Database {
           id: string;
           client_id: string;
           suitability: Json | null;
+          dados_cliente: Json | null;
           ativos_atuais: Json;
           alocacao_personalizada: Json | null;
           planejamento_if: Json;
@@ -104,6 +105,7 @@ export interface Database {
           id?: string;
           client_id: string;
           suitability?: Json | null;
+          dados_cliente?: Json | null;
           ativos_atuais?: Json;
           alocacao_personalizada?: Json | null;
           planejamento_if?: Json;
@@ -119,6 +121,7 @@ export interface Database {
           id?: string;
           client_id?: string;
           suitability?: Json | null;
+          dados_cliente?: Json | null;
           ativos_atuais?: Json;
           alocacao_personalizada?: Json | null;
           planejamento_if?: Json;

@@ -88,6 +88,26 @@ export function SecaoRevisao({ statusSecoes, comentarios, resultados, onNavigate
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderTop: "3px solid #BBA866" }}>
         <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: "0 0 4px" }}>Premissas das Ferramentas</p>
         <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 16px" }}>Resultados salvos pelos simuladores durante a elaboração da estratégia</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+          {/* Ferramenta Carteira */}
+          <div style={{ padding: "14px 16px", borderRadius: 8, backgroundColor: resultados.carteira ? "#F5F3FF" : "#F9FAFB", border: `1px solid ${resultados.carteira ? "#DDD6FE" : "#E5E7EB"}` }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: resultados.carteira ? "#5B21B6" : "#9CA3AF", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {resultados.carteira ? "✓" : "○"} Ferramenta de Carteira
+            </p>
+            {resultados.carteira ? (
+              <>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>Patrimônio mapeado:</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: "0 0 6px" }}>{formatCurrency(resultados.carteira.patrimonio)}</p>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 2px" }}>{resultados.carteira.planoAcaoCount} ações no plano</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#16A34A", margin: 0 }}>
+                  +{formatCurrency(resultados.carteira.totalAportar)} aportar
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, fontStyle: "italic" }}>Ferramenta não utilizada</p>
+            )}
+          </div>
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           {/* Simulador IF */}
           <div style={{ padding: "14px 16px", borderRadius: 8, backgroundColor: resultados.if ? "#F0FDF4" : "#F9FAFB", border: `1px solid ${resultados.if ? "#86EFAC" : "#E5E7EB"}` }}>
