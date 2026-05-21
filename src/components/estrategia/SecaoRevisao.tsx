@@ -716,9 +716,9 @@ export function SecaoRevisao({
                       fontWeight: 700,
                       padding: "3px 10px",
                       borderRadius: 999,
-                      backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#FEF2F2",
+                      backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#F2EBEB",
                       color: resultados.if.liberdadeAlcancada ? "#3D6B41" : "#7A3535",
-                      border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#FECACA"}`,
+                      border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#C8A8A8"}`,
                       display: "inline-block",
                     }}
                   >

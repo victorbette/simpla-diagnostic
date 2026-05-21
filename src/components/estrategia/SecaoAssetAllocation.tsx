@@ -35,8 +35,8 @@ const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
   rvGlobal: "RV Global", rfGlobal: "RF Global", cripto: "Cripto",
 };
 const ASSET_COLORS: Record<keyof MacroalocacaoAlvo, string> = {
-  rendaFixa: "#2A4F6A", acoes: "#3D6B41", fiis: "#A78BFA",
-  rvGlobal: "#F97316", rfGlobal: "#06B6D4", cripto: "#EAB308",
+  rendaFixa: "#2A4F6A", acoes: "#3D6B41", fiis: "#4A6B3D",
+  rvGlobal: "#000000", rfGlobal: "#6B6347", cripto: "#BBA866",
 };
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
@@ -115,7 +115,7 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
       <div>
         {/* Diagnóstico card */}
         <div style={{ ...CARD, borderTop: "3px solid #000000", position: "relative" }}>
-          <span style={{ position: "absolute", top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F5F3FF", color: "#000000" }}>
+          <span style={{ position: "absolute", top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#EDE9DC", color: "#000000" }}>
             SOMENTE LEITURA
           </span>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
@@ -125,7 +125,7 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
             <div>
               <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 6px", textTransform: "uppercase", fontWeight: 600 }}>Perfil de Risco</p>
-              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: "#F5F3FF", color: "#000000" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: "#EDE9DC", color: "#000000" }}>
                 {perfil ? PERFIL_LABELS[perfil as PerfilRisco] : "Não definido"}
               </span>
             </div>
@@ -135,7 +135,7 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
             </div>
             <div>
               <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#0F766E", margin: 0 }}>{formatCurrency(total)}</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(total)}</p>
             </div>
             {alvo && (
               <div>
@@ -297,8 +297,8 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
         </div>
 
         {resultadoCarteira && (
-          <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #000000", backgroundColor: "#F5F3FF" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#5B21B6", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #000000", backgroundColor: "#EDE9DC" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               ✓ Resultado da Ferramenta
             </p>
             {[
@@ -307,7 +307,7 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
               { label: "Total a aportar", value: formatCurrency(resultadoCarteira.totalAportar), color: "#3D6B41" },
               { label: "Total a resgatar", value: formatCurrency(resultadoCarteira.totalResgatar), color: "#7A3535" },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #DDD6FE", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #E2DCC8", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
                 <span style={{ color: "#6B6347" }}>{label}</span>
                 <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
               </div>

@@ -249,10 +249,10 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
               marginTop: 12,
               padding: "8px 24px",
               borderRadius: 99,
-              background: overallScore >= 70 ? "#d1fae5" : overallScore >= 40 ? "#fef3c7" : "#fee2e2",
+              background: overallScore >= 70 ? "#EBF2EC" : overallScore >= 40 ? "#F5F0E0" : "#F2EBEB",
               fontSize: 16,
               fontWeight: 700,
-              color: overallScore >= 70 ? "#065f46" : overallScore >= 40 ? "#92400e" : "#991b1b",
+              color: overallScore >= 70 ? "#3D6B41" : overallScore >= 40 ? "#8A7A45" : "#7A3535",
             }}
           >
             Score geral: {overallScore}/100 — {scoreLabel(overallScore)}
@@ -275,12 +275,12 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreIF >= 70 ? "#d1fae5" : scoreIF >= 40 ? "#fef3c7" : "#fee2e2",
+              background: scoreIF >= 70 ? "#EBF2EC" : scoreIF >= 40 ? "#F5F0E0" : "#F2EBEB",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreIF >= 70 ? "#065f46" : scoreIF >= 40 ? "#92400e" : "#991b1b",
+              color: scoreIF >= 70 ? "#3D6B41" : scoreIF >= 40 ? "#8A7A45" : "#7A3535",
             }}
           >
             Situação: {scoreLabel(scoreIF)} ({scoreIF}/100)
@@ -289,7 +289,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <Row label="Projeção patrimonial" value={formatCurrency(ifResult.patrimonioProjetado)} />
           <Row label="Patrimônio necessário" value={formatCurrency(ifResult.patrimonioNecessario)} />
           {ifResult.gap > 0 && (
-            <p style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
               Próximo passo: aumentar aportes mensais para reduzir o gap de{" "}
               {formatCurrency(ifResult.gap)}.
             </p>
@@ -301,19 +301,19 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreProt >= 70 ? "#d1fae5" : scoreProt >= 40 ? "#fef3c7" : "#fee2e2",
+              background: scoreProt >= 70 ? "#EBF2EC" : scoreProt >= 40 ? "#F5F0E0" : "#F2EBEB",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreProt >= 70 ? "#065f46" : scoreProt >= 40 ? "#92400e" : "#991b1b",
+              color: scoreProt >= 70 ? "#3D6B41" : scoreProt >= 40 ? "#8A7A45" : "#7A3535",
             }}
           >
             Situação: {scoreLabel(scoreProt)} ({scoreProt}/100)
           </div>
           <Row label="Capital protegido" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} />
           {protResult.gap > 0 && (
-            <p style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
               Próximo passo: contratar ou ampliar cobertura de seguro de vida.
             </p>
           )}
@@ -324,12 +324,12 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreFiscal >= 70 ? "#d1fae5" : scoreFiscal >= 40 ? "#fef3c7" : "#fee2e2",
+              background: scoreFiscal >= 70 ? "#EBF2EC" : scoreFiscal >= 40 ? "#F5F0E0" : "#F2EBEB",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreFiscal >= 70 ? "#065f46" : scoreFiscal >= 40 ? "#92400e" : "#991b1b",
+              color: scoreFiscal >= 70 ? "#3D6B41" : scoreFiscal >= 40 ? "#8A7A45" : "#7A3535",
             }}
           >
             Situação: {scoreLabel(scoreFiscal)} ({scoreFiscal}/100)
@@ -341,7 +341,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
             />
           )}
           {fiscalResult.gapEconomia > 5000 && (
-            <p style={{ fontSize: 11, color: "#b45309", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
               Próximo passo: aportar no PGBL e usar dedução fiscal disponível.
             </p>
           )}

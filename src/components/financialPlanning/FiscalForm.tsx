@@ -346,7 +346,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             <Badge
               style={{
                 backgroundColor:
-                  value.tipoDeclaracao === "completa" ? "#EBF2EC" : "#EFF6FF",
+                  value.tipoDeclaracao === "completa" ? "#EBF2EC" : "#EAF0F5",
                 color: value.tipoDeclaracao === "completa" ? "#3D6B41" : "#1D4ED8",
                 border:
                   value.tipoDeclaracao === "completa"

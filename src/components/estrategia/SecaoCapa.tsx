@@ -58,8 +58,8 @@ export function SecaoCapa({
     perfil === "moderado" || perfil === "conservador_moderado"
       ? { bg: "#F5F0E0", color: "#8A7A45" }
       : perfil === "arrojado"
-      ? { bg: "#FEF2F2", color: "#7A3535" }
-      : { bg: "#F0FDFA", color: "#0F766E" };
+      ? { bg: "#F2EBEB", color: "#7A3535" }
+      : { bg: "#EAF0F5", color: "#2A4F6A" };
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -152,7 +152,7 @@ export function SecaoCapa({
           </div>
           <div>
             <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
-            <p style={{ fontSize: 16, fontWeight: 700, color: "#0F766E", margin: 0 }}>{formatCurrency(patrimonio)}</p>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(patrimonio)}</p>
           </div>
           <div>
             <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Data de Elaboração</p>
@@ -164,11 +164,11 @@ export function SecaoCapa({
           <p style={{ fontSize: 11, color: "#9E9070", margin: "0 0 10px" }}>Áreas do planejamento</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {[
-              { label: "Asset Alloc.", color: "#000000", bg: "#F5F3FF" },
+              { label: "Asset Alloc.", color: "#000000", bg: "#EDE9DC" },
               { label: "Aposentadoria", color: "#3D6B41", bg: "#EBF2EC" },
-              { label: "Proteção", color: "#7A3535", bg: "#FEF2F2" },
+              { label: "Proteção", color: "#7A3535", bg: "#F2EBEB" },
               { label: "Fiscal", color: "#8A7A45", bg: "#F5F0E0" },
-              { label: "Sucessório", color: "#2A4F6A", bg: "#EFF6FF" },
+              { label: "Sucessório", color: "#2A4F6A", bg: "#EAF0F5" },
             ].map(({ label, color, bg }) => (
               <span key={label} style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, backgroundColor: bg, color }}>
                 {label}

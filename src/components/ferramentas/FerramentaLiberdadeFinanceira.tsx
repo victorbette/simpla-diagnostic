@@ -272,8 +272,8 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                       fontWeight: 600,
                       borderRadius: 5,
                       padding: "2px 7px",
-                      backgroundColor: o.tipo === "aporte" ? "#dcfce7" : "#fee2e2",
-                      color: o.tipo === "aporte" ? "#166534" : "#dc2626",
+                      backgroundColor: o.tipo === "aporte" ? "#EBF2EC" : "#F2EBEB",
+                      color: o.tipo === "aporte" ? "#3D6B41" : "#7A3535",
                     }}
                   >
                     {o.tipo === "aporte" ? "+" : "−"} {o.idadeRealizacao} anos
@@ -326,7 +326,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   {result.gapRenda >= 0 ? "Superávit de renda" : "Gap de renda"}
                 </p>
                 <p
-                  style={{ fontSize: 20, fontWeight: 700, color: result.gapRenda >= 0 ? "#16a34a" : "#dc2626" }}
+                  style={{ fontSize: 20, fontWeight: 700, color: result.gapRenda >= 0 ? "#3D6B41" : "#7A3535" }}
                   className="tabular-nums"
                 >
                   {formatCurrency(Math.abs(result.gapRenda))}
@@ -339,9 +339,9 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
               <CardContent className="pt-4 pb-4 flex items-center justify-center">
                 {result.liberdadeAlcancada ? (
                   <span style={{
-                    backgroundColor: "#f0fdf4",
-                    color: "#15803d",
-                    border: "1px solid #bbf7d0",
+                    backgroundColor: "#EBF2EC",
+                    color: "#3D6B41",
+                    border: "1px solid #A8C8AB",
                     borderRadius: 8,
                     padding: "6px 14px",
                     fontSize: 13,
@@ -351,9 +351,9 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   </span>
                 ) : (
                   <span style={{
-                    backgroundColor: "#fef2f2",
-                    color: "#dc2626",
-                    border: "1px solid #fecaca",
+                    backgroundColor: "#F2EBEB",
+                    color: "#7A3535",
+                    border: "1px solid #C8A8A8",
                     borderRadius: 8,
                     padding: "6px 14px",
                     fontSize: 13,
@@ -379,7 +379,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                       <span style={{ color: "#6B6347" }}>{o.nome} (idade {o.idadeRealizacao})</span>
                       <span
                         className="tabular-nums font-medium"
-                        style={{ color: o.tipo === "despesa" ? "#dc2626" : "#16a34a" }}
+                        style={{ color: o.tipo === "despesa" ? "#7A3535" : "#3D6B41" }}
                       >
                         {o.tipo === "despesa" ? "−" : "+"}{formatCurrency(o.valor)}
                       </span>
@@ -420,8 +420,8 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="gradLF" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#BBA866" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#BBA866" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" />
@@ -440,16 +440,16 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
               {patrimonioAlvo > 0 && (
                 <ReferenceLine
                   y={patrimonioAlvo}
-                  stroke="#ef4444"
+                  stroke="#7A3535"
                   strokeDasharray="4 4"
-                  label={{ value: "Meta IF", position: "right", fontSize: 9, fill: "#ef4444" }}
+                  label={{ value: "Meta IF", position: "right", fontSize: 9, fill: "#7A3535" }}
                 />
               )}
               <Area
                 type="monotone"
                 dataKey="comObjetivos"
                 name="Com objetivos"
-                stroke="#3b82f6"
+                stroke="#BBA866"
                 fill="url(#gradLF)"
                 strokeWidth={2}
               />

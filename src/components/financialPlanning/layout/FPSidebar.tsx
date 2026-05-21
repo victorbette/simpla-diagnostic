@@ -23,10 +23,10 @@ const STEPS: { id: FPStep; label: string; num: number }[] = [
 ];
 
 const AVATAR_COLORS = [
-  "bg-purple-200 text-[#8A7A45]",
-  "bg-teal-200 text-[#8A7A45]",
-  "bg-green-200 text-[#3D6B41]",
-  "bg-amber-200 text-[#8A7A45]",
+  "bg-[#EDE9DC] text-[#8A7A45]",
+  "bg-[#EDE9DC] text-[#8A7A45]",
+  "bg-[#D4E8D5] text-[#3D6B41]",
+  "bg-[#F5F0E0] text-[#8A7A45]",
 ];
 
 function getInitials(nome: string): string {
@@ -52,11 +52,11 @@ function perfilCfg(perfil: string | null | undefined): ProfileCfg {
     case "moderado":
       return { dotColor: "#8A7A45", label: "MODERADO", textColor: "#8A7A45", bg: "#F5F0E0" };
     case "conservador":
-      return { dotColor: TEAL, label: "CONSERVADOR", textColor: "#0F766E", bg: "#F0FDFE" };
+      return { dotColor: TEAL, label: "CONSERVADOR", textColor: "#2A4F6A", bg: "#EAF0F5" };
     case "conservador_moderado":
-      return { dotColor: TEAL, label: "CONS. MOD.", textColor: "#0F766E", bg: "#F0FDFE" };
+      return { dotColor: TEAL, label: "CONS. MOD.", textColor: "#2A4F6A", bg: "#EAF0F5" };
     case "arrojado":
-      return { dotColor: "#7A3535", label: "ARROJADO", textColor: "#7A3535", bg: "#FFF5F5" };
+      return { dotColor: "#7A3535", label: "ARROJADO", textColor: "#7A3535", bg: "#F2EBEB" };
     default:
       return { dotColor: "#9E9070", label: "SEM PERFIL", textColor: "#6B6347", bg: "#F5F3EE" };
   }

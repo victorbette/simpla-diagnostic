@@ -118,7 +118,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal desejada na IF</Label>
               {isRendaSugerida && (
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#F0FDFA", color: "#0D9488", border: "1px solid #99F6E4" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#EAF0F5", color: "#2A4F6A", border: "1px solid #A8C4D8" }}>
                   ✓ SUGERIDO
                 </span>
               )}

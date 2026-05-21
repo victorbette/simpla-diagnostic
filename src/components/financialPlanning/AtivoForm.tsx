@@ -13,10 +13,10 @@ const TEAL = "#BBA866";
 const CAMPOS: { key: keyof Omit<AtivoAtual, "total">; label: string; hint: string; color: string }[] = [
   { key: "rendaFixa", label: "Renda Fixa", hint: "CDB, Tesouro, LCI, LCA", color: "#2A4F6A" },
   { key: "acoes", label: "Ações brasileiras", hint: "Ações, ETFs nacionais", color: "#3D6B41" },
-  { key: "fiis", label: "FIIs", hint: "Fundos Imobiliários", color: "#A78BFA" },
-  { key: "rvGlobal", label: "RV Global", hint: "BDR, ETF int., conta ext.", color: "#F97316" },
-  { key: "rfGlobal", label: "RF Global", hint: "Renda fixa internacional", color: "#06B6D4" },
-  { key: "cripto", label: "Criptoativos", hint: "Bitcoin, Ethereum e outros", color: "#EAB308" },
+  { key: "fiis", label: "FIIs", hint: "Fundos Imobiliários", color: "#4A6B3D" },
+  { key: "rvGlobal", label: "RV Global", hint: "BDR, ETF int., conta ext.", color: "#000000" },
+  { key: "rfGlobal", label: "RF Global", hint: "Renda fixa internacional", color: "#6B6347" },
+  { key: "cripto", label: "Criptoativos", hint: "Bitcoin, Ethereum e outros", color: "#BBA866" },
 ];
 
 interface Props {
@@ -97,12 +97,12 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
         {zerando && (
           <div
             style={{
-              backgroundColor: "#F0FDFA",
-              border: "1px solid #99F6E4",
+              backgroundColor: "#EAF0F5",
+              border: "1px solid #E2DCC8",
               borderRadius: 8,
               padding: "12px 16px",
               fontSize: 13,
-              color: "#0F766E",
+              color: "#2A4F6A",
             }}
           >
             O planejamento partirá do zero com base nos aportes mensais projetados.
@@ -200,13 +200,13 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
         {total > 0 && suitabilityPerfil && alvo && (
           <div
             style={{
-              backgroundColor: "#F0FDFA",
-              border: "1px solid #99F6E4",
+              backgroundColor: "#EAF0F5",
+              border: "1px solid #A8C4D8",
               borderRadius: 10,
               padding: 16,
             }}
           >
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#0F766E", margin: "0 0 12px", textTransform: "uppercase" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#2A4F6A", margin: "0 0 12px", textTransform: "uppercase" }}>
               Comparação com perfil {PERFIL_LABELS[suitabilityPerfil]}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

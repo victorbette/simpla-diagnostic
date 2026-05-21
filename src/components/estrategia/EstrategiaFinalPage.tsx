@@ -332,7 +332,7 @@ export function EstrategiaFinalPage({
                     fontSize: 13,
                     padding: "3px 10px",
                     borderRadius: 9999,
-                    backgroundColor: "#EDE9FE",
+                    backgroundColor: "#EDE9DC",
                     color: "#000000",
                     fontWeight: 600,
                   }}
@@ -526,10 +526,10 @@ export function EstrategiaFinalPage({
                           fontSize: 13,
                           padding: "3px 10px",
                           borderRadius: 9999,
-                          backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#FEF2F2",
+                          backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#F2EBEB",
                           color: resultados.if.liberdadeAlcancada ? "#3D6B41" : "#7A3535",
                           fontWeight: 600,
-                          border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#FECACA"}`,
+                          border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#C8A8A8"}`,
                         }}
                       >
                         {resultados.if.liberdadeAlcancada ? "Alcançada" : "Em construção"}
@@ -981,7 +981,7 @@ export function EstrategiaFinalPage({
               {estrategia.dataProximaReuniao && (
                 <div
                   style={{
-                    backgroundColor: "#EFF6FF",
+                    backgroundColor: "#EAF0F5",
                     border: "1px solid #BFDBFE",
                     borderRadius: 8,
                     padding: 12,

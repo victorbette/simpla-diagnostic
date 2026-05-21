@@ -428,13 +428,13 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
                 <Progress value={coveragePct} className="h-2" />
               </div>
               {resultado.gap > 0 ? (
-                <div style={{ border: "1px solid #FECACA", backgroundColor: "#FFF5F5", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                <div style={{ border: "1px solid #C8A8A8", backgroundColor: "#F2EBEB", borderRadius: 8, padding: 12, textAlign: "center" }}>
                   <p className="text-xs" style={{ color: "#7A3535" }}>Gap descoberto</p>
                   <p className="tabular-nums" style={{ color: "#7A3535", fontSize: 22, fontWeight: 700 }}>{formatCurrency(resultado.gap)}</p>
                 </div>
               ) : (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-                  <p className="text-sm font-semibold text-emerald-700">Cobertura adequada</p>
+                <div className="rounded-lg border border-[#A8C8AB] bg-[#EBF2EC] p-3 text-center">
+                  <p className="text-sm font-semibold text-[#3D6B41]">Cobertura adequada</p>
                 </div>
               )}
             </CardContent>

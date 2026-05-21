@@ -80,7 +80,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
           {isConsultor && row("Custo inventário", formatCurrency(sucR.custoInventarioEstimado))}
         </div>
         {data.comentarios.protecaoSucessorio && isConsultor && (
-          <p style={{ fontSize: 13, color: "#3D3520", backgroundColor: "#FEF2F2", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #7A3535", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#3D3520", backgroundColor: "#F2EBEB", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #7A3535", margin: 0 }}>
             {data.comentarios.protecaoSucessorio}
           </p>
         )}
@@ -113,8 +113,8 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
             Premissas dos Simuladores
           </h3>
           {resultados.carteira && (
-            <div style={{ padding: 14, backgroundColor: "#F5F3FF", borderRadius: 8, border: "1px solid #DDD6FE", marginBottom: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#5B21B6", margin: "0 0 8px", textTransform: "uppercase" }}>Ferramenta de Carteira</p>
+            <div style={{ padding: 14, backgroundColor: "#EDE9DC", borderRadius: 8, border: "1px solid #E2DCC8", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#000000", margin: "0 0 8px", textTransform: "uppercase" }}>Ferramenta de Carteira</p>
               {row("Patrimônio mapeado", formatCurrency(resultados.carteira.patrimonio))}
               {row("Total a aportar", formatCurrency(resultados.carteira.totalAportar))}
               {row("Total a resgatar", formatCurrency(resultados.carteira.totalResgatar))}
@@ -133,8 +133,8 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
               </div>
             )}
             {resultados.seguro && (
-              <div style={{ padding: 14, backgroundColor: "#FFF5F5", borderRadius: 8, border: "1px solid #FECACA" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#B91C1C", margin: "0 0 8px", textTransform: "uppercase" }}>Análise de Seguros</p>
+              <div style={{ padding: 14, backgroundColor: "#F2EBEB", borderRadius: 8, border: "1px solid #C8A8A8" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#7A3535", margin: "0 0 8px", textTransform: "uppercase" }}>Análise de Seguros</p>
                 {row("Capital necessário", formatCurrency(resultados.seguro.totalNeed))}
                 {row("Cobertura atual", formatCurrency(resultados.seguro.totalCoverage))}
                 {row("Gap de cobertura", formatCurrency(resultados.seguro.gap))}

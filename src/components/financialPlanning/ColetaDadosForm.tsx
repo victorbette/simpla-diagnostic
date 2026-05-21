@@ -46,7 +46,7 @@ const PERFIL_CARDS: {
     alocacao: "RF 92% · RV 4% · Internacional 4%",
     descricao: "Foco em preservação de capital e liquidez. Baixa tolerância a risco.",
     color: "#BBA866",
-    bgSelected: "#F0FDFA",
+    bgSelected: "#EAF0F5",
     icon: Shield,
   },
   {
@@ -55,7 +55,7 @@ const PERFIL_CARDS: {
     alocacao: "RF 78% · RV 13% · Internacional 9%",
     descricao: "Equilíbrio com predominância em renda fixa e alguma exposição a RV.",
     color: "#2A4F6A",
-    bgSelected: "#EFF6FF",
+    bgSelected: "#EAF0F5",
     icon: TrendingUp,
   },
   {
@@ -73,7 +73,7 @@ const PERFIL_CARDS: {
     alocacao: "RF 52% · RV 29% · Internacional 17,5%",
     descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.",
     color: "#7A3535",
-    bgSelected: "#FEF2F2",
+    bgSelected: "#F2EBEB",
     icon: Zap,
   },
 ];
@@ -146,13 +146,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <Label className={labelCls}>Idade</Label>
             <div className="flex items-center gap-2">
               <div
-                className="flex h-10 items-center px-3 rounded-lg border border-[#E2DCC8] bg-[#F0FDFA] text-sm font-semibold text-[#0F766E] flex-1"
+                className="flex h-10 items-center px-3 rounded-lg border border-[#E2DCC8] bg-[#EAF0F5] text-sm font-semibold text-[#2A4F6A] flex-1"
                 style={{ borderLeft: "3px solid #BBA866" }}
               >
                 {calculatedAge ? `${calculatedAge} anos` : "—"}
               </div>
               {calculatedAge && (
-                <span className="text-[10px] font-bold text-[#0F766E] bg-[#F0FDFA] border border-[#99F6E4] rounded px-1.5 py-0.5 whitespace-nowrap">
+                <span className="text-[10px] font-bold text-[#2A4F6A] bg-[#EAF0F5] border border-[#A8C4D8] rounded px-1.5 py-0.5 whitespace-nowrap">
                   ✓ CALCULADO
                 </span>
               )}
@@ -300,7 +300,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <FPSectionHeader
           title="Vínculo Profissional"
           subtitle="Tipo de relação com o mercado de trabalho"
-          borderColor="#A78BFA"
+          borderColor="#6B6347"
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>

@@ -19,10 +19,10 @@ type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo_ativo";
 
 const ACAO_BADGE_STYLE: Record<ItemPlanoAcao["tipo"], { bg: string; color: string; label: string }> = {
   manter:          { bg: "#F5F3EE", color: "#3D3520", label: "Manter" },
-  aportar:         { bg: "#DBEAFE", color: "#1E40AF", label: "Aportar" },
-  resgatar_parcial:{ bg: "#FEF3C7", color: "#92400E", label: "Resgatar parcial" },
-  resgatar_total:  { bg: "#FEE2E2", color: "#991B1B", label: "Resgatar tudo" },
-  novo_ativo:      { bg: "#EDE9FE", color: "#5B21B6", label: "Novo ativo" },
+  aportar:         { bg: "#EAF0F5", color: "#2A4F6A", label: "Aportar" },
+  resgatar_parcial:{ bg: "#F5F0E0", color: "#8A7A45", label: "Resgatar parcial" },
+  resgatar_total:  { bg: "#F2EBEB", color: "#7A3535", label: "Resgatar tudo" },
+  novo_ativo:      { bg: "#EDE9DC", color: "#000000", label: "Novo ativo" },
 };
 
 function AcaoBadge({ tipo }: { tipo: ItemPlanoAcao["tipo"] }) {

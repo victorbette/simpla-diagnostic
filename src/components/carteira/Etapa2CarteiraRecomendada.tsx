@@ -92,7 +92,7 @@ export function Etapa2CarteiraRecomendada({
       <div className="space-y-4">
         {/* Info banner */}
         {clientProfile && (
-          <div style={{ border: "1px solid #99E6EB", backgroundColor: "#F0FDFB", borderRadius: 8, padding: "12px 16px" }} className="flex items-start gap-2">
+          <div style={{ border: "1px solid #E2DCC8", backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }} className="flex items-start gap-2">
             <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#BBA866" }} />
             <p className="text-sm" style={{ color: "#000000" }}>
               <span className="font-medium">
@@ -195,7 +195,7 @@ export function Etapa2CarteiraRecomendada({
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Total</span>
             {isExact ? (
-              <Badge className="bg-[#D4E8D5] text-green-800 text-xs">100%</Badge>
+              <Badge className="bg-[#D4E8D5] text-[#3D6B41] text-xs">100%</Badge>
             ) : (
               <span className="text-xs font-semibold text-[#8A7A45]">{formatPct(totalPctMeta)}</span>
             )}

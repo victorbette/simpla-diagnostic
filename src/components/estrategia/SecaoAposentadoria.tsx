@@ -91,7 +91,7 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
               {[
                 { label: "Idade atual", value: `${p.idadeAtual} anos` },
                 { label: "Idade meta IF", value: `${p.idadeMeta} anos` },
-                { label: "Renda desejada na IF", value: `${formatCurrency(p.rendaMensalDesejada)}/mês`, color: "#0D9488" },
+                { label: "Renda desejada na IF", value: `${formatCurrency(p.rendaMensalDesejada)}/mês`, color: "#2A4F6A" },
                 { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês`, color: r.rendaMensalAtingivel >= p.rendaMensalDesejada ? "#3D6B41" : "#7A3535" },
                 { label: "Patrimônio necessário", value: formatCurrency(r.patrimonioNecessario), color: "#000000" },
                 { label: "Projeção c/ aportes", value: formatCurrency(r.patrimonioProjetado), color: "#3D6B41" },

@@ -21,7 +21,7 @@ const CARD: React.CSSProperties = {
 };
 
 const PRIORIDADE_STYLE: Record<AcaoItem["prioridade"], { bg: string; border: string; badge: string; badgeText: string; label: string }> = {
-  alta:  { bg: "#FEF2F2", border: "#7A3535", badge: "#FEE2E2", badgeText: "#7A3535", label: "ALTA" },
+  alta:  { bg: "#F2EBEB", border: "#7A3535", badge: "#FEE2E2", badgeText: "#7A3535", label: "ALTA" },
   media: { bg: "#F5F0E0", border: "#8A7A45", badge: "#FEF3C7", badgeText: "#8A7A45", label: "MÉDIA" },
   baixa: { bg: "#F9FAFB", border: "#9E9070", badge: "#F5F3EE", badgeText: "#6B6347", label: "BAIXA" },
 };

@@ -90,15 +90,15 @@ function profileConfig(perfil: string | null | undefined): ProfileConfig {
     case "conservador_moderado":
       return {
         borderColor: "#BBA866",
-        badgeBg: "#F0FDFE",
-        badgeText: "#0F766E",
+        badgeBg: "#EAF0F5",
+        badgeText: "#2A4F6A",
         dotColor: "#BBA866",
         label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
       };
     case "arrojado":
       return {
         borderColor: "#7A3535",
-        badgeBg: "#FFF5F5",
+        badgeBg: "#F2EBEB",
         badgeText: "#7A3535",
         dotColor: "#7A3535",
         label: "ARROJADO",

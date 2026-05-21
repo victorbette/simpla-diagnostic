@@ -12,7 +12,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 8,
   padding: "0 14px",
   fontSize: 14,
-  backgroundColor: "#F0FDFA",
+  backgroundColor: "#EAF0F5",
   color: "#3D3520",
   cursor: "default",
   outline: "none",
@@ -31,9 +31,9 @@ export function FPAutoField({ label, value, hint, id }: Props) {
         </label>
         <span
           style={{
-            backgroundColor: "#F0FDFA",
-            color: "#0F766E",
-            border: "1px solid #99F6E4",
+            backgroundColor: "#EAF0F5",
+            color: "#2A4F6A",
+            border: "1px solid #A8C4D8",
             borderRadius: 4,
             fontSize: 10,
             padding: "2px 6px",

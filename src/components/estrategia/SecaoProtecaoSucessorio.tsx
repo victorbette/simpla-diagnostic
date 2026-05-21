@@ -242,8 +242,8 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
           </div>
 
           {resultadoSeguro && (
-            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #7A3535", backgroundColor: "#FFF5F5" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#B91C1C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #7A3535", backgroundColor: "#F2EBEB" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#7A3535", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 ✓ Resultado da Análise de Seguros
               </p>
               {[
@@ -251,7 +251,7 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
                 { label: "Cobertura atual", value: formatCurrency(resultadoSeguro.totalCoverage) },
                 { label: "Gap de cobertura", value: formatCurrency(resultadoSeguro.gap), color: resultadoSeguro.gap > 0 ? "#7A3535" : "#3D6B41" },
               ].map(({ label, value, color }) => (
-                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #FECACA", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #C8A8A8", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
                   <span style={{ color: "#6B6347" }}>{label}</span>
                   <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
                 </div>

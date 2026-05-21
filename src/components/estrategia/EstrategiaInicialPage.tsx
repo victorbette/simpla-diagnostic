@@ -549,7 +549,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>{clientName}</div>
-                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EDE9FE", color: "#000000" }}>{perfilLabel}</span>
+                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EDE9DC", color: "#000000" }}>{perfilLabel}</span>
               </div>
             </div>
           </div>

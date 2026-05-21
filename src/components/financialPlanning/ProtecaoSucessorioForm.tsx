@@ -158,8 +158,8 @@ export function ProtecaoSucessorioForm({
         {/* Resultado proteção */}
         <div
           style={{
-            backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#FEF2F2",
-            border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#FECACA"}`,
+            backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#F2EBEB",
+            border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#C8A8A8"}`,
             borderRadius: 10,
             padding: 20,
             display: "grid",
@@ -199,9 +199,9 @@ export function ProtecaoSucessorioForm({
             </p>
             <Badge
               style={{
-                backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#FEF2F2",
+                backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#F2EBEB",
                 color: scoreProtecao >= 80 ? "#3D6B41" : scoreProtecao >= 50 ? "#8A7A45" : "#7A3535",
-                border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#FECACA"}`,
+                border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#C8A8A8"}`,
                 fontSize: 13,
                 fontWeight: 700,
                 padding: "4px 12px",
@@ -320,7 +320,7 @@ export function ProtecaoSucessorioForm({
         {/* Resultado sucessório */}
         <div
           style={{
-            backgroundColor: "#EFF6FF",
+            backgroundColor: "#EAF0F5",
             border: "1px solid #BFDBFE",
             borderRadius: 10,
             padding: 20,

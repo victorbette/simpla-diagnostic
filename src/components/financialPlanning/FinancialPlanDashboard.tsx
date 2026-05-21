@@ -40,12 +40,12 @@ const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
 };
 
 const ASSET_COLORS: Record<keyof MacroalocacaoAlvo, string> = {
-  rendaFixa: "#3b82f6",
-  acoes: "#10b981",
-  fiis: "#f59e0b",
-  rvGlobal: "#8b5cf6",
-  rfGlobal: "#14b8a6",
-  cripto: "#f97316",
+  rendaFixa: "#2A4F6A",
+  acoes: "#3D6B41",
+  fiis: "#4A6B3D",
+  rvGlobal: "#000000",
+  rfGlobal: "#6B6347",
+  cripto: "#BBA866",
 };
 
 const ASSET_KEYS = Object.keys(ASSET_LABELS) as (keyof MacroalocacaoAlvo)[];
@@ -62,13 +62,13 @@ function scoreBadge(score: number, semDados: boolean): { text: string; bg: strin
   if (semDados) return { text: "Sem dados", bg: "#F5F3EE", color: "#6B6347" };
   if (score >= 70) return { text: "Adequado", bg: "#EBF2EC", color: "#3D6B41" };
   if (score >= 40) return { text: "Atenção", bg: "#F5F0E0", color: "#8A7A45" };
-  return { text: "Risco", bg: "#FEF2F2", color: "#7A3535" };
+  return { text: "Risco", bg: "#F2EBEB", color: "#7A3535" };
 }
 
 function perfilStyle(perfil: string): { bg: string; color: string } {
-  if (perfil === "conservador") return { bg: "#F0FDFA", color: "#0F766E" };
+  if (perfil === "conservador") return { bg: "#EAF0F5", color: "#2A4F6A" };
   if (perfil === "moderado" || perfil === "conservador_moderado") return { bg: "#F5F0E0", color: "#8A7A45" };
-  return { bg: "#FEF2F2", color: "#7A3535" };
+  return { bg: "#F2EBEB", color: "#7A3535" };
 }
 
 function aaScore(gap: MacroalocacaoAlvo | null): number {
@@ -253,8 +253,8 @@ export function FinancialPlanDashboard({
   const patrimonioFora = plan.sucessorio.possuiSeguroVidaSucessao ? plan.sucessorio.capitalSeguroVidaSucessao : 0;
   const patrimonioInv = Math.max(0, plan.sucessorio.patrimonioTotal - patrimonioFora);
   const sucPieData = [
-    { name: "No inventário", value: patrimonioInv, color: "#ef4444" },
-    { name: "Fora do inventário", value: patrimonioFora, color: "#10b981" },
+    { name: "No inventário", value: patrimonioInv, color: "#7A3535" },
+    { name: "Fora do inventário", value: patrimonioFora, color: "#3D6B41" },
   ].filter((d) => d.value > 0);
 
   // ── Header ────────────────────────────────────────────────────────────────
@@ -365,7 +365,7 @@ export function FinancialPlanDashboard({
                 <Tooltip formatter={(v) => `${v}%`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="atual" name="Atual" fill="#000000" radius={[0, 2, 2, 0]} />
-                <Bar dataKey="alvo" name="Alvo" fill="#DDD6FE" radius={[0, 2, 2, 0]} />
+                <Bar dataKey="alvo" name="Alvo" fill="#BBA866" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -428,7 +428,7 @@ export function FinancialPlanDashboard({
             <Row label="Gap de cobertura" value={formatCurrency(protResult.gap)} color={protResult.gap > 0 ? "#7A3535" : "#3D6B41"} />
             <Row label="Cobertura" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} color={protResult.percentualCoberto >= 100 ? "#3D6B41" : "#7A3535"} />
             {protResult.gap > 0 && (
-              <div style={{ marginTop: 8, padding: "10px 14px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#7A3535" }}>
+              <div style={{ marginTop: 8, padding: "10px 14px", backgroundColor: "#F2EBEB", border: "1px solid #C8A8A8", borderRadius: 8, fontSize: 13, color: "#7A3535" }}>
                 ⚠ Encaminhar para análise completa de seguros
               </div>
             )}
@@ -441,7 +441,7 @@ export function FinancialPlanDashboard({
               { label: "Plano de saúde", ok: plan.protecao.possuiPlanoSaude, detail: plan.protecao.possuiPlanoSaude ? "Sim" : "Não contratado" },
             ].map(({ label, ok, detail }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "1px solid #F5F3EE" }}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#FEF2F2", color: ok ? "#3D6B41" : "#7A3535", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#F2EBEB", color: ok ? "#3D6B41" : "#7A3535", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                   {ok ? "✓" : "✗"}
                 </span>
                 <div>
@@ -475,7 +475,7 @@ export function FinancialPlanDashboard({
                 <div style={{ height: "100%", width: `${pgblPct}%`, backgroundColor: "#8A7A45", borderRadius: 5 }} />
               </div>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 999, backgroundColor: fiscalResult.recomendaPGBL ? "#EBF2EC" : "#EFF6FF", color: fiscalResult.recomendaPGBL ? "#3D6B41" : "#2A4F6A" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 999, backgroundColor: fiscalResult.recomendaPGBL ? "#EBF2EC" : "#EAF0F5", color: fiscalResult.recomendaPGBL ? "#3D6B41" : "#2A4F6A" }}>
               {fiscalResult.recomendaPGBL ? "PGBL recomendado" : "VGBL recomendado"}
             </span>
             {fiscalResult.recomendacoes.length > 0 && (

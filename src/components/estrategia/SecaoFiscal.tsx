@@ -91,7 +91,7 @@ export function SecaoFiscal({ plan, comentario, onComentarioChange, tags, onTags
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 12px", borderRadius: 999, backgroundColor: r.recomendaPGBL ? "#EBF2EC" : "#EFF6FF", color: r.recomendaPGBL ? "#3D6B41" : "#2A4F6A" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 12px", borderRadius: 999, backgroundColor: r.recomendaPGBL ? "#EBF2EC" : "#EAF0F5", color: r.recomendaPGBL ? "#3D6B41" : "#2A4F6A" }}>
                 {r.recomendaPGBL ? "PGBL recomendado" : "VGBL recomendado"}
               </span>
             </div>
