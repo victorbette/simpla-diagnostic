@@ -40,13 +40,13 @@ function formatAxis(v: number) {
 }
 
 const cardGreenTop: React.CSSProperties = {
-  borderTop: "3px solid #22C55E",
+  borderTop: "3px solid #3D6B41",
   borderRadius: 12,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
 const badgePctStyle: React.CSSProperties = {
-  backgroundColor: "#041A20",
+  backgroundColor: "#000000",
   color: "white",
   borderRadius: 6,
   padding: "2px 8px",
@@ -108,48 +108,48 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
           {/* Parâmetros */}
           <Card style={cardGreenTop}>
             <CardContent className="pt-5 space-y-4">
-              <p style={{ color: "#041A20", fontSize: 16, fontWeight: 700, margin: 0 }}>
+              <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
                 Parâmetros da simulação
               </p>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-idade-atual" style={{ color: "#6B7280" }}>Idade atual</Label>
+                  <Label htmlFor="lf-idade-atual" style={{ color: "#6B6347" }}>Idade atual</Label>
                   <Input id="lf-idade-atual" type="number" min={18} max={80}
                     value={params.idadeAtual} onChange={e => setP({ idadeAtual: Number(e.target.value) })}
-                    style={{ borderColor: "#E5E7EB", color: "#111827" }} />
+                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade IF</Label>
+                  <Label htmlFor="lf-apos" style={{ color: "#6B6347" }}>Idade IF</Label>
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
                     value={params.idadeAposentadoria} onChange={e => setP({ idadeAposentadoria: Number(e.target.value) })}
-                    style={{ borderColor: "#E5E7EB", color: "#111827" }} />
+                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-vida" style={{ color: "#6B7280" }}>Expectativa</Label>
+                  <Label htmlFor="lf-vida" style={{ color: "#6B6347" }}>Expectativa</Label>
                   <Input id="lf-vida" type="number" min={params.idadeAposentadoria + 1} max={110}
                     value={params.expectativaVida} onChange={e => setP({ expectativaVida: Number(e.target.value) })}
-                    style={{ borderColor: "#E5E7EB", color: "#111827" }} />
+                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Patrimônio atual</Label>
+                <Label style={{ color: "#6B6347" }}>Patrimônio atual</Label>
                 <CurrencyInput value={params.patrimonioInicial} onChange={v => setP({ patrimonioInicial: v })} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
+                <Label style={{ color: "#6B6347" }}>Aporte mensal</Label>
                 <CurrencyInput value={params.aporteMensal} onChange={v => setP({ aporteMensal: v })} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Renda mensal desejada na IF</Label>
+                <Label style={{ color: "#6B6347" }}>Renda mensal desejada na IF</Label>
                 <CurrencyInput value={params.rendaDesejada} onChange={v => setP({ rendaDesejada: v })} />
               </div>
 
               {/* Rentabilidade slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B7280" }}>Rentabilidade nominal anual</Label>
+                  <Label style={{ color: "#6B6347" }}>Rentabilidade nominal anual</Label>
                   <span style={badgePctStyle}>{formatNumber(params.rentabilidadeAnual * 100, 1)}%</span>
                 </div>
                 <input
@@ -157,9 +157,9 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   value={params.rentabilidadeAnual * 100}
                   onChange={e => setP({ rentabilidadeAnual: Number(e.target.value) / 100 })}
                   className="w-full"
-                  style={{ accentColor: "#041A20" }}
+                  style={{ accentColor: "#000000" }}
                 />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9E9070" }}>
                   <span>3% (conservador)</span>
                   <span>15% (arrojado)</span>
                 </div>
@@ -168,7 +168,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
               {/* Inflação slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B7280" }}>Inflação anual</Label>
+                  <Label style={{ color: "#6B6347" }}>Inflação anual</Label>
                   <span style={badgePctStyle}>{formatNumber(params.inflacaoAnual * 100, 1)}%</span>
                 </div>
                 <input
@@ -176,9 +176,9 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   value={params.inflacaoAnual * 100}
                   onChange={e => setP({ inflacaoAnual: Number(e.target.value) / 100 })}
                   className="w-full"
-                  style={{ accentColor: "#041A20" }}
+                  style={{ accentColor: "#000000" }}
                 />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9E9070" }}>
                   <span>2%</span>
                   <span>10%</span>
                 </div>
@@ -190,14 +190,14 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
           <Card style={cardGreenTop}>
             <CardContent className="pt-5 space-y-3">
               <div className="flex items-center justify-between">
-                <p style={{ color: "#041A20", fontSize: 16, fontWeight: 700, margin: 0 }}>
+                <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
                   Objetivos de vida
                 </p>
                 <button
                   onClick={() => setShowForm(s => !s)}
                   style={{
-                    border: "1px solid #041A20",
-                    color: "#041A20",
+                    border: "1px solid #000000",
+                    color: "#000000",
                     backgroundColor: "transparent",
                     borderRadius: 6,
                     padding: "4px 12px",
@@ -214,32 +214,32 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
               </div>
 
               {showForm && (
-                <div className="space-y-3 rounded-xl border p-3" style={{ backgroundColor: "#F8F9FA", borderColor: "#E5E7EB" }}>
+                <div className="space-y-3 rounded-xl border p-3" style={{ backgroundColor: "#F5F3EE", borderColor: "#E2DCC8" }}>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs" style={{ color: "#6B7280" }}>Nome do objetivo</Label>
+                    <Label className="text-xs" style={{ color: "#6B6347" }}>Nome do objetivo</Label>
                     <Input
                       placeholder="ex: Compra de imóvel"
                       value={novoNome}
                       onChange={e => setNovoNome(e.target.value)}
-                      style={{ borderColor: "#E5E7EB", color: "#111827" }}
+                      style={{ borderColor: "#E2DCC8", color: "#000000" }}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs" style={{ color: "#6B7280" }}>Valor</Label>
+                      <Label className="text-xs" style={{ color: "#6B6347" }}>Valor</Label>
                       <CurrencyInput value={novoValor} onChange={setNovoValor} />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs" style={{ color: "#6B7280" }}>Idade de realização</Label>
+                      <Label className="text-xs" style={{ color: "#6B6347" }}>Idade de realização</Label>
                       <Input
                         type="number" min={params.idadeAtual}
                         value={novaIdade} onChange={e => setNovaIdade(Number(e.target.value))}
-                        style={{ borderColor: "#E5E7EB", color: "#111827" }}
+                        style={{ borderColor: "#E2DCC8", color: "#000000" }}
                       />
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs" style={{ color: "#6B7280" }}>Tipo</Label>
+                    <Label className="text-xs" style={{ color: "#6B6347" }}>Tipo</Label>
                     <Select value={novoTipo} onValueChange={v => setNovoTipo(v as LifeGoalTipo)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -256,14 +256,14 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
               )}
 
               {objetivos.length === 0 && !showForm && (
-                <p style={{ fontSize: 12, color: "#9CA3AF" }}>Nenhum objetivo cadastrado.</p>
+                <p style={{ fontSize: 12, color: "#9E9070" }}>Nenhum objetivo cadastrado.</p>
               )}
 
               {objetivos.map(o => (
                 <div
                   key={o.id}
                   className="flex items-center gap-2 rounded-lg p-2.5"
-                  style={{ border: "1px solid #E5E7EB" }}
+                  style={{ border: "1px solid #E2DCC8" }}
                 >
                   <span
                     className="shrink-0"
@@ -279,8 +279,8 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                     {o.tipo === "aporte" ? "+" : "−"} {o.idadeRealizacao} anos
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#111827" }}>{o.nome}</p>
-                    <p style={{ fontSize: 11, color: "#6B7280" }}>{formatCurrency(o.valor)}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "#000000" }}>{o.nome}</p>
+                    <p style={{ fontSize: 11, color: "#6B6347" }}>{formatCurrency(o.valor)}</p>
                   </div>
                   <Button size="icon" variant="ghost" onClick={() => removeObjetivo(o.id)}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -298,10 +298,10 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
             {/* Patrimônio na IF */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Patrimônio na IF
                 </p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#041A20" }} className="tabular-nums">
+                <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
                   {formatCurrency(result.patrimonioAposentadoria)}
                 </p>
               </CardContent>
@@ -310,10 +310,10 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
             {/* Renda sustentável */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Renda sustentável
                 </p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#041A20" }} className="tabular-nums">
+                <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
                   {formatCurrency(result.rendaSustentavel)}
                 </p>
               </CardContent>
@@ -322,7 +322,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
             {/* Gap / Superávit */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
                   {result.gapRenda >= 0 ? "Superávit de renda" : "Gap de renda"}
                 </p>
                 <p
@@ -370,13 +370,13 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
           {objetivos.length > 0 && (
             <Card style={cardGreenTop}>
               <CardContent className="pt-4">
-                <p style={{ color: "#041A20", fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
+                <p style={{ color: "#000000", fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
                   Impacto dos objetivos
                 </p>
                 <div className="space-y-1.5">
                   {objetivos.map(o => (
                     <div key={o.id} className="flex justify-between text-sm border-b pb-1.5 last:border-0">
-                      <span style={{ color: "#6B7280" }}>{o.nome} (idade {o.idadeRealizacao})</span>
+                      <span style={{ color: "#6B6347" }}>{o.nome} (idade {o.idadeRealizacao})</span>
                       <span
                         className="tabular-nums font-medium"
                         style={{ color: o.tipo === "despesa" ? "#dc2626" : "#16a34a" }}
@@ -395,7 +395,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
             onClick={() => onSave(params, objetivos, result)}
             style={{
               width: "100%",
-              backgroundColor: "#22C55E",
+              backgroundColor: "#3D6B41",
               color: "white",
               border: "none",
               borderRadius: 8,
@@ -413,7 +413,7 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
       {/* ── Full-width chart card ── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
-          <p style={{ color: "#041A20", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+          <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
             Projeção Patrimonial
           </p>
           <ResponsiveContainer width="100%" height={300}>
@@ -424,15 +424,15 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-              <XAxis dataKey="idade" tick={{ fontSize: 10, fill: "#6B7280" }} />
-              <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10, fill: "#6B7280" }} width={55} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" />
+              <XAxis dataKey="idade" tick={{ fontSize: 10, fill: "#6B6347" }} />
+              <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10, fill: "#6B6347" }} width={55} />
               <Tooltip
                 formatter={(v) => formatCurrency(v as number)}
                 labelFormatter={(l) => `Idade ${l}`}
                 contentStyle={{
                   backgroundColor: "white",
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid #E2DCC8",
                   borderRadius: 8,
                   fontSize: 12,
                 }}

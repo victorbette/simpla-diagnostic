@@ -457,9 +457,9 @@ export function TabelaAtivos({
                         className={cn(
                           "text-xs font-medium whitespace-nowrap",
                           dif > 100
-                            ? "text-green-600"
+                            ? "text-[#3D6B41]"
                             : dif < -100
-                            ? "text-red-600"
+                            ? "text-[#7A3535]"
                             : "text-muted-foreground"
                         )}
                       >

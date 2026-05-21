@@ -33,10 +33,10 @@ const PERFIL_LABELS_LOCAL: Record<string, string> = {
 };
 
 const GRUPOS_DISPLAY = [
-  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#2563EB" },
-  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#16A34A" },
-  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#D97706" },
-  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#EA580C" },
+  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#2A4F6A" },
+  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#3D6B41" },
+  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#8A7A45" },
+  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#8A7A45" },
 ];
 
 const GRUPO_ORDER = ["Renda Fixa", "Renda Variável Brasil", "Internacional", "Criptoativos"];
@@ -93,8 +93,8 @@ export function Etapa2CarteiraRecomendada({
         {/* Info banner */}
         {clientProfile && (
           <div style={{ border: "1px solid #99E6EB", backgroundColor: "#F0FDFB", borderRadius: 8, padding: "12px 16px" }} className="flex items-start gap-2">
-            <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#46BDC6" }} />
-            <p className="text-sm" style={{ color: "#041A20" }}>
+            <Info className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#BBA866" }} />
+            <p className="text-sm" style={{ color: "#000000" }}>
               <span className="font-medium">
                 Carteira pré-carregada com perfil{" "}
                 {PERFIL_LABELS_LOCAL[clientProfile] ?? clientProfile}.
@@ -112,7 +112,7 @@ export function Etapa2CarteiraRecomendada({
                 onAtivosRec(ativosIniciais(clientProfile, patrimonio));
               }
             }}
-            style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 13 }}
+            style={{ border: "1px solid #000000", color: "#000000", backgroundColor: "transparent", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 13 }}
           >
             Usar alocação padrão do perfil
           </button>
@@ -122,28 +122,28 @@ export function Etapa2CarteiraRecomendada({
                 ativosAtuais.map((a) => ({ ...a, id: genId(), pctMeta: 0, valorMetaBRL: 0 }))
               )
             }
-            style={{ border: "1px solid #041A20", color: "#041A20", backgroundColor: "transparent", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 13 }}
+            style={{ border: "1px solid #000000", color: "#000000", backgroundColor: "transparent", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 13 }}
           >
             Copiar estrutura da carteira atual
           </button>
         </div>
 
         {/* Progress bar card */}
-        <div className="rounded-lg border p-3 space-y-2" style={isExact ? { borderTop: "3px solid #22C55E" } : undefined}>
+        <div className="rounded-lg border p-3 space-y-2" style={isExact ? { borderTop: "3px solid #3D6B41" } : undefined}>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Total alocado</span>
             {isExact ? (
-              <span style={{ backgroundColor: "#F0FDF4", color: "#15803D", border: "1px solid #86EFAC", borderRadius: 9999, padding: "2px 8px", fontSize: 12 }}>100% alocado</span>
+              <span style={{ backgroundColor: "#EBF2EC", color: "#3D6B41", border: "1px solid #A8C8AB", borderRadius: 9999, padding: "2px 8px", fontSize: 12 }}>100% alocado</span>
             ) : (
-              <span className="text-sm font-semibold" style={{ color: "#F59E0B" }}>{formatPct(totalPctMeta)}</span>
+              <span className="text-sm font-semibold" style={{ color: "#8A7A45" }}>{formatPct(totalPctMeta)}</span>
             )}
           </div>
           <Progress
             value={Math.min(totalPctMeta, 100)}
-            className={cn("h-2", isExact ? "[&>div]:bg-green-500" : "[&>div]:bg-amber-500")}
+            className={cn("h-2", isExact ? "[&>div]:bg-[#EBF2EC]0" : "[&>div]:bg-[#F5F0E0]0")}
           />
           {!isExact && (
-            <p className="text-xs" style={{ color: "#F59E0B" }}>Ajuste para fechar em 100%</p>
+            <p className="text-xs" style={{ color: "#8A7A45" }}>Ajuste para fechar em 100%</p>
           )}
         </div>
 
@@ -156,9 +156,9 @@ export function Etapa2CarteiraRecomendada({
 
           return (
             <div key={grupoNome} className="rounded-lg border overflow-hidden">
-              <div style={{ backgroundColor: "#F8F9FA", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6" }}>
-                <span style={{ fontWeight: 600, color: "#041A20", fontSize: 14 }}>{grupoNome}</span>
-                <span style={{ fontSize: 12, color: "#6B7280" }}>{formatPct(grupoTotalPct)}</span>
+              <div style={{ backgroundColor: "#F5F3EE", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F5F3EE" }}>
+                <span style={{ fontWeight: 600, color: "#000000", fontSize: 14 }}>{grupoNome}</span>
+                <span style={{ fontSize: 12, color: "#6B6347" }}>{formatPct(grupoTotalPct)}</span>
               </div>
 
               {cards.map((card, idx) => {
@@ -189,30 +189,30 @@ export function Etapa2CarteiraRecomendada({
       {/* RIGHT SIDE */}
       <div className="sticky top-20 space-y-4">
         <div className="rounded-lg border bg-card p-4 space-y-3" style={{ borderTop: "3px solid #BBA866", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <h3 className="font-semibold text-sm" style={{ fontWeight: 700, color: "#041A20", fontSize: 14 }}>Alocação recomendada</h3>
+          <h3 className="font-semibold text-sm" style={{ fontWeight: 700, color: "#000000", fontSize: 14 }}>Alocação recomendada</h3>
 
           {/* Compact progress */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Total</span>
             {isExact ? (
-              <Badge className="bg-green-100 text-green-800 text-xs">100%</Badge>
+              <Badge className="bg-[#D4E8D5] text-green-800 text-xs">100%</Badge>
             ) : (
-              <span className="text-xs font-semibold text-amber-600">{formatPct(totalPctMeta)}</span>
+              <span className="text-xs font-semibold text-[#8A7A45]">{formatPct(totalPctMeta)}</span>
             )}
           </div>
           <Progress
             value={Math.min(totalPctMeta, 100)}
-            className={cn("h-1.5", isExact ? "[&>div]:bg-green-500" : "[&>div]:bg-amber-500")}
+            className={cn("h-1.5", isExact ? "[&>div]:bg-[#EBF2EC]0" : "[&>div]:bg-[#F5F0E0]0")}
           />
 
           {/* Comparison table */}
           <table className="w-full text-xs mt-2">
             <thead>
-              <tr style={{ borderBottom: "2px solid #E5E7EB" }}>
-                <th className="pb-1 text-left" style={{ color: "#9CA3AF", fontWeight: 500, fontSize: 11 }}>Grupo</th>
-                <th className="pb-1 text-right" style={{ color: "#9CA3AF", fontWeight: 500, fontSize: 11 }}>Atual</th>
-                <th className="pb-1 text-right" style={{ color: "#9CA3AF", fontWeight: 500, fontSize: 11 }}>Meta</th>
-                <th className="pb-1 text-right" style={{ color: "#9CA3AF", fontWeight: 500, fontSize: 11 }}>Dif</th>
+              <tr style={{ borderBottom: "2px solid #E2DCC8" }}>
+                <th className="pb-1 text-left" style={{ color: "#9E9070", fontWeight: 500, fontSize: 11 }}>Grupo</th>
+                <th className="pb-1 text-right" style={{ color: "#9E9070", fontWeight: 500, fontSize: 11 }}>Atual</th>
+                <th className="pb-1 text-right" style={{ color: "#9E9070", fontWeight: 500, fontSize: 11 }}>Meta</th>
+                <th className="pb-1 text-right" style={{ color: "#9E9070", fontWeight: 500, fontSize: 11 }}>Dif</th>
               </tr>
             </thead>
             <tbody>
@@ -227,9 +227,9 @@ export function Etapa2CarteiraRecomendada({
                     className={cn(
                       "py-1 text-right font-medium",
                       row.dif > 0.5
-                        ? "text-green-600"
+                        ? "text-[#3D6B41]"
                         : row.dif < -0.5
-                        ? "text-red-600"
+                        ? "text-[#7A3535]"
                         : "text-muted-foreground"
                     )}
                   >

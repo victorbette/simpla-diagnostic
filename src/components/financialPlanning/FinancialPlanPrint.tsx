@@ -80,7 +80,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
         style={{
           fontFamily: "Georgia, serif",
           fontSize: 11,
-          color: "#111827",
+          color: "#000000",
           maxWidth: 680,
           margin: "0 auto",
           padding: "20px 0",
@@ -93,7 +93,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
             justifyContent: "space-between",
             alignItems: "flex-start",
             marginBottom: 24,
-            borderBottom: "2px solid #111827",
+            borderBottom: "2px solid #000000",
             paddingBottom: 12,
           }}
         >
@@ -231,7 +231,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
         style={{
           fontFamily: "Georgia, serif",
           fontSize: 11,
-          color: "#111827",
+          color: "#000000",
           maxWidth: 680,
           margin: "0 auto",
           padding: "20px 0",

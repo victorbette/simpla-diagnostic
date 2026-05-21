@@ -21,9 +21,9 @@ const CARD: React.CSSProperties = {
 };
 
 const PRIORIDADE_STYLE: Record<AcaoItem["prioridade"], { bg: string; border: string; badge: string; badgeText: string; label: string }> = {
-  alta:  { bg: "#FEF2F2", border: "#EF4444", badge: "#FEE2E2", badgeText: "#DC2626", label: "ALTA" },
-  media: { bg: "#FFFBEB", border: "#F59E0B", badge: "#FEF3C7", badgeText: "#B45309", label: "MÉDIA" },
-  baixa: { bg: "#F9FAFB", border: "#9CA3AF", badge: "#F3F4F6", badgeText: "#6B7280", label: "BAIXA" },
+  alta:  { bg: "#FEF2F2", border: "#7A3535", badge: "#FEE2E2", badgeText: "#7A3535", label: "ALTA" },
+  media: { bg: "#F5F0E0", border: "#8A7A45", badge: "#FEF3C7", badgeText: "#8A7A45", label: "MÉDIA" },
+  baixa: { bg: "#F9FAFB", border: "#9E9070", badge: "#F5F3EE", badgeText: "#6B6347", label: "BAIXA" },
 };
 
 export function SecaoProximosPassos({
@@ -61,11 +61,11 @@ export function SecaoProximosPassos({
   return (
     <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Ações prioritárias */}
-      <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      <div style={{ ...CARD, borderTop: "3px solid #2A4F6A" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Plano de ação para o cliente
         </p>
-        <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 20px" }}>
+        <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 20px" }}>
           Gerado automaticamente dos gaps identificados. Edite, reordene e adicione ações.
         </p>
 
@@ -85,13 +85,13 @@ export function SecaoProximosPassos({
                   alignItems: "flex-start",
                 }}
               >
-                <span style={{ fontSize: 16, color: "#9CA3AF", cursor: "grab", flexShrink: 0, lineHeight: 1.5 }}>⠿</span>
+                <span style={{ fontSize: 16, color: "#9E9070", cursor: "grab", flexShrink: 0, lineHeight: 1.5 }}>⠿</span>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: style.badge, color: style.badgeText }}>
                       {style.label}
                     </span>
-                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#374151" }}>
+                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F5F3EE", color: "#3D3520" }}>
                       {acao.area}
                     </span>
                   </div>
@@ -99,20 +99,20 @@ export function SecaoProximosPassos({
                     type="text"
                     value={acao.texto}
                     onChange={(e) => updateAcao(acao.id, { texto: e.target.value })}
-                    style={{ fontSize: 13, color: "#041A20", border: "none", background: "transparent", outline: "none", width: "100%", fontFamily: "inherit" }}
+                    style={{ fontSize: 13, color: "#000000", border: "none", background: "transparent", outline: "none", width: "100%", fontFamily: "inherit" }}
                   />
                   <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <label style={{ fontSize: 11, color: "#6B7280" }}>Prazo:</label>
+                    <label style={{ fontSize: 11, color: "#6B6347" }}>Prazo:</label>
                     <input
                       type="date"
                       value={acao.prazo}
                       onChange={(e) => updateAcao(acao.id, { prazo: e.target.value })}
-                      style={{ fontSize: 12, border: "1px solid #E5E7EB", borderRadius: 4, padding: "2px 6px", color: "#374151" }}
+                      style={{ fontSize: 12, border: "1px solid #E2DCC8", borderRadius: 4, padding: "2px 6px", color: "#3D3520" }}
                     />
                     <select
                       value={acao.prioridade}
                       onChange={(e) => updateAcao(acao.id, { prioridade: e.target.value as AcaoItem["prioridade"] })}
-                      style={{ fontSize: 11, border: "1px solid #E5E7EB", borderRadius: 4, padding: "2px 6px", color: "#374151" }}
+                      style={{ fontSize: 11, border: "1px solid #E2DCC8", borderRadius: 4, padding: "2px 6px", color: "#3D3520" }}
                     >
                       <option value="alta">Alta</option>
                       <option value="media">Média</option>
@@ -122,7 +122,7 @@ export function SecaoProximosPassos({
                 </div>
                 <button
                   onClick={() => removeAcao(acao.id)}
-                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 16, lineHeight: 1 }}
+                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#9E9070", fontSize: 16, lineHeight: 1 }}
                 >
                   ✕
                 </button>
@@ -133,33 +133,33 @@ export function SecaoProximosPassos({
 
         <button
           onClick={addAcao}
-          style={{ marginTop: 14, width: "100%", padding: "10px 0", border: "2px dashed #D1D5DB", borderRadius: 8, backgroundColor: "transparent", color: "#6B7280", fontSize: 13, cursor: "pointer" }}
+          style={{ marginTop: 14, width: "100%", padding: "10px 0", border: "2px dashed #E2DCC8", borderRadius: 8, backgroundColor: "transparent", color: "#6B6347", fontSize: 13, cursor: "pointer" }}
         >
           + Adicionar ação
         </button>
       </div>
 
       {/* Próxima reunião */}
-      <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      <div style={{ ...CARD, borderTop: "3px solid #2A4F6A" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Informações da Próxima Reunião
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div>
-            <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Data da próxima reunião</label>
+            <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Data da próxima reunião</label>
             <input
               type="date"
               value={dataProximaReuniao}
               onChange={(e) => onDataChange(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", boxSizing: "border-box" }}
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Formato</label>
+            <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Formato</label>
             <select
               value={formatoReuniao}
               onChange={(e) => onFormatoChange(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", boxSizing: "border-box" }}
+              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", boxSizing: "border-box" }}
             >
               <option value="Presencial">Presencial</option>
               <option value="Online">Online</option>
@@ -168,26 +168,26 @@ export function SecaoProximosPassos({
           </div>
         </div>
         <div>
-          <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 6 }}>Pauta sugerida</label>
+          <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Pauta sugerida</label>
           <textarea
             value={pautaSugerida}
             onChange={(e) => onPautaChange(e.target.value)}
             placeholder="Tópicos a discutir na próxima reunião..."
-            style={{ width: "100%", minHeight: 100, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+            style={{ width: "100%", minHeight: 100, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
           />
         </div>
       </div>
 
       {/* Considerações finais */}
-      <div style={{ ...CARD, borderTop: "3px solid #041A20" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      <div style={{ ...CARD, borderTop: "3px solid #000000" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Considerações Finais
         </p>
         <textarea
           value={consideracoesFinais}
           onChange={(e) => onConsideracoesChange(e.target.value)}
           placeholder="Mensagem final personalizada para o cliente..."
-          style={{ width: "100%", minHeight: 140, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+          style={{ width: "100%", minHeight: 140, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
         />
       </div>
     </div>

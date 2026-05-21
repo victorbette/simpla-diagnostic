@@ -27,9 +27,9 @@ import { formatDate } from "@/lib/format";
 // ─── Risk badge helper ────────────────────────────────────────────────────────
 
 const RISK_BADGE: Record<string, { label: string; className: string }> = {
-  high: { label: "Risco alto", className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" },
-  medium: { label: "Atenção", className: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" },
-  low: { label: "Adequado", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" },
+  high: { label: "Risco alto", className: "bg-[#E8D4D4] text-red-800 dark:bg-red-900 dark:text-red-200" },
+  medium: { label: "Atenção", className: "bg-[#EDE3C0] text-[#6B5E32] dark:bg-amber-900 dark:text-amber-200" },
+  low: { label: "Adequado", className: "bg-[#D4E8D5] text-green-800 dark:bg-green-900 dark:text-green-200" },
 };
 
 type View = "select" | "form" | "result";

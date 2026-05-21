@@ -8,11 +8,11 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { ALOCACAO_ALVO, PERFIL_LABELS, calcularAlocacaoAtual } from "@/types/financialPlanning";
 import type { AtivoAtual, PerfilRisco, DadosCliente } from "@/types/financialPlanning";
 
-const TEAL = "#46BDC6";
+const TEAL = "#BBA866";
 
 const CAMPOS: { key: keyof Omit<AtivoAtual, "total">; label: string; hint: string; color: string }[] = [
-  { key: "rendaFixa", label: "Renda Fixa", hint: "CDB, Tesouro, LCI, LCA", color: "#3B82F6" },
-  { key: "acoes", label: "Ações brasileiras", hint: "Ações, ETFs nacionais", color: "#22C55E" },
+  { key: "rendaFixa", label: "Renda Fixa", hint: "CDB, Tesouro, LCI, LCA", color: "#2A4F6A" },
+  { key: "acoes", label: "Ações brasileiras", hint: "Ações, ETFs nacionais", color: "#3D6B41" },
   { key: "fiis", label: "FIIs", hint: "Fundos Imobiliários", color: "#A78BFA" },
   { key: "rvGlobal", label: "RV Global", hint: "BDR, ETF int., conta ext.", color: "#F97316" },
   { key: "rfGlobal", label: "RF Global", hint: "Renda fixa internacional", color: "#06B6D4" },
@@ -88,7 +88,7 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
           />
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Switch id="zerando" checked={zerando} onCheckedChange={handleZerando} />
-            <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B7280]">
+            <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B6347]">
               Começando do zero
             </Label>
           </div>
@@ -110,19 +110,19 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
         )}
 
         {/* Table */}
-        <div style={{ border: "1px solid #F3F4F6", borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ border: "1px solid #F5F3EE", borderRadius: 10, overflow: "hidden" }}>
           {/* Header */}
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "2fr 1.5fr 1fr",
-              backgroundColor: "#F8F9FA",
-              borderBottom: "1px solid #F3F4F6",
+              backgroundColor: "#F5F3EE",
+              borderBottom: "1px solid #F5F3EE",
               padding: "10px 16px",
             }}
           >
             {["Classe de ativo", "Valor (R$)", "% Atual"].map((h) => (
-              <p key={h} style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", margin: 0 }}>
+              <p key={h} style={{ fontSize: 11, fontWeight: 700, color: "#9E9070", textTransform: "uppercase", margin: 0 }}>
                 {h}
               </p>
             ))}
@@ -138,7 +138,7 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
                 style={{
                   display: "grid",
                   gridTemplateColumns: "2fr 1.5fr 1fr",
-                  borderBottom: "1px solid #F3F4F6",
+                  borderBottom: "1px solid #F5F3EE",
                   padding: "12px 16px",
                   alignItems: "center",
                   gap: 8,
@@ -155,9 +155,9 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
                         flexShrink: 0,
                       }}
                     />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#000000" }}>{label}</span>
                   </div>
-                  <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0 18px" }}>{hint}</p>
+                  <p style={{ fontSize: 11, color: "#9E9070", margin: "2px 0 0 18px" }}>{hint}</p>
                 </div>
                 <CurrencyInput
                   value={value[key]}
@@ -165,11 +165,11 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
                   disabled={zerando}
                 />
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: "#374151", margin: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "#3D3520", margin: 0 }}>
                     {formatNumber(atual, 1)}%
                   </p>
                   {alvoVal !== null && (
-                    <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>
+                    <p style={{ fontSize: 11, color: "#9E9070", margin: 0 }}>
                       alvo: {alvoVal}%
                     </p>
                   )}
@@ -184,15 +184,15 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
               display: "grid",
               gridTemplateColumns: "2fr 1.5fr 1fr",
               padding: "12px 16px",
-              backgroundColor: "#F8F9FA",
+              backgroundColor: "#F5F3EE",
               alignItems: "center",
             }}
           >
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: 0 }}>Total</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#000000", margin: 0 }}>Total</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(total)}
             </p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#041A20", margin: 0 }}>100%</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#000000", margin: 0 }}>100%</p>
           </div>
         </div>
 
@@ -215,16 +215,16 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
                 const alvoVal = alvo[key] ?? 0;
                 return (
                   <div key={key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 80px", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
-                    <div style={{ position: "relative", height: 8, backgroundColor: "#E5E7EB", borderRadius: 4, overflow: "hidden" }}>
+                    <span style={{ fontSize: 12, color: "#6B6347" }}>{label}</span>
+                    <div style={{ position: "relative", height: 8, backgroundColor: "#E2DCC8", borderRadius: 4, overflow: "hidden" }}>
                       <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.min(100, atual)}%`, backgroundColor: color, borderRadius: 4 }} />
                       {alvoVal > 0 && (
-                        <div style={{ position: "absolute", top: 0, height: "100%", width: 2, backgroundColor: "#374151", left: `${Math.min(100, alvoVal)}%` }} />
+                        <div style={{ position: "absolute", top: 0, height: "100%", width: 2, backgroundColor: "#3D3520", left: `${Math.min(100, alvoVal)}%` }} />
                       )}
                     </div>
-                    <div style={{ fontSize: 12, color: "#374151", textAlign: "right" }}>
+                    <div style={{ fontSize: 12, color: "#3D3520", textAlign: "right" }}>
                       <span style={{ fontWeight: 600 }}>{formatNumber(atual, 1)}%</span>
-                      <span style={{ color: "#9CA3AF" }}> / {alvoVal}%</span>
+                      <span style={{ color: "#9E9070" }}> / {alvoVal}%</span>
                     </div>
                   </div>
                 );
@@ -241,8 +241,8 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, dadosCliente }: 
           subtitle="Imóveis para aluguel ou participações societárias"
           borderColor={TEAL}
         />
-        <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
+        <div style={{ border: "1px solid #E2DCC8", borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontSize: 13, color: "#9E9070", margin: 0 }}>
             Esses ativos serão considerados na análise de independência financeira.
           </p>
         </div>

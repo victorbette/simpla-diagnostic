@@ -15,7 +15,7 @@ interface SucessorioFormProps {
 
 function scoreColor(score: number): string {
   if (score >= 70) return "text-emerald-600";
-  if (score >= 40) return "text-amber-600";
+  if (score >= 40) return "text-[#8A7A45]";
   return "text-destructive";
 }
 

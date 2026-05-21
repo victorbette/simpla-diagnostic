@@ -85,16 +85,16 @@ interface SecaoConfig {
 
 const SECOES: SecaoConfig[] = [
   { id: "capa",               label: "Capa e Identificação",   color: "#BBA866", Icon: FileText       },
-  { id: "assetAllocation",    label: "Asset Allocation",        color: "#7C3AED", Icon: PieChartIcon   },
-  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#22C55E", Icon: Flame          },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#F87171", Icon: Shield         },
-  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#F59E0B", Icon: Receipt        },
-  { id: "proximosPassos",     label: "Próximos Passos",         color: "#3B82F6", Icon: ListChecks     },
-  { id: "revisao",            label: "Revisão Final",           color: "#041A20", Icon: ClipboardCheck },
+  { id: "assetAllocation",    label: "Asset Allocation",        color: "#000000", Icon: PieChartIcon   },
+  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#3D6B41", Icon: Flame          },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#7A3535", Icon: Shield         },
+  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#8A7A45", Icon: Receipt        },
+  { id: "proximosPassos",     label: "Próximos Passos",         color: "#2A4F6A", Icon: ListChecks     },
+  { id: "revisao",            label: "Revisão Final",           color: "#000000", Icon: ClipboardCheck },
 ];
 
 const AVATAR_COLORS = [
-  "#BBA866", "#7C3AED", "#22C55E", "#F87171", "#3B82F6", "#F59E0B",
+  "#BBA866", "#000000", "#3D6B41", "#7A3535", "#2A4F6A", "#8A7A45",
 ];
 
 // ─── Helper: generate initial actions ─────────────────────────────────────────
@@ -329,27 +329,27 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   function renderStatusBadge(status: SectionStatus, isRevisao = false) {
     if (isRevisao) {
       return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F3F4F6", color: "#6B7280" }}>
+        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>
           Aguardando
         </span>
       );
     }
     if (status === "concluido") {
       return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F0FDF4", color: "#15803D" }}>
+        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EBF2EC", color: "#3D6B41" }}>
           ✓ Concluída
         </span>
       );
     }
     if (status === "revisando") {
       return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#FFFBEB", color: "#B45309" }}>
+        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45" }}>
           Em revisão
         </span>
       );
     }
     return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F3F4F6", color: "#6B7280" }}>
+      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>
         Pendente
       </span>
     );
@@ -534,12 +534,12 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       {/* Body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Sidebar */}
-        <div style={{ width: 280, backgroundColor: "white", borderRight: "1px solid #F3F4F6", display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
+        <div style={{ width: 280, backgroundColor: "white", borderRight: "1px solid #F5F3EE", display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
           {/* Top block */}
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #F3F4F6" }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #F5F3EE" }}>
             <button
               onClick={onClose}
-              style={{ color: "#46BDC6", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 4 }}
+              style={{ color: "#BBA866", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 4 }}
             >
               ← Voltar ao Diagnóstico
             </button>
@@ -548,8 +548,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 {initials || firstChar}
               </div>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#041A20" }}>{clientName}</div>
-                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EDE9FE", color: "#7C3AED" }}>{perfilLabel}</span>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>{clientName}</div>
+                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EDE9FE", color: "#000000" }}>{perfilLabel}</span>
               </div>
             </div>
           </div>
@@ -574,7 +574,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "10px 20px",
-                    background: isActive ? "#F8F9FA" : "transparent",
+                    background: isActive ? "#F5F3EE" : "transparent",
                     borderLeft: isActive ? `3px solid ${secao.color}` : "3px solid transparent",
                     border: "none",
                     borderLeftWidth: 3,
@@ -600,7 +600,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                         style={{ color: isActive ? secao.color : hexOpacity(secao.color, 0.60) }}
                       />
                     </div>
-                    <span style={{ fontSize: 13, color: isActive ? "#041A20" : "#374151", fontWeight: isActive ? 600 : 400 }}>
+                    <span style={{ fontSize: 13, color: isActive ? "#000000" : "#3D3520", fontWeight: isActive ? 600 : 400 }}>
                       {secao.label}
                     </span>
                   </div>
@@ -611,11 +611,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </nav>
 
           {/* Sidebar footer */}
-          <div style={{ padding: 16, borderTop: "1px solid #F3F4F6" }}>
-            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
+          <div style={{ padding: 16, borderTop: "1px solid #F5F3EE" }}>
+            <div style={{ fontSize: 12, color: "#6B6347", marginBottom: 6 }}>
               {concluidasCount} de 6 seções concluídas
             </div>
-            <div style={{ height: 4, backgroundColor: "#F3F4F6", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
+            <div style={{ height: 4, backgroundColor: "#F5F3EE", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#BBA866", borderRadius: 2, transition: "width 0.3s" }} />
             </div>
             {onSaveCloud && (
@@ -629,13 +629,13 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             )}
             <button
               onClick={() => setPrintMode("consultor")}
-              style={{ width: "100%", padding: "8px 0", border: "1px solid #041A20", borderRadius: 6, backgroundColor: "transparent", color: "#041A20", fontSize: 13, cursor: "pointer", marginBottom: 8 }}
+              style={{ width: "100%", padding: "8px 0", border: "1px solid #000000", borderRadius: 6, backgroundColor: "transparent", color: "#000000", fontSize: 13, cursor: "pointer", marginBottom: 8 }}
             >
               Gerar PDF Consultor
             </button>
             <button
               onClick={() => setPrintMode("cliente")}
-              style={{ width: "100%", padding: "8px 0", border: "none", borderRadius: 6, backgroundColor: "#041A20", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              style={{ width: "100%", padding: "8px 0", border: "none", borderRadius: 6, backgroundColor: "#000000", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
             >
               Gerar PDF Cliente
             </button>
@@ -643,17 +643,17 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         </div>
 
         {/* Main content */}
-        <div style={{ flex: 1, backgroundColor: "#F8F9FA", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, backgroundColor: "#F5F3EE", display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Scrollable area */}
           <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
             {/* Breadcrumb */}
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: "#9E9070", marginBottom: 8 }}>
               Estratégia Inicial › {secaoAtual.label}
             </div>
 
             {/* Title row */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-              <h1 style={{ fontSize: 28, fontWeight: 700, color: "#041A20", margin: 0 }}>
+              <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000000", margin: 0 }}>
                 {secaoAtual.label}
               </h1>
               {secaoAtiva !== "revisao" && (
@@ -662,9 +662,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                   style={{
                     padding: "8px 16px",
                     borderRadius: 6,
-                    border: `1px solid #22C55E`,
-                    backgroundColor: data.statusSecoes[secaoAtiva] === "concluido" ? "#22C55E" : "transparent",
-                    color: data.statusSecoes[secaoAtiva] === "concluido" ? "white" : "#22C55E",
+                    border: `1px solid #3D6B41`,
+                    backgroundColor: data.statusSecoes[secaoAtiva] === "concluido" ? "#3D6B41" : "transparent",
+                    color: data.statusSecoes[secaoAtiva] === "concluido" ? "white" : "#3D6B41",
                     fontSize: 13,
                     cursor: "pointer",
                     fontWeight: 500,
@@ -683,17 +683,17 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </div>
 
           {/* Bottom nav */}
-          <div style={{ backgroundColor: "white", borderTop: "1px solid #E5E7EB", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <div style={{ backgroundColor: "white", borderTop: "1px solid #E2DCC8", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <button
               onClick={irAnterior}
               disabled={secaoIndex === 0}
               style={{
                 padding: "8px 16px",
                 borderRadius: 6,
-                border: "1px solid #041A20",
+                border: "1px solid #000000",
                 backgroundColor: "transparent",
-                color: secaoIndex === 0 ? "#9CA3AF" : "#041A20",
-                borderColor: secaoIndex === 0 ? "#E5E7EB" : "#041A20",
+                color: secaoIndex === 0 ? "#9E9070" : "#000000",
+                borderColor: secaoIndex === 0 ? "#E2DCC8" : "#000000",
                 fontSize: 13,
                 cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
               }}
@@ -711,7 +711,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                       height: 8,
                       width: i === secaoIndex ? 22 : 8,
                       borderRadius: 9999,
-                      backgroundColor: i === secaoIndex ? "#041A20" : "#E5E7EB",
+                      backgroundColor: i === secaoIndex ? "#000000" : "#E2DCC8",
                       border: "none",
                       cursor: "pointer",
                       transition: "width 0.2s",
@@ -720,7 +720,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                   />
                 ))}
               </div>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
+              <span style={{ fontSize: 11, color: "#9E9070" }}>{secaoIndex + 1} de {SECOES.length}</span>
             </div>
 
             <button
@@ -730,8 +730,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 padding: "8px 16px",
                 borderRadius: 6,
                 border: "none",
-                backgroundColor: secaoIndex === SECOES.length - 1 ? "#E5E7EB" : "#041A20",
-                color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
+                backgroundColor: secaoIndex === SECOES.length - 1 ? "#E2DCC8" : "#000000",
+                color: secaoIndex === SECOES.length - 1 ? "#9E9070" : "white",
                 fontSize: 13,
                 cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
                 fontWeight: 500,

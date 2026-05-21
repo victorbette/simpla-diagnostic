@@ -31,7 +31,7 @@ function Gauge({ score, color }: { score: number; color: string }) {
   const filled = (Math.min(100, Math.max(0, score)) / 100) * circ;
   return (
     <svg width="84" height="48" viewBox="0 0 84 48">
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E5E7EB" strokeWidth="7" strokeLinecap="round" />
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E2DCC8" strokeWidth="7" strokeLinecap="round" />
       <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" strokeDasharray={`${filled} ${circ}`} />
       <text x={cx} y={cy - 6} textAnchor="middle" fontSize="13" fontWeight="700" fill={color}>{Math.round(score)}</text>
     </svg>
@@ -53,14 +53,14 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
     return pts;
   })();
 
-  const protColor = scoreProtecao >= 70 ? "#22C55E" : scoreProtecao >= 40 ? "#F59E0B" : "#EF4444";
-  const sucColor = scoreSuc >= 70 ? "#22C55E" : scoreSuc >= 40 ? "#F59E0B" : "#EF4444";
+  const protColor = scoreProtecao >= 70 ? "#3D6B41" : scoreProtecao >= 40 ? "#8A7A45" : "#7A3535";
+  const sucColor = scoreSuc >= 70 ? "#3D6B41" : scoreSuc >= 40 ? "#8A7A45" : "#7A3535";
 
   const patrimonioFora = plan.sucessorio.possuiSeguroVidaSucessao ? plan.sucessorio.capitalSeguroVidaSucessao : 0;
   const patrimonioInv = Math.max(0, plan.sucessorio.patrimonioTotal - patrimonioFora);
   const sucPie = [
-    { name: "No inventário", value: patrimonioInv, color: "#EF4444" },
-    { name: "Protegido", value: patrimonioFora, color: "#22C55E" },
+    { name: "No inventário", value: patrimonioInv, color: "#7A3535" },
+    { name: "Protegido", value: patrimonioFora, color: "#3D6B41" },
   ].filter((d) => d.value > 0);
 
   function toggleTag(t: string) {
@@ -78,19 +78,19 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
         {/* Coluna esquerda */}
         <div>
           {/* Proteção */}
-          <div style={{ ...CARD, borderTop: "3px solid #F87171" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ ...CARD, borderTop: "3px solid #7A3535" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Diagnóstico Proteção
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
               {[
                 { label: "Capital necessário", value: formatCurrency(prot.capitalNecessario) },
                 { label: "Capital segurado", value: formatCurrency(prot.capitalAtual) },
-                { label: "Gap de cobertura", value: formatCurrency(prot.gap), color: prot.gap > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Gap de cobertura", value: formatCurrency(prot.gap), color: prot.gap > 0 ? "#7A3535" : "#3D6B41" },
               ].map(({ label, value, color }) => (
                 <div key={label}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: color ?? "#041A20", margin: 0 }}>{value}</p>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: color ?? "#000000", margin: 0 }}>{value}</p>
                 </div>
               ))}
             </div>
@@ -101,38 +101,38 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
                 { label: "Plano de saúde", ok: plan.protecao.possuiPlanoSaude },
               ].map(({ label, ok }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                  <span style={{ fontWeight: 700, color: ok ? "#16A34A" : "#EF4444" }}>{ok ? "✓" : "✗"}</span>
-                  <span style={{ color: ok ? "#374151" : "#9CA3AF" }}>{label}</span>
+                  <span style={{ fontWeight: 700, color: ok ? "#3D6B41" : "#7A3535" }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
                 </div>
               ))}
             </div>
-            <button onClick={() => setSeguroModal(true)} style={{ width: "100%", padding: "9px 0", border: "1px solid #F87171", borderRadius: 6, backgroundColor: "transparent", color: "#F87171", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
+            <button onClick={() => setSeguroModal(true)} style={{ width: "100%", padding: "9px 0", border: "1px solid #7A3535", borderRadius: 6, backgroundColor: "transparent", color: "#7A3535", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
               Análise completa de seguros →
             </button>
           </div>
 
           {/* Divider */}
           <div style={{ position: "relative", margin: "16px 0", textAlign: "center" }}>
-            <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, backgroundColor: "#E5E7EB" }} />
-            <span style={{ position: "relative", backgroundColor: "#F8F9FA", padding: "0 12px", fontSize: 12, color: "#9CA3AF" }}>
+            <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 1, backgroundColor: "#E2DCC8" }} />
+            <span style={{ position: "relative", backgroundColor: "#F5F3EE", padding: "0 12px", fontSize: 12, color: "#9E9070" }}>
               Planejamento Sucessório
             </span>
           </div>
 
           {/* Sucessório */}
-          <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ ...CARD, borderTop: "3px solid #2A4F6A" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Diagnóstico Sucessório
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
               {[
-                { label: "ITCMD estimado", value: formatCurrency(suc.itcmdEstimado), color: "#DC2626" },
-                { label: "Custo inventário", value: formatCurrency(suc.custoInventarioEstimado), color: "#DC2626" },
+                { label: "ITCMD estimado", value: formatCurrency(suc.itcmdEstimado), color: "#7A3535" },
+                { label: "Custo inventário", value: formatCurrency(suc.custoInventarioEstimado), color: "#7A3535" },
                 { label: "% do custo", value: `${formatNumber(suc.percentualCusto, 1)}%` },
               ].map(({ label, value, color }) => (
                 <div key={label}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: color ?? "#041A20", margin: 0 }}>{value}</p>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: color ?? "#000000", margin: 0 }}>{value}</p>
                 </div>
               ))}
             </div>
@@ -143,64 +143,64 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
                 { label: "Seguro para sucessão", ok: plan.sucessorio.possuiSeguroVidaSucessao },
               ].map(({ label, ok }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                  <span style={{ fontWeight: 700, color: ok ? "#16A34A" : "#EF4444" }}>{ok ? "✓" : "✗"}</span>
-                  <span style={{ color: ok ? "#374151" : "#9CA3AF" }}>{label}</span>
+                  <span style={{ fontWeight: 700, color: ok ? "#3D6B41" : "#7A3535" }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Estratégia */}
-          <div style={{ ...CARD, borderTop: "3px solid #041A20", marginTop: 16 }}>
+          <div style={{ ...CARD, borderTop: "3px solid #000000", marginTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <Pencil style={{ width: 14, height: 14, color: "#6B7280" }} />
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: 0 }}>Estratégia e Recomendações</p>
+              <Pencil style={{ width: 14, height: 14, color: "#6B6347" }} />
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: 0 }}>Estratégia e Recomendações</p>
             </div>
             <div style={{ position: "relative" }}>
               <textarea
                 value={comentario}
                 onChange={(e) => handleComentario(e.target.value)}
                 placeholder="Ex: Identificamos lacuna de cobertura de R$ 800k em seguro de vida. Além disso, com ITCMD estimado de R$ 45k, recomendamos..."
-                style={{ width: "100%", minHeight: 180, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+                style={{ width: "100%", minHeight: 180, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
               />
-              <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>{comentario.length} caracteres</span>
+              <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>{comentario.length} caracteres</span>
             </div>
             <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
+              <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
               {AVAILABLE_TAGS.map((t) => (
-                <button key={t} onClick={() => toggleTag(t)} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer", border: "1px solid #E5E7EB", backgroundColor: tags.includes(t) ? "#041A20" : "transparent", color: tags.includes(t) ? "white" : "#374151" }}>
+                <button key={t} onClick={() => toggleTag(t)} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer", border: "1px solid #E2DCC8", backgroundColor: tags.includes(t) ? "#000000" : "transparent", color: tags.includes(t) ? "white" : "#3D3520" }}>
                   {t}
                 </button>
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}</span>
-              <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#041A20", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Salvar</button>
+              <span style={{ fontSize: 11, color: "#9E9070" }}>{lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}</span>
+              <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#000000", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Salvar</button>
             </div>
           </div>
         </div>
 
         {/* Coluna direita */}
         <div>
-          <div style={{ ...CARD, borderTop: "3px solid #F87171" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Resumo Proteção</p>
+          <div style={{ ...CARD, borderTop: "3px solid #7A3535" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Resumo Proteção</p>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
               <Gauge score={scoreProtecao} color={protColor} />
             </div>
             {[
               { label: "Capital necessário", value: formatCurrency(prot.capitalNecessario) },
               { label: "Capital segurado", value: formatCurrency(prot.capitalAtual) },
-              { label: "Gap", value: formatCurrency(prot.gap), color: prot.gap > 0 ? "#DC2626" : "#16A34A" },
+              { label: "Gap", value: formatCurrency(prot.gap), color: prot.gap > 0 ? "#7A3535" : "#3D6B41" },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6, fontSize: 13 }}>
-                <span style={{ color: "#6B7280" }}>{label}</span>
-                <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F5F3EE", paddingBottom: 6, marginBottom: 6, fontSize: 13 }}>
+                <span style={{ color: "#6B6347" }}>{label}</span>
+                <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ ...CARD, borderTop: "3px solid #3B82F6", marginTop: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Resumo Sucessório</p>
+          <div style={{ ...CARD, borderTop: "3px solid #2A4F6A", marginTop: 16 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Resumo Sucessório</p>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 4 }}>
               <Gauge score={scoreSuc} color={sucColor} />
             </div>
@@ -215,48 +215,48 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
               </ResponsiveContainer>
             )}
             {[
-              { label: "ITCMD estimado", value: formatCurrency(suc.itcmdEstimado), color: "#DC2626" },
-              { label: "Custo inventário", value: formatCurrency(suc.custoInventarioEstimado), color: "#DC2626" },
+              { label: "ITCMD estimado", value: formatCurrency(suc.itcmdEstimado), color: "#7A3535" },
+              { label: "Custo inventário", value: formatCurrency(suc.custoInventarioEstimado), color: "#7A3535" },
             ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6, fontSize: 13 }}>
-                <span style={{ color: "#6B7280" }}>{label}</span>
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F5F3EE", paddingBottom: 6, marginBottom: 6, fontSize: 13 }}>
+                <span style={{ color: "#6B6347" }}>{label}</span>
                 <span style={{ fontWeight: 600, color }}>{value}</span>
               </div>
             ))}
           </div>
 
-          <div style={{ ...CARD, marginTop: 16, border: "1px solid #E5E7EB" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
+          <div style={{ ...CARD, marginTop: 16, border: "1px solid #E2DCC8" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
             {[
               { label: "Diagnóstico revisado", ok: true },
               { label: "Análise de seguros feita", ok: resultadoSeguro !== null },
               { label: "Estratégia redigida", ok: comentario.length > 50 },
             ].map(({ label, ok }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
-                <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#F0FDF4" : "#F3F4F6", color: ok ? "#16A34A" : "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#F5F3EE", color: ok ? "#3D6B41" : "#9E9070", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                   {ok ? "✓" : "○"}
                 </span>
-                <span style={{ color: ok ? "#374151" : "#9CA3AF" }}>{label}</span>
+                <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
               </div>
             ))}
           </div>
 
           {resultadoSeguro && (
-            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #F87171", backgroundColor: "#FFF5F5" }}>
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #7A3535", backgroundColor: "#FFF5F5" }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#B91C1C", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 ✓ Resultado da Análise de Seguros
               </p>
               {[
                 { label: "Capital necessário", value: formatCurrency(resultadoSeguro.totalNeed) },
                 { label: "Cobertura atual", value: formatCurrency(resultadoSeguro.totalCoverage) },
-                { label: "Gap de cobertura", value: formatCurrency(resultadoSeguro.gap), color: resultadoSeguro.gap > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Gap de cobertura", value: formatCurrency(resultadoSeguro.gap), color: resultadoSeguro.gap > 0 ? "#7A3535" : "#3D6B41" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #FECACA", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
-                  <span style={{ color: "#6B7280" }}>{label}</span>
-                  <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+                  <span style={{ color: "#6B6347" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
                 </div>
               ))}
-              <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+              <p style={{ fontSize: 10, color: "#6B6347", margin: "6px 0 0", textAlign: "right" }}>
                 Salvo em {new Date(resultadoSeguro.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
               </p>
             </div>

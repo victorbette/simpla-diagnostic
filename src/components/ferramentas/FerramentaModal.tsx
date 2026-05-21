@@ -15,7 +15,7 @@ export function FerramentaModal({ open, onClose, title, children }: FerramentaMo
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-4 shrink-0"
-          style={{ backgroundColor: "#041A20" }}
+          style={{ backgroundColor: "#000000" }}
         >
           <h2 className="text-lg font-semibold text-white">{title}</h2>
           <button

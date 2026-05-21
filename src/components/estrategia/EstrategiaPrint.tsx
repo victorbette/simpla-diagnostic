@@ -32,9 +32,9 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
   const isConsultor = mode === "consultor";
 
   const row = (label: string, value: string) => (
-    <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6", padding: "6px 0", fontSize: 13 }}>
-      <span style={{ color: "#6B7280" }}>{label}</span>
-      <span style={{ fontWeight: 600, color: "#041A20" }}>{value}</span>
+    <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #F5F3EE", padding: "6px 0", fontSize: 13 }}>
+      <span style={{ color: "#6B6347" }}>{label}</span>
+      <span style={{ fontWeight: 600, color: "#000000" }}>{value}</span>
     </div>
   );
 
@@ -43,15 +43,15 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
       {/* Capa */}
       <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "3px solid #BBA866" }}>
         {data.logoBase64 && <img src={data.logoBase64} alt="Logo" style={{ height: 48, marginBottom: 16, objectFit: "contain" }} />}
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#041A20", margin: "0 0 8px" }}>Estratégia Inicial</h1>
-        <h2 style={{ fontSize: 20, fontWeight: 400, color: "#374151", margin: "0 0 4px" }}>{clientName}</h2>
-        <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>{hoje} · {data.nomeConsultor}</p>
-        {data.apresentacao && <p style={{ fontSize: 14, color: "#374151", marginTop: 16, lineHeight: 1.6 }}>{data.apresentacao}</p>}
+        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#000000", margin: "0 0 8px" }}>Estratégia Inicial</h1>
+        <h2 style={{ fontSize: 20, fontWeight: 400, color: "#3D3520", margin: "0 0 4px" }}>{clientName}</h2>
+        <p style={{ fontSize: 14, color: "#6B6347", margin: 0 }}>{hoje} · {data.nomeConsultor}</p>
+        {data.apresentacao && <p style={{ fontSize: 14, color: "#3D3520", marginTop: 16, lineHeight: 1.6 }}>{data.apresentacao}</p>}
       </div>
 
       {/* IF */}
       <div style={{ marginBottom: 32 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #22C55E", paddingLeft: 12 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #3D6B41", paddingLeft: 12 }}>
           Aposentadoria / Independência Financeira
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
@@ -61,7 +61,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
           {row("Progresso rumo à IF", `${formatNumber(ifR.percentualIF, 0)}%`)}
         </div>
         {data.comentarios.aposentadoria && isConsultor && (
-          <p style={{ fontSize: 13, color: "#374151", backgroundColor: "#F0FDF4", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #22C55E", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#3D3520", backgroundColor: "#EBF2EC", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #3D6B41", margin: 0 }}>
             {data.comentarios.aposentadoria}
           </p>
         )}
@@ -69,7 +69,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
 
       {/* Proteção */}
       <div style={{ marginBottom: 32 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #F87171", paddingLeft: 12 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #7A3535", paddingLeft: 12 }}>
           Proteção e Sucessório
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
@@ -80,7 +80,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
           {isConsultor && row("Custo inventário", formatCurrency(sucR.custoInventarioEstimado))}
         </div>
         {data.comentarios.protecaoSucessorio && isConsultor && (
-          <p style={{ fontSize: 13, color: "#374151", backgroundColor: "#FEF2F2", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #F87171", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#3D3520", backgroundColor: "#FEF2F2", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #7A3535", margin: 0 }}>
             {data.comentarios.protecaoSucessorio}
           </p>
         )}
@@ -89,7 +89,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
       {/* Fiscal */}
       {isConsultor && (
         <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #F59E0B", paddingLeft: 12 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #8A7A45", paddingLeft: 12 }}>
             Planejamento Fiscal
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
@@ -99,7 +99,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
             {row("Espaço disponível PGBL", formatCurrency(fiscalR.espacoPGBL))}
           </div>
           {data.comentarios.fiscal && (
-            <p style={{ fontSize: 13, color: "#374151", backgroundColor: "#FFFBEB", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #F59E0B", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#3D3520", backgroundColor: "#F5F0E0", padding: "12px 16px", borderRadius: 8, borderLeft: "3px solid #8A7A45", margin: 0 }}>
               {data.comentarios.fiscal}
             </p>
           )}
@@ -109,7 +109,7 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
       {/* Premissas das ferramentas (consultor only) */}
       {isConsultor && (resultados.carteira || resultados.if || resultados.seguro || resultados.fiscal) && (
         <div style={{ marginBottom: 32 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #BBA866", paddingLeft: 12 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #BBA866", paddingLeft: 12 }}>
             Premissas dos Simuladores
           </h3>
           {resultados.carteira && (
@@ -123,8 +123,8 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
           )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             {resultados.if && (
-              <div style={{ padding: 14, backgroundColor: "#F0FDF4", borderRadius: 8, border: "1px solid #86EFAC" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#15803D", margin: "0 0 8px", textTransform: "uppercase" }}>Simulador de IF</p>
+              <div style={{ padding: 14, backgroundColor: "#EBF2EC", borderRadius: 8, border: "1px solid #A8C8AB" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#3D6B41", margin: "0 0 8px", textTransform: "uppercase" }}>Simulador de IF</p>
                 {row("Patrimônio apos.", formatCurrency(resultados.if.patrimonioAposentadoria))}
                 {row("Renda sustentável", `${formatCurrency(resultados.if.rendaSustentavel)}/mês`)}
                 {row("Gap de renda", formatCurrency(resultados.if.gapRenda))}
@@ -141,8 +141,8 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
               </div>
             )}
             {resultados.fiscal && (
-              <div style={{ padding: 14, backgroundColor: "#FFFBEB", borderRadius: 8, border: "1px solid #FDE68A" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#B45309", margin: "0 0 8px", textTransform: "uppercase" }}>Calculadora PGBL</p>
+              <div style={{ padding: 14, backgroundColor: "#F5F0E0", borderRadius: 8, border: "1px solid #D4C08A" }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#8A7A45", margin: "0 0 8px", textTransform: "uppercase" }}>Calculadora PGBL</p>
                 {row("IR sem PGBL", `${formatCurrency(resultados.fiscal.irSemPGBL)}/ano`)}
                 {row("IR com PGBL", `${formatCurrency(resultados.fiscal.irComPGBL)}/ano`)}
                 {row("Economia anual", formatCurrency(resultados.fiscal.economiaAnual))}
@@ -155,28 +155,28 @@ export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props
 
       {/* Próximos passos */}
       <div style={{ marginBottom: 32 }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#041A20", margin: "0 0 16px", borderLeft: "3px solid #3B82F6", paddingLeft: 12 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #2A4F6A", paddingLeft: 12 }}>
           Próximos Passos
         </h3>
         {data.acoes.map((a, i) => (
           <div key={a.id} style={{ display: "flex", gap: 12, marginBottom: 8, alignItems: "flex-start" }}>
-            <span style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: "#041A20", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+            <span style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: "#000000", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
               {i + 1}
             </span>
             <div>
-              <p style={{ fontSize: 13, color: "#041A20", margin: 0, fontWeight: 500 }}>{a.texto}</p>
-              {a.prazo && <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>Prazo: {a.prazo}</p>}
+              <p style={{ fontSize: 13, color: "#000000", margin: 0, fontWeight: 500 }}>{a.texto}</p>
+              {a.prazo && <p style={{ fontSize: 11, color: "#6B6347", margin: "2px 0 0" }}>Prazo: {a.prazo}</p>}
             </div>
           </div>
         ))}
         {data.consideracoesFinais && (
-          <p style={{ fontSize: 13, color: "#374151", marginTop: 16, padding: "12px 16px", backgroundColor: "#F8F9FA", borderRadius: 8, borderLeft: "3px solid #041A20" }}>
+          <p style={{ fontSize: 13, color: "#3D3520", marginTop: 16, padding: "12px 16px", backgroundColor: "#F5F3EE", borderRadius: 8, borderLeft: "3px solid #000000" }}>
             {data.consideracoesFinais}
           </p>
         )}
       </div>
 
-      <p style={{ fontSize: 11, color: "#9CA3AF", textAlign: "center", marginTop: 32 }}>
+      <p style={{ fontSize: 11, color: "#9E9070", textAlign: "center", marginTop: 32 }}>
         Documento gerado em {hoje} · {isConsultor ? "Versão Consultor" : "Versão Cliente"}
       </p>
     </div>

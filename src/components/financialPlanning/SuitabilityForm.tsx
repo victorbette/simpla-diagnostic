@@ -20,9 +20,9 @@ interface SuitabilityFormProps {
 }
 
 const PROFILE_COLORS: Record<string, string> = {
-  conservador: "bg-blue-100 text-blue-800 border-blue-300",
-  conservador_moderado: "bg-teal-100 text-teal-800 border-teal-300",
-  moderado: "bg-amber-100 text-amber-800 border-amber-300",
+  conservador: "bg-[#D5E4EE] text-blue-800 border-[#2A4F6A]",
+  conservador_moderado: "bg-teal-100 text-teal-800 border-[#BBA866]",
+  moderado: "bg-[#EDE3C0] text-[#6B5E32] border-[#BBA866]",
   arrojado: "bg-rose-100 text-rose-800 border-rose-300",
 };
 

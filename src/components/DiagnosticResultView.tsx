@@ -34,23 +34,23 @@ const RISK: Record<RiskLevel, { label: string; color: string; bgClass: string; t
   high: {
     label: "Risco alto",
     color: "#E24B4A",
-    bgClass: "bg-red-50 dark:bg-red-950",
-    textClass: "text-red-700 dark:text-red-300",
-    badgeClass: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    bgClass: "bg-[#F2EBEB] dark:bg-red-950",
+    textClass: "text-[#7A3535] dark:text-red-300",
+    badgeClass: "bg-[#E8D4D4] text-red-800 dark:bg-red-900 dark:text-red-200",
   },
   medium: {
     label: "Atenção",
     color: "#EF9F27",
-    bgClass: "bg-amber-50 dark:bg-amber-950",
-    textClass: "text-amber-700 dark:text-amber-300",
-    badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
+    bgClass: "bg-[#F5F0E0] dark:bg-amber-950",
+    textClass: "text-[#8A7A45] dark:text-amber-300",
+    badgeClass: "bg-[#EDE3C0] text-[#6B5E32] dark:bg-amber-900 dark:text-amber-200",
   },
   low: {
     label: "Adequado",
     color: "#639922",
-    bgClass: "bg-green-50 dark:bg-green-950",
-    textClass: "text-green-700 dark:text-green-300",
-    badgeClass: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+    bgClass: "bg-[#EBF2EC] dark:bg-green-950",
+    textClass: "text-[#3D6B41] dark:text-green-300",
+    badgeClass: "bg-[#D4E8D5] text-green-800 dark:bg-green-900 dark:text-green-200",
   },
 };
 
@@ -315,7 +315,7 @@ function FIRECard({ answers }: { answers: DiagnosticAnswers }) {
             </div>
             <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-blue-500 transition-all duration-700 ease-out"
+                className="absolute inset-y-0 left-0 rounded-full bg-[#EAF0F5]0 transition-all duration-700 ease-out"
                 style={{ width: `${assetW}%` }}
               />
             </div>
@@ -327,7 +327,7 @@ function FIRECard({ answers }: { answers: DiagnosticAnswers }) {
             </div>
             <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
               <div
-                className="absolute inset-y-0 left-0 rounded-full bg-green-500 transition-all duration-700 ease-out"
+                className="absolute inset-y-0 left-0 rounded-full bg-[#EBF2EC]0 transition-all duration-700 ease-out"
                 style={{ width: `${incomeW}%` }}
               />
             </div>
@@ -335,9 +335,9 @@ function FIRECard({ answers }: { answers: DiagnosticAnswers }) {
         </div>
 
         {assetProgress < 80 && yearsLeft < 10 && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <p className="text-xs text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-2 rounded-lg border border-[#D4C08A] bg-[#F5F0E0] p-3 dark:border-amber-800 dark:bg-amber-950">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#8A7A45] dark:text-amber-400" />
+            <p className="text-xs text-[#8A7A45] dark:text-amber-300">
               Com {yearsLeft} anos disponíveis e patrimônio em {Math.round(assetProgress)}% da meta,
               é recomendável revisar a estratégia ou o prazo-alvo com seu consultor.
             </p>

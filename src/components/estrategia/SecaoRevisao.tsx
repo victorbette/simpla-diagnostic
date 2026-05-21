@@ -38,20 +38,20 @@ interface Props {
 
 const SECOES_CONTENT: { id: SecaoId; label: string; color: string }[] = [
   { id: "capa", label: "Capa e Identificação", color: "#BBA866" },
-  { id: "assetAllocation", label: "Asset Allocation", color: "#7C3AED" },
-  { id: "aposentadoria", label: "Aposentadoria / IF", color: "#22C55E" },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#F87171" },
-  { id: "fiscal", label: "Planejamento Fiscal", color: "#F59E0B" },
-  { id: "proximosPassos", label: "Próximos Passos", color: "#3B82F6" },
+  { id: "assetAllocation", label: "Asset Allocation", color: "#000000" },
+  { id: "aposentadoria", label: "Aposentadoria / IF", color: "#3D6B41" },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#7A3535" },
+  { id: "fiscal", label: "Planejamento Fiscal", color: "#8A7A45" },
+  { id: "proximosPassos", label: "Próximos Passos", color: "#2A4F6A" },
 ];
 
 const CLASSE_COLORS: Record<string, string> = {
-  rendaFixa: "#2563EB",
-  acoes: "#16A34A",
-  fiis: "#D97706",
-  rvGlobal: "#7C3AED",
-  rfGlobal: "#0891B2",
-  cripto: "#EA580C",
+  rendaFixa: "#2A4F6A",
+  acoes: "#3D6B41",
+  fiis: "#8A7A45",
+  rvGlobal: "#000000",
+  rfGlobal: "#2A4F6A",
+  cripto: "#8A7A45",
 };
 
 const CLASSE_LABELS: Record<string, string> = {
@@ -79,9 +79,9 @@ function statusBadge(status: SectionStatus): React.ReactElement {
           fontWeight: 700,
           padding: "2px 8px",
           borderRadius: 999,
-          backgroundColor: "#F0FDF4",
-          color: "#16A34A",
-          border: "1px solid #86EFAC",
+          backgroundColor: "#EBF2EC",
+          color: "#3D6B41",
+          border: "1px solid #A8C8AB",
         }}
       >
         ✓ Concluída
@@ -96,9 +96,9 @@ function statusBadge(status: SectionStatus): React.ReactElement {
           fontWeight: 600,
           padding: "2px 8px",
           borderRadius: 999,
-          backgroundColor: "#FFFBEB",
-          color: "#B45309",
-          border: "1px solid #FDE68A",
+          backgroundColor: "#F5F0E0",
+          color: "#8A7A45",
+          border: "1px solid #D4C08A",
         }}
       >
         Em revisão
@@ -111,9 +111,9 @@ function statusBadge(status: SectionStatus): React.ReactElement {
         fontSize: 10,
         padding: "2px 8px",
         borderRadius: 999,
-        backgroundColor: "#F3F4F6",
-        color: "#6B7280",
-        border: "1px solid #E5E7EB",
+        backgroundColor: "#F5F3EE",
+        color: "#6B6347",
+        border: "1px solid #E2DCC8",
       }}
     >
       Pendente
@@ -128,12 +128,12 @@ function metrica(
 ): React.ReactElement {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500 }}>{label}</span>
+      <span style={{ fontSize: 11, color: "#9E9070", fontWeight: 500 }}>{label}</span>
       <span
         style={{
           fontSize: 15,
           fontWeight: 700,
-          color: color ?? "#041A20",
+          color: color ?? "#000000",
           lineHeight: 1.2,
         }}
       >
@@ -168,7 +168,7 @@ function SafePie({
             alignItems: "center",
             justifyContent: "center",
             height: 140,
-            color: "#9CA3AF",
+            color: "#9E9070",
             fontSize: 12,
           }}
         >
@@ -178,7 +178,7 @@ function SafePie({
     }
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textAlign: "center" }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#6B6347", textAlign: "center" }}>
           {title}
         </span>
         <ResponsiveContainer width="100%" height={140}>
@@ -217,8 +217,8 @@ function SafePie({
                   flexShrink: 0,
                 }}
               />
-              <span style={{ color: "#374151", flex: 1 }}>{d.name}</span>
-              <span style={{ color: "#6B7280", fontWeight: 600 }}>
+              <span style={{ color: "#3D3520", flex: 1 }}>{d.name}</span>
+              <span style={{ color: "#6B6347", fontWeight: 600 }}>
                 {d.value.toFixed(1)}%
               </span>
             </div>
@@ -228,7 +228,7 @@ function SafePie({
     );
   } catch {
     return (
-      <div style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: 16 }}>
+      <div style={{ fontSize: 12, color: "#9E9070", textAlign: "center", padding: 16 }}>
         Erro ao renderizar gráfico
       </div>
     );
@@ -275,7 +275,7 @@ function CardHeader({ children }: { children: React.ReactNode }): React.ReactEle
         alignItems: "center",
         justifyContent: "space-between",
         padding: "16px 20px 12px",
-        borderBottom: "1px solid #F3F4F6",
+        borderBottom: "1px solid #F5F3EE",
       }}
     >
       {children}
@@ -301,7 +301,7 @@ function CommentArea({
       style={{
         marginTop: 14,
         paddingTop: 14,
-        borderTop: "1px solid #F3F4F6",
+        borderTop: "1px solid #F5F3EE",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start",
@@ -313,7 +313,7 @@ function CommentArea({
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: "#9CA3AF",
+            color: "#9E9070",
             textTransform: "uppercase",
             letterSpacing: "0.06em",
             margin: "0 0 4px",
@@ -322,11 +322,11 @@ function CommentArea({
           Estratégia do consultor
         </p>
         {comentario ? (
-          <p style={{ fontSize: 13, color: "#374151", fontStyle: "italic", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#3D3520", fontStyle: "italic", margin: 0 }}>
             {comentario}
           </p>
         ) : (
-          <p style={{ fontSize: 13, color: "#D1D5DB", fontStyle: "italic", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#E2DCC8", fontStyle: "italic", margin: 0 }}>
             Nenhum comentário adicionado
           </p>
         )}
@@ -336,7 +336,7 @@ function CommentArea({
         style={{
           fontSize: 12,
           fontWeight: 600,
-          color: "#0D9488",
+          color: "#BBA866",
           background: "none",
           border: "none",
           cursor: "pointer",
@@ -352,7 +352,7 @@ function CommentArea({
 
 function Placeholder({ text }: { text: string }): React.ReactElement {
   return (
-    <p style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic", margin: 0 }}>
+    <p style={{ fontSize: 13, color: "#9E9070", fontStyle: "italic", margin: 0 }}>
       {text}
     </p>
   );
@@ -374,7 +374,7 @@ function ProgressBar({
         width: "100%",
         height: 8,
         borderRadius: 4,
-        backgroundColor: "#F3F4F6",
+        backgroundColor: "#F5F3EE",
         overflow: "hidden",
       }}
     >
@@ -431,7 +431,7 @@ export function SecaoRevisao({
       ? (resultados.if.patrimonioAposentadoria / resultadoIFCalc.patrimonioNecessario) * 100
       : 0;
   const progressIFColor =
-    progressIF >= 80 ? "#16A34A" : progressIF >= 50 ? "#F59E0B" : "#DC2626";
+    progressIF >= 80 ? "#3D6B41" : progressIF >= 50 ? "#8A7A45" : "#7A3535";
 
   const anosRestantes = Math.max(0, plan.planejamentoIF.idadeMeta - plan.planejamentoIF.idadeAtual);
 
@@ -455,8 +455,8 @@ export function SecaoRevisao({
         style={{
           padding: "16px 20px",
           borderRadius: 10,
-          backgroundColor: todasConcluidas ? "#F0FDF4" : "#FFFBEB",
-          border: `1px solid ${todasConcluidas ? "#86EFAC" : "#FDE68A"}`,
+          backgroundColor: todasConcluidas ? "#EBF2EC" : "#F5F0E0",
+          border: `1px solid ${todasConcluidas ? "#A8C8AB" : "#D4C08A"}`,
           display: "flex",
           alignItems: "center",
           gap: 10,
@@ -464,15 +464,15 @@ export function SecaoRevisao({
         }}
       >
         {todasConcluidas ? (
-          <CheckCircle style={{ width: 18, height: 18, color: "#16A34A", flexShrink: 0 }} />
+          <CheckCircle style={{ width: 18, height: 18, color: "#3D6B41", flexShrink: 0 }} />
         ) : (
-          <AlertCircle style={{ width: 18, height: 18, color: "#B45309", flexShrink: 0 }} />
+          <AlertCircle style={{ width: 18, height: 18, color: "#8A7A45", flexShrink: 0 }} />
         )}
         <span
           style={{
             fontSize: 14,
             fontWeight: 600,
-            color: todasConcluidas ? "#16A34A" : "#B45309",
+            color: todasConcluidas ? "#3D6B41" : "#8A7A45",
           }}
         >
           {todasConcluidas
@@ -506,11 +506,11 @@ export function SecaoRevisao({
       {/* ── BLOCO 2: Cards por área ── */}
 
       {/* Card 1: Asset Allocation */}
-      <AreaCard borderColor="#7C3AED">
+      <AreaCard borderColor="#000000">
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <PieChartIcon style={{ width: 20, height: 20, color: "#7C3AED" }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#041A20" }}>
+            <PieChartIcon style={{ width: 20, height: 20, color: "#000000" }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Asset Allocation
             </span>
             {statusBadge(estrategia.statusSecoes["assetAllocation"])}
@@ -522,9 +522,9 @@ export function SecaoRevisao({
                 fontWeight: 700,
                 padding: "3px 10px",
                 borderRadius: 999,
-                backgroundColor: "#F5F3FF",
-                color: "#7C3AED",
-                border: "1px solid #DDD6FE",
+                backgroundColor: "#EDE9DC",
+                color: "#000000",
+                border: "1px solid #E2DCC8",
               }}
             >
               {PERFIL_LABELS[perfil]}
@@ -540,12 +540,12 @@ export function SecaoRevisao({
                 {metrica(
                   "Total Aportes",
                   safeCurrency(resultados.carteira.totalAportar),
-                  "#16A34A"
+                  "#3D6B41"
                 )}
                 {metrica(
                   "Total Resgates",
                   safeCurrency(resultados.carteira.totalResgatar),
-                  "#DC2626"
+                  "#7A3535"
                 )}
               </div>
 
@@ -577,9 +577,9 @@ export function SecaoRevisao({
                         style={{
                           textAlign: "left",
                           padding: "4px 8px",
-                          color: "#9CA3AF",
+                          color: "#9E9070",
                           fontWeight: 600,
-                          borderBottom: "1px solid #F3F4F6",
+                          borderBottom: "1px solid #F5F3EE",
                         }}
                       >
                         Classe
@@ -588,9 +588,9 @@ export function SecaoRevisao({
                         style={{
                           textAlign: "right",
                           padding: "4px 8px",
-                          color: "#9CA3AF",
+                          color: "#9E9070",
                           fontWeight: 600,
-                          borderBottom: "1px solid #F3F4F6",
+                          borderBottom: "1px solid #F5F3EE",
                         }}
                       >
                         % Atual
@@ -600,9 +600,9 @@ export function SecaoRevisao({
                           style={{
                             textAlign: "right",
                             padding: "4px 8px",
-                            color: "#9CA3AF",
+                            color: "#9E9070",
                             fontWeight: 600,
-                            borderBottom: "1px solid #F3F4F6",
+                            borderBottom: "1px solid #F5F3EE",
                           }}
                         >
                           % Meta
@@ -619,7 +619,7 @@ export function SecaoRevisao({
                           <td
                             style={{
                               padding: "4px 8px",
-                              color: "#374151",
+                              color: "#3D3520",
                               display: "flex",
                               alignItems: "center",
                               gap: 6,
@@ -641,7 +641,7 @@ export function SecaoRevisao({
                             style={{
                               padding: "4px 8px",
                               textAlign: "right",
-                              color: "#374151",
+                              color: "#3D3520",
                               fontWeight: 600,
                             }}
                           >
@@ -652,7 +652,7 @@ export function SecaoRevisao({
                               style={{
                                 padding: "4px 8px",
                                 textAlign: "right",
-                                color: "#6B7280",
+                                color: "#6B6347",
                               }}
                             >
                               {metaVal !== null ? `${metaVal.toFixed(1)}%` : "—"}
@@ -678,11 +678,11 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 2: Aposentadoria / IF */}
-      <AreaCard borderColor="#22C55E">
+      <AreaCard borderColor="#3D6B41">
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Flame style={{ width: 20, height: 20, color: "#22C55E" }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#041A20" }}>
+            <Flame style={{ width: 20, height: 20, color: "#3D6B41" }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Aposentadoria / IF
             </span>
             {statusBadge(estrategia.statusSecoes["aposentadoria"])}
@@ -704,10 +704,10 @@ export function SecaoRevisao({
                 {metrica(
                   "Gap de Renda",
                   safeCurrency(resultados.if.gapRenda),
-                  resultados.if.gapRenda > 0 ? "#DC2626" : "#16A34A"
+                  resultados.if.gapRenda > 0 ? "#7A3535" : "#3D6B41"
                 )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500 }}>
+                  <span style={{ fontSize: 11, color: "#9E9070", fontWeight: 500 }}>
                     Liberdade Financeira
                   </span>
                   <span
@@ -716,9 +716,9 @@ export function SecaoRevisao({
                       fontWeight: 700,
                       padding: "3px 10px",
                       borderRadius: 999,
-                      backgroundColor: resultados.if.liberdadeAlcancada ? "#F0FDF4" : "#FEF2F2",
-                      color: resultados.if.liberdadeAlcancada ? "#16A34A" : "#DC2626",
-                      border: `1px solid ${resultados.if.liberdadeAlcancada ? "#86EFAC" : "#FECACA"}`,
+                      backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#FEF2F2",
+                      color: resultados.if.liberdadeAlcancada ? "#3D6B41" : "#7A3535",
+                      border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#FECACA"}`,
                       display: "inline-block",
                     }}
                   >
@@ -730,7 +730,7 @@ export function SecaoRevisao({
               {/* Progress bar */}
               <div style={{ marginBottom: 16 }}>
                 <ProgressBar pct={progressIF} color={progressIFColor} />
-                <p style={{ fontSize: 11, color: "#6B7280", margin: "4px 0 0" }}>
+                <p style={{ fontSize: 11, color: "#6B6347", margin: "4px 0 0" }}>
                   Progresso: {progressIF.toFixed(0)}% do patrimônio necessário (
                   {safeCurrency(resultadoIFCalc.patrimonioNecessario)})
                 </p>
@@ -765,11 +765,11 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 3: Proteção e Sucessório */}
-      <AreaCard borderColor="#F87171">
+      <AreaCard borderColor="#7A3535">
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Shield style={{ width: 20, height: 20, color: "#F87171" }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#041A20" }}>
+            <Shield style={{ width: 20, height: 20, color: "#7A3535" }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Proteção e Sucessório
             </span>
             {statusBadge(estrategia.statusSecoes["protecaoSucessorio"])}
@@ -783,7 +783,7 @@ export function SecaoRevisao({
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: "#9CA3AF",
+                  color: "#9E9070",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   margin: "0 0 10px",
@@ -800,7 +800,7 @@ export function SecaoRevisao({
                     {metrica(
                       "Gap cobertura",
                       safeCurrency(resultados.seguro.gap),
-                      resultados.seguro.gap > 0 ? "#DC2626" : "#16A34A"
+                      resultados.seguro.gap > 0 ? "#7A3535" : "#3D6B41"
                     )}
                   </div>
                   <div style={{ marginBottom: 12 }}>
@@ -810,7 +810,7 @@ export function SecaoRevisao({
                           ? (resultados.seguro.totalCoverage / resultados.seguro.totalNeed) * 100
                           : 0
                       }
-                      color="#F87171"
+                      color="#7A3535"
                     />
                   </div>
                 </>
@@ -827,10 +827,10 @@ export function SecaoRevisao({
                     key={item.label}
                     style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13 }}
                   >
-                    <span style={{ color: item.ok ? "#16A34A" : "#DC2626", fontWeight: 700 }}>
+                    <span style={{ color: item.ok ? "#3D6B41" : "#7A3535", fontWeight: 700 }}>
                       {item.ok ? "✓" : "✗"}
                     </span>
-                    <span style={{ color: "#374151" }}>{item.label}</span>
+                    <span style={{ color: "#3D3520" }}>{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -842,7 +842,7 @@ export function SecaoRevisao({
                 style={{
                   fontSize: 10,
                   fontWeight: 700,
-                  color: "#9CA3AF",
+                  color: "#9E9070",
                   textTransform: "uppercase",
                   letterSpacing: "0.08em",
                   margin: "0 0 10px",
@@ -860,7 +860,7 @@ export function SecaoRevisao({
                 {metrica(
                   "Custo total",
                   safeCurrency(resultadoSuc.custoTotal),
-                  "#F59E0B"
+                  "#8A7A45"
                 )}
               </div>
 
@@ -878,10 +878,10 @@ export function SecaoRevisao({
                     key={item.label}
                     style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13 }}
                   >
-                    <span style={{ color: item.ok ? "#16A34A" : "#DC2626", fontWeight: 700 }}>
+                    <span style={{ color: item.ok ? "#3D6B41" : "#7A3535", fontWeight: 700 }}>
                       {item.ok ? "✓" : "✗"}
                     </span>
-                    <span style={{ color: "#374151" }}>{item.label}</span>
+                    <span style={{ color: "#3D3520" }}>{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -897,11 +897,11 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 4: Planejamento Fiscal */}
-      <AreaCard borderColor="#F59E0B">
+      <AreaCard borderColor="#8A7A45">
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Receipt style={{ width: 20, height: 20, color: "#F59E0B" }} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#041A20" }}>
+            <Receipt style={{ width: 20, height: 20, color: "#8A7A45" }} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Planejamento Fiscal
             </span>
             {statusBadge(estrategia.statusSecoes["fiscal"])}
@@ -915,13 +915,13 @@ export function SecaoRevisao({
                 {metrica(
                   "Economia/ano",
                   safeCurrency(resultados.fiscal.economiaAnual),
-                  "#16A34A"
+                  "#3D6B41"
                 )}
                 {metrica("Teto PGBL", safeCurrency(resultados.fiscal.tetoPGBLAnual))}
                 {metrica(
                   "Espaço disponível",
                   `${safeCurrency(resultados.fiscal.espacoDisponivelMensal)}/mês`,
-                  "#F59E0B"
+                  "#8A7A45"
                 )}
               </div>
 
@@ -931,17 +931,17 @@ export function SecaoRevisao({
                   {
                     label: "IR sem PGBL",
                     value: resultados.fiscal.irSemPGBL,
-                    color: "#9CA3AF",
+                    color: "#9E9070",
                   },
                   {
                     label: "IR com PGBL",
                     value: resultados.fiscal.irComPGBL,
-                    color: "#16A34A",
+                    color: "#3D6B41",
                   },
                   {
                     label: "Economia",
                     value: resultados.fiscal.economiaAnual,
-                    color: "#F59E0B",
+                    color: "#8A7A45",
                   },
                 ].map((bar) => (
                   <div
@@ -951,7 +951,7 @@ export function SecaoRevisao({
                     <span
                       style={{
                         fontSize: 12,
-                        color: "#6B7280",
+                        color: "#6B6347",
                         width: 80,
                         flexShrink: 0,
                         textAlign: "right",
@@ -964,7 +964,7 @@ export function SecaoRevisao({
                         flex: 1,
                         height: 8,
                         borderRadius: 4,
-                        backgroundColor: "#F3F4F6",
+                        backgroundColor: "#F5F3EE",
                         overflow: "hidden",
                       }}
                     >
@@ -984,7 +984,7 @@ export function SecaoRevisao({
                       style={{
                         fontSize: 12,
                         fontWeight: 600,
-                        color: "#374151",
+                        color: "#3D3520",
                         width: 100,
                         flexShrink: 0,
                       }}
@@ -1006,9 +1006,9 @@ export function SecaoRevisao({
                     fontWeight: 600,
                     padding: "4px 12px",
                     borderRadius: 999,
-                    backgroundColor: "#FFFBEB",
-                    border: "1px solid #F59E0B",
-                    color: "#B45309",
+                    backgroundColor: "#F5F0E0",
+                    border: "1px solid #8A7A45",
+                    color: "#8A7A45",
                   }}
                 >
                   ✓ Recomendação: PGBL
@@ -1040,10 +1040,10 @@ export function SecaoRevisao({
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16 }}>
           <MessageSquare style={{ width: 20, height: 20, color: "#BBA866", flexShrink: 0, marginTop: 2 }} />
           <div>
-            <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: "0 0 2px" }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: "0 0 2px" }}>
               Comentário Geral do Consultor
             </p>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#9E9070", margin: 0 }}>
               Observações gerais sobre a estratégia para {clientName || "o cliente"}
             </p>
           </div>
@@ -1056,10 +1056,10 @@ export function SecaoRevisao({
             width: "100%",
             minHeight: 120,
             padding: "12px 14px",
-            border: "1px solid #E5E7EB",
+            border: "1px solid #E2DCC8",
             borderRadius: 8,
             fontSize: 14,
-            color: "#374151",
+            color: "#3D3520",
             resize: "vertical",
             fontFamily: "inherit",
             outline: "none",
@@ -1080,7 +1080,7 @@ export function SecaoRevisao({
           marginBottom: 16,
         }}
       >
-        <p style={{ fontSize: 14, color: "#6B7280", margin: 0, textAlign: "center" }}>
+        <p style={{ fontSize: 14, color: "#6B6347", margin: 0, textAlign: "center" }}>
           Estratégia revisada e pronta?
         </p>
         <button
@@ -1089,7 +1089,7 @@ export function SecaoRevisao({
             display: "flex",
             alignItems: "center",
             gap: 10,
-            backgroundColor: "#041A20",
+            backgroundColor: "#000000",
             color: "white",
             border: "none",
             padding: "16px 48px",
@@ -1113,7 +1113,7 @@ export function SecaoRevisao({
           <p
             style={{
               fontSize: 13,
-              color: "#B45309",
+              color: "#8A7A45",
               margin: 0,
               textAlign: "center",
             }}

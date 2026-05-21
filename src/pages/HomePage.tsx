@@ -35,15 +35,15 @@ import { toast } from "sonner";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DARK = "#041A20";
+const DARK = "#000000";
 const GOLD = "#BBA866";
 
 const AVATAR_COLORS = [
-  "bg-purple-200 text-purple-700",
-  "bg-teal-200 text-teal-700",
-  "bg-green-200 text-green-700",
-  "bg-amber-200 text-amber-700",
-  "bg-red-200 text-red-700",
+  "bg-purple-200 text-[#8A7A45]",
+  "bg-teal-200 text-[#8A7A45]",
+  "bg-green-200 text-[#3D6B41]",
+  "bg-amber-200 text-[#8A7A45]",
+  "bg-red-200 text-[#7A3535]",
   "bg-indigo-200 text-indigo-700",
 ];
 
@@ -80,35 +80,35 @@ function profileConfig(perfil: string | null | undefined): ProfileConfig {
   switch (perfil) {
     case "moderado":
       return {
-        borderColor: "#F59E0B",
-        badgeBg: "#FFFBEB",
-        badgeText: "#B45309",
-        dotColor: "#F59E0B",
+        borderColor: "#8A7A45",
+        badgeBg: "#F5F0E0",
+        badgeText: "#8A7A45",
+        dotColor: "#8A7A45",
         label: "MODERADO",
       };
     case "conservador":
     case "conservador_moderado":
       return {
-        borderColor: "#46BDC6",
+        borderColor: "#BBA866",
         badgeBg: "#F0FDFE",
         badgeText: "#0F766E",
-        dotColor: "#46BDC6",
+        dotColor: "#BBA866",
         label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
       };
     case "arrojado":
       return {
-        borderColor: "#F87171",
+        borderColor: "#7A3535",
         badgeBg: "#FFF5F5",
-        badgeText: "#DC2626",
-        dotColor: "#F87171",
+        badgeText: "#7A3535",
+        dotColor: "#7A3535",
         label: "ARROJADO",
       };
     default:
       return {
-        borderColor: "#9CA3AF",
-        badgeBg: "#F3F4F6",
-        badgeText: "#6B7280",
-        dotColor: "#D1D5DB",
+        borderColor: "#9E9070",
+        badgeBg: "#F5F3EE",
+        badgeText: "#6B6347",
+        dotColor: "#E2DCC8",
         label: "SEM PERFIL",
       };
   }
@@ -250,7 +250,7 @@ export function HomePage() {
   const totalClientes = clientStore.clients.length;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F8F9FA" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#F5F3EE" }}>
 
       {/* ── Header ── */}
       <header
@@ -283,7 +283,7 @@ export function HomePage() {
               <p className="text-white text-sm font-medium leading-tight">
                 {userLabel}
               </p>
-              <p className="text-gray-400 text-xs leading-tight">
+              <p className="text-[#9E9070] text-xs leading-tight">
                 Consultor financeiro
               </p>
             </div>
@@ -295,7 +295,7 @@ export function HomePage() {
             </div>
             <button
               onClick={signOut}
-              className="text-gray-400 hover:text-white transition-colors p-1"
+              className="text-[#9E9070] hover:text-white transition-colors p-1"
               title="Sair"
             >
               <LogOut className="h-5 w-5" />
@@ -327,7 +327,7 @@ export function HomePage() {
                   >
                     Meus Clientes
                   </h1>
-                  <span style={{ color: "#6B7280", fontSize: 18 }}>
+                  <span style={{ color: "#6B6347", fontSize: 18 }}>
                     ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
                   </span>
                 </div>
@@ -338,14 +338,14 @@ export function HomePage() {
                 <div className="relative">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: "#9CA3AF" }}
+                    style={{ color: "#9E9070" }}
                   />
                   <input
                     type="text"
                     placeholder="Buscar cliente..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+                    className="pl-9 pr-4 py-2.5 text-sm border border-[#E2DCC8] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
                     style={{ width: 280 }}
                   />
                 </div>
@@ -364,11 +364,11 @@ export function HomePage() {
             {clientStore.clients.length === 0 ? (
               /* Empty — no clients at all */
               <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Users className="h-16 w-16" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-xl font-semibold" style={{ color: "#374151" }}>
+                <Users className="h-16 w-16" style={{ color: "#9E9070" }} />
+                <h2 className="text-xl font-semibold" style={{ color: "#3D3520" }}>
                   Nenhum cliente cadastrado
                 </h2>
-                <p className="text-sm" style={{ color: "#6B7280" }}>
+                <p className="text-sm" style={{ color: "#6B6347" }}>
                   Adicione seu primeiro cliente para começar
                 </p>
                 <button
@@ -383,14 +383,14 @@ export function HomePage() {
             ) : filtered.length === 0 ? (
               /* Empty — search no results */
               <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Search className="h-14 w-14" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-lg font-semibold" style={{ color: "#374151" }}>
+                <Search className="h-14 w-14" style={{ color: "#9E9070" }} />
+                <h2 className="text-lg font-semibold" style={{ color: "#3D3520" }}>
                   Nenhum cliente encontrado para &ldquo;{search}&rdquo;
                 </h2>
                 <button
                   onClick={() => setSearch("")}
-                  className="mt-2 border border-gray-300 text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-gray-50 transition"
-                  style={{ color: "#374151" }}
+                  className="mt-2 border border-[#C8C0A0] text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-[#F5F3EE] transition"
+                  style={{ color: "#3D3520" }}
                 >
                   Limpar busca
                 </button>
@@ -441,8 +441,8 @@ export function HomePage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors"
-                              style={{ color: "#9CA3AF" }}
+                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#EDE9DC] transition-colors"
+                              style={{ color: "#9E9070" }}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </button>
@@ -454,7 +454,7 @@ export function HomePage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => setDeleteTarget(c)}
-                              className="text-red-600 focus:text-red-600"
+                              className="text-[#7A3535] focus:text-[#7A3535]"
                             >
                               Excluir cliente
                             </DropdownMenuItem>
@@ -472,31 +472,31 @@ export function HomePage() {
                         <div className="min-w-0">
                           <p
                             className="font-semibold truncate"
-                            style={{ fontSize: 16, color: "#111827" }}
+                            style={{ fontSize: 16, color: "#000000" }}
                           >
                             {c.nome}
                           </p>
-                          <p style={{ fontSize: 12, color: "#9CA3AF" }}>
+                          <p style={{ fontSize: 12, color: "#9E9070" }}>
                             Cadastrado em {formatDate(c.dataCriacao)}
                           </p>
                         </div>
                       </div>
 
                       {/* Divider */}
-                      <div style={{ height: 1, backgroundColor: "#F3F4F6", marginBottom: 16 }} />
+                      <div style={{ height: 1, backgroundColor: "#F5F3EE", marginBottom: 16 }} />
 
                       {/* Row 3: metrics */}
                       <div className="grid grid-cols-2 gap-4 mb-5 flex-1">
                         <div>
                           <p
                             className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
+                            style={{ fontSize: 10, color: "#9E9070", fontWeight: 600 }}
                           >
                             ÚLTIMO CONTATO
                           </p>
                           <p
                             className="font-semibold"
-                            style={{ fontSize: 13, color: "#374151" }}
+                            style={{ fontSize: 13, color: "#3D3520" }}
                           >
                             {ultimoContato ? formatDate(ultimoContato) : "—"}
                           </p>
@@ -504,7 +504,7 @@ export function HomePage() {
                         <div>
                           <p
                             className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
+                            style={{ fontSize: 10, color: "#9E9070", fontWeight: 600 }}
                           >
                             FINANCIAL PLANNING
                           </p>
@@ -513,7 +513,7 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#46BDC6" }}
+                                  style={{ backgroundColor: "#BBA866" }}
                                 />
                                 <span
                                   className="font-semibold"
@@ -527,11 +527,11 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#22C55E" }}
+                                  style={{ backgroundColor: "#3D6B41" }}
                                 />
                                 <span
                                   className="font-semibold"
-                                  style={{ fontSize: 13, color: "#16A34A" }}
+                                  style={{ fontSize: 13, color: "#3D6B41" }}
                                 >
                                   Concluído
                                 </span>
@@ -541,11 +541,11 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#D1D5DB" }}
+                                  style={{ backgroundColor: "#E2DCC8" }}
                                 />
                                 <span
                                   className="font-semibold"
-                                  style={{ fontSize: 13, color: "#6B7280" }}
+                                  style={{ fontSize: 13, color: "#6B6347" }}
                                 >
                                   Não iniciado
                                 </span>
@@ -619,7 +619,7 @@ export function HomePage() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="m-nome">
-                Nome completo <span className="text-red-500">*</span>
+                Nome completo <span className="text-[#7A3535]">*</span>
               </Label>
               <Input
                 id="m-nome"
@@ -714,7 +714,7 @@ export function HomePage() {
           <DialogHeader>
             <DialogTitle>Excluir cliente</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-gray-600 py-2">
+          <p className="text-sm text-[#6B6347] py-2">
             Tem certeza que deseja excluir <strong>{deleteTarget?.nome}</strong>?
             Esta ação não pode ser desfeita.
           </p>

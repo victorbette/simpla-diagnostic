@@ -59,7 +59,7 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
   return (
     <div className="space-y-6">
       {/* Inputs */}
-      <Card style={{ borderTop: "3px solid #F59E0B", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <Card style={{ borderTop: "3px solid #8A7A45", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <CardContent className="pt-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="flex flex-col gap-1.5">
@@ -101,11 +101,11 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
         ].map(({ label, value, isEspaco }) => (
           <Card key={label} style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             <CardContent className="pt-4 pb-4">
-              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>{label}</p>
+              <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9E9070" }}>{label}</p>
               <p
                 className="tabular-nums"
                 style={isEspaco
-                  ? { color: "#F59E0B", fontSize: 16, fontWeight: 700 }
+                  ? { color: "#8A7A45", fontSize: 16, fontWeight: 700 }
                   : { fontSize: 16, fontWeight: 700 }}
               >
                 {formatCurrency(value)}
@@ -118,29 +118,29 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>IR sem PGBL</p>
-            <p className="tabular-nums" style={{ color: "#F87171", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irSemPGBL)}/ano</p>
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9E9070" }}>IR sem PGBL</p>
+            <p className="tabular-nums" style={{ color: "#7A3535", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irSemPGBL)}/ano</p>
           </CardContent>
         </Card>
         <Card style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>IR com PGBL</p>
-            <p className="tabular-nums" style={{ color: "#22C55E", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irComPGBL)}/ano</p>
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9E9070" }}>IR com PGBL</p>
+            <p className="tabular-nums" style={{ color: "#3D6B41", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irComPGBL)}/ano</p>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2" style={{ borderTop: "3px solid #22C55E", borderRadius: 10, backgroundColor: "#F0FDF4" }}>
+        <Card className="lg:col-span-2" style={{ borderTop: "3px solid #3D6B41", borderRadius: 10, backgroundColor: "#EBF2EC" }}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>Economia tributária</p>
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9E9070" }}>Economia tributária</p>
             <div className="flex items-baseline gap-2">
-              <p className="tabular-nums" style={{ color: "#22C55E", fontSize: 24, fontWeight: 700 }}>{formatCurrency(result.economiaAnual)}/ano</p>
-              <p className="text-sm" style={{ color: "#22C55E" }}>{formatCurrency(result.economiaMensal)}/mês</p>
+              <p className="tabular-nums" style={{ color: "#3D6B41", fontSize: 24, fontWeight: 700 }}>{formatCurrency(result.economiaAnual)}/ano</p>
+              <p className="text-sm" style={{ color: "#3D6B41" }}>{formatCurrency(result.economiaMensal)}/mês</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Barra PGBL */}
-      <Card style={{ borderTop: "3px solid #F59E0B" }}>
+      <Card style={{ borderTop: "3px solid #8A7A45" }}>
         <CardContent className="pt-5 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">PGBL utilizado vs. teto</span>
@@ -163,7 +163,7 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
       </Card>
 
       {/* Simulador de otimização */}
-      <Card style={{ borderTop: "3px solid #F59E0B" }}>
+      <Card style={{ borderTop: "3px solid #8A7A45" }}>
         <CardContent className="pt-5 space-y-4">
           <p className="text-sm font-semibold">Simulador de otimização</p>
           <div className="space-y-1">
@@ -179,14 +179,14 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
               value={aporteSimulado}
               onChange={e => setAporteSimulado(Number(e.target.value))}
               className="w-full"
-              style={{ accentColor: "#F59E0B" }}
+              style={{ accentColor: "#8A7A45" }}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>R$ 0</span>
               <span>{formatCurrency(teto)}/mês (teto)</span>
             </div>
           </div>
-          <div style={{ border: "1px solid #FDE68A", backgroundColor: "#FFFBEB", color: "#92400E", borderRadius: 8, padding: 12, fontSize: 14 }}>
+          <div style={{ border: "1px solid #D4C08A", backgroundColor: "#F5F0E0", color: "#92400E", borderRadius: 8, padding: 12, fontSize: 14 }}>
             Aportando <strong>{formatCurrency(aporteSimulado)}/mês</strong>, você economiza{" "}
             <strong>{formatCurrency(resultSimulado.economiaAnual)}/ano</strong> no IR
             ({formatCurrency(resultSimulado.economiaMensal)}/mês)
@@ -205,7 +205,7 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr style={{ backgroundColor: "#041A20" }}>
+                  <tr style={{ backgroundColor: "#000000" }}>
                     <th style={{ color: "white", padding: "10px 16px", textAlign: "left" }}>Tempo de acumulação</th>
                     <th style={{ color: "white", padding: "10px 16px", textAlign: "right" }}>Alíquota no resgate</th>
                   </tr>
@@ -227,7 +227,7 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
         </Card>
       )}
 
-      <button onClick={() => onSave(result)} style={{ width: "100%", backgroundColor: "#F59E0B", color: "white", border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+      <button onClick={() => onSave(result)} style={{ width: "100%", backgroundColor: "#8A7A45", color: "white", border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
         Salvar análise PGBL
       </button>
     </div>

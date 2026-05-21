@@ -15,8 +15,8 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularFiscal } from "@/types/financialPlanning";
 import type { PlanejamentoFiscal, DadosCliente } from "@/types/financialPlanning";
 
-const AMBER = "#F59E0B";
-const DARK = "#041A20";
+const AMBER = "#8A7A45";
+const DARK = "#000000";
 
 const TRABALHO_LABELS: Record<string, string> = {
   clt: "CLT (empregado)",
@@ -71,7 +71,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#374151]">Renda mensal bruta</Label>
+              <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal bruta</Label>
               <CurrencyInput
                 value={value.rendaBrutaAnual / 12}
                 onChange={(v) => set("rendaBrutaAnual", v * 12)}
@@ -85,7 +85,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
           />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#374151]">Tipo de declaração IR</Label>
+            <Label className="text-[13px] font-medium text-[#3D3520]">Tipo de declaração IR</Label>
             <Select
               value={value.tipoDeclaracao}
               onValueChange={(v) =>
@@ -124,7 +124,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
 
         <div
           style={{
-            border: "1px solid #E5E7EB",
+            border: "1px solid #E2DCC8",
             borderRadius: 10,
             padding: "16px 20px",
             display: "flex",
@@ -155,7 +155,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
+                <Label className="text-[12px] text-[#6B6347]">Valor aportado anualmente</Label>
                 <CurrencyInput
                   value={value.valorPGBLAnual ?? 0}
                   onChange={(v) => set("valorPGBLAnual", v)}
@@ -187,7 +187,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
+                <Label className="text-[12px] text-[#6B6347]">Valor aportado anualmente</Label>
                 <CurrencyInput
                   value={value.valorVGBLAnual ?? 0}
                   onChange={(v) => set("valorVGBLAnual", v)}
@@ -265,7 +265,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B7280]">Valor anual de rendimentos isentos</Label>
+                <Label className="text-[12px] text-[#6B6347]">Valor anual de rendimentos isentos</Label>
                 <CurrencyInput
                   value={value.valorRendimentosIsentos}
                   onChange={(v) => set("valorRendimentosIsentos", v)}
@@ -279,8 +279,8 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
       {/* Painel resultado */}
       <div
         style={{
-          backgroundColor: "#FFFBEB",
-          border: "1px solid #FDE68A",
+          backgroundColor: "#F5F0E0",
+          border: "1px solid #D4C08A",
           borderRadius: 10,
           padding: 20,
           display: "flex",
@@ -322,7 +322,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                 <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
                   Economia potencial
                 </p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#16A34A", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#3D6B41", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                   {formatCurrency(resultado.economiaFiscalPotencial)}/ano
                 </p>
               </div>
@@ -331,7 +331,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
                     Espaço disponível
                   </p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: "#B45309", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#8A7A45", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {formatCurrency(resultado.espacoPGBL)}/ano
                   </p>
                 </div>
@@ -346,11 +346,11 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             <Badge
               style={{
                 backgroundColor:
-                  value.tipoDeclaracao === "completa" ? "#F0FDF4" : "#EFF6FF",
-                color: value.tipoDeclaracao === "completa" ? "#16A34A" : "#1D4ED8",
+                  value.tipoDeclaracao === "completa" ? "#EBF2EC" : "#EFF6FF",
+                color: value.tipoDeclaracao === "completa" ? "#3D6B41" : "#1D4ED8",
                 border:
                   value.tipoDeclaracao === "completa"
-                    ? "1px solid #86EFAC"
+                    ? "1px solid #A8C8AB"
                     : "1px solid #BFDBFE",
                 fontSize: 13,
                 fontWeight: 700,
@@ -380,7 +380,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             <div
               style={{
                 height: 6,
-                backgroundColor: "#FDE68A",
+                backgroundColor: "#D4C08A",
                 borderRadius: 3,
                 overflow: "hidden",
               }}

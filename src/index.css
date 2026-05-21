@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Simpla Wealth design tokens ──────────────────────────── */
+:root {
+  --sw-black:      #000000;
+  --sw-dark:       #0A1628;
+  --sw-gold:       #BBA866;
+  --sw-gold-light: #D4C08A;
+  --sw-gold-dark:  #8A7A45;
+  --sw-white:      #FFFFFF;
+  --sw-off-white:  #F5F3EE;
+  --sw-cream:      #EDE9DC;
+  --sw-border:     #E2DCC8;
+  --sw-muted:      #6B6347;
+  --sw-hint:       #9E9070;
+  --sw-success:    #3D6B41;
+  --sw-success-bg: #EBF2EC;
+  --sw-warning:    #8A7A45;
+  --sw-warning-bg: #F5F0E0;
+  --sw-danger:     #7A3535;
+  --sw-danger-bg:  #F2EBEB;
+  --sw-info:       #2A4F6A;
+  --sw-info-bg:    #EAF0F5;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -82,8 +82,8 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
         {/* Coluna esquerda */}
         <div>
           {/* Diagnóstico card */}
-          <div style={{ ...CARD, borderTop: "3px solid #22C55E" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ ...CARD, borderTop: "3px solid #3D6B41" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Diagnóstico IF
             </p>
 
@@ -92,102 +92,102 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
                 { label: "Idade atual", value: `${p.idadeAtual} anos` },
                 { label: "Idade meta IF", value: `${p.idadeMeta} anos` },
                 { label: "Renda desejada na IF", value: `${formatCurrency(p.rendaMensalDesejada)}/mês`, color: "#0D9488" },
-                { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês`, color: r.rendaMensalAtingivel >= p.rendaMensalDesejada ? "#16A34A" : "#DC2626" },
-                { label: "Patrimônio necessário", value: formatCurrency(r.patrimonioNecessario), color: "#041A20" },
-                { label: "Projeção c/ aportes", value: formatCurrency(r.patrimonioProjetado), color: "#16A34A" },
+                { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês`, color: r.rendaMensalAtingivel >= p.rendaMensalDesejada ? "#3D6B41" : "#7A3535" },
+                { label: "Patrimônio necessário", value: formatCurrency(r.patrimonioNecessario), color: "#000000" },
+                { label: "Projeção c/ aportes", value: formatCurrency(r.patrimonioProjetado), color: "#3D6B41" },
               ].map(({ label, value, color }) => (
                 <div key={label}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: color ?? "#041A20", margin: 0 }}>{value}</p>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: color ?? "#000000", margin: 0 }}>{value}</p>
                 </div>
               ))}
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#374151", marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#3D3520", marginBottom: 6 }}>
                 <span>{formatNumber(r.percentualIF, 0)}% do caminho percorrido</span>
-                <span style={{ color: "#16A34A", fontWeight: 600 }}>{formatNumber(r.percentualIF, 0)}%</span>
+                <span style={{ color: "#3D6B41", fontWeight: 600 }}>{formatNumber(r.percentualIF, 0)}%</span>
               </div>
-              <div style={{ height: 8, backgroundColor: "#F3F4F6", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min(100, r.percentualIF)}%`, backgroundColor: "#22C55E", borderRadius: 4, transition: "width 0.4s" }} />
+              <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min(100, r.percentualIF)}%`, backgroundColor: "#3D6B41", borderRadius: 4, transition: "width 0.4s" }} />
               </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "#6B7280" }}>Gap patrimonial</span>
-                <span style={{ fontWeight: 600, color: r.gap > 0 ? "#DC2626" : "#16A34A" }}>
+                <span style={{ color: "#6B6347" }}>Gap patrimonial</span>
+                <span style={{ fontWeight: 600, color: r.gap > 0 ? "#7A3535" : "#3D6B41" }}>
                   {r.gap > 0 ? "-" : "+"}{formatCurrency(Math.abs(r.gap))}
                 </span>
               </div>
               {aporteNecessario > 0 && (
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                  <span style={{ color: "#6B7280" }}>Aporte necessário</span>
-                  <span style={{ fontWeight: 600, color: "#B45309" }}>{formatCurrency(aporteNecessario)}/mês</span>
+                  <span style={{ color: "#6B6347" }}>Aporte necessário</span>
+                  <span style={{ fontWeight: 600, color: "#8A7A45" }}>{formatCurrency(aporteNecessario)}/mês</span>
                 </div>
               )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "#6B7280" }}>Renda sustentável</span>
-                <span style={{ fontWeight: 600, color: "#041A20" }}>{formatCurrency(r.rendaMensalAtingivel)}/mês</span>
+                <span style={{ color: "#6B6347" }}>Renda sustentável</span>
+                <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(r.rendaMensalAtingivel)}/mês</span>
               </div>
             </div>
 
             <button
               onClick={() => setModalOpen(true)}
-              style={{ marginTop: 16, width: "100%", padding: "9px 0", border: "1px solid #22C55E", borderRadius: 6, backgroundColor: "transparent", color: "#22C55E", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              style={{ marginTop: 16, width: "100%", padding: "9px 0", border: "1px solid #3D6B41", borderRadius: 6, backgroundColor: "transparent", color: "#3D6B41", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
             >
               Simulador completo de IF →
             </button>
           </div>
 
           {/* Estratégia card */}
-          <div style={{ ...CARD, borderTop: "3px solid #041A20", marginTop: 16 }}>
+          <div style={{ ...CARD, borderTop: "3px solid #000000", marginTop: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <Pencil style={{ width: 14, height: 14, color: "#6B7280" }} />
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: 0 }}>Estratégia e Recomendações</p>
+              <Pencil style={{ width: 14, height: 14, color: "#6B6347" }} />
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: 0 }}>Estratégia e Recomendações</p>
             </div>
             <div style={{ position: "relative" }}>
               <textarea
                 value={comentario}
                 onChange={(e) => handleComentario(e.target.value)}
                 placeholder="Ex: Para atingir a IF aos 60 anos, o cliente precisa aumentar o aporte mensal de R$ 3.000 para R$ 4.500..."
-                style={{ width: "100%", minHeight: 200, padding: "10px 12px", borderRadius: 6, border: "1px solid #E5E7EB", fontSize: 13, color: "#041A20", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+                style={{ width: "100%", minHeight: 200, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
               />
-              <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>{comentario.length} caracteres</span>
+              <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>{comentario.length} caracteres</span>
             </div>
             <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
+              <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
               {AVAILABLE_TAGS.map((t) => (
-                <button key={t} onClick={() => toggleTag(t)} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer", border: "1px solid #E5E7EB", backgroundColor: tags.includes(t) ? "#041A20" : "transparent", color: tags.includes(t) ? "white" : "#374151" }}>
+                <button key={t} onClick={() => toggleTag(t)} style={{ fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer", border: "1px solid #E2DCC8", backgroundColor: tags.includes(t) ? "#000000" : "transparent", color: tags.includes(t) ? "white" : "#3D3520" }}>
                   {t}
                 </button>
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}</span>
-              <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#041A20", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Salvar</button>
+              <span style={{ fontSize: 11, color: "#9E9070" }}>{lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}</span>
+              <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#000000", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>Salvar</button>
             </div>
           </div>
         </div>
 
         {/* Coluna direita */}
         <div>
-          <div style={{ ...CARD, borderTop: "3px solid #22C55E" }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Projeção Patrimonial</p>
+          <div style={{ ...CARD, borderTop: "3px solid #3D6B41" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Projeção Patrimonial</p>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={projecaoData}>
                 <defs>
                   <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#2A4F6A" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#2A4F6A" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="idade" tick={{ fontSize: 10 }} />
                 <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v) => formatCurrency(v as number)} labelFormatter={(l) => `Idade ${l}`} />
-                <ReferenceLine y={r.patrimonioNecessario} stroke="#EF4444" strokeDasharray="4 4" label={{ value: "Meta", position: "right", fontSize: 10, fill: "#EF4444" }} />
-                <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#3B82F6" fill="url(#gradIF)" strokeWidth={2} />
+                <ReferenceLine y={r.patrimonioNecessario} stroke="#7A3535" strokeDasharray="4 4" label={{ value: "Meta", position: "right", fontSize: 10, fill: "#7A3535" }} />
+                <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#2A4F6A" fill="url(#gradIF)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
 
@@ -197,16 +197,16 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
                 { label: "Renda desejada", value: `${formatCurrency(p.rendaMensalDesejada)}/mês` },
                 { label: "Renda atingível", value: `${formatCurrency(r.rendaMensalAtingivel)}/mês` },
               ].map(({ label, value }) => (
-                <div key={label} style={{ backgroundColor: "#F8F9FA", borderRadius: 8, padding: "10px 12px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px" }}>{label}</p>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#041A20", margin: 0 }}>{value}</p>
+                <div key={label} style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 12px" }}>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px" }}>{label}</p>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: 0 }}>{value}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ ...CARD, marginTop: 16, border: "1px solid #E5E7EB" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#041A20", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
+          <div style={{ ...CARD, marginTop: 16, border: "1px solid #E2DCC8" }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
             {[
               { label: "Diagnóstico revisado", ok: true },
               { label: "Projeção analisada", ok: r.patrimonioNecessario > 0 },
@@ -214,32 +214,32 @@ export function SecaoAposentadoria({ plan, comentario, onComentarioChange, tags,
               { label: "Estratégia redigida", ok: comentario.length > 50 },
             ].map(({ label, ok }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
-                <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#F0FDF4" : "#F3F4F6", color: ok ? "#16A34A" : "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#F5F3EE", color: ok ? "#3D6B41" : "#9E9070", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                   {ok ? "✓" : "○"}
                 </span>
-                <span style={{ color: ok ? "#374151" : "#9CA3AF" }}>{label}</span>
+                <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
               </div>
             ))}
           </div>
 
           {resultadoIF && (
-            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #22C55E", backgroundColor: "#F0FDF4" }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#15803D", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #3D6B41", backgroundColor: "#EBF2EC" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#3D6B41", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 ✓ Resultado do Simulador
               </p>
               {[
                 { label: "Patrimônio na aposentadoria", value: formatCurrency(resultadoIF.patrimonioAposentadoria) },
                 { label: "Renda sustentável", value: `${formatCurrency(resultadoIF.rendaSustentavel)}/mês` },
-                { label: "Gap de renda", value: formatCurrency(resultadoIF.gapRenda), color: resultadoIF.gapRenda > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Gap de renda", value: formatCurrency(resultadoIF.gapRenda), color: resultadoIF.gapRenda > 0 ? "#7A3535" : "#3D6B41" },
                 { label: "Aporte ajustado", value: `${formatCurrency(resultadoIF.aporteAjustado)}/mês` },
-                { label: "IF atingida?", value: resultadoIF.liberdadeAlcancada ? "Sim ✓" : "Não ✗", color: resultadoIF.liberdadeAlcancada ? "#16A34A" : "#DC2626" },
+                { label: "IF atingida?", value: resultadoIF.liberdadeAlcancada ? "Sim ✓" : "Não ✗", color: resultadoIF.liberdadeAlcancada ? "#3D6B41" : "#7A3535" },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #BBF7D0", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
-                  <span style={{ color: "#6B7280" }}>{label}</span>
-                  <span style={{ fontWeight: 600, color: color ?? "#041A20" }}>{value}</span>
+                  <span style={{ color: "#6B6347" }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
                 </div>
               ))}
-              <p style={{ fontSize: 10, color: "#6B7280", margin: "6px 0 0", textAlign: "right" }}>
+              <p style={{ fontSize: 10, color: "#6B6347", margin: "6px 0 0", textAlign: "right" }}>
                 Salvo em {new Date(resultadoIF.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
               </p>
             </div>

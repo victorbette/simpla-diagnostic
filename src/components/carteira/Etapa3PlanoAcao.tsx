@@ -18,7 +18,7 @@ interface Props {
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo_ativo";
 
 const ACAO_BADGE_STYLE: Record<ItemPlanoAcao["tipo"], { bg: string; color: string; label: string }> = {
-  manter:          { bg: "#F3F4F6", color: "#374151", label: "Manter" },
+  manter:          { bg: "#F5F3EE", color: "#3D3520", label: "Manter" },
   aportar:         { bg: "#DBEAFE", color: "#1E40AF", label: "Aportar" },
   resgatar_parcial:{ bg: "#FEF3C7", color: "#92400E", label: "Resgatar parcial" },
   resgatar_total:  { bg: "#FEE2E2", color: "#991B1B", label: "Resgatar tudo" },
@@ -80,21 +80,21 @@ export function Etapa3PlanoAcao({
     <div className="space-y-6">
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #22C55E", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total aportes</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(totalAportes)}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E2DCC8", borderTop: "3px solid #3D6B41", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total aportes</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatBRL(totalAportes)}</p>
         </div>
-        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #F87171", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total resgates</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#DC2626", margin: 0 }}>{formatBRL(totalResgates)}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E2DCC8", borderTop: "3px solid #7A3535", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total resgates</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatBRL(totalResgates)}</p>
         </div>
-        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: `3px solid ${saldoLiquido >= 0 ? "#22C55E" : "#F87171"}`, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Saldo líquido</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#DC2626", margin: 0 }}>{formatBRL(saldoLiquido)}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E2DCC8", borderTop: `3px solid ${saldoLiquido >= 0 ? "#3D6B41" : "#7A3535"}`, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Saldo líquido</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: saldoLiquido >= 0 ? "#3D6B41" : "#7A3535", margin: 0 }}>{formatBRL(saldoLiquido)}</p>
         </div>
-        <div style={{ borderRadius: 10, border: "1px solid #E5E7EB", borderTop: "3px solid #041A20", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Movimentações</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#041A20", margin: 0 }}>{nMovs}</p>
+        <div style={{ borderRadius: 10, border: "1px solid #E2DCC8", borderTop: "3px solid #000000", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <p style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Movimentações</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: 0 }}>{nMovs}</p>
         </div>
       </div>
 
@@ -118,9 +118,9 @@ export function Etapa3PlanoAcao({
               fontSize: 12,
               fontWeight: 500,
               cursor: "pointer",
-              border: filtro === f ? "1.5px solid #041A20" : "1px solid #E5E7EB",
-              backgroundColor: filtro === f ? "#041A20" : "white",
-              color: filtro === f ? "white" : "#6B7280",
+              border: filtro === f ? "1.5px solid #000000" : "1px solid #E2DCC8",
+              backgroundColor: filtro === f ? "#000000" : "white",
+              color: filtro === f ? "white" : "#6B6347",
             }}
           >
             {label}
@@ -136,17 +136,17 @@ export function Etapa3PlanoAcao({
 
         return (
           <div key={cardId} className="rounded-lg border overflow-hidden">
-            <div style={{ backgroundColor: "#F8F9FA", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F3F4F6" }}>
+            <div style={{ backgroundColor: "#F5F3EE", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F5F3EE" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span
                   style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: card.cor }}
                 />
-                <span style={{ fontWeight: 600, fontSize: 14, color: "#041A20" }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>
                   {card.grupo} — {card.label}
                 </span>
               </div>
               <span
-                style={{ fontSize: 13, fontWeight: 500, color: groupTotal > 0 ? "#15803D" : groupTotal < 0 ? "#DC2626" : "#9CA3AF" }}
+                style={{ fontSize: 13, fontWeight: 500, color: groupTotal > 0 ? "#3D6B41" : groupTotal < 0 ? "#7A3535" : "#9E9070" }}
               >
                 {groupTotal === 0
                   ? "—"
@@ -155,7 +155,7 @@ export function Etapa3PlanoAcao({
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead style={{ backgroundColor: "#041A20" }}>
+                <thead style={{ backgroundColor: "#000000" }}>
                   <tr>
                     <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Ativo</th>
                     <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Atual R$</th>
@@ -194,7 +194,7 @@ export function Etapa3PlanoAcao({
                         {formatBRL(item.valorMetaBRL)}
                       </td>
                       <td
-                        style={{ padding: "8px 12px", textAlign: "right", fontWeight: 500, whiteSpace: "nowrap", color: item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#DC2626" : "#9CA3AF" }}
+                        style={{ padding: "8px 12px", textAlign: "right", fontWeight: 500, whiteSpace: "nowrap", color: item.movimentacaoBRL > 0 ? "#3D6B41" : item.movimentacaoBRL < 0 ? "#7A3535" : "#9E9070" }}
                       >
                         {item.movimentacaoBRL === 0
                           ? "—"

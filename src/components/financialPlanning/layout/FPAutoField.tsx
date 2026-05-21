@@ -8,12 +8,12 @@ interface Props {
 const inputStyle: React.CSSProperties = {
   width: "100%",
   height: 40,
-  border: "1px solid #E5E7EB",
+  border: "1px solid #E2DCC8",
   borderRadius: 8,
   padding: "0 14px",
   fontSize: 14,
   backgroundColor: "#F0FDFA",
-  color: "#374151",
+  color: "#3D3520",
   cursor: "default",
   outline: "none",
   boxSizing: "border-box",
@@ -25,7 +25,7 @@ export function FPAutoField({ label, value, hint, id }: Props) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <label
           htmlFor={id}
-          style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}
+          style={{ fontSize: 13, fontWeight: 500, color: "#3D3520" }}
         >
           {label}
         </label>
@@ -45,7 +45,7 @@ export function FPAutoField({ label, value, hint, id }: Props) {
           ✓ CALCULADO
         </span>
       </div>
-      <div style={{ borderLeft: "3px solid #46BDC6", borderRadius: "0 8px 8px 0" }}>
+      <div style={{ borderLeft: "3px solid #BBA866", borderRadius: "0 8px 8px 0" }}>
         <input
           id={id}
           readOnly
@@ -54,7 +54,7 @@ export function FPAutoField({ label, value, hint, id }: Props) {
         />
       </div>
       {hint && (
-        <p style={{ fontSize: 11, color: "#9CA3AF", fontStyle: "italic", margin: 0 }}>
+        <p style={{ fontSize: 11, color: "#9E9070", fontStyle: "italic", margin: 0 }}>
           {hint}
         </p>
       )}

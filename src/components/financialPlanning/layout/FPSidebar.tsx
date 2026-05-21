@@ -1,8 +1,8 @@
 import { Check, Lock } from "lucide-react";
 
-const DARK = "#041A20";
-const TEAL = "#46BDC6";
-const GREEN = "#22C55E";
+const DARK = "#000000";
+const TEAL = "#BBA866";
+const GREEN = "#3D6B41";
 const GOLD = "#BBA866";
 
 export type FPStep =
@@ -23,10 +23,10 @@ const STEPS: { id: FPStep; label: string; num: number }[] = [
 ];
 
 const AVATAR_COLORS = [
-  "bg-purple-200 text-purple-700",
-  "bg-teal-200 text-teal-700",
-  "bg-green-200 text-green-700",
-  "bg-amber-200 text-amber-700",
+  "bg-purple-200 text-[#8A7A45]",
+  "bg-teal-200 text-[#8A7A45]",
+  "bg-green-200 text-[#3D6B41]",
+  "bg-amber-200 text-[#8A7A45]",
 ];
 
 function getInitials(nome: string): string {
@@ -50,15 +50,15 @@ interface ProfileCfg {
 function perfilCfg(perfil: string | null | undefined): ProfileCfg {
   switch (perfil) {
     case "moderado":
-      return { dotColor: "#F59E0B", label: "MODERADO", textColor: "#B45309", bg: "#FFFBEB" };
+      return { dotColor: "#8A7A45", label: "MODERADO", textColor: "#8A7A45", bg: "#F5F0E0" };
     case "conservador":
       return { dotColor: TEAL, label: "CONSERVADOR", textColor: "#0F766E", bg: "#F0FDFE" };
     case "conservador_moderado":
       return { dotColor: TEAL, label: "CONS. MOD.", textColor: "#0F766E", bg: "#F0FDFE" };
     case "arrojado":
-      return { dotColor: "#F87171", label: "ARROJADO", textColor: "#DC2626", bg: "#FFF5F5" };
+      return { dotColor: "#7A3535", label: "ARROJADO", textColor: "#7A3535", bg: "#FFF5F5" };
     default:
-      return { dotColor: "#9CA3AF", label: "SEM PERFIL", textColor: "#6B7280", bg: "#F3F4F6" };
+      return { dotColor: "#9E9070", label: "SEM PERFIL", textColor: "#6B6347", bg: "#F5F3EE" };
   }
 }
 
@@ -91,7 +91,7 @@ export function FPSidebar({
         width: 260,
         flexShrink: 0,
         backgroundColor: "white",
-        borderRight: "1px solid #F3F4F6",
+        borderRight: "1px solid #F5F3EE",
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
@@ -111,7 +111,7 @@ export function FPSidebar({
           background: "none",
           border: "none",
           cursor: "pointer",
-          borderBottom: "1px solid #F3F4F6",
+          borderBottom: "1px solid #F5F3EE",
           width: "100%",
           textAlign: "left",
         }}
@@ -123,7 +123,7 @@ export function FPSidebar({
       <div
         style={{
           padding: "20px",
-          borderBottom: "1px solid #F3F4F6",
+          borderBottom: "1px solid #F5F3EE",
           display: "flex",
           flexDirection: "column",
           gap: 10,
@@ -192,7 +192,7 @@ export function FPSidebar({
         style={{
           fontSize: 10,
           fontWeight: 700,
-          color: "#9CA3AF",
+          color: "#9E9070",
           letterSpacing: "0.08em",
           textTransform: "uppercase",
           padding: "16px 20px 8px",
@@ -237,18 +237,18 @@ export function FPSidebar({
           } else if (isLocked) {
             circleStyle = {
               backgroundColor: "white",
-              border: "1.5px solid #E5E7EB",
-              color: "#D1D5DB",
+              border: "1.5px solid #E2DCC8",
+              color: "#E2DCC8",
             };
-            labelColor = "#D1D5DB";
+            labelColor = "#E2DCC8";
           } else {
             // pending
             circleStyle = {
               backgroundColor: "white",
-              border: "1.5px solid #D1D5DB",
-              color: "#9CA3AF",
+              border: "1.5px solid #E2DCC8",
+              color: "#9E9070",
             };
-            labelColor = "#6B7280";
+            labelColor = "#6B6347";
           }
 
           // Connector line style
@@ -257,10 +257,10 @@ export function FPSidebar({
             if (isComplete) {
               lineStyle = { borderLeft: `2px solid ${GREEN}` };
             } else if (isActive) {
-              lineStyle = { borderLeft: "2px solid #D1D5DB" };
+              lineStyle = { borderLeft: "2px solid #E2DCC8" };
             } else {
               lineStyle = {
-                borderLeft: "2px dashed #E5E7EB",
+                borderLeft: "2px dashed #E2DCC8",
               };
             }
           }
@@ -351,7 +351,7 @@ export function FPSidebar({
       <div
         style={{
           padding: "16px 20px",
-          borderTop: "1px solid #F3F4F6",
+          borderTop: "1px solid #F5F3EE",
           marginTop: "auto",
         }}
       >
@@ -360,7 +360,7 @@ export function FPSidebar({
             display: "flex",
             justifyContent: "space-between",
             fontSize: 12,
-            color: "#6B7280",
+            color: "#6B6347",
             marginBottom: 6,
           }}
         >
@@ -370,7 +370,7 @@ export function FPSidebar({
         <div
           style={{
             height: 4,
-            backgroundColor: "#F3F4F6",
+            backgroundColor: "#F5F3EE",
             borderRadius: 2,
             overflow: "hidden",
           }}

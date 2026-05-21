@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FPSidebar } from "./FPSidebar";
 import type { FPStep } from "./FPSidebar";
 
-const DARK = "#041A20";
+const DARK = "#000000";
 const GOLD = "#BBA866";
 
 const STEP_META: Record<FPStep, { title: string; subtitle: string; next: string | null }> = {
@@ -140,7 +140,7 @@ export function FPLayout({
             <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>
               {userLabel}
             </p>
-            <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
+            <p style={{ color: "#9E9070", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
               Consultor financeiro
             </p>
           </div>
@@ -168,7 +168,7 @@ export function FPLayout({
             style={{
               background: "none",
               border: "none",
-              color: "#9CA3AF",
+              color: "#9E9070",
               cursor: "pointer",
               padding: 4,
             }}
@@ -194,7 +194,7 @@ export function FPLayout({
         <main
           style={{
             flex: 1,
-            backgroundColor: "#F8F9FA",
+            backgroundColor: "#F5F3EE",
             overflowY: "auto",
             padding: 32,
             display: "flex",
@@ -216,7 +216,7 @@ export function FPLayout({
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#9CA3AF",
+                  color: "#9E9070",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   margin: "0 0 4px",
@@ -227,19 +227,19 @@ export function FPLayout({
               <h1 style={{ fontSize: 28, fontWeight: 700, color: DARK, margin: "0 0 4px" }}>
                 {meta.title}
               </h1>
-              <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>
+              <p style={{ fontSize: 14, color: "#6B6347", margin: 0 }}>
                 {meta.subtitle}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               {dirty && !saving && (
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#F59E0B" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#F59E0B", display: "inline-block" }} />
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8A7A45" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#8A7A45", display: "inline-block" }} />
                   Não salvo
                 </span>
               )}
               {ultimoSalvo && !dirty && !saving && (
-                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                <span style={{ fontSize: 12, color: "#9E9070" }}>
                   Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
@@ -296,8 +296,8 @@ export function FPLayout({
               style={{
                 border: `1.5px solid ${DARK}`,
                 backgroundColor: "white",
-                color: stepIndex === 0 ? "#9CA3AF" : DARK,
-                borderColor: stepIndex === 0 ? "#E5E7EB" : DARK,
+                color: stepIndex === 0 ? "#9E9070" : DARK,
+                borderColor: stepIndex === 0 ? "#E2DCC8" : DARK,
                 borderRadius: 8,
                 padding: "10px 20px",
                 fontSize: 14,
@@ -320,8 +320,8 @@ export function FPLayout({
                     backgroundColor: d.active
                       ? DARK
                       : d.complete
-                      ? "#22C55E"
-                      : "#D1D5DB",
+                      ? "#3D6B41"
+                      : "#E2DCC8",
                     display: "inline-block",
                     transition: "width 0.2s",
                   }}

@@ -11,11 +11,11 @@ export function FPSectionHeader({ title, subtitle, borderColor, className = "" }
       className={className}
       style={{ borderLeft: `3px solid ${borderColor}`, paddingLeft: 12 }}
     >
-      <h4 style={{ fontWeight: 700, fontSize: 16, color: "#041A20", margin: 0 }}>
+      <h4 style={{ fontWeight: 700, fontSize: 16, color: "#000000", margin: 0 }}>
         {title}
       </h4>
       {subtitle && (
-        <p style={{ fontSize: 13, color: "#6B7280", margin: "2px 0 0" }}>
+        <p style={{ fontSize: 13, color: "#6B6347", margin: "2px 0 0" }}>
           {subtitle}
         </p>
       )}

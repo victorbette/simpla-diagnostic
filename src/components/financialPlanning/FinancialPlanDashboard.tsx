@@ -28,7 +28,7 @@ interface FinancialPlanDashboardProps {
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
-const DARK = "#041A20";
+const DARK = "#000000";
 
 const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
   rendaFixa: "Renda Fixa",
@@ -53,22 +53,22 @@ const ASSET_KEYS = Object.keys(ASSET_LABELS) as (keyof MacroalocacaoAlvo)[];
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function scoreColor(score: number): string {
-  if (score >= 70) return "#22C55E";
-  if (score >= 40) return "#F59E0B";
-  return "#EF4444";
+  if (score >= 70) return "#3D6B41";
+  if (score >= 40) return "#8A7A45";
+  return "#7A3535";
 }
 
 function scoreBadge(score: number, semDados: boolean): { text: string; bg: string; color: string } {
-  if (semDados) return { text: "Sem dados", bg: "#F3F4F6", color: "#6B7280" };
-  if (score >= 70) return { text: "Adequado", bg: "#F0FDF4", color: "#16A34A" };
-  if (score >= 40) return { text: "Atenção", bg: "#FFFBEB", color: "#B45309" };
-  return { text: "Risco", bg: "#FEF2F2", color: "#DC2626" };
+  if (semDados) return { text: "Sem dados", bg: "#F5F3EE", color: "#6B6347" };
+  if (score >= 70) return { text: "Adequado", bg: "#EBF2EC", color: "#3D6B41" };
+  if (score >= 40) return { text: "Atenção", bg: "#F5F0E0", color: "#8A7A45" };
+  return { text: "Risco", bg: "#FEF2F2", color: "#7A3535" };
 }
 
 function perfilStyle(perfil: string): { bg: string; color: string } {
   if (perfil === "conservador") return { bg: "#F0FDFA", color: "#0F766E" };
-  if (perfil === "moderado" || perfil === "conservador_moderado") return { bg: "#FFFBEB", color: "#B45309" };
-  return { bg: "#FEF2F2", color: "#DC2626" };
+  if (perfil === "moderado" || perfil === "conservador_moderado") return { bg: "#F5F0E0", color: "#8A7A45" };
+  return { bg: "#FEF2F2", color: "#7A3535" };
 }
 
 function aaScore(gap: MacroalocacaoAlvo | null): number {
@@ -120,11 +120,11 @@ function Gauge({ score, color, semDados }: { score: number; color: string; semDa
   const filled = semDados ? 0 : (Math.min(100, Math.max(0, score)) / 100) * circumference;
   return (
     <svg width="92" height="52" viewBox="0 0 92 52">
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E5E7EB" strokeWidth="8" strokeLinecap="round" />
+      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E2DCC8" strokeWidth="8" strokeLinecap="round" />
       {!semDados && (
         <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${filled} ${circumference}`} />
       )}
-      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="16" fontWeight="700" fill={semDados ? "#9CA3AF" : color}>
+      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="16" fontWeight="700" fill={semDados ? "#9E9070" : color}>
         {semDados ? "—" : score}
       </text>
     </svg>
@@ -139,11 +139,11 @@ function ScoreCard({ icon: Icon, label, score, color, semDados }: {
     <div style={{ backgroundColor: "white", borderRadius: 12, padding: 20, borderTop: `3px solid ${color}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
       <Icon style={{ width: 22, height: 22, color }} />
       <Gauge score={score} color={color} semDados={semDados} />
-      <p style={{ fontSize: 12, color: "#374151", textAlign: "center", margin: 0, fontWeight: 500 }}>{label}</p>
+      <p style={{ fontSize: 12, color: "#3D3520", textAlign: "center", margin: 0, fontWeight: 500 }}>{label}</p>
       <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color }}>
         {badge.text}
       </span>
-      {semDados && <p style={{ fontSize: 10, color: "#9CA3AF", textAlign: "center", margin: 0 }}>Complete a etapa</p>}
+      {semDados && <p style={{ fontSize: 10, color: "#9E9070", textAlign: "center", margin: 0 }}>Complete a etapa</p>}
     </div>
   );
 }
@@ -158,7 +158,7 @@ function SectionCard({ title, score, color, semDados, onAprofundar, children }: 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <p style={{ fontSize: 16, fontWeight: 700, color: DARK, margin: 0 }}>{title}</p>
           {!semDados && (
-            <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, backgroundColor: "#F3F4F6", color: "#374151" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 4, backgroundColor: "#F5F3EE", color: "#3D3520" }}>
               {score}/100
             </span>
           )}
@@ -167,14 +167,14 @@ function SectionCard({ title, score, color, semDados, onAprofundar, children }: 
           </span>
         </div>
         {onAprofundar && (
-          <button onClick={onAprofundar} style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "transparent", color: "#374151", cursor: "pointer", flexShrink: 0 }}>
+          <button onClick={onAprofundar} style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, border: "1px solid #E2DCC8", backgroundColor: "transparent", color: "#3D3520", cursor: "pointer", flexShrink: 0 }}>
             Aprofundar →
           </button>
         )}
       </div>
       {semDados ? (
-        <div style={{ textAlign: "center", padding: "32px 16px", backgroundColor: "#F8F9FA", borderRadius: 8 }}>
-          <p style={{ margin: 0, fontSize: 13, color: "#9CA3AF" }}>Complete a etapa para ver o diagnóstico</p>
+        <div style={{ textAlign: "center", padding: "32px 16px", backgroundColor: "#F5F3EE", borderRadius: 8 }}>
+          <p style={{ margin: 0, fontSize: 13, color: "#9E9070" }}>Complete a etapa para ver o diagnóstico</p>
         </div>
       ) : children}
     </div>
@@ -183,8 +183,8 @@ function SectionCard({ title, score, color, semDados, onAprofundar, children }: 
 
 function Row({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, paddingBottom: 8, borderBottom: "1px solid #F3F4F6", marginBottom: 0 }}>
-      <span style={{ color: "#6B7280" }}>{label}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, paddingBottom: 8, borderBottom: "1px solid #F5F3EE", marginBottom: 0 }}>
+      <span style={{ color: "#6B6347" }}>{label}</span>
       <span style={{ fontWeight: 600, color: color ?? DARK, fontVariantNumeric: "tabular-nums" }}>{value}</span>
     </div>
   );
@@ -260,7 +260,7 @@ export function FinancialPlanDashboard({
   // ── Header ────────────────────────────────────────────────────────────────
   const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
   const hoje = new Date().toLocaleDateString("pt-BR");
-  const pStyle = perfil ? perfilStyle(perfil) : { bg: "#F3F4F6", color: "#6B7280" };
+  const pStyle = perfil ? perfilStyle(perfil) : { bg: "#F5F3EE", color: "#6B6347" };
   const pgblPct = fiscalResult.tetoPGBL > 0
     ? Math.min(100, (plan.fiscal.valorPGBLAnual / fiscalResult.tetoPGBL) * 100) : 0;
 
@@ -268,12 +268,12 @@ export function FinancialPlanDashboard({
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* ── 1. Banner ─────────────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #22C55E", borderRadius: 12, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ backgroundColor: "#EBF2EC", border: "1px solid #3D6B41", borderRadius: 12, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <CheckCircle style={{ width: 20, height: 20, color: "#16A34A", flexShrink: 0, marginTop: 2 }} />
+          <CheckCircle style={{ width: 20, height: 20, color: "#3D6B41", flexShrink: 0, marginTop: 2 }} />
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: "#14532D", margin: "0 0 2px" }}>Diagnóstico inicial gerado com sucesso.</p>
-            <p style={{ fontSize: 13, color: "#15803D", margin: 0 }}>Revise os resultados abaixo e, quando pronto, avance para montar a Estratégia Inicial.</p>
+            <p style={{ fontSize: 13, color: "#3D6B41", margin: 0 }}>Revise os resultados abaixo e, quando pronto, avance para montar a Estratégia Inicial.</p>
           </div>
         </div>
         <button onClick={onAvancarEstrategia} style={{ backgroundColor: DARK, color: "white", border: "none", borderRadius: 8, padding: "12px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
@@ -287,7 +287,7 @@ export function FinancialPlanDashboard({
           {/* Left */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: DARK, margin: "0 0 4px" }}>{clientName}</h2>
-            <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 8px" }}>Plano financeiro · {hoje}</p>
+            <p style={{ fontSize: 13, color: "#6B6347", margin: "0 0 8px" }}>Plano financeiro · {hoje}</p>
             {perfil && (
               <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 999, backgroundColor: pStyle.bg, color: pStyle.color }}>
                 Perfil: {PERFIL_LABELS[perfil]}
@@ -304,7 +304,7 @@ export function FinancialPlanDashboard({
                 { icon: Printer, label: "PDF Consultor", onClick: () => onPrint("advisor") },
                 { icon: Download, label: "PDF Cliente", onClick: () => onPrint("client") },
               ] as const).map(({ icon: Icon, label, onClick }) => (
-                <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: "1px solid #E5E7EB", backgroundColor: "white", color: "#374151", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: "1px solid #E2DCC8", backgroundColor: "white", color: "#3D3520", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
                   <Icon style={{ width: 13, height: 13 }} />
                   {label}
                 </button>
@@ -312,7 +312,7 @@ export function FinancialPlanDashboard({
             </div>
             {/* Score */}
             <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Score geral</p>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Score geral</p>
               <p style={{ fontSize: 48, fontWeight: 800, color: DARK, margin: "0 0 4px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{overallScore}</p>
               <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: overallBadge.bg, color: overallBadge.color }}>
                 {overallBadge.text}
@@ -324,18 +324,18 @@ export function FinancialPlanDashboard({
 
       {/* ── 3. Score cards grid ────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
-        <ScoreCard icon={PieIcon}    label="Asset Allocation"  score={aaS}   color="#7C3AED" semDados={semDadosAA} />
-        <ScoreCard icon={TrendingUp} label="Aposentadoria / IF" score={ifS}  color="#22C55E" />
-        <ScoreCard icon={Shield}     label="Proteção"           score={protS} color="#F87171" semDados={semDadosProtecao} />
-        <ScoreCard icon={Receipt}    label="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal} />
-        <ScoreCard icon={GitBranch}  label="Sucessório"         score={sucS}  color="#3B82F6" semDados={semDadosSucessorio} />
+        <ScoreCard icon={PieIcon}    label="Asset Allocation"  score={aaS}   color="#000000" semDados={semDadosAA} />
+        <ScoreCard icon={TrendingUp} label="Aposentadoria / IF" score={ifS}  color="#3D6B41" />
+        <ScoreCard icon={Shield}     label="Proteção"           score={protS} color="#7A3535" semDados={semDadosProtecao} />
+        <ScoreCard icon={Receipt}    label="Planejamento Fiscal" score={fiscS} color="#8A7A45" semDados={semDadosFiscal} />
+        <ScoreCard icon={GitBranch}  label="Sucessório"         score={sucS}  color="#2A4F6A" semDados={semDadosSucessorio} />
       </div>
 
       {/* ── 4. Asset Allocation detail ─────────────────────────────────────── */}
-      <SectionCard title="Asset Allocation" score={aaS} color="#7C3AED" semDados={semDadosAA}>
+      <SectionCard title="Asset Allocation" score={aaS} color="#000000" semDados={semDadosAA}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div>
-            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>Alocação atual</p>
+            <p style={{ fontSize: 12, color: "#6B6347", marginBottom: 8 }}>Alocação atual</p>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name} ${value}%`} labelLine={false}>
@@ -354,7 +354,7 @@ export function FinancialPlanDashboard({
             </div>
           </div>
           <div>
-            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>
+            <p style={{ fontSize: 12, color: "#6B6347", marginBottom: 8 }}>
               Atual vs. alvo{alvo && plan.suitability ? ` (${PERFIL_LABELS[plan.suitability.perfil]})` : ""}
             </p>
             <ResponsiveContainer width="100%" height={220}>
@@ -364,7 +364,7 @@ export function FinancialPlanDashboard({
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={64} />
                 <Tooltip formatter={(v) => `${v}%`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="atual" name="Atual" fill="#7C3AED" radius={[0, 2, 2, 0]} />
+                <Bar dataKey="atual" name="Atual" fill="#000000" radius={[0, 2, 2, 0]} />
                 <Bar dataKey="alvo" name="Alvo" fill="#DDD6FE" radius={[0, 2, 2, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -373,46 +373,46 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 5. Aposentadoria / IF detail ────────────────────────────────────── */}
-      <SectionCard title="Aposentadoria / IF" score={ifS} color="#22C55E">
+      <SectionCard title="Aposentadoria / IF" score={ifS} color="#3D6B41">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               {[
                 { label: "Patrimônio necessário", value: formatCurrency(ifResult.patrimonioNecessario) },
-                { label: "Projeção com aportes", value: formatCurrency(ifResult.patrimonioProjetado), color: "#16A34A" },
-                { label: ifResult.gap > 0 ? "Gap (falta)" : "Superávit", value: formatCurrency(Math.abs(ifResult.gap)), color: ifResult.gap > 0 ? "#DC2626" : "#16A34A" },
+                { label: "Projeção com aportes", value: formatCurrency(ifResult.patrimonioProjetado), color: "#3D6B41" },
+                { label: ifResult.gap > 0 ? "Gap (falta)" : "Superávit", value: formatCurrency(Math.abs(ifResult.gap)), color: ifResult.gap > 0 ? "#7A3535" : "#3D6B41" },
                 { label: "Renda desejada na IF", value: `${formatCurrency(plan.planejamentoIF.rendaMensalDesejada)}/mês` },
               ].map(({ label, value, color }) => (
-                <div key={label} style={{ backgroundColor: "#F8F9FA", borderRadius: 8, padding: "10px 12px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
+                <div key={label} style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 12px" }}>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>{label}</p>
                   <p style={{ fontSize: 14, fontWeight: 700, color: color ?? DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>{value}</p>
                 </div>
               ))}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-              <span style={{ color: "#6B7280" }}>Progresso rumo à IF</span>
-              <span style={{ fontWeight: 600, color: "#16A34A" }}>{formatNumber(ifResult.percentualIF, 0)}%</span>
+              <span style={{ color: "#6B6347" }}>Progresso rumo à IF</span>
+              <span style={{ fontWeight: 600, color: "#3D6B41" }}>{formatNumber(ifResult.percentualIF, 0)}%</span>
             </div>
-            <div style={{ height: 8, backgroundColor: "#E5E7EB", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${Math.min(100, ifResult.percentualIF)}%`, backgroundColor: "#22C55E", borderRadius: 4, transition: "width 0.4s" }} />
+            <div style={{ height: 8, backgroundColor: "#E2DCC8", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${Math.min(100, ifResult.percentualIF)}%`, backgroundColor: "#3D6B41", borderRadius: 4, transition: "width 0.4s" }} />
             </div>
           </div>
           <div>
-            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>Projeção patrimonial por idade</p>
+            <p style={{ fontSize: 12, color: "#6B6347", marginBottom: 8 }}>Projeção patrimonial por idade</p>
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={projecaoData}>
                 <defs>
                   <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#3D6B41" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#3D6B41" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="idade" tick={{ fontSize: 10 }} />
                 <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v) => formatCurrency(v as number)} labelFormatter={(l) => `Idade ${l}`} />
-                <ReferenceLine y={ifResult.patrimonioNecessario} stroke="#EF4444" strokeDasharray="4 4" label={{ value: "Meta", position: "right", fontSize: 10, fill: "#EF4444" }} />
-                <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#22C55E" fill="url(#gradIF)" strokeWidth={2} />
+                <ReferenceLine y={ifResult.patrimonioNecessario} stroke="#7A3535" strokeDasharray="4 4" label={{ value: "Meta", position: "right", fontSize: 10, fill: "#7A3535" }} />
+                <Area type="monotone" dataKey="projecao" name="Projeção" stroke="#3D6B41" fill="url(#gradIF)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -420,15 +420,15 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 6. Proteção detail ─────────────────────────────────────────────── */}
-      <SectionCard title="Proteção" score={protS} color="#F87171" semDados={semDadosProtecao}>
+      <SectionCard title="Proteção" score={protS} color="#7A3535" semDados={semDadosProtecao}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Row label="Capital necessário" value={formatCurrency(protResult.capitalNecessario)} />
             <Row label="Capital segurado atual" value={formatCurrency(protResult.capitalAtual)} />
-            <Row label="Gap de cobertura" value={formatCurrency(protResult.gap)} color={protResult.gap > 0 ? "#DC2626" : "#16A34A"} />
-            <Row label="Cobertura" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} color={protResult.percentualCoberto >= 100 ? "#16A34A" : "#DC2626"} />
+            <Row label="Gap de cobertura" value={formatCurrency(protResult.gap)} color={protResult.gap > 0 ? "#7A3535" : "#3D6B41"} />
+            <Row label="Cobertura" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} color={protResult.percentualCoberto >= 100 ? "#3D6B41" : "#7A3535"} />
             {protResult.gap > 0 && (
-              <div style={{ marginTop: 8, padding: "10px 14px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#DC2626" }}>
+              <div style={{ marginTop: 8, padding: "10px 14px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, fontSize: 13, color: "#7A3535" }}>
                 ⚠ Encaminhar para análise completa de seguros
               </div>
             )}
@@ -440,13 +440,13 @@ export function FinancialPlanDashboard({
               { label: "Seguro de invalidez", ok: plan.protecao.possuiSeguroInvalidez, detail: plan.protecao.possuiSeguroInvalidez ? "Sim" : "Não contratado" },
               { label: "Plano de saúde", ok: plan.protecao.possuiPlanoSaude, detail: plan.protecao.possuiPlanoSaude ? "Sim" : "Não contratado" },
             ].map(({ label, ok, detail }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "1px solid #F3F4F6" }}>
-                <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: ok ? "#F0FDF4" : "#FEF2F2", color: ok ? "#16A34A" : "#DC2626", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 8, border: "1px solid #F5F3EE" }}>
+                <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#FEF2F2", color: ok ? "#3D6B41" : "#7A3535", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                   {ok ? "✓" : "✗"}
                 </span>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 500, color: DARK, margin: 0 }}>{label}</p>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>{detail}</p>
+                  <p style={{ fontSize: 11, color: "#6B6347", margin: 0 }}>{detail}</p>
                 </div>
               </div>
             ))}
@@ -455,33 +455,33 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 7. Fiscal detail ───────────────────────────────────────────────── */}
-      <SectionCard title="Planejamento Fiscal" score={fiscS} color="#F59E0B" semDados={semDadosFiscal}>
+      <SectionCard title="Planejamento Fiscal" score={fiscS} color="#8A7A45" semDados={semDadosFiscal}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Row label="Renda anual bruta" value={formatCurrency(plan.fiscal.rendaBrutaAnual)} />
             <Row label="Teto PGBL (12%)" value={formatCurrency(fiscalResult.tetoPGBL)} />
             <Row label="PGBL aportado" value={formatCurrency(plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)} />
-            <Row label="Espaço disponível PGBL" value={formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)))} color="#B45309" />
-            <Row label="Economia potencial" value={`${formatCurrency(fiscalResult.economiaFiscalPotencial)}/ano`} color="#16A34A" />
+            <Row label="Espaço disponível PGBL" value={formatCurrency(Math.max(0, fiscalResult.tetoPGBL - (plan.fiscal.temPGBL ? plan.fiscal.valorPGBLAnual : 0)))} color="#8A7A45" />
+            <Row label="Economia potencial" value={`${formatCurrency(fiscalResult.economiaFiscalPotencial)}/ano`} color="#3D6B41" />
           </div>
           <div>
-            <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 8 }}>PGBL utilizado vs. teto</p>
+            <p style={{ fontSize: 12, color: "#6B6347", marginBottom: 8 }}>PGBL utilizado vs. teto</p>
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                <span style={{ color: "#6B7280" }}>Aproveitamento</span>
-                <span style={{ fontWeight: 600, color: "#B45309" }}>{formatNumber(pgblPct, 0)}%</span>
+                <span style={{ color: "#6B6347" }}>Aproveitamento</span>
+                <span style={{ fontWeight: 600, color: "#8A7A45" }}>{formatNumber(pgblPct, 0)}%</span>
               </div>
               <div style={{ height: 10, backgroundColor: "#FEF3C7", borderRadius: 5, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pgblPct}%`, backgroundColor: "#F59E0B", borderRadius: 5 }} />
+                <div style={{ height: "100%", width: `${pgblPct}%`, backgroundColor: "#8A7A45", borderRadius: 5 }} />
               </div>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 999, backgroundColor: fiscalResult.recomendaPGBL ? "#F0FDF4" : "#EFF6FF", color: fiscalResult.recomendaPGBL ? "#16A34A" : "#2563EB" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 999, backgroundColor: fiscalResult.recomendaPGBL ? "#EBF2EC" : "#EFF6FF", color: fiscalResult.recomendaPGBL ? "#3D6B41" : "#2A4F6A" }}>
               {fiscalResult.recomendaPGBL ? "PGBL recomendado" : "VGBL recomendado"}
             </span>
             {fiscalResult.recomendacoes.length > 0 && (
               <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 6 }}>
                 {fiscalResult.recomendacoes.map((r, i) => (
-                  <p key={i} style={{ fontSize: 12, color: "#374151", margin: 0 }}>• {r}</p>
+                  <p key={i} style={{ fontSize: 12, color: "#3D3520", margin: 0 }}>• {r}</p>
                 ))}
               </div>
             )}
@@ -490,13 +490,13 @@ export function FinancialPlanDashboard({
       </SectionCard>
 
       {/* ── 8. Sucessório detail ───────────────────────────────────────────── */}
-      <SectionCard title="Planejamento Sucessório" score={sucS} color="#3B82F6" semDados={semDadosSucessorio}>
+      <SectionCard title="Planejamento Sucessório" score={sucS} color="#2A4F6A" semDados={semDadosSucessorio}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Row label="ITCMD estimado (4%)" value={formatCurrency(sucResult.itcmdEstimado)} color="#DC2626" />
-            <Row label="Custo inventário (6%)" value={formatCurrency(sucResult.custoInventarioEstimado)} color="#DC2626" />
-            <Row label="Total de custos" value={formatCurrency(sucResult.custoTotal)} color="#DC2626" />
-            <Row label="Patrimônio líquido aos herdeiros" value={formatCurrency(sucResult.patrimonioLiquidoHerdeiros)} color="#16A34A" />
+            <Row label="ITCMD estimado (4%)" value={formatCurrency(sucResult.itcmdEstimado)} color="#7A3535" />
+            <Row label="Custo inventário (6%)" value={formatCurrency(sucResult.custoInventarioEstimado)} color="#7A3535" />
+            <Row label="Total de custos" value={formatCurrency(sucResult.custoTotal)} color="#7A3535" />
+            <Row label="Patrimônio líquido aos herdeiros" value={formatCurrency(sucResult.patrimonioLiquidoHerdeiros)} color="#3D6B41" />
             <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
               {[
                 { label: "Testamento", ok: plan.sucessorio.possuiTestamento },
@@ -504,8 +504,8 @@ export function FinancialPlanDashboard({
                 { label: "Seguro com beneficiário", ok: plan.sucessorio.possuiSeguroVidaSucessao },
               ].map(({ label, ok }) => (
                 <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-                  <span style={{ fontWeight: 700, color: ok ? "#16A34A" : "#EF4444" }}>{ok ? "✓" : "✗"}</span>
-                  <span style={{ color: ok ? DARK : "#9CA3AF" }}>{label}</span>
+                  <span style={{ fontWeight: 700, color: ok ? "#3D6B41" : "#7A3535" }}>{ok ? "✓" : "✗"}</span>
+                  <span style={{ color: ok ? DARK : "#9E9070" }}>{label}</span>
                 </div>
               ))}
             </div>
@@ -531,10 +531,10 @@ export function FinancialPlanDashboard({
 
       {/* Score geral em destaque — linha decorativa */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "8px 0" }}>
-        <div style={{ height: 1, flex: 1, backgroundColor: "#E5E7EB" }} />
-        <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>Score consolidado: {overallScore}/100</span>
+        <div style={{ height: 1, flex: 1, backgroundColor: "#E2DCC8" }} />
+        <span style={{ fontSize: 12, color: "#9E9070", fontWeight: 500 }}>Score consolidado: {overallScore}/100</span>
         <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: overallColor }} />
-        <div style={{ height: 1, flex: 1, backgroundColor: "#E5E7EB" }} />
+        <div style={{ height: 1, flex: 1, backgroundColor: "#E2DCC8" }} />
       </div>
     </div>
   );

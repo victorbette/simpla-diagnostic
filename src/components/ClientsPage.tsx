@@ -28,12 +28,12 @@ import { formatDate } from "@/lib/format";
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
-  "bg-blue-500",
+  "bg-[#EAF0F5]0",
   "bg-emerald-500",
-  "bg-purple-500",
+  "bg-[#F5F3EE]0",
   "bg-rose-500",
-  "bg-amber-500",
-  "bg-teal-500",
+  "bg-[#F5F0E0]0",
+  "bg-[#F5F0E0]0",
   "bg-indigo-500",
   "bg-orange-500",
 ];
