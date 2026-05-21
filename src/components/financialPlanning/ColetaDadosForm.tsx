@@ -242,7 +242,6 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             { label: "Renda mensal", key: "rendaMensal" as const },
             { label: "Custo de vida mensal", key: "custoDeVidaMensal" as const },
             { label: "Aporte mensal médio", key: "aportesMensalMedio" as const, hint: "Média mensal" },
-            { label: "Fatura mensal do cartão", key: "valorFaturaCartao" as const, hint: "Gasto familiar total" },
           ].map(({ label, key, hint }) => (
             <div key={key} className={fieldCls}>
               <Label className={labelCls}>{label}</Label>
@@ -255,6 +254,78 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
               )}
             </div>
           ))}
+        </div>
+
+        {/* Gasto no cartão */}
+        <div className={fieldCls}>
+          <Label className={labelCls}>Quanto gasta por mês no cartão de crédito?</Label>
+          <CurrencyInput
+            value={value.gastoCartaoMensal}
+            onChange={(v) => set("gastoCartaoMensal", v)}
+          />
+          <p className="text-[11px] text-[#9E9070] italic">
+            Some todas as faturas do mês, incluindo cartões adicionais
+          </p>
+        </div>
+
+        {/* Perfil de viagens */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div>
+            <Label className={labelCls}>Perfil de viagens</Label>
+            <p className="text-[11px] text-[#9E9070] italic">
+              Usado para planejamento de reserva de emergência e seguros
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div
+              style={{
+                borderRadius: 10,
+                border: "1px solid #E2DCC8",
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+              }}
+            >
+              <Switch
+                checked={value.fazViagensNacionais}
+                onCheckedChange={(v) => set("fazViagensNacionais", v)}
+                style={value.fazViagensNacionais ? { backgroundColor: "#000000" } : undefined}
+              />
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
+                  Viagens nacionais
+                </p>
+                <p style={{ fontSize: 11, color: "#9E9070", margin: "2px 0 0" }}>
+                  Viaja dentro do Brasil regularmente
+                </p>
+              </div>
+            </div>
+            <div
+              style={{
+                borderRadius: 10,
+                border: "1px solid #E2DCC8",
+                padding: "14px 16px",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 12,
+              }}
+            >
+              <Switch
+                checked={value.fazViagensInternacionais}
+                onCheckedChange={(v) => set("fazViagensInternacionais", v)}
+                style={value.fazViagensInternacionais ? { backgroundColor: "#000000" } : undefined}
+              />
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
+                  Viagens internacionais
+                </p>
+                <p style={{ fontSize: 11, color: "#9E9070", margin: "2px 0 0" }}>
+                  Viaja para o exterior
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

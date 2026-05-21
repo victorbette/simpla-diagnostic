@@ -544,6 +544,9 @@ export interface DadosCliente {
   custoDeVidaMensal: number;
   aportesMensalMedio: number;
   valorFaturaCartao: number;
+  gastoCartaoMensal: number;
+  fazViagensNacionais: boolean;
+  fazViagensInternacionais: boolean;
   temSeguroVida: boolean;
   valorApoliceVida: number;
   temSeguroInvalidez: boolean;
@@ -566,6 +569,9 @@ export const initialDadosCliente: DadosCliente = {
   custoDeVidaMensal: 0,
   aportesMensalMedio: 0,
   valorFaturaCartao: 0,
+  gastoCartaoMensal: 0,
+  fazViagensNacionais: false,
+  fazViagensInternacionais: false,
   temSeguroVida: false,
   valorApoliceVida: 0,
   temSeguroInvalidez: false,
