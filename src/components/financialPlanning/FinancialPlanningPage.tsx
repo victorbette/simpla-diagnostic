@@ -43,26 +43,34 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const planInitialized = useRef(false);
 
-  // Load existing plan from Supabase on mount; fall back to blank if none exists
+  // Load (or create) plan on mount — ensures plan.id always exists for saves
   useEffect(() => {
-    store.carregarPlano(clientId).then(() => {
-      // sync handled in the effect below
-    }).catch(() => {
-      // carregarPlano already logs the error
-    });
+    const init = async () => {
+      await store.carregarPlano(clientId);
+
+      // planRef is updated synchronously inside carregarPlano
+      if (!store.planRef.current) {
+        // No plan yet — create a blank one so all subsequent saves are UPDATEs
+        try {
+          await store.criarPlano(clientId);
+        } catch (err) {
+          console.error("FinancialPlanningPage: criarPlano failed", err);
+        }
+      }
+
+      // Sync to local state (only once)
+      if (!planInitialized.current) {
+        planInitialized.current = true;
+        if (store.planRef.current) {
+          setPlan(store.planRef.current);
+          setDirty(false);
+        }
+      }
+    };
+
+    init().catch(console.error);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
-
-  // Once carregarPlano resolves, sync store.plan → local plan (only on first load)
-  useEffect(() => {
-    if (!store.loading && !planInitialized.current) {
-      planInitialized.current = true;
-      if (store.plan) {
-        setPlan(store.plan);
-        setDirty(false);
-      }
-    }
-  }, [store.loading, store.plan]);
 
   const updatePlan = useCallback((patch: Partial<FinancialPlan>) => {
     setPlan((prev) => ({ ...prev, ...patch }));
@@ -325,10 +333,11 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
             plan={plan}
             clientName={clientName}
             onEdit={() => setStep("coleta")}
-            onSave={() => handleSave("completo")}
+            onSave={async () => { await handleSave("completo"); }}
             onPrint={handlePrint}
             onAvancarEstrategia={() => setMostrarEstrategia(true)}
             allStepsDone={allFormsDone}
+            ultimoSalvo={ultimoSalvo}
           />
         )}
       </FPLayout>

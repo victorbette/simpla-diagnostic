@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type {
   FinancialPlan,
@@ -72,13 +72,19 @@ function planToPayload(plan: FinancialPlan): Record<string, unknown> {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useFinancialPlanStore() {
-  // Per-client current plan — set by carregarPlano / savePlan
   const [plan, setPlan] = useState<FinancialPlan | null>(null);
+  // Ref keeps plan accessible synchronously after async operations
+  const planRef = useRef<FinancialPlan | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
+
+  const setPlanSafe = useCallback((p: FinancialPlan | null) => {
+    planRef.current = p;
+    setPlan(p);
+  }, []);
 
   // ── Explicit per-client load (for FinancialPlanningPage init) ─────────────
 
@@ -95,7 +101,7 @@ export function useFinancialPlanStore() {
         .maybeSingle();
 
       if (fetchError) throw fetchError;
-      setPlan(data ? rowToPlan(data as unknown as PlanRow) : null);
+      setPlanSafe(data ? rowToPlan(data as unknown as PlanRow) : null);
     } catch (err) {
       console.error("useFinancialPlanStore: carregarPlano failed", err);
       setError(err instanceof Error ? err.message : "Erro ao carregar plano");
@@ -138,7 +144,7 @@ export function useFinancialPlanStore() {
     }
 
     const novo = rowToPlan(data as unknown as PlanRow);
-    setPlan(novo);
+    setPlanSafe(novo);
     return novo;
   }, []);
 
@@ -169,7 +175,7 @@ export function useFinancialPlanStore() {
         }
 
         const updated = rowToPlan(data as unknown as PlanRow);
-        setPlan(updated);
+        setPlanSafe(updated);
         setUltimoSalvo(new Date());
         return updated;
       } else {
@@ -190,7 +196,7 @@ export function useFinancialPlanStore() {
         }
 
         const created = rowToPlan(data as unknown as PlanRow);
-        setPlan(created);
+        setPlanSafe(created);
         setUltimoSalvo(new Date());
         return created;
       }
@@ -261,6 +267,7 @@ export function useFinancialPlanStore() {
 
   return {
     plan,
+    planRef,
     loading,
     saving,
     error,

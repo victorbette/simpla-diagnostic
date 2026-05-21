@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   AreaChart, Area, ResponsiveContainer, ReferenceLine,
@@ -20,10 +20,11 @@ interface FinancialPlanDashboardProps {
   plan: FinancialPlan;
   clientName: string;
   onEdit: () => void;
-  onSave: () => void;
+  onSave: () => Promise<void>;
   onPrint: (type: "advisor" | "client") => void;
   onAvancarEstrategia: () => void;
   allStepsDone?: boolean;
+  ultimoSalvo?: Date | null;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
@@ -200,7 +201,24 @@ export function FinancialPlanDashboard({
   onPrint,
   onAvancarEstrategia,
   allStepsDone: _allStepsDone,
+  ultimoSalvo,
 }: FinancialPlanDashboardProps) {
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+
+  const handleSalvarDiagnostico = async () => {
+    setSalvando(true);
+    setSalvo(false);
+    try {
+      await onSave();
+      setSalvo(true);
+      setTimeout(() => setSalvo(false), 3000);
+    } catch {
+      // error already shown via toast in parent
+    } finally {
+      setSalvando(false);
+    }
+  };
   // ── Calculations ──────────────────────────────────────────────────────────
   const ifResult = useMemo(() => calcularIF(plan.planejamentoIF), [plan.planejamentoIF]);
   const protResult = useMemo(() => calcularProtecao(plan.protecao), [plan.protecao]);
@@ -297,18 +315,48 @@ export function FinancialPlanDashboard({
           {/* Right */}
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
             {/* Action buttons */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {([
-                { icon: Edit2, label: "Editar", onClick: onEdit },
-                { icon: Save, label: "Salvar", onClick: onSave },
-                { icon: Printer, label: "PDF Consultor", onClick: () => onPrint("advisor") },
-                { icon: Download, label: "PDF Cliente", onClick: () => onPrint("client") },
-              ] as const).map(({ icon: Icon, label, onClick }) => (
-                <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: "1px solid #E2DCC8", backgroundColor: "white", color: "#3D3520", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-                  <Icon style={{ width: 13, height: 13 }} />
-                  {label}
-                </button>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+              {/* Save button — prominent */}
+              <button
+                onClick={handleSalvarDiagnostico}
+                disabled={salvando}
+                style={{
+                  background: salvo ? "#3D6B41" : "#000000",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 24px",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: salvando ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  opacity: salvando ? 0.7 : 1,
+                  transition: "background 200ms",
+                }}
+              >
+                <Save style={{ width: 15, height: 15 }} />
+                {salvando ? "Salvando..." : salvo ? "✓ Salvo com sucesso" : "Salvar diagnóstico"}
+              </button>
+              {ultimoSalvo && !salvo && (
+                <span style={{ fontSize: 11, color: "#9E9070" }}>
+                  Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+              {/* Secondary actions */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {([
+                  { icon: Edit2, label: "Editar", onClick: onEdit },
+                  { icon: Printer, label: "PDF Consultor", onClick: () => onPrint("advisor") },
+                  { icon: Download, label: "PDF Cliente", onClick: () => onPrint("client") },
+                ] as const).map(({ icon: Icon, label, onClick }) => (
+                  <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: "1px solid #E2DCC8", backgroundColor: "white", color: "#3D3520", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                    <Icon style={{ width: 13, height: 13 }} />
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
             {/* Score */}
             <div style={{ textAlign: "center" }}>

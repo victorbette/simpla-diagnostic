@@ -511,9 +511,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             <button
               onClick={() => handleSalvarCloud(data)}
               disabled={salvando}
-              style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #BBA866", backgroundColor: "transparent", color: "#BBA866", fontSize: 13, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.7 : 1 }}
+              style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
             >
-              {salvando ? "Salvando…" : "Salvar estratégia"}
+              {salvando ? "Salvando…" : "💾 Salvar estratégia"}
             </button>
           )}
           <button
@@ -622,9 +622,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               <button
                 onClick={() => handleSalvarCloud(data)}
                 disabled={salvando}
-                style={{ width: "100%", padding: "8px 0", border: "1px solid #BBA866", borderRadius: 6, backgroundColor: "transparent", color: "#BBA866", fontSize: 13, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.7 : 1 }}
+                style={{ width: "100%", padding: "9px 0", border: "none", borderRadius: 6, backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.85 : 1 }}
               >
-                {salvando ? "Salvando…" : ultimoSalvo ? `Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Salvar estratégia"}
+                {salvando ? "Salvando…" : ultimoSalvo ? `✓ Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "💾 Salvar estratégia"}
               </button>
             )}
             <button
