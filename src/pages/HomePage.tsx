@@ -26,11 +26,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ClientCardSkeleton } from "@/components/ui/ClientCardSkeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
-import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { toast } from "sonner";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -139,7 +138,6 @@ const EMPTY_FORM: ClientForm = {
 export function HomePage() {
   const { user, signOut } = useAuth();
   const clientStore = useClientStore();
-  const planStore = useFinancialPlanStore();
 
   const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
   const [search, setSearch] = useState("");
@@ -308,7 +306,11 @@ export function HomePage() {
       <main className="mx-auto max-w-7xl px-6 py-8">
 
         {clientStore.loading ? (
-          <LoadingSpinner text="Carregando clientes..." />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 24 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ClientCardSkeleton key={i} />
+            ))}
+          </div>
         ) : (
           <>
             {/* ── Title row ── */}
@@ -401,17 +403,17 @@ export function HomePage() {
                 style={{ gap: 24 }}
               >
                 {filtered.map((c, idx) => {
-                  const plan = planStore.getLatestPlan(c.id);
-                  const perfil = plan?.dadosCliente?.suitabilityPerfil ?? plan?.suitability?.perfil ?? null;
+                  const perfil = c.planSuitabilityPerfil ?? null;
                   const pc = profileConfig(perfil);
 
-                  const fpStatus: FPStatus = !plan
-                    ? "nao_iniciado"
-                    : plan.status === "completo"
-                    ? "concluido"
-                    : "em_andamento";
+                  const fpStatus: FPStatus =
+                    c.planStatus === "nao_iniciado"
+                      ? "nao_iniciado"
+                      : c.planStatus === "completo"
+                      ? "concluido"
+                      : "em_andamento";
 
-                  const ultimoContato = plan?.updatedAt ?? c.dataCriacao;
+                  const ultimoContato = c.planUpdatedAt ?? c.dataCriacao;
 
                   return (
                     <div

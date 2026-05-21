@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import type {
   FinancialPlan,
   SuitabilityResult,
@@ -73,47 +72,13 @@ function planToPayload(plan: FinancialPlan): Record<string, unknown> {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useFinancialPlanStore() {
-  const { user } = useAuth();
-
-  // Global list — feeds HomePage's status badges via getLatestPlan
-  const [plans, setPlans] = useState<FinancialPlan[]>([]);
   // Per-client current plan — set by carregarPlano / savePlan
   const [plan, setPlan] = useState<FinancialPlan | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
-
-  // Load all plans for the user on mount (for HomePage's getLatestPlan)
-  useEffect(() => {
-    if (!user) {
-      setPlans([]);
-      setLoading(false);
-      return;
-    }
-
-    async function load() {
-      setLoading(true);
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("financial_plans")
-          .select("*, clients!inner(user_id)")
-          .eq("clients.user_id", user!.id)
-          .order("updated_at", { ascending: false });
-
-        if (fetchError) throw fetchError;
-        setPlans((data ?? []).map((row) => rowToPlan(row as unknown as PlanRow)));
-      } catch (err) {
-        console.error("useFinancialPlanStore: failed to load plans", err);
-        setError(err instanceof Error ? err.message : "Erro ao carregar planos");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, [user]);
 
   // ── Explicit per-client load (for FinancialPlanningPage init) ─────────────
 
@@ -174,7 +139,6 @@ export function useFinancialPlanStore() {
 
     const novo = rowToPlan(data as unknown as PlanRow);
     setPlan(novo);
-    setPlans((prev) => [novo, ...prev]);
     return novo;
   }, []);
 
@@ -206,7 +170,6 @@ export function useFinancialPlanStore() {
 
         const updated = rowToPlan(data as unknown as PlanRow);
         setPlan(updated);
-        setPlans((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
         setUltimoSalvo(new Date());
         return updated;
       } else {
@@ -228,7 +191,6 @@ export function useFinancialPlanStore() {
 
         const created = rowToPlan(data as unknown as PlanRow);
         setPlan(created);
-        setPlans((prev) => [created, ...prev]);
         setUltimoSalvo(new Date());
         return created;
       }
@@ -294,32 +256,10 @@ export function useFinancialPlanStore() {
       .delete()
       .eq("id", id);
     if (deleteError) throw deleteError;
-    setPlans((prev) => prev.filter((p) => p.id !== id));
     setPlan((prev) => (prev?.id === id ? null : prev));
   }, []);
 
-  // ── Synchronous helpers from cached global list ───────────────────────────
-
-  const getClientPlans = useCallback(
-    (clientId: string): FinancialPlan[] =>
-      plans
-        .filter((p) => p.clientId === clientId)
-        .sort(
-          (a, b) =>
-            new Date(b.updatedAt ?? 0).getTime() -
-            new Date(a.updatedAt ?? 0).getTime()
-        ),
-    [plans]
-  );
-
-  const getLatestPlan = useCallback(
-    (clientId: string): FinancialPlan | undefined =>
-      getClientPlans(clientId)[0],
-    [getClientPlans]
-  );
-
   return {
-    plans,
     plan,
     loading,
     saving,
@@ -333,7 +273,5 @@ export function useFinancialPlanStore() {
     salvarEstrategia,
     loadEstrategia,
     deletePlan,
-    getClientPlans,
-    getLatestPlan,
   };
 }

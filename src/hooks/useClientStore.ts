@@ -13,6 +13,11 @@ export interface Client {
   observacoes?: string | null;
   dataCriacao: string;
   updatedAt?: string | null;
+  // Plan summary — populated via join, defaults to "no plan"
+  planId: string | null;
+  planStatus: "nao_iniciado" | "rascunho" | "completo";
+  planUpdatedAt: string | null;
+  planSuitabilityPerfil: string | null;
 }
 
 export interface Simulation {
@@ -23,7 +28,16 @@ export interface Simulation {
   dataSimulacao: string;
 }
 
+// ── Module-level cache (persists across remounts) ─────────────────────────────
+
+const cache = new Map<string, { data: Client[]; ts: number }>();
+const CACHE_TTL = 30_000; // 30 seconds
+
 function mapRow(row: Record<string, unknown>): Client {
+  const plans = (row.financial_plans as Array<Record<string, unknown>> | null) ?? [];
+  const plan = plans[0] ?? null;
+  const suitability = plan?.suitability as Record<string, unknown> | null | undefined;
+
   return {
     id: row.id as string,
     userId: row.user_id as string,
@@ -35,6 +49,10 @@ function mapRow(row: Record<string, unknown>): Client {
     observacoes: (row.observacoes as string | null) ?? null,
     dataCriacao: row.data_criacao as string,
     updatedAt: (row.updated_at as string | null) ?? null,
+    planId: (plan?.id as string | null) ?? null,
+    planStatus: ((plan?.status as string) ?? "nao_iniciado") as Client["planStatus"],
+    planUpdatedAt: (plan?.updated_at as string | null) ?? null,
+    planSuitabilityPerfil: (suitability?.perfil as string | null) ?? null,
   };
 }
 
@@ -45,34 +63,64 @@ export function useClientStore() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const carregarClientes = useCallback(async () => {
-    if (!user) {
-      setClients([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const { data, error: err } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("data_criacao", { ascending: false });
+  const carregarClientes = useCallback(
+    async (forceRefresh = false) => {
+      if (!user) {
+        setClients([]);
+        setLoading(false);
+        return;
+      }
 
-      if (err) throw err;
-      setClients((data ?? []).map((row) => mapRow(row as unknown as Record<string, unknown>)));
-    } catch (err) {
-      console.error("useClientStore: carregarClientes failed", err);
-      setError(err instanceof Error ? err.message : "Erro ao carregar clientes");
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+      const agora = Date.now();
+      const cached = cache.get(user.id);
+
+      // Serve from cache if fresh and not forcing refresh
+      if (!forceRefresh && cached && agora - cached.ts < CACHE_TTL) {
+        setClients(cached.data);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      try {
+        // Single query — clients + plan summary via join (eliminates N+1)
+        const { data, error: err } = await supabase
+          .from("clients")
+          .select(`
+            id, user_id, nome, email, telefone, cpf,
+            data_nascimento, observacoes, data_criacao, updated_at,
+            financial_plans ( id, status, updated_at, suitability )
+          `)
+          .eq("user_id", user.id)
+          .order("data_criacao", { ascending: false });
+
+        if (err) throw err;
+
+        const result = (data ?? []).map((row) =>
+          mapRow(row as unknown as Record<string, unknown>)
+        );
+
+        cache.set(user.id, { data: result, ts: Date.now() });
+        setClients(result);
+      } catch (err) {
+        console.error("useClientStore: carregarClientes failed", err);
+        setError(err instanceof Error ? err.message : "Erro ao carregar clientes");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
 
   useEffect(() => {
     carregarClientes();
   }, [carregarClientes]);
+
+  // Invalidate cache for this user
+  const invalidateCache = useCallback(() => {
+    if (user) cache.delete(user.id);
+  }, [user]);
 
   // ── Criar ─────────────────────────────────────────────────────────────────
 
@@ -111,14 +159,21 @@ export function useClientStore() {
         throw new Error(err.message);
       }
 
-      const novo = mapRow(data as unknown as Record<string, unknown>);
+      const novo: Client = {
+        ...mapRow(data as unknown as Record<string, unknown>),
+        planId: null,
+        planStatus: "nao_iniciado",
+        planUpdatedAt: null,
+        planSuitabilityPerfil: null,
+      };
+
+      invalidateCache();
       setClients((prev) => [novo, ...prev]);
       return novo;
     },
-    [user]
+    [user, invalidateCache]
   );
 
-  // Alias para compatibilidade com código existente
   const addClient = useCallback(
     (nome: string, email?: string, telefone?: string): Promise<Client> =>
       criarCliente({ nome, email, telefone }),
@@ -157,29 +212,49 @@ export function useClientStore() {
         throw new Error(err.message);
       }
 
+      invalidateCache();
       setClients((prev) =>
         prev.map((c) => (c.id === id ? { ...c, ...dados } : c))
       );
     },
-    []
+    [invalidateCache]
   );
 
   // ── Deletar ───────────────────────────────────────────────────────────────
 
-  const deletarCliente = useCallback(async (id: string): Promise<void> => {
-    const { error: err } = await supabase.from("clients").delete().eq("id", id);
+  const deletarCliente = useCallback(
+    async (id: string): Promise<void> => {
+      const { error: err } = await supabase.from("clients").delete().eq("id", id);
 
-    if (err) {
-      console.error("useClientStore: deletarCliente failed", err);
-      throw new Error(err.message);
-    }
+      if (err) {
+        console.error("useClientStore: deletarCliente failed", err);
+        throw new Error(err.message);
+      }
 
-    setClients((prev) => prev.filter((c) => c.id !== id));
-    setSimulations((prev) => prev.filter((s) => s.clientId !== id));
-  }, []);
+      invalidateCache();
+      setClients((prev) => prev.filter((c) => c.id !== id));
+      setSimulations((prev) => prev.filter((s) => s.clientId !== id));
+    },
+    [invalidateCache]
+  );
 
-  // Alias para compatibilidade
   const deleteClient = deletarCliente;
+
+  // ── Método chamado após salvar um plan — atualiza planStatus em memória ───
+
+  const updateClientPlanStatus = useCallback(
+    (clientId: string, planId: string, status: Client["planStatus"]) => {
+      invalidateCache();
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === clientId
+            ? { ...c, planId, planStatus: status, planUpdatedAt: new Date().toISOString() }
+            : c
+        )
+      );
+    },
+    [invalidateCache]
+  );
 
   // ── Simulações ────────────────────────────────────────────────────────────
 
@@ -235,6 +310,7 @@ export function useClientStore() {
     criarCliente,
     atualizarCliente,
     deletarCliente,
+    updateClientPlanStatus,
     addClient,
     deleteClient,
     addSimulation,
