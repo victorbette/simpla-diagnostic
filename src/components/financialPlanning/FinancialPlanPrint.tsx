@@ -202,7 +202,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 8, fontSize: 9, color: "#9ca3af", textAlign: "center" }}>
-          Uso restrito ao consultor · {formatDate(new Date())} · Simpla Financial Planning
+          Uso restrito ao consultor · {formatDate(new Date())} · Simpla Wealth Financial Planning
         </div>
       </div>
     </div>
@@ -366,7 +366,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
             textAlign: "center",
           }}
         >
-          {formatDate(new Date())} · Simpla Financial Planning · Este documento é pessoal e intransferível.
+          {formatDate(new Date())} · Simpla Wealth Financial Planning · Este documento é pessoal e intransferível.
         </div>
       </div>
     </div>

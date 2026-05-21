@@ -481,12 +481,22 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       {/* Header */}
-      <div style={{ height: 56, backgroundColor: "#041A20", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#BBA866" }} />
-            <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>Simpla</span>
-            <span style={{ color: "#BBA866", fontWeight: 600, fontSize: 18 }}>Financial Planning</span>
+      <div style={{ height: 56, backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src="/logo-icon.png"
+              alt="Simpla Wealth"
+              style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+                Simpla Wealth
+              </span>
+              <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+                Financial Planning
+              </span>
+            </div>
           </div>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>

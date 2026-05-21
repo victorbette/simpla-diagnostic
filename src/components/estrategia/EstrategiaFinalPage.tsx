@@ -145,7 +145,7 @@ export function EstrategiaFinalPage({
       <div
         style={{
           height: 56,
-          backgroundColor: "#041A20",
+          backgroundColor: "#000000",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -154,7 +154,7 @@ export function EstrategiaFinalPage({
         }}
       >
         {/* Left */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={onVoltar}
             style={{
@@ -171,14 +171,24 @@ export function EstrategiaFinalPage({
           >
             <ArrowLeft size={14} /> Voltar à revisão
           </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16 }}>
-            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#BBA866" }} />
-            <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>Simpla</span>
-            <span style={{ color: "#BBA866", fontWeight: 600, fontSize: 18 }}>Financial Planning</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img
+              src="/logo-icon.png"
+              alt="Simpla Wealth"
+              style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+            />
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+                Simpla Wealth
+              </span>
+              <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+                Financial Planning
+              </span>
+            </div>
           </div>
-          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginLeft: 8 }}> › </span>
-          <span style={{ color: "white", fontSize: 14, marginLeft: 4 }}>Estratégia Inicial — Pronta</span>
-          <span style={{ color: "#BBA866", fontSize: 14, marginLeft: 6 }}>· {clientName}</span>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}> › </span>
+          <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial — Pronta</span>
+          <span style={{ color: "#BBA866", fontSize: 14, marginLeft: 4 }}>· {clientName}</span>
         </div>
 
         {/* Right */}
@@ -279,11 +289,11 @@ export function EstrategiaFinalPage({
                 style={{ height: 60, display: "block", margin: "0 auto 32px" }}
               />
             ) : (
-              <div style={{ textAlign: "center", marginBottom: 32 }}>
-                <span style={{ color: "#041A20", fontWeight: 900, fontSize: 24, letterSpacing: "0.05em" }}>
-                  SIMPLA FINANCIAL PLANNING
-                </span>
-              </div>
+              <img
+                src="/logo-icon-large.png"
+                alt="Simpla Wealth"
+                style={{ height: 80, width: 80, objectFit: "contain", margin: "0 auto 24px", display: "block", borderRadius: 8 }}
+              />
             )}
 
             <div style={{ fontSize: 40, fontWeight: 700, color: "#041A20", marginBottom: 8 }}>
@@ -998,9 +1008,9 @@ export function EstrategiaFinalPage({
           >
             <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.6 }}>
               Este documento foi elaborado pelo consultor{" "}
-              {estrategia.nomeConsultor || "Simpla Financial Planning"} com base nas informações
+              {estrategia.nomeConsultor || "Simpla Wealth Financial Planning"} com base nas informações
               fornecidas pelo cliente e tem caráter informativo. Não constitui oferta de compra ou
-              venda de valores mobiliários. © Simpla Financial Planning {new Date().getFullYear()}
+              venda de valores mobiliários. © Simpla Wealth Financial Planning {new Date().getFullYear()}
             </div>
           </div>
         </div>

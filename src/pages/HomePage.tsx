@@ -255,15 +255,25 @@ export function HomePage() {
       {/* ── Header ── */}
       <header
         className="sticky top-0 z-40"
-        style={{ backgroundColor: DARK }}
+        style={{ backgroundColor: "#000000" }}
       >
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           {/* Logo */}
           <div className="flex-1 flex items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#BBA866]" />
-              <span className="text-white font-semibold text-lg">Simpla</span>
-              <span className="text-[#BBA866] font-semibold text-lg">Financial Planning</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <img
+                src="/logo-icon.png"
+                alt="Simpla Wealth"
+                style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+                <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+                  Simpla Wealth
+                </span>
+                <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+                  Financial Planning
+                </span>
+              </div>
             </div>
           </div>
 
