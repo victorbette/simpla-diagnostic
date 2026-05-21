@@ -259,15 +259,12 @@ export function HomePage() {
       >
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           {/* Logo */}
-          <div className="flex-1 flex items-center gap-2">
-            <span style={{ color: GOLD, fontSize: 18 }}>●</span>
-            <span
-              className="font-bold text-white"
-              style={{ fontFamily: "Poppins, sans-serif", fontSize: 17 }}
-            >
-              Simpla{" "}
-              <span style={{ color: GOLD, fontWeight: 400 }}>Financial Planning</span>
-            </span>
+          <div className="flex-1 flex items-center">
+            <img
+              src="/logo-simpla.svg"
+              alt="Simpla Financial Planning"
+              style={{ height: 28, width: "auto", objectFit: "contain" }}
+            />
           </div>
 
           {/* User info + logout */}

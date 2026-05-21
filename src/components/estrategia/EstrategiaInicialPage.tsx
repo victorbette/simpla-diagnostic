@@ -483,7 +483,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       {/* Header */}
       <div style={{ height: 56, backgroundColor: "#041A20", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ color: "#BBA866", fontWeight: 700, fontSize: 16 }}>simpla</span>
+          <img
+            src="/logo-simpla.svg"
+            alt="Simpla Financial Planning"
+            style={{ height: 26, width: "auto", objectFit: "contain" }}
+          />
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>
         </div>
