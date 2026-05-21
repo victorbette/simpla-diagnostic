@@ -171,11 +171,11 @@ export function EstrategiaFinalPage({
           >
             <ArrowLeft size={14} /> Voltar à revisão
           </button>
-          <img
-            src="/logo-simpla.svg"
-            alt="Simpla Financial Planning"
-            style={{ height: 26, width: "auto", objectFit: "contain", marginLeft: 16 }}
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#BBA866" }} />
+            <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>Simpla</span>
+            <span style={{ color: "#BBA866", fontWeight: 600, fontSize: 18 }}>Financial Planning</span>
+          </div>
           <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14, marginLeft: 8 }}> › </span>
           <span style={{ color: "white", fontSize: 14, marginLeft: 4 }}>Estratégia Inicial — Pronta</span>
           <span style={{ color: "#BBA866", fontSize: 14, marginLeft: 6 }}>· {clientName}</span>
@@ -279,12 +279,10 @@ export function EstrategiaFinalPage({
                 style={{ height: 60, display: "block", margin: "0 auto 32px" }}
               />
             ) : (
-              <div style={{ backgroundColor: "#041A20", borderRadius: 10, padding: "12px 28px", display: "inline-block", marginBottom: 32 }}>
-                <img
-                  src="/logo-simpla.svg"
-                  alt="Simpla Financial Planning"
-                  style={{ height: 40, width: "auto", objectFit: "contain", display: "block" }}
-                />
+              <div style={{ textAlign: "center", marginBottom: 32 }}>
+                <span style={{ color: "#041A20", fontWeight: 900, fontSize: 24, letterSpacing: "0.05em" }}>
+                  SIMPLA FINANCIAL PLANNING
+                </span>
               </div>
             )}
 

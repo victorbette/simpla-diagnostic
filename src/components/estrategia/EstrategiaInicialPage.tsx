@@ -482,12 +482,12 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       {/* Header */}
       <div style={{ height: 56, backgroundColor: "#041A20", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <img
-            src="/logo-simpla.svg"
-            alt="Simpla Financial Planning"
-            style={{ height: 26, width: "auto", objectFit: "contain" }}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#BBA866" }} />
+            <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>Simpla</span>
+            <span style={{ color: "#BBA866", fontWeight: 600, fontSize: 18 }}>Financial Planning</span>
+          </div>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>
         </div>

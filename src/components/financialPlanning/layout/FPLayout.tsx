@@ -117,11 +117,11 @@ export function FPLayout({
       >
         {/* Logo */}
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <img
-            src="/logo-simpla.svg"
-            alt="Simpla Financial Planning"
-            style={{ height: 28, width: "auto", objectFit: "contain" }}
-          />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#BBA866" }} />
+            <span style={{ color: "white", fontWeight: 600, fontSize: 18 }}>Simpla</span>
+            <span style={{ color: "#BBA866", fontWeight: 600, fontSize: 18 }}>Financial Planning</span>
+          </div>
         </div>
 
         {/* User info */}

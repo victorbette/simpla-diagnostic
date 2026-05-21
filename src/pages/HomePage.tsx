@@ -260,11 +260,11 @@ export function HomePage() {
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           {/* Logo */}
           <div className="flex-1 flex items-center">
-            <img
-              src="/logo-simpla.svg"
-              alt="Simpla Financial Planning"
-              style={{ height: 28, width: "auto", objectFit: "contain" }}
-            />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#BBA866]" />
+              <span className="text-white font-semibold text-lg">Simpla</span>
+              <span className="text-[#BBA866] font-semibold text-lg">Financial Planning</span>
+            </div>
           </div>
 
           {/* User info + logout */}
