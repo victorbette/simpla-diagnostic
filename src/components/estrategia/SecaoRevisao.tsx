@@ -19,7 +19,7 @@ import {
   PERFIL_LABELS,
 } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
-import type { SectionStatus, SecaoId, EstrategiaData } from "./EstrategiaInicialPage";
+import type { SecaoId, EstrategiaData } from "./EstrategiaInicialPage";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -37,7 +37,6 @@ interface Props {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SECOES_CONTENT: { id: SecaoId; label: string; color: string }[] = [
-  { id: "capa", label: "Capa e Identificação", color: "#BBA866" },
   { id: "assetAllocation", label: "Asset Allocation", color: "#000000" },
   { id: "aposentadoria", label: "Aposentadoria / IF", color: "#3D6B41" },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#7A3535" },
@@ -70,25 +69,9 @@ function safeCurrency(v: number | null | undefined): string {
   return formatCurrency(v);
 }
 
-function statusBadge(status: SectionStatus): React.ReactElement {
-  if (status === "concluido") {
-    return (
-      <span
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          padding: "2px 8px",
-          borderRadius: 999,
-          backgroundColor: "#EBF2EC",
-          color: "#3D6B41",
-          border: "1px solid #A8C8AB",
-        }}
-      >
-        ✓ Concluída
-      </span>
-    );
-  }
-  if (status === "revisando") {
+function statusBadge(secaoId: SecaoId, estrategia: EstrategiaData): React.ReactElement {
+  const len = estrategia.comentarios[secaoId]?.length ?? 0;
+  if (len > 20) {
     return (
       <span
         style={{
@@ -403,7 +386,7 @@ export function SecaoRevisao({
   onComentarioGeralChange,
 }: Props): React.ReactElement {
   const pendentes = SECOES_CONTENT.filter(
-    (s) => estrategia.statusSecoes[s.id] !== "concluido"
+    (s) => (estrategia.comentarios[s.id]?.length ?? 0) <= 20
   ).length;
   const todasConcluidas = pendentes === 0;
 
@@ -482,7 +465,7 @@ export function SecaoRevisao({
         {!todasConcluidas && (
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {SECOES_CONTENT.filter(
-              (s) => estrategia.statusSecoes[s.id] !== "concluido"
+              (s) => (estrategia.comentarios[s.id]?.length ?? 0) <= 20
             ).map((s) => (
               <span
                 key={s.id}
@@ -513,7 +496,7 @@ export function SecaoRevisao({
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Asset Allocation
             </span>
-            {statusBadge(estrategia.statusSecoes["assetAllocation"])}
+            {statusBadge("assetAllocation", estrategia)}
           </div>
           {perfil && (
             <span
@@ -685,7 +668,7 @@ export function SecaoRevisao({
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Aposentadoria / IF
             </span>
-            {statusBadge(estrategia.statusSecoes["aposentadoria"])}
+            {statusBadge("aposentadoria", estrategia)}
           </div>
         </CardHeader>
         <CardBody>
@@ -772,7 +755,7 @@ export function SecaoRevisao({
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Proteção e Sucessório
             </span>
-            {statusBadge(estrategia.statusSecoes["protecaoSucessorio"])}
+            {statusBadge("protecaoSucessorio", estrategia)}
           </div>
         </CardHeader>
         <CardBody>
@@ -904,7 +887,7 @@ export function SecaoRevisao({
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Planejamento Fiscal
             </span>
-            {statusBadge(estrategia.statusSecoes["fiscal"])}
+            {statusBadge("fiscal", estrategia)}
           </div>
         </CardHeader>
         <CardBody>

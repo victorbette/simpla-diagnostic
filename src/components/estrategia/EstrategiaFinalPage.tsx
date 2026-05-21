@@ -22,9 +22,9 @@ function metricaItem(label: string, value: string, color = "#000000") {
   );
 }
 
-function statusBadgeLocal(status: string) {
-  if (status === "concluido") return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EBF2EC", color: "#3D6B41", border: "1px solid #A8C8AB" }}>✓ Concluída</span>;
-  if (status === "revisando") return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45", border: "1px solid #D4C08A" }}>Em revisão</span>;
+function statusBadgeLocal(secaoId: string, estrategia: EstrategiaData) {
+  const len = estrategia.comentarios[secaoId]?.length ?? 0;
+  if (len > 20) return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45", border: "1px solid #D4C08A" }}>Em revisão</span>;
   return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>Pendente</span>;
 }
 
@@ -427,7 +427,7 @@ export function EstrategiaFinalPage({
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Asset Allocation
                 </span>
-                {statusBadgeLocal(estrategia.statusSecoes["assetAllocation"] ?? "pendente")}
+                {statusBadgeLocal("assetAllocation", estrategia)}
               </div>
 
               {resultados.carteira ? (
@@ -493,7 +493,7 @@ export function EstrategiaFinalPage({
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Aposentadoria / IF
                 </span>
-                {statusBadgeLocal(estrategia.statusSecoes["aposentadoria"] ?? "pendente")}
+                {statusBadgeLocal("aposentadoria", estrategia)}
               </div>
 
               {resultados.if ? (
@@ -657,7 +657,7 @@ export function EstrategiaFinalPage({
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Proteção e Sucessório
                 </span>
-                {statusBadgeLocal(estrategia.statusSecoes["protecaoSucessorio"] ?? "pendente")}
+                {statusBadgeLocal("protecaoSucessorio", estrategia)}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
@@ -771,7 +771,7 @@ export function EstrategiaFinalPage({
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Planejamento Fiscal
                 </span>
-                {statusBadgeLocal(estrategia.statusSecoes["fiscal"] ?? "pendente")}
+                {statusBadgeLocal("fiscal", estrategia)}
               </div>
 
               {resultados.fiscal ? (
@@ -873,7 +873,7 @@ export function EstrategiaFinalPage({
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Próximos Passos
                 </span>
-                {statusBadgeLocal(estrategia.statusSecoes["proximosPassos"] ?? "pendente")}
+                {statusBadgeLocal("proximosPassos", estrategia)}
               </div>
 
               {/* Actions list */}
@@ -977,23 +977,6 @@ export function EstrategiaFinalPage({
                 )}
               </div>
 
-              {/* Próxima reunião */}
-              {estrategia.dataProximaReuniao && (
-                <div
-                  style={{
-                    backgroundColor: "#EAF0F5",
-                    border: "1px solid #BFDBFE",
-                    borderRadius: 8,
-                    padding: 12,
-                    fontSize: 13,
-                    color: "#1D4ED8",
-                    fontWeight: 600,
-                  }}
-                >
-                  Próxima reunião:{" "}
-                  {new Date(estrategia.dataProximaReuniao + "T00:00:00").toLocaleDateString("pt-BR")}
-                </div>
-              )}
             </>
           )}
 

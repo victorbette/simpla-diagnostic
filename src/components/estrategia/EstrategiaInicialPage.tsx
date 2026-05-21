@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import {
-  FileText,
   PieChart as PieChartIcon,
   Flame,
   Shield,
@@ -20,7 +19,6 @@ import {
 } from "@/types/financialPlanning";
 import type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
-import { SecaoCapa } from "./SecaoCapa";
 import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
 import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
@@ -40,7 +38,6 @@ function hexOpacity(hex: string, opacity: number): string {
 export type SectionStatus = "pendente" | "revisando" | "concluido";
 
 export type SecaoId =
-  | "capa"
   | "assetAllocation"
   | "aposentadoria"
   | "protecaoSucessorio"
@@ -62,11 +59,7 @@ export interface EstrategiaData {
   apresentacao: string;
   comentarios: Record<string, string>;
   tags: Record<string, string[]>;
-  statusSecoes: Record<SecaoId, SectionStatus>;
   acoes: AcaoItem[];
-  dataProximaReuniao: string;
-  formatoReuniao: string;
-  pautaSugerida: string;
   consideracoesFinais: string;
   comentarioGeral: string;
   resultados: ResultadosEstrategia;
@@ -84,7 +77,6 @@ interface SecaoConfig {
 }
 
 const SECOES: SecaoConfig[] = [
-  { id: "capa",               label: "Capa e Identificação",   color: "#BBA866", Icon: FileText       },
   { id: "assetAllocation",    label: "Asset Allocation",        color: "#000000", Icon: PieChartIcon   },
   { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#3D6B41", Icon: Flame          },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#7A3535", Icon: Shield         },
@@ -163,24 +155,13 @@ function gerarAcoesIniciais(plan: FinancialPlan): AcaoItem[] {
 // ─── Default data factory ──────────────────────────────────────────────────────
 
 function defaultData(plan: FinancialPlan): EstrategiaData {
-  const secaoIds: SecaoId[] = [
-    "capa", "assetAllocation", "aposentadoria",
-    "protecaoSucessorio", "fiscal", "proximosPassos", "revisao",
-  ];
-  const statusSecoes = {} as Record<SecaoId, SectionStatus>;
-  secaoIds.forEach((id) => { statusSecoes[id] = "pendente"; });
-
   return {
     logoBase64: null,
     nomeConsultor: "",
     apresentacao: "",
     comentarios: {},
     tags: {},
-    statusSecoes,
     acoes: gerarAcoesIniciais(plan),
-    dataProximaReuniao: "",
-    formatoReuniao: "Online",
-    pautaSugerida: "",
     consideracoesFinais: "",
     comentarioGeral: "",
     resultados: defaultResultados,
@@ -216,7 +197,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     return defaultData(plan);
   });
 
-  const [secaoAtiva, setSecaoAtiva] = useState<SecaoId>("capa");
+  const [secaoAtiva, setSecaoAtiva] = useState<SecaoId>("assetAllocation");
   const [printMode, setPrintMode] = useState<"consultor" | "cliente" | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
@@ -283,24 +264,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const secaoAtual = SECOES.find((s) => s.id === secaoAtiva)!;
   const secaoIndex = SECOES.findIndex((s) => s.id === secaoAtiva);
 
-  const marcarConcluida = () => {
-    setData((prev) => {
-      const novoStatus = prev.statusSecoes[secaoAtiva] === "concluido" ? "revisando" : "concluido";
-      const next = {
-        ...prev,
-        statusSecoes: { ...prev.statusSecoes, [secaoAtiva]: novoStatus },
-      };
-      // Auto-save silencioso no Supabase ao marcar como concluída
-      if (onSaveCloud) {
-        onSaveCloud(next).catch(() => {/* falha silenciosa */});
-      }
-      return next;
-    });
-
-    // stub return to keep the old signature happy — o setData já atualiza
-    return;
-  };
-
   const irParaSecao = (id: SecaoId) => setSecaoAtiva(id);
 
   const irAnterior = () => {
@@ -311,10 +274,10 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     if (secaoIndex < SECOES.length - 1) setSecaoAtiva(SECOES[secaoIndex + 1].id);
   };
 
-  // Count completed (non-revisao)
+  // Count sections with comments (non-revisao)
   const nonRevisaoSections = SECOES.filter((s) => s.id !== "revisao");
   const concluidasCount = nonRevisaoSections.filter(
-    (s) => data.statusSecoes[s.id] === "concluido"
+    (s) => (data.comentarios[s.id]?.length ?? 0) > 20
   ).length;
 
   // Avatar
@@ -326,22 +289,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "Não definido";
 
-  function renderStatusBadge(status: SectionStatus, isRevisao = false) {
-    if (isRevisao) {
-      return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>
-          Aguardando
-        </span>
-      );
-    }
-    if (status === "concluido") {
-      return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EBF2EC", color: "#3D6B41" }}>
-          ✓ Concluída
-        </span>
-      );
-    }
-    if (status === "revisando") {
+  function renderStatusBadge(secaoId: SecaoId) {
+    const len = data.comentarios[secaoId]?.length ?? 0;
+    if (len > 20) {
       return (
         <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45" }}>
           Em revisão
@@ -365,19 +315,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       setData((prev) => ({ ...prev, tags: { ...prev.tags, [secaoAtiva]: v } }));
 
     switch (secaoAtiva) {
-      case "capa":
-        return (
-          <SecaoCapa
-            plan={plan}
-            clientName={clientName}
-            logoBase64={data.logoBase64}
-            onLogoChange={(v) => setData((prev) => ({ ...prev, logoBase64: v }))}
-            nomeConsultor={data.nomeConsultor}
-            onNomeConsultorChange={(v) => setData((prev) => ({ ...prev, nomeConsultor: v }))}
-            apresentacao={data.apresentacao}
-            onApresentacaoChange={(v) => setData((prev) => ({ ...prev, apresentacao: v }))}
-          />
-        );
       case "assetAllocation":
         return (
           <SecaoAssetAllocation
@@ -433,12 +370,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             plan={plan}
             acoes={data.acoes}
             onAcoesChange={(v) => setData((prev) => ({ ...prev, acoes: v }))}
-            dataProximaReuniao={data.dataProximaReuniao}
-            onDataChange={(v) => setData((prev) => ({ ...prev, dataProximaReuniao: v }))}
-            formatoReuniao={data.formatoReuniao}
-            onFormatoChange={(v) => setData((prev) => ({ ...prev, formatoReuniao: v }))}
-            pautaSugerida={data.pautaSugerida}
-            onPautaChange={(v) => setData((prev) => ({ ...prev, pautaSugerida: v }))}
             consideracoesFinais={data.consideracoesFinais}
             onConsideracoesChange={(v) => setData((prev) => ({ ...prev, consideracoesFinais: v }))}
           />
@@ -462,7 +393,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     }
   }
 
-  const progressPct = (concluidasCount / 6) * 100;
+  const progressPct = (concluidasCount / 5) * 100;
 
   if (mostrarFinal) {
     return (
@@ -513,7 +444,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               disabled={salvando}
               style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
             >
-              {salvando ? "Salvando…" : "💾 Salvar estratégia"}
+              {salvando ? "Salvando..." : "Salvar estratégia"}
             </button>
           )}
           <button
@@ -563,7 +494,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           <nav style={{ flex: 1 }}>
             {SECOES.map((secao) => {
               const isActive = secao.id === secaoAtiva;
-              const status = data.statusSecoes[secao.id];
               return (
                 <button
                   key={secao.id}
@@ -604,7 +534,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                       {secao.label}
                     </span>
                   </div>
-                  {renderStatusBadge(status, secao.id === "revisao")}
+                  {renderStatusBadge(secao.id)}
                 </button>
               );
             })}
@@ -613,7 +543,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           {/* Sidebar footer */}
           <div style={{ padding: 16, borderTop: "1px solid #F5F3EE" }}>
             <div style={{ fontSize: 12, color: "#6B6347", marginBottom: 6 }}>
-              {concluidasCount} de 6 seções concluídas
+              {concluidasCount} de 5 seções com estratégia
             </div>
             <div style={{ height: 4, backgroundColor: "#F5F3EE", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#BBA866", borderRadius: 2, transition: "width 0.3s" }} />
@@ -624,7 +554,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 disabled={salvando}
                 style={{ width: "100%", padding: "9px 0", border: "none", borderRadius: 6, backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.85 : 1 }}
               >
-                {salvando ? "Salvando…" : ultimoSalvo ? `✓ Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "💾 Salvar estratégia"}
+                {salvando ? "Salvando..." : ultimoSalvo ? `✓ Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Salvar estratégia"}
               </button>
             )}
             <button
@@ -652,30 +582,10 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             </div>
 
             {/* Title row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+            <div style={{ marginBottom: 24 }}>
               <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000000", margin: 0 }}>
                 {secaoAtual.label}
               </h1>
-              {secaoAtiva !== "revisao" && (
-                <button
-                  onClick={marcarConcluida}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: `1px solid #3D6B41`,
-                    backgroundColor: data.statusSecoes[secaoAtiva] === "concluido" ? "#3D6B41" : "transparent",
-                    color: data.statusSecoes[secaoAtiva] === "concluido" ? "white" : "#3D6B41",
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontWeight: 500,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  Marcar como concluída ✓
-                </button>
-              )}
             </div>
 
             {/* Section content */}

@@ -5,12 +5,6 @@ interface Props {
   plan: FinancialPlan;
   acoes: AcaoItem[];
   onAcoesChange: (v: AcaoItem[]) => void;
-  dataProximaReuniao: string;
-  onDataChange: (v: string) => void;
-  formatoReuniao: string;
-  onFormatoChange: (v: string) => void;
-  pautaSugerida: string;
-  onPautaChange: (v: string) => void;
   consideracoesFinais: string;
   onConsideracoesChange: (v: string) => void;
 }
@@ -30,12 +24,6 @@ export function SecaoProximosPassos({
   plan: _plan,
   acoes,
   onAcoesChange,
-  dataProximaReuniao,
-  onDataChange,
-  formatoReuniao,
-  onFormatoChange,
-  pautaSugerida,
-  onPautaChange,
   consideracoesFinais,
   onConsideracoesChange,
 }: Props) {
@@ -137,45 +125,6 @@ export function SecaoProximosPassos({
         >
           + Adicionar ação
         </button>
-      </div>
-
-      {/* Próxima reunião */}
-      <div style={{ ...CARD, borderTop: "3px solid #2A4F6A" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          Informações da Próxima Reunião
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-          <div>
-            <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Data da próxima reunião</label>
-            <input
-              type="date"
-              value={dataProximaReuniao}
-              onChange={(e) => onDataChange(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", boxSizing: "border-box" }}
-            />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Formato</label>
-            <select
-              value={formatoReuniao}
-              onChange={(e) => onFormatoChange(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", boxSizing: "border-box" }}
-            >
-              <option value="Presencial">Presencial</option>
-              <option value="Online">Online</option>
-              <option value="Telefone">Telefone</option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label style={{ fontSize: 12, color: "#6B6347", display: "block", marginBottom: 6 }}>Pauta sugerida</label>
-          <textarea
-            value={pautaSugerida}
-            onChange={(e) => onPautaChange(e.target.value)}
-            placeholder="Tópicos a discutir na próxima reunião..."
-            style={{ width: "100%", minHeight: 100, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
-          />
-        </div>
       </div>
 
       {/* Considerações finais */}
