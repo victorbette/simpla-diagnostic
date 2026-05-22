@@ -9,6 +9,7 @@ export interface MacroAlocacao {
 
 export interface PlanoAcaoItem {
   id: string;
+  card?: string;
   nomeAtivo: string;
   segmento: string;
   tipo: string;
