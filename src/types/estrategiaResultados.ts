@@ -63,6 +63,19 @@ export interface ResultadoSeguro {
   scoreProtecao: number;
   temSeguroVida: boolean;
   temSeguroInvalidez: boolean;
+  // Breakdown de necessidades
+  immediateTotal: number;
+  ongoingTotal: number;
+  educationTotal: number;
+  lifestyleTotal: number;
+  inventoryCost: number;
+  // Coberturas em vida
+  disabilityTotal: number;
+  disabilityGap: number;
+  disabilityCoverage: number;
+  criticalIllnessTotal: number;
+  criticalIllnessGap: number;
+  criticalIllnessCoverage: number;
   dataCalculo: string;
   savedAt: string;
 }
