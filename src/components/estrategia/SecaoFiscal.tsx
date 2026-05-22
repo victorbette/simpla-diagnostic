@@ -70,9 +70,9 @@ export function SecaoFiscal({
           <span
             style={{
               fontSize: 11,
-              color: "#6B6347",
-              backgroundColor: "#F5F3EE",
-              border: "1px solid #E2DCC8",
+              color: "#6B7280",
+              backgroundColor: "#F0F7FF",
+              border: "1px solid #BFDBFE",
               borderRadius: 999,
               padding: "2px 10px",
             }}
@@ -84,9 +84,9 @@ export function SecaoFiscal({
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: "#8A7A45",
+              color: "#2563EB",
               backgroundColor: "transparent",
-              border: "1px solid #8A7A45",
+              border: "1px solid #2563EB",
               borderRadius: 6,
               padding: "5px 12px",
               cursor: "pointer",
@@ -101,8 +101,8 @@ export function SecaoFiscal({
       <div
         style={{
           marginTop: 16,
-          backgroundColor: "#F5F0E0",
-          border: "1px solid #D4C08A",
+          backgroundColor: "#EFF6FF",
+          border: "1px solid #60A5FA",
           borderRadius: 8,
           padding: "20px 24px",
           textAlign: "center",
@@ -111,7 +111,7 @@ export function SecaoFiscal({
         <p
           style={{
             fontSize: 11,
-            color: "#6B6347",
+            color: "#6B7280",
             textTransform: "uppercase",
             letterSpacing: "0.05em",
             margin: "0 0 4px",
@@ -123,7 +123,7 @@ export function SecaoFiscal({
           style={{
             fontSize: 32,
             fontWeight: 800,
-            color: "#3D6B41",
+            color: "#15803D",
             margin: 0,
           }}
         >
@@ -136,8 +136,8 @@ export function SecaoFiscal({
                 display: "inline-block",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#3D6B41",
-                backgroundColor: "#EBF2EC",
+                color: "#15803D",
+                backgroundColor: "#DCFCE7",
                 border: "1px solid #A7C9AB",
                 borderRadius: 999,
                 padding: "3px 12px",
@@ -151,9 +151,9 @@ export function SecaoFiscal({
                 display: "inline-block",
                 fontSize: 12,
                 fontWeight: 600,
-                color: "#8A7A45",
+                color: "#2563EB",
                 backgroundColor: "#FEF9EC",
-                border: "1px solid #D4C08A",
+                border: "1px solid #60A5FA",
                 borderRadius: 999,
                 padding: "3px 12px",
               }}
@@ -177,23 +177,23 @@ export function SecaoFiscal({
           {
             label: "IR sem PGBL",
             value: `${formatCurrency(resultadoFiscal.irSemPGBL)}/ano`,
-            color: "#7A3535",
+            color: "#B91C1C",
           },
           {
             label: "IR com PGBL",
             value: `${formatCurrency(resultadoFiscal.irComPGBL)}/ano`,
-            color: "#3D6B41",
+            color: "#15803D",
           },
           {
             label: "Espaço mensal",
             value: `${formatCurrency(resultadoFiscal.espacoDisponivelMensal)}/mês`,
-            color: "#8A7A45",
+            color: "#2563EB",
           },
         ].map(({ label, value, color }) => (
           <div
             key={label}
             style={{
-              backgroundColor: "#F5F3EE",
+              backgroundColor: "#F0F7FF",
               borderRadius: 8,
               padding: "12px 14px",
             }}
@@ -201,7 +201,7 @@ export function SecaoFiscal({
             <p
               style={{
                 fontSize: 11,
-                color: "#6B6347",
+                color: "#6B7280",
                 textTransform: "uppercase",
                 letterSpacing: "0.04em",
                 margin: "0 0 4px",
@@ -233,13 +233,13 @@ export function SecaoFiscal({
             {
               label: "IR sem PGBL",
               value: resultadoFiscal.irSemPGBL,
-              color: "#7A3535",
+              color: "#B91C1C",
               widthPct: 100,
             },
             {
               label: "IR com PGBL",
               value: resultadoFiscal.irComPGBL,
-              color: "#3D6B41",
+              color: "#15803D",
               widthPct:
                 resultadoFiscal.irSemPGBL > 0
                   ? Math.min(100, (resultadoFiscal.irComPGBL / resultadoFiscal.irSemPGBL) * 100)
@@ -248,7 +248,7 @@ export function SecaoFiscal({
             {
               label: "Economia",
               value: resultadoFiscal.economiaAnual,
-              color: "#BBA866",
+              color: "#3B82F6",
               widthPct:
                 resultadoFiscal.irSemPGBL > 0
                   ? Math.min(100, (resultadoFiscal.economiaAnual / resultadoFiscal.irSemPGBL) * 100)
@@ -264,13 +264,13 @@ export function SecaoFiscal({
                   marginBottom: 4,
                 }}
               >
-                <span style={{ color: "#6B6347" }}>{label}</span>
+                <span style={{ color: "#6B7280" }}>{label}</span>
                 <span style={{ fontWeight: 600, color }}>{formatCurrency(value)}</span>
               </div>
               <div
                 style={{
                   height: 6,
-                  backgroundColor: "#F5F3EE",
+                  backgroundColor: "#F0F7FF",
                   borderRadius: 3,
                   overflow: "hidden",
                 }}
@@ -297,8 +297,8 @@ export function SecaoFiscal({
               display: "inline-block",
               fontSize: 12,
               fontWeight: 600,
-              color: "#3D6B41",
-              backgroundColor: "#EBF2EC",
+              color: "#15803D",
+              backgroundColor: "#DCFCE7",
               border: "1px solid #A7C9AB",
               borderRadius: 6,
               padding: "6px 14px",
@@ -312,9 +312,9 @@ export function SecaoFiscal({
               display: "inline-block",
               fontSize: 12,
               fontWeight: 600,
-              color: "#8A7A45",
-              backgroundColor: "#F5F0E0",
-              border: "1px solid #D4C08A",
+              color: "#2563EB",
+              backgroundColor: "#EFF6FF",
+              border: "1px solid #60A5FA",
               borderRadius: 6,
               padding: "6px 14px",
             }}
@@ -331,16 +331,16 @@ export function SecaoFiscal({
   const emptyState = (
     <div
       style={{
-        backgroundColor: "#F5F3EE",
+        backgroundColor: "#F0F7FF",
         borderRadius: 8,
         padding: "32px 24px",
         textAlign: "center",
       }}
     >
-      <p style={{ fontSize: 14, color: "#6B6347", margin: "0 0 8px" }}>
+      <p style={{ fontSize: 14, color: "#6B7280", margin: "0 0 8px" }}>
         Calculadora PGBL não executada
       </p>
-      <p style={{ fontSize: 13, color: "#3D6B41", fontWeight: 600, margin: 0 }}>
+      <p style={{ fontSize: 13, color: "#15803D", fontWeight: 600, margin: 0 }}>
         Economia potencial: {formatCurrency(r.economiaFiscalPotencial)}/ano
       </p>
       <button
@@ -350,7 +350,7 @@ export function SecaoFiscal({
           fontSize: 13,
           fontWeight: 600,
           color: "white",
-          backgroundColor: "#8A7A45",
+          backgroundColor: "#2563EB",
           border: "none",
           borderRadius: 6,
           padding: "9px 20px",
@@ -368,12 +368,12 @@ export function SecaoFiscal({
         style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}
       >
         {/* Card 1 — PGBL tool */}
-        <div style={{ ...CARD, borderTop: "3px solid #8A7A45" }}>
+        <div style={{ ...CARD, borderTop: "3px solid #2563EB" }}>
           {resultadoFiscal ? toolResult : emptyState}
         </div>
 
         {/* Card 2 — Comment */}
-        <div style={{ ...CARD, borderTop: "3px solid #000000" }}>
+        <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
           <p
             style={{
               fontSize: 13,
@@ -397,7 +397,7 @@ export function SecaoFiscal({
                 minHeight: 180,
                 padding: "10px 12px",
                 borderRadius: 6,
-                border: "1px solid #E2DCC8",
+                border: "1px solid #BFDBFE",
                 fontSize: 13,
                 color: "#000000",
                 resize: "vertical",
@@ -412,7 +412,7 @@ export function SecaoFiscal({
                 bottom: 8,
                 right: 10,
                 fontSize: 11,
-                color: "#9E9070",
+                color: "#9CA3AF",
               }}
             >
               {comentario.length} caracteres
@@ -428,7 +428,7 @@ export function SecaoFiscal({
               alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
+            <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
             {AVAILABLE_TAGS.map((t) => (
               <button
                 key={t}
@@ -438,9 +438,9 @@ export function SecaoFiscal({
                   padding: "3px 10px",
                   borderRadius: 999,
                   cursor: "pointer",
-                  border: "1px solid #E2DCC8",
-                  backgroundColor: tags.includes(t) ? "#000000" : "transparent",
-                  color: tags.includes(t) ? "white" : "#3D3520",
+                  border: "1px solid #BFDBFE",
+                  backgroundColor: tags.includes(t) ? "#2563EB" : "transparent",
+                  color: tags.includes(t) ? "white" : "#111827",
                 }}
               >
                 {t}
@@ -455,7 +455,7 @@ export function SecaoFiscal({
               marginTop: 8,
             }}
           >
-            <span style={{ fontSize: 11, color: "#9E9070" }}>
+            <span style={{ fontSize: 11, color: "#9CA3AF" }}>
               {lastEdit ? `Última edição: ${lastEdit}` : ""}
             </span>
           </div>

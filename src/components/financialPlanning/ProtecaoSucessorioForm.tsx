@@ -23,8 +23,8 @@ import type {
   DadosCliente,
 } from "@/types/financialPlanning";
 
-const RED = "#7A3535";
-const BLUE = "#2A4F6A";
+const RED = "#B91C1C";
+const BLUE = "#1E40AF";
 const DARK = "#000000";
 
 const UFS = [
@@ -79,7 +79,7 @@ export function ProtecaoSucessorioForm({
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Renda mensal</Label>
               <CurrencyInput
                 value={protecao.rendaMensal}
                 onChange={(v) => setP("rendaMensal", v)}
@@ -88,7 +88,7 @@ export function ProtecaoSucessorioForm({
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">Número de dependentes</Label>
+            <Label className="text-[13px] font-medium text-[#111827]">Número de dependentes</Label>
             <input
               type="number"
               min={0}
@@ -102,7 +102,7 @@ export function ProtecaoSucessorioForm({
 
         <div
           style={{
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             borderRadius: 10,
             padding: "16px 20px",
             display: "flex",
@@ -123,7 +123,7 @@ export function ProtecaoSucessorioForm({
             </div>
             {protecao.possuiSeguroVida && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
-                <Label className="text-[12px] text-[#6B6347]">Capital segurado</Label>
+                <Label className="text-[12px] text-[#6B7280]">Capital segurado</Label>
                 <CurrencyInput
                   value={protecao.capitalSeguradoVida}
                   onChange={(v) => setP("capitalSeguradoVida", v)}
@@ -158,8 +158,8 @@ export function ProtecaoSucessorioForm({
         {/* Resultado proteção */}
         <div
           style={{
-            backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#F2EBEB",
-            border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#C8A8A8"}`,
+            backgroundColor: scoreProtecao >= 80 ? "#DCFCE7" : scoreProtecao >= 50 ? "#EFF6FF" : "#FEE2E2",
+            border: `1px solid ${scoreProtecao >= 80 ? "#86EFAC" : scoreProtecao >= 50 ? "#60A5FA" : "#FCA5A5"}`,
             borderRadius: 10,
             padding: 20,
             display: "grid",
@@ -168,7 +168,7 @@ export function ProtecaoSucessorioForm({
           }}
         >
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#3D6B41" : "#92400E" }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#15803D" : "#92400E" }}>
               Capital necessário
             </p>
             <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
@@ -176,7 +176,7 @@ export function ProtecaoSucessorioForm({
             </p>
           </div>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#3D6B41" : "#92400E" }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: scoreProtecao >= 80 ? "#15803D" : "#92400E" }}>
               Capital segurado
             </p>
             <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
@@ -185,23 +185,23 @@ export function ProtecaoSucessorioForm({
           </div>
           {resultProtecao.gap > 0 && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#7A3535" }}>
+              <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#B91C1C" }}>
                 Gap de cobertura
               </p>
-              <p style={{ fontSize: 18, fontWeight: 700, color: "#7A3535", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#B91C1C", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(resultProtecao.gap)}
               </p>
             </div>
           )}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 6px", color: scoreProtecao >= 80 ? "#3D6B41" : "#92400E" }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 6px", color: scoreProtecao >= 80 ? "#15803D" : "#92400E" }}>
               Cobertura atual
             </p>
             <Badge
               style={{
-                backgroundColor: scoreProtecao >= 80 ? "#EBF2EC" : scoreProtecao >= 50 ? "#F5F0E0" : "#F2EBEB",
-                color: scoreProtecao >= 80 ? "#3D6B41" : scoreProtecao >= 50 ? "#8A7A45" : "#7A3535",
-                border: `1px solid ${scoreProtecao >= 80 ? "#A8C8AB" : scoreProtecao >= 50 ? "#D4C08A" : "#C8A8A8"}`,
+                backgroundColor: scoreProtecao >= 80 ? "#DCFCE7" : scoreProtecao >= 50 ? "#EFF6FF" : "#FEE2E2",
+                color: scoreProtecao >= 80 ? "#15803D" : scoreProtecao >= 50 ? "#2563EB" : "#B91C1C",
+                border: `1px solid ${scoreProtecao >= 80 ? "#86EFAC" : scoreProtecao >= 50 ? "#60A5FA" : "#FCA5A5"}`,
                 fontSize: 13,
                 fontWeight: 700,
                 padding: "4px 12px",
@@ -214,7 +214,7 @@ export function ProtecaoSucessorioForm({
       </section>
 
       {/* Divider */}
-      <div style={{ borderTop: "1px solid #E2DCC8" }} />
+      <div style={{ borderTop: "1px solid #BFDBFE" }} />
 
       {/* ══ SUCESSÓRIO ══ */}
       <section style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -232,7 +232,7 @@ export function ProtecaoSucessorioForm({
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Patrimônio total estimado</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Patrimônio total estimado</Label>
               <CurrencyInput
                 value={sucessorio.patrimonioTotal}
                 onChange={(v) => onSucessorioChange({ ...sucessorio, patrimonioTotal: v })}
@@ -241,7 +241,7 @@ export function ProtecaoSucessorioForm({
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">Número de herdeiros</Label>
+            <Label className="text-[13px] font-medium text-[#111827]">Número de herdeiros</Label>
             <input
               type="number"
               min={0}
@@ -253,7 +253,7 @@ export function ProtecaoSucessorioForm({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">Estado de residência (ITCMD)</Label>
+            <Label className="text-[13px] font-medium text-[#111827]">Estado de residência (ITCMD)</Label>
             <Select
               value={sucessorio.estadoResidencia}
               onValueChange={(v) => setS("estadoResidencia", v)}
@@ -272,7 +272,7 @@ export function ProtecaoSucessorioForm({
 
         <div
           style={{
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             borderRadius: 10,
             padding: "16px 20px",
             display: "flex",
@@ -307,7 +307,7 @@ export function ProtecaoSucessorioForm({
             </div>
             {sucessorio.possuiSeguroVidaSucessao && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
-                <Label className="text-[12px] text-[#6B6347]">Capital do seguro para sucessão</Label>
+                <Label className="text-[12px] text-[#6B7280]">Capital do seguro para sucessão</Label>
                 <CurrencyInput
                   value={sucessorio.capitalSeguroVidaSucessao}
                   onChange={(v) => setS("capitalSeguroVidaSucessao", v)}
@@ -333,7 +333,7 @@ export function ProtecaoSucessorioForm({
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
               ITCMD estimado
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#7A3535", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#B91C1C", margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(resultSucessorio.itcmdEstimado)}
             </p>
           </div>
@@ -341,7 +341,7 @@ export function ProtecaoSucessorioForm({
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
               Custo inventário
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#7A3535", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#B91C1C", margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(resultSucessorio.custoInventarioEstimado)}
             </p>
           </div>
@@ -357,7 +357,7 @@ export function ProtecaoSucessorioForm({
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px", color: "#1D4ED8" }}>
               Patrimônio líquido
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#3D6B41", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(resultSucessorio.patrimonioLiquidoHerdeiros)}
             </p>
           </div>

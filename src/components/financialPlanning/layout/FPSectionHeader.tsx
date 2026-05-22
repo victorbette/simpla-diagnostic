@@ -15,7 +15,7 @@ export function FPSectionHeader({ title, subtitle, borderColor, className = "" }
         {title}
       </h4>
       {subtitle && (
-        <p style={{ fontSize: 13, color: "#6B6347", margin: "2px 0 0" }}>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: "2px 0 0" }}>
           {subtitle}
         </p>
       )}

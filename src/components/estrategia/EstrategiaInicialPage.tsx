@@ -77,15 +77,15 @@ interface SecaoConfig {
 
 const SECOES: SecaoConfig[] = [
   { id: "assetAllocation",    label: "Asset Allocation",        color: "#000000", Icon: PieChartIcon   },
-  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#3D6B41", Icon: Flame          },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#7A3535", Icon: Shield         },
-  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#8A7A45", Icon: Receipt        },
-  { id: "proximosPassos",     label: "Próximos Passos",         color: "#2A4F6A", Icon: ListChecks     },
+  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#15803D", Icon: Flame          },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#B91C1C", Icon: Shield         },
+  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#2563EB", Icon: Receipt        },
+  { id: "proximosPassos",     label: "Próximos Passos",         color: "#1E40AF", Icon: ListChecks     },
   { id: "revisao",            label: "Revisão Final",           color: "#000000", Icon: ClipboardCheck },
 ];
 
 const AVATAR_COLORS = [
-  "#BBA866", "#000000", "#3D6B41", "#7A3535", "#2A4F6A", "#8A7A45",
+  "#3B82F6", "#000000", "#15803D", "#B91C1C", "#1E40AF", "#2563EB",
 ];
 
 // ─── Helper: generate initial actions ─────────────────────────────────────────
@@ -303,13 +303,13 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     const len = data.comentarios[secaoId]?.length ?? 0;
     if (len > 20) {
       return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45" }}>
+        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EFF6FF", color: "#2563EB" }}>
           Em revisão
         </span>
       );
     }
     return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>
+      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F0F7FF", color: "#6B7280" }}>
         Pendente
       </span>
     );
@@ -422,19 +422,19 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
       {/* Header */}
-      <div style={{ height: 56, backgroundColor: "#000000", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
+      <div style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/logo-icon.png"
-              alt="Simpla Wealth"
+              src="/logo-si.svg"
+              alt="Simpla Invest"
               style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
             />
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
               <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                Simpla Wealth
+                Simpla Invest
               </span>
-              <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
                 Financial Planning
               </span>
             </div>
@@ -452,7 +452,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             <button
               onClick={() => handleSalvarCloud(data)}
               disabled={salvando}
-              style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
+              style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#2563EB" : "#3B82F6", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
             >
               {salvando ? "Salvando..." : "Salvar estratégia"}
             </button>
@@ -465,7 +465,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </button>
           <button
             onClick={() => setPrintMode("cliente")}
-            style={{ padding: "6px 14px", borderRadius: 6, border: "none", backgroundColor: "#BBA866", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+            style={{ padding: "6px 14px", borderRadius: 6, border: "none", backgroundColor: "#3B82F6", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
           >
             Gerar PDF Cliente
           </button>
@@ -475,12 +475,12 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       {/* Body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Sidebar */}
-        <div style={{ width: 280, backgroundColor: "white", borderRight: "1px solid #F5F3EE", display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
+        <div style={{ width: 280, backgroundColor: "white", borderRight: "1px solid #F0F7FF", display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
           {/* Top block */}
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #F5F3EE" }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #F0F7FF" }}>
             <button
               onClick={onClose}
-              style={{ color: "#BBA866", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 4 }}
+              style={{ color: "#3B82F6", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 4 }}
             >
               ← Voltar ao Diagnóstico
             </button>
@@ -490,13 +490,13 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               </div>
               <div>
                 <div style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>{clientName}</div>
-                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EDE9DC", color: "#000000" }}>{perfilLabel}</span>
+                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#DBEAFE", color: "#000000" }}>{perfilLabel}</span>
               </div>
             </div>
           </div>
 
           {/* Section label */}
-          <div style={{ padding: "16px 20px 8px", fontSize: 10, fontWeight: 700, color: "#BBA866", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <div style={{ padding: "16px 20px 8px", fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             Estratégia Inicial
           </div>
 
@@ -514,7 +514,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "10px 20px",
-                    background: isActive ? "#F5F3EE" : "transparent",
+                    background: isActive ? "#F0F7FF" : "transparent",
                     borderLeft: isActive ? `3px solid ${secao.color}` : "3px solid transparent",
                     border: "none",
                     borderLeftWidth: 3,
@@ -540,7 +540,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                         style={{ color: isActive ? secao.color : hexOpacity(secao.color, 0.60) }}
                       />
                     </div>
-                    <span style={{ fontSize: 13, color: isActive ? "#000000" : "#3D3520", fontWeight: isActive ? 600 : 400 }}>
+                    <span style={{ fontSize: 13, color: isActive ? "#000000" : "#111827", fontWeight: isActive ? 600 : 400 }}>
                       {secao.label}
                     </span>
                   </div>
@@ -551,18 +551,18 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </nav>
 
           {/* Sidebar footer */}
-          <div style={{ padding: 16, borderTop: "1px solid #F5F3EE" }}>
-            <div style={{ fontSize: 12, color: "#6B6347", marginBottom: 6 }}>
+          <div style={{ padding: 16, borderTop: "1px solid #F0F7FF" }}>
+            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
               {concluidasCount} de 5 seções com estratégia
             </div>
-            <div style={{ height: 4, backgroundColor: "#F5F3EE", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#BBA866", borderRadius: 2, transition: "width 0.3s" }} />
+            <div style={{ height: 4, backgroundColor: "#F0F7FF", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#3B82F6", borderRadius: 2, transition: "width 0.3s" }} />
             </div>
             {onSaveCloud && (
               <button
                 onClick={() => handleSalvarCloud(data)}
                 disabled={salvando}
-                style={{ width: "100%", padding: "9px 0", border: "none", borderRadius: 6, backgroundColor: salvando ? "#8A7A45" : "#BBA866", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.85 : 1 }}
+                style={{ width: "100%", padding: "9px 0", border: "none", borderRadius: 6, backgroundColor: salvando ? "#2563EB" : "#3B82F6", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.85 : 1 }}
               >
                 {salvando ? "Salvando..." : ultimoSalvo ? `✓ Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Salvar estratégia"}
               </button>
@@ -575,7 +575,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             </button>
             <button
               onClick={() => setPrintMode("cliente")}
-              style={{ width: "100%", padding: "8px 0", border: "none", borderRadius: 6, backgroundColor: "#000000", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
+              style={{ width: "100%", padding: "8px 0", border: "none", borderRadius: 6, backgroundColor: "#1E3A8A", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
             >
               Gerar PDF Cliente
             </button>
@@ -583,11 +583,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         </div>
 
         {/* Main content */}
-        <div style={{ flex: 1, backgroundColor: "#F5F3EE", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, backgroundColor: "#F0F7FF", display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Scrollable area */}
           <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
             {/* Breadcrumb */}
-            <div style={{ fontSize: 12, color: "#9E9070", marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>
               Estratégia Inicial › {secaoAtual.label}
             </div>
 
@@ -603,7 +603,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </div>
 
           {/* Bottom nav */}
-          <div style={{ backgroundColor: "white", borderTop: "1px solid #E2DCC8", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <div style={{ backgroundColor: "white", borderTop: "1px solid #BFDBFE", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <button
               onClick={irAnterior}
               disabled={secaoIndex === 0}
@@ -612,8 +612,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 borderRadius: 6,
                 border: "1px solid #000000",
                 backgroundColor: "transparent",
-                color: secaoIndex === 0 ? "#9E9070" : "#000000",
-                borderColor: secaoIndex === 0 ? "#E2DCC8" : "#000000",
+                color: secaoIndex === 0 ? "#9CA3AF" : "#000000",
+                borderColor: secaoIndex === 0 ? "#BFDBFE" : "#000000",
                 fontSize: 13,
                 cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
               }}
@@ -631,7 +631,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                       height: 8,
                       width: i === secaoIndex ? 22 : 8,
                       borderRadius: 9999,
-                      backgroundColor: i === secaoIndex ? "#000000" : "#E2DCC8",
+                      backgroundColor: i === secaoIndex ? "#2563EB" : "#BFDBFE",
                       border: "none",
                       cursor: "pointer",
                       transition: "width 0.2s",
@@ -640,7 +640,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                   />
                 ))}
               </div>
-              <span style={{ fontSize: 11, color: "#9E9070" }}>{secaoIndex + 1} de {SECOES.length}</span>
+              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
             </div>
 
             <button
@@ -650,8 +650,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 padding: "8px 16px",
                 borderRadius: 6,
                 border: "none",
-                backgroundColor: secaoIndex === SECOES.length - 1 ? "#E2DCC8" : "#000000",
-                color: secaoIndex === SECOES.length - 1 ? "#9E9070" : "white",
+                backgroundColor: secaoIndex === SECOES.length - 1 ? "#BFDBFE" : "#2563EB",
+                color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
                 fontSize: 13,
                 cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
                 fontWeight: 500,

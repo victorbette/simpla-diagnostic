@@ -2,27 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Simpla Wealth design tokens ──────────────────────────── */
+/* ── Simpla Invest design tokens ──────────────────────────── */
 :root {
-  --sw-black:      #000000;
-  --sw-dark:       #0A1628;
-  --sw-gold:       #BBA866;
-  --sw-gold-light: #D4C08A;
-  --sw-gold-dark:  #8A7A45;
+  --si-dark:       #1E3A8A;
+  --si-primary:    #2563EB;
+  --si-medium:     #3B82F6;
+  --si-light:      #60A5FA;
+  --si-pale:       #93C5FD;
+  --si-white:      #FFFFFF;
+  --si-offwhite:   #F0F7FF;
+  --si-cream:      #DBEAFE;
+  --si-border:     #BFDBFE;
+  --si-muted:      #6B7280;
+  --si-hint:       #9CA3AF;
+  --si-success:    #15803D;
+  --si-successbg:  #DCFCE7;
+  --si-warning:    #B45309;
+  --si-warningbg:  #FEF3C7;
+  --si-danger:     #B91C1C;
+  --si-dangerbg:   #FEE2E2;
+  /* legacy aliases */
+  --sw-black:      #1E3A8A;
+  --sw-dark:       #1E3A8A;
+  --sw-gold:       #3B82F6;
+  --sw-gold-light: #60A5FA;
+  --sw-gold-dark:  #2563EB;
   --sw-white:      #FFFFFF;
-  --sw-off-white:  #F5F3EE;
-  --sw-cream:      #EDE9DC;
-  --sw-border:     #E2DCC8;
-  --sw-muted:      #6B6347;
-  --sw-hint:       #9E9070;
-  --sw-success:    #3D6B41;
-  --sw-success-bg: #EBF2EC;
-  --sw-warning:    #8A7A45;
-  --sw-warning-bg: #F5F0E0;
-  --sw-danger:     #7A3535;
-  --sw-danger-bg:  #F2EBEB;
-  --sw-info:       #2A4F6A;
-  --sw-info-bg:    #EAF0F5;
+  --sw-off-white:  #F0F7FF;
+  --sw-cream:      #DBEAFE;
+  --sw-border:     #BFDBFE;
+  --sw-muted:      #6B7280;
+  --sw-hint:       #9CA3AF;
+  --sw-success:    #15803D;
+  --sw-success-bg: #DCFCE7;
+  --sw-warning:    #B45309;
+  --sw-warning-bg: #FEF3C7;
+  --sw-danger:     #B91C1C;
+  --sw-danger-bg:  #FEE2E2;
+  --sw-info:       #1E40AF;
+  --sw-info-bg:    #EFF6FF;
 }
 
 @layer base {

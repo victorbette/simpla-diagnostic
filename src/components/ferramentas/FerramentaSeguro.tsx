@@ -124,14 +124,14 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 8, border: "1px solid #E2DCC8" }}>
-        <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 8, border: "1px solid #BFDBFE" }}>
+        <span style={{ fontSize: 11, color: "#3B82F6", display: "flex", alignItems: "center", gap: 4 }}>
           {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
         </span>
         {temDadosSalvos && (
           <button
             onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) limpar(); }}
-            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B6347", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B7280", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
           >
             Limpar dados
           </button>
@@ -146,8 +146,8 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
             className="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
             style={
               tab === t.id
-                ? { borderColor: "#7A3535", color: "#000000" }
-                : { borderColor: "transparent", color: "#6B6347" }
+                ? { borderColor: "#B91C1C", color: "#000000" }
+                : { borderColor: "transparent", color: "#6B7280" }
             }
           >
             {t.label}
@@ -229,9 +229,9 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
               ))}
               {data.assets.length === 0 && <p className="text-xs text-muted-foreground">Nenhum ativo cadastrado.</p>}
             </div>
-            <Card style={{ borderTop: "3px solid #7A3535", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <CardContent className="pt-4 space-y-1.5">
-                <p className="text-xs font-semibold" style={{ color: "#6B6347" }}>Resumo imediato</p>
+                <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo imediato</p>
                 {[
                   { label: "Total de ativos", value: resultado.totalAssets },
                   { label: "Total de dívidas", value: resultado.totalDebts },
@@ -240,7 +240,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
                   { label: "Total imediato", value: resultado.immediateTotal, bold: true },
                 ].map(({ label, value, bold }) => (
                   <div key={label} className="flex justify-between text-sm">
-                    <span style={{ color: bold ? "#000000" : "#6B6347", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                    <span style={{ color: bold ? "#000000" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
                     <span className="tabular-nums" style={{ color: bold ? "#000000" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                   </div>
                 ))}
@@ -307,9 +307,9 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
             </div>
           </div>
 
-          <Card style={{ borderTop: "3px solid #7A3535", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
-              <p className="text-xs font-semibold" style={{ color: "#6B6347" }}>Resumo contínuo</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo contínuo</p>
               {[
                 { label: "Gap de renda mensal", value: Math.max(0, data.familyExpenses - data.spouseIncome) },
                 { label: "Cobertura de estilo de vida", value: resultado.lifestyleTotal },
@@ -317,7 +317,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
                 { label: "Total contínuo", value: resultado.ongoingTotal, bold: true },
               ].map(({ label, value, bold }) => (
                 <div key={label} className="flex justify-between text-sm">
-                  <span style={{ color: bold ? "#000000" : "#6B6347", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                  <span style={{ color: bold ? "#000000" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
                   <span className="tabular-nums" style={{ color: bold ? "#000000" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                 </div>
               ))}
@@ -390,9 +390,9 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
             </div>
           </div>
 
-          <Card style={{ borderTop: "3px solid #7A3535", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
-              <p className="text-xs font-semibold" style={{ color: "#6B6347" }}>Necessidades em vida</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Necessidades em vida</p>
               {[
                 { label: "Necessidade de invalidez (5 anos)", value: resultado.disabilityTotal, neg: false },
                 { label: "Cobertura invalidez atual", value: resultado.disabilityCoverage, neg: false },
@@ -402,8 +402,8 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
                 { label: "Gap DG", value: resultado.criticalIllnessGap, neg: resultado.criticalIllnessGap > 0 },
               ].map(({ label, value, neg }) => (
                 <div key={label} className="flex justify-between text-sm">
-                  <span style={{ color: "#6B6347" }}>{label}</span>
-                  <span className="tabular-nums" style={{ color: neg ? "#7A3535" : (resultado.disabilityGap <= 0 && label === "Gap invalidez") || (resultado.criticalIllnessGap <= 0 && label === "Gap DG") ? "#059669" : undefined }}>{formatCurrency(value)}</span>
+                  <span style={{ color: "#6B7280" }}>{label}</span>
+                  <span className="tabular-nums" style={{ color: neg ? "#B91C1C" : (resultado.disabilityGap <= 0 && label === "Gap invalidez") || (resultado.criticalIllnessGap <= 0 && label === "Gap DG") ? "#059669" : undefined }}>{formatCurrency(value)}</span>
                 </div>
               ))}
             </CardContent>
@@ -436,35 +436,35 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
             {data.policies.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma apólice cadastrada.</p>}
           </div>
 
-          <Card style={{ borderTop: "3px solid #7A3535", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-3">
-              <p className="text-xs font-semibold" style={{ color: "#6B6347" }}>Resumo de cobertura</p>
+              <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo de cobertura</p>
               <div className="space-y-1.5">
                 {[
                   { label: "Capital necessário total", value: resultado.totalNeed, bold: true },
                   { label: "Capital segurado atual", value: resultado.totalCoverage, bold: true },
                 ].map(({ label, value, bold }) => (
                   <div key={label} className="flex justify-between text-sm">
-                    <span style={{ color: bold ? "#000000" : "#6B6347", fontWeight: bold ? 600 : undefined }}>{label}</span>
+                    <span style={{ color: bold ? "#000000" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
                     <span className="tabular-nums" style={{ color: bold ? "#000000" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
                   </div>
                 ))}
               </div>
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span style={{ color: "#6B6347" }}>Cobertura</span>
+                  <span style={{ color: "#6B7280" }}>Cobertura</span>
                   <span>{formatNumber(coveragePct, 0)}%</span>
                 </div>
                 <Progress value={coveragePct} className="h-2" />
               </div>
               {resultado.gap > 0 ? (
-                <div style={{ border: "1px solid #C8A8A8", backgroundColor: "#F2EBEB", borderRadius: 8, padding: 12, textAlign: "center" }}>
-                  <p className="text-xs" style={{ color: "#7A3535" }}>Gap descoberto</p>
-                  <p className="tabular-nums" style={{ color: "#7A3535", fontSize: 22, fontWeight: 700 }}>{formatCurrency(resultado.gap)}</p>
+                <div style={{ border: "1px solid #C8A8A8", backgroundColor: "#FEE2E2", borderRadius: 8, padding: 12, textAlign: "center" }}>
+                  <p className="text-xs" style={{ color: "#B91C1C" }}>Gap descoberto</p>
+                  <p className="tabular-nums" style={{ color: "#B91C1C", fontSize: 22, fontWeight: 700 }}>{formatCurrency(resultado.gap)}</p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-[#A8C8AB] bg-[#EBF2EC] p-3 text-center">
-                  <p className="text-sm font-semibold text-[#3D6B41]">Cobertura adequada</p>
+                  <p className="text-sm font-semibold text-[#15803D]">Cobertura adequada</p>
                 </div>
               )}
             </CardContent>
@@ -476,23 +476,23 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
       <div className="sticky bottom-0 -mx-6 -mb-6 flex items-center justify-between gap-4 border-t px-6 py-4" style={{ backgroundColor: "white" }}>
         <div className="flex gap-6">
           <div>
-            <p className="text-xs" style={{ color: "#6B6347" }}>Capital necessário</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Capital necessário</p>
             <p className="text-base font-bold tabular-nums" style={{ color: "#000000" }}>{formatCurrency(resultado.totalNeed)}</p>
           </div>
           <div>
-            <p className="text-xs" style={{ color: "#6B6347" }}>Capital segurado</p>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Capital segurado</p>
             <p className="text-base font-bold tabular-nums" style={{ color: "#000000" }}>{formatCurrency(resultado.totalCoverage)}</p>
           </div>
           <div>
-            <p className="text-xs" style={{ color: "#6B6347" }}>Gap</p>
-            <p className="text-base font-bold tabular-nums" style={{ color: resultado.gap > 0 ? "#7A3535" : "#059669" }}>
+            <p className="text-xs" style={{ color: "#6B7280" }}>Gap</p>
+            <p className="text-base font-bold tabular-nums" style={{ color: resultado.gap > 0 ? "#B91C1C" : "#059669" }}>
               {formatCurrency(resultado.gap)}
             </p>
           </div>
         </div>
         <button
           onClick={handleSave}
-          style={{ backgroundColor: "#7A3535", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+          style={{ backgroundColor: "#B91C1C", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
         >
           Salvar análise
         </button>

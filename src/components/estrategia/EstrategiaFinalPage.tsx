@@ -16,7 +16,7 @@ import { formatCurrency } from "@/lib/format";
 function metricaItem(label: string, value: string, color = "#000000") {
   return (
     <div style={{ textAlign: "center" }}>
-      <div style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, color }}>{value}</div>
     </div>
   );
@@ -24,15 +24,15 @@ function metricaItem(label: string, value: string, color = "#000000") {
 
 function statusBadgeLocal(secaoId: string, estrategia: EstrategiaData) {
   const len = estrategia.comentarios[secaoId]?.length ?? 0;
-  if (len > 20) return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F0E0", color: "#8A7A45", border: "1px solid #D4C08A" }}>Em revisão</span>;
-  return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F5F3EE", color: "#6B6347" }}>Pendente</span>;
+  if (len > 20) return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EFF6FF", color: "#2563EB", border: "1px solid #60A5FA" }}>Em revisão</span>;
+  return <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F0F7FF", color: "#6B7280" }}>Pendente</span>;
 }
 
 function checklist(label: string, ok: boolean) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 4 }}>
-      <span style={{ color: ok ? "#3D6B41" : "#7A3535", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
-      <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
+      <span style={{ color: ok ? "#15803D" : "#B91C1C", fontWeight: 700 }}>{ok ? "✓" : "✗"}</span>
+      <span style={{ color: ok ? "#111827" : "#9CA3AF" }}>{label}</span>
     </div>
   );
 }
@@ -145,7 +145,7 @@ export function EstrategiaFinalPage({
       <div
         style={{
           height: 56,
-          backgroundColor: "#000000",
+          backgroundColor: "#1E3A8A",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -158,7 +158,7 @@ export function EstrategiaFinalPage({
           <button
             onClick={onVoltar}
             style={{
-              color: "#BBA866",
+              color: "#3B82F6",
               backgroundColor: "transparent",
               border: "none",
               cursor: "pointer",
@@ -173,28 +173,28 @@ export function EstrategiaFinalPage({
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/logo-icon.png"
-              alt="Simpla Wealth"
+              src="/logo-si.svg"
+              alt="Simpla Invest"
               style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
             />
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
               <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                Simpla Wealth
+                Simpla Invest
               </span>
-              <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
                 Financial Planning
               </span>
             </div>
           </div>
           <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial — Pronta</span>
-          <span style={{ color: "#BBA866", fontSize: 14, marginLeft: 4 }}>· {clientName}</span>
+          <span style={{ color: "#3B82F6", fontSize: 14, marginLeft: 4 }}>· {clientName}</span>
         </div>
 
         {/* Right */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {ultimoSalvo && (
-            <span style={{ fontSize: 12, color: "#BBA866" }}>
+            <span style={{ fontSize: 12, color: "#3B82F6" }}>
               Salvo às{" "}
               {ultimoSalvo.toLocaleTimeString("pt-BR", {
                 hour: "2-digit",
@@ -225,7 +225,7 @@ export function EstrategiaFinalPage({
               padding: "6px 14px",
               borderRadius: 6,
               border: "none",
-              backgroundColor: "#BBA866",
+              backgroundColor: "#3B82F6",
               color: "#000000",
               fontWeight: 600,
               fontSize: 13,
@@ -262,7 +262,7 @@ export function EstrategiaFinalPage({
       </div>
 
       {/* ── SCROLLABLE CONTENT ──────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F5F3EE" }}>
+      <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
         <div
           style={{
             maxWidth: 900,
@@ -290,8 +290,8 @@ export function EstrategiaFinalPage({
               />
             ) : (
               <img
-                src="/logo-icon-large.png"
-                alt="Simpla Wealth"
+                src="/logo-si.svg"
+                alt="Simpla Invest"
                 style={{ height: 80, width: 80, objectFit: "contain", margin: "0 auto 24px", display: "block", borderRadius: 8 }}
               />
             )}
@@ -299,14 +299,14 @@ export function EstrategiaFinalPage({
             <div style={{ fontSize: 40, fontWeight: 700, color: "#000000", marginBottom: 8 }}>
               Estratégia Inicial
             </div>
-            <div style={{ fontSize: 24, color: "#BBA866", fontWeight: 700, marginBottom: 24 }}>
+            <div style={{ fontSize: 24, color: "#3B82F6", fontWeight: 700, marginBottom: 24 }}>
               {clientName}
             </div>
 
             <div
               style={{
                 width: 80,
-                borderTop: "2px solid #BBA866",
+                borderTop: "2px solid #3B82F6",
                 margin: "0 auto 24px",
               }}
             />
@@ -323,7 +323,7 @@ export function EstrategiaFinalPage({
               }}
             >
               <div>
-                <div style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                   Perfil
                 </div>
                 <span
@@ -332,7 +332,7 @@ export function EstrategiaFinalPage({
                     fontSize: 13,
                     padding: "3px 10px",
                     borderRadius: 9999,
-                    backgroundColor: "#EDE9DC",
+                    backgroundColor: "#DBEAFE",
                     color: "#000000",
                     fontWeight: 600,
                   }}
@@ -341,7 +341,7 @@ export function EstrategiaFinalPage({
                 </span>
               </div>
               <div>
-                <div style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                   Data
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#000000" }}>
@@ -349,7 +349,7 @@ export function EstrategiaFinalPage({
                 </div>
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <div style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                <div style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                   Consultor
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#000000" }}>
@@ -362,8 +362,8 @@ export function EstrategiaFinalPage({
               <div
                 style={{
                   fontStyle: "italic",
-                  color: "#6B6347",
-                  borderLeft: "3px solid #BBA866",
+                  color: "#6B7280",
+                  borderLeft: "3px solid #3B82F6",
                   paddingLeft: 16,
                   marginTop: 24,
                   textAlign: "left",
@@ -380,8 +380,8 @@ export function EstrategiaFinalPage({
           {estrategia.comentarioGeral && (
             <div
               style={{
-                backgroundColor: "#F5F0E0",
-                borderLeft: "4px solid #BBA866",
+                backgroundColor: "#EFF6FF",
+                borderLeft: "4px solid #3B82F6",
                 borderRadius: 12,
                 padding: 24,
               }}
@@ -390,7 +390,7 @@ export function EstrategiaFinalPage({
                 style={{
                   fontSize: 11,
                   textTransform: "uppercase",
-                  color: "#9E9070",
+                  color: "#9CA3AF",
                   letterSpacing: "0.05em",
                   marginBottom: 8,
                 }}
@@ -400,7 +400,7 @@ export function EstrategiaFinalPage({
               <div
                 style={{
                   fontStyle: "italic",
-                  color: "#3D3520",
+                  color: "#111827",
                   fontSize: 14,
                   lineHeight: 1.6,
                 }}
@@ -440,20 +440,20 @@ export function EstrategiaFinalPage({
                       justifyContent: "space-around",
                       marginBottom: 16,
                       padding: "16px 0",
-                      borderTop: "1px solid #F5F3EE",
-                      borderBottom: "1px solid #F5F3EE",
+                      borderTop: "1px solid #F0F7FF",
+                      borderBottom: "1px solid #F0F7FF",
                     }}
                   >
                     {metricaItem("Patrimônio", formatCurrency(resultados.carteira.patrimonio))}
-                    {metricaItem("Total Aportes", formatCurrency(resultados.carteira.totalAportar), "#3D6B41")}
-                    {metricaItem("Total Resgates", formatCurrency(resultados.carteira.totalResgatar), "#7A3535")}
+                    {metricaItem("Total Aportes", formatCurrency(resultados.carteira.totalAportar), "#15803D")}
+                    {metricaItem("Total Resgates", formatCurrency(resultados.carteira.totalResgatar), "#B91C1C")}
                   </div>
-                  <div style={{ fontSize: 13, color: "#6B6347", marginBottom: 12 }}>
+                  <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
                     Plano de ação: <strong>{resultados.carteira.planoAcaoCount}</strong> movimentações
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: "#9E9070", fontStyle: "italic", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic", marginBottom: 12 }}>
                   Ferramenta de carteira não utilizada nesta estratégia.
                 </div>
               )}
@@ -462,7 +462,7 @@ export function EstrategiaFinalPage({
                 <div
                   style={{
                     fontStyle: "italic",
-                    color: "#6B6347",
+                    color: "#6B7280",
                     fontSize: 13,
                     lineHeight: 1.6,
                     borderLeft: "2px solid #000000",
@@ -478,7 +478,7 @@ export function EstrategiaFinalPage({
 
           {/* ── APOSENTADORIA / IF ───────────────────────────────────────── */}
           {areaCard(
-            "#3D6B41",
+            "#15803D",
             <>
               {/* Header */}
               <div
@@ -489,7 +489,7 @@ export function EstrategiaFinalPage({
                   marginBottom: 20,
                 }}
               >
-                <Flame size={20} style={{ color: "#3D6B41" }} />
+                <Flame size={20} style={{ color: "#15803D" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Aposentadoria / IF
                 </span>
@@ -505,8 +505,8 @@ export function EstrategiaFinalPage({
                       gridTemplateColumns: "repeat(4, 1fr)",
                       gap: 16,
                       padding: "16px 0",
-                      borderTop: "1px solid #F5F3EE",
-                      borderBottom: "1px solid #F5F3EE",
+                      borderTop: "1px solid #F0F7FF",
+                      borderBottom: "1px solid #F0F7FF",
                       marginBottom: 16,
                     }}
                   >
@@ -515,10 +515,10 @@ export function EstrategiaFinalPage({
                     {metricaItem(
                       "Gap de Renda",
                       formatCurrency(Math.abs(resultados.if.gapRenda)) + "/mês",
-                      resultados.if.gapRenda <= 0 ? "#3D6B41" : "#7A3535"
+                      resultados.if.gapRenda <= 0 ? "#15803D" : "#B91C1C"
                     )}
                     <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: 11, color: "#9E9070", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                         Liberdade
                       </div>
                       <span
@@ -526,10 +526,10 @@ export function EstrategiaFinalPage({
                           fontSize: 13,
                           padding: "3px 10px",
                           borderRadius: 9999,
-                          backgroundColor: resultados.if.liberdadeAlcancada ? "#EBF2EC" : "#F2EBEB",
-                          color: resultados.if.liberdadeAlcancada ? "#3D6B41" : "#7A3535",
+                          backgroundColor: resultados.if.liberdadeAlcancada ? "#DCFCE7" : "#FEE2E2",
+                          color: resultados.if.liberdadeAlcancada ? "#15803D" : "#B91C1C",
                           fontWeight: 600,
-                          border: `1px solid ${resultados.if.liberdadeAlcancada ? "#A8C8AB" : "#C8A8A8"}`,
+                          border: `1px solid ${resultados.if.liberdadeAlcancada ? "#86EFAC" : "#FCA5A5"}`,
                         }}
                       >
                         {resultados.if.liberdadeAlcancada ? "Alcançada" : "Em construção"}
@@ -545,7 +545,7 @@ export function EstrategiaFinalPage({
                           display: "flex",
                           justifyContent: "space-between",
                           fontSize: 12,
-                          color: "#6B6347",
+                          color: "#6B7280",
                           marginBottom: 6,
                         }}
                       >
@@ -565,7 +565,7 @@ export function EstrategiaFinalPage({
                       <div
                         style={{
                           height: 8,
-                          backgroundColor: "#F5F3EE",
+                          backgroundColor: "#F0F7FF",
                           borderRadius: 4,
                           overflow: "hidden",
                         }}
@@ -579,7 +579,7 @@ export function EstrategiaFinalPage({
                                 resultadoIF.patrimonioNecessario) *
                                 100
                             )}%`,
-                            backgroundColor: "#3D6B41",
+                            backgroundColor: "#15803D",
                             borderRadius: 4,
                             transition: "width 0.4s",
                           }}
@@ -596,20 +596,20 @@ export function EstrategiaFinalPage({
                       gap: 12,
                     }}
                   >
-                    <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 11, color: "#9E9070", marginBottom: 2 }}>Renda desejada</div>
+                    <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>Renda desejada</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>
                         {formatCurrency(plan.planejamentoIF.rendaMensalDesejada)}/mês
                       </div>
                     </div>
-                    <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 11, color: "#9E9070", marginBottom: 2 }}>Anos restantes</div>
+                    <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>Anos restantes</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>
                         {Math.max(0, plan.planejamentoIF.idadeMeta - plan.planejamentoIF.idadeAtual)} anos
                       </div>
                     </div>
-                    <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 14px" }}>
-                      <div style={{ fontSize: 11, color: "#9E9070", marginBottom: 2 }}>Patrimônio necessário</div>
+                    <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "10px 14px" }}>
+                      <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>Patrimônio necessário</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>
                         {formatCurrency(resultadoIF.patrimonioNecessario)}
                       </div>
@@ -617,7 +617,7 @@ export function EstrategiaFinalPage({
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: "#9E9070", fontStyle: "italic", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic", marginBottom: 12 }}>
                   Simulador de IF não executado nesta estratégia.
                 </div>
               )}
@@ -626,10 +626,10 @@ export function EstrategiaFinalPage({
                 <div
                   style={{
                     fontStyle: "italic",
-                    color: "#6B6347",
+                    color: "#6B7280",
                     fontSize: 13,
                     lineHeight: 1.6,
-                    borderLeft: "2px solid #3D6B41",
+                    borderLeft: "2px solid #15803D",
                     paddingLeft: 12,
                     marginTop: 16,
                   }}
@@ -642,7 +642,7 @@ export function EstrategiaFinalPage({
 
           {/* ── PROTEÇÃO E SUCESSÓRIO ─────────────────────────────────────── */}
           {areaCard(
-            "#7A3535",
+            "#B91C1C",
             <>
               {/* Header */}
               <div
@@ -653,7 +653,7 @@ export function EstrategiaFinalPage({
                   marginBottom: 20,
                 }}
               >
-                <Shield size={20} style={{ color: "#7A3535" }} />
+                <Shield size={20} style={{ color: "#B91C1C" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Proteção e Sucessório
                 </span>
@@ -667,7 +667,7 @@ export function EstrategiaFinalPage({
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#7A3535",
+                      color: "#B91C1C",
                       textTransform: "uppercase",
                       letterSpacing: "0.06em",
                       marginBottom: 12,
@@ -679,16 +679,16 @@ export function EstrategiaFinalPage({
                   {resultados.seguro ? (
                     <div style={{ marginBottom: 12 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                        <span style={{ color: "#6B6347" }}>Capital necessário</span>
+                        <span style={{ color: "#6B7280" }}>Capital necessário</span>
                         <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(resultados.seguro.totalNeed)}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                        <span style={{ color: "#6B6347" }}>Capital atual</span>
-                        <span style={{ fontWeight: 600, color: "#3D6B41" }}>{formatCurrency(resultados.seguro.totalCoverage)}</span>
+                        <span style={{ color: "#6B7280" }}>Capital atual</span>
+                        <span style={{ fontWeight: 600, color: "#15803D" }}>{formatCurrency(resultados.seguro.totalCoverage)}</span>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 12 }}>
-                        <span style={{ color: "#6B6347" }}>Gap cobertura</span>
-                        <span style={{ fontWeight: 600, color: resultados.seguro.gap > 0 ? "#7A3535" : "#3D6B41" }}>
+                        <span style={{ color: "#6B7280" }}>Gap cobertura</span>
+                        <span style={{ fontWeight: 600, color: resultados.seguro.gap > 0 ? "#B91C1C" : "#15803D" }}>
                           {formatCurrency(resultados.seguro.gap)}
                         </span>
                       </div>
@@ -706,7 +706,7 @@ export function EstrategiaFinalPage({
                     style={{
                       fontSize: 11,
                       fontWeight: 700,
-                      color: "#7A3535",
+                      color: "#B91C1C",
                       textTransform: "uppercase",
                       letterSpacing: "0.06em",
                       marginBottom: 12,
@@ -717,16 +717,16 @@ export function EstrategiaFinalPage({
 
                   <div style={{ marginBottom: 12 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                      <span style={{ color: "#6B6347" }}>ITCMD estimado</span>
+                      <span style={{ color: "#6B7280" }}>ITCMD estimado</span>
                       <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(resultadoSuc.itcmdEstimado)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 }}>
-                      <span style={{ color: "#6B6347" }}>Custo inventário</span>
+                      <span style={{ color: "#6B7280" }}>Custo inventário</span>
                       <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(resultadoSuc.custoInventarioEstimado)}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 12 }}>
-                      <span style={{ color: "#6B6347" }}>Custo total</span>
-                      <span style={{ fontWeight: 600, color: "#7A3535" }}>{formatCurrency(resultadoSuc.custoTotal)}</span>
+                      <span style={{ color: "#6B7280" }}>Custo total</span>
+                      <span style={{ fontWeight: 600, color: "#B91C1C" }}>{formatCurrency(resultadoSuc.custoTotal)}</span>
                     </div>
                   </div>
 
@@ -740,10 +740,10 @@ export function EstrategiaFinalPage({
                 <div
                   style={{
                     fontStyle: "italic",
-                    color: "#6B6347",
+                    color: "#6B7280",
                     fontSize: 13,
                     lineHeight: 1.6,
-                    borderLeft: "2px solid #7A3535",
+                    borderLeft: "2px solid #B91C1C",
                     paddingLeft: 12,
                     marginTop: 16,
                   }}
@@ -756,7 +756,7 @@ export function EstrategiaFinalPage({
 
           {/* ── PLANEJAMENTO FISCAL ──────────────────────────────────────── */}
           {areaCard(
-            "#8A7A45",
+            "#2563EB",
             <>
               {/* Header */}
               <div
@@ -767,7 +767,7 @@ export function EstrategiaFinalPage({
                   marginBottom: 20,
                 }}
               >
-                <Receipt size={20} style={{ color: "#8A7A45" }} />
+                <Receipt size={20} style={{ color: "#2563EB" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Planejamento Fiscal
                 </span>
@@ -783,14 +783,14 @@ export function EstrategiaFinalPage({
                       gap: 24,
                       justifyContent: "space-around",
                       padding: "16px 0",
-                      borderTop: "1px solid #F5F3EE",
-                      borderBottom: "1px solid #F5F3EE",
+                      borderTop: "1px solid #F0F7FF",
+                      borderBottom: "1px solid #F0F7FF",
                       marginBottom: 20,
                     }}
                   >
-                    {metricaItem("Economia/ano", formatCurrency(resultados.fiscal.economiaAnual), "#3D6B41")}
+                    {metricaItem("Economia/ano", formatCurrency(resultados.fiscal.economiaAnual), "#15803D")}
                     {metricaItem("Teto PGBL", formatCurrency(resultados.fiscal.tetoPGBLAnual))}
-                    {metricaItem("Espaço disponível", formatCurrency(resultados.fiscal.espacoDisponivelMensal) + "/mês", "#8A7A45")}
+                    {metricaItem("Espaço disponível", formatCurrency(resultados.fiscal.espacoDisponivelMensal) + "/mês", "#2563EB")}
                   </div>
 
                   {/* Horizontal bars */}
@@ -800,32 +800,32 @@ export function EstrategiaFinalPage({
                       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                         {/* IR sem PGBL */}
                         <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6347", marginBottom: 4 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
                             <span>IR sem PGBL</span>
                             <span>{formatCurrency(resultados.fiscal.irSemPGBL)}</span>
                           </div>
-                          <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(resultados.fiscal.irSemPGBL / maxIR) * 100}%`, backgroundColor: "#9E9070", borderRadius: 4 }} />
+                          <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${(resultados.fiscal.irSemPGBL / maxIR) * 100}%`, backgroundColor: "#9CA3AF", borderRadius: 4 }} />
                           </div>
                         </div>
                         {/* IR com PGBL */}
                         <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6347", marginBottom: 4 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
                             <span>IR com PGBL</span>
                             <span>{formatCurrency(resultados.fiscal.irComPGBL)}</span>
                           </div>
-                          <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(resultados.fiscal.irComPGBL / maxIR) * 100}%`, backgroundColor: "#3D6B41", borderRadius: 4 }} />
+                          <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${(resultados.fiscal.irComPGBL / maxIR) * 100}%`, backgroundColor: "#15803D", borderRadius: 4 }} />
                           </div>
                         </div>
                         {/* Economia */}
                         <div>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6347", marginBottom: 4 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
                             <span>Economia</span>
-                            <span style={{ color: "#3D6B41", fontWeight: 600 }}>{formatCurrency(resultados.fiscal.economiaAnual)}</span>
+                            <span style={{ color: "#15803D", fontWeight: 600 }}>{formatCurrency(resultados.fiscal.economiaAnual)}</span>
                           </div>
-                          <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${(resultados.fiscal.economiaAnual / maxIR) * 100}%`, backgroundColor: "#8A7A45", borderRadius: 4 }} />
+                          <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${(resultados.fiscal.economiaAnual / maxIR) * 100}%`, backgroundColor: "#2563EB", borderRadius: 4 }} />
                           </div>
                         </div>
                       </div>
@@ -833,7 +833,7 @@ export function EstrategiaFinalPage({
                   })()}
                 </>
               ) : (
-                <div style={{ fontSize: 13, color: "#9E9070", fontStyle: "italic", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic", marginBottom: 12 }}>
                   Planejamento fiscal não executado nesta estratégia.
                 </div>
               )}
@@ -842,10 +842,10 @@ export function EstrategiaFinalPage({
                 <div
                   style={{
                     fontStyle: "italic",
-                    color: "#6B6347",
+                    color: "#6B7280",
                     fontSize: 13,
                     lineHeight: 1.6,
-                    borderLeft: "2px solid #8A7A45",
+                    borderLeft: "2px solid #2563EB",
                     paddingLeft: 12,
                     marginTop: 16,
                   }}
@@ -858,7 +858,7 @@ export function EstrategiaFinalPage({
 
           {/* ── PRÓXIMOS PASSOS ──────────────────────────────────────────── */}
           {areaCard(
-            "#2A4F6A",
+            "#1E40AF",
             <>
               {/* Header */}
               <div
@@ -869,7 +869,7 @@ export function EstrategiaFinalPage({
                   marginBottom: 20,
                 }}
               >
-                <ListChecks size={20} style={{ color: "#2A4F6A" }} />
+                <ListChecks size={20} style={{ color: "#1E40AF" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
                   Próximos Passos
                 </span>
@@ -883,14 +883,14 @@ export function EstrategiaFinalPage({
                     acao.prioridade === "alta"
                       ? "#FEE2E2"
                       : acao.prioridade === "media"
-                      ? "#F5F0E0"
+                      ? "#EFF6FF"
                       : "#F0F9FF";
                   const prioColor =
                     acao.prioridade === "alta"
-                      ? "#7A3535"
+                      ? "#B91C1C"
                       : acao.prioridade === "media"
-                      ? "#8A7A45"
-                      : "#2A4F6A";
+                      ? "#2563EB"
+                      : "#1E40AF";
                   const prioLabel =
                     acao.prioridade === "alta"
                       ? "ALTA"
@@ -906,7 +906,7 @@ export function EstrategiaFinalPage({
                         alignItems: "flex-start",
                         gap: 12,
                         padding: "12px 14px",
-                        backgroundColor: "#F5F3EE",
+                        backgroundColor: "#F0F7FF",
                         borderRadius: 8,
                       }}
                     >
@@ -916,7 +916,7 @@ export function EstrategiaFinalPage({
                           width: 26,
                           height: 26,
                           borderRadius: "50%",
-                          backgroundColor: "#000000",
+                          backgroundColor: "#1E3A8A",
                           color: "white",
                           display: "flex",
                           alignItems: "center",
@@ -951,8 +951,8 @@ export function EstrategiaFinalPage({
                                 fontSize: 11,
                                 padding: "2px 8px",
                                 borderRadius: 9999,
-                                backgroundColor: "#F5F3EE",
-                                color: "#3D3520",
+                                backgroundColor: "#F0F7FF",
+                                color: "#111827",
                               }}
                             >
                               {acao.area}
@@ -961,7 +961,7 @@ export function EstrategiaFinalPage({
                         </div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#000000" }}>{acao.texto}</div>
                         {acao.prazo && (
-                          <div style={{ fontSize: 12, color: "#9E9070", marginTop: 2 }}>
+                          <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>
                             até {acao.prazo}
                           </div>
                         )}
@@ -971,7 +971,7 @@ export function EstrategiaFinalPage({
                 })}
 
                 {acoesOrdenadas.length === 0 && (
-                  <div style={{ fontSize: 13, color: "#9E9070", fontStyle: "italic" }}>
+                  <div style={{ fontSize: 13, color: "#9CA3AF", fontStyle: "italic" }}>
                     Nenhuma ação definida.
                   </div>
                 )}
@@ -983,17 +983,17 @@ export function EstrategiaFinalPage({
           {/* ── DISCLAIMER ───────────────────────────────────────────────── */}
           <div
             style={{
-              backgroundColor: "#F5F3EE",
+              backgroundColor: "#F0F7FF",
               borderRadius: 8,
               padding: 16,
               textAlign: "center",
             }}
           >
-            <div style={{ fontSize: 11, color: "#9E9070", lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.6 }}>
               Este documento foi elaborado pelo consultor{" "}
-              {estrategia.nomeConsultor || "Simpla Wealth Financial Planning"} com base nas informações
+              {estrategia.nomeConsultor || "Simpla Invest Financial Planning"} com base nas informações
               fornecidas pelo cliente e tem caráter informativo. Não constitui oferta de compra ou
-              venda de valores mobiliários. © Simpla Wealth Financial Planning {new Date().getFullYear()}
+              venda de valores mobiliários. © Simpla Invest Financial Planning {new Date().getFullYear()}
             </div>
           </div>
         </div>

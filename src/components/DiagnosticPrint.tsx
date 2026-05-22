@@ -45,7 +45,7 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       {/* Overall score */}
       <div className="mb-6 flex items-start gap-8">
         <div>
-          <p className="text-xs uppercase tracking-wide text-[#9E9070]">Score geral</p>
+          <p className="text-xs uppercase tracking-wide text-[#9CA3AF]">Score geral</p>
           <p className="text-5xl font-bold">{overallScore}%</p>
           <p className="mt-1 font-semibold">{RISK_LABEL[overallRisk]}</p>
         </div>
@@ -53,19 +53,19 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
           {(["high", "medium", "low"] as RiskLevel[]).map((level) => (
             <div key={level} className="text-center">
               <p className="text-2xl font-bold">{counts[level]}</p>
-              <p className="text-xs text-[#6B6347]">{RISK_LABEL[level]}</p>
+              <p className="text-xs text-[#6B7280]">{RISK_LABEL[level]}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Summary table */}
-      <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+      <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
         Resumo por categoria
       </h2>
       <table className="mb-8 w-full border-collapse text-xs">
         <thead>
-          <tr className="border-b border-[#C8C0A0] text-left">
+          <tr className="border-b border-[#93C5FD] text-left">
             <th className="py-1.5 pr-3">Categoria</th>
             <th className="py-1.5 pr-3 w-16 text-right">Score</th>
             <th className="py-1.5 pr-3 w-24">Situação</th>
@@ -74,11 +74,11 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
         </thead>
         <tbody>
           {categories.map((cat) => (
-            <tr key={cat.id} className="border-b border-[#EDE9DC]">
+            <tr key={cat.id} className="border-b border-[#DBEAFE]">
               <td className="py-1.5 pr-3 font-medium">{cat.label}</td>
               <td className="py-1.5 pr-3 text-right tabular-nums">{cat.score}%</td>
               <td className="py-1.5 pr-3">{RISK_LABEL[cat.riskLevel]}</td>
-              <td className="py-1.5 text-[#3D3520]">
+              <td className="py-1.5 text-[#111827]">
                 {cat.findings.slice(0, 2).join(" · ")}
               </td>
             </tr>
@@ -87,20 +87,20 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       </table>
 
       {/* Detailed per category */}
-      <h2 className="mb-3 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+      <h2 className="mb-3 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
         Detalhamento por categoria
       </h2>
       {categories.map((cat) => (
         <div key={cat.id} className="mb-5 break-inside-avoid">
           <div className="flex items-baseline gap-2 mb-1">
             <h3 className="font-bold">{cat.label}</h3>
-            <span className="text-xs text-[#9E9070]">
+            <span className="text-xs text-[#9CA3AF]">
               {cat.score}% · {RISK_LABEL[cat.riskLevel]}
             </span>
           </div>
           {cat.findings.length > 0 && (
             <>
-              <p className="text-xs font-semibold text-[#9E9070] mb-0.5">Pontos identificados</p>
+              <p className="text-xs font-semibold text-[#9CA3AF] mb-0.5">Pontos identificados</p>
               <ul className="mb-1 ml-4 list-disc space-y-0.5">
                 {cat.findings.map((f, i) => (
                   <li key={i}>{f}</li>
@@ -110,7 +110,7 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
           )}
           {cat.recommendations.length > 0 && (
             <>
-              <p className="text-xs font-semibold text-[#9E9070] mb-0.5">Recomendações</p>
+              <p className="text-xs font-semibold text-[#9CA3AF] mb-0.5">Recomendações</p>
               <ul className="ml-4 list-disc space-y-0.5">
                 {cat.recommendations.map((r, i) => (
                   <li key={i}>{r}</li>
@@ -124,7 +124,7 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       {/* FIRE data */}
       {answers.targetPassiveIncome > 0 && (
         <>
-          <h2 className="mb-2 mt-4 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+          <h2 className="mb-2 mt-4 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
             Liberdade financeira (FIRE)
           </h2>
           <table className="mb-8 w-full border-collapse text-xs">
@@ -146,8 +146,8 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
                   `${Math.round(Math.min((answers.monthlyPassiveIncome / answers.targetPassiveIncome) * 100, 100))}%`,
                 ],
               ].map(([label, value]) => (
-                <tr key={label} className="border-b border-[#EDE9DC]">
-                  <td className="py-1 pr-4 text-[#6B6347] w-64">{label}</td>
+                <tr key={label} className="border-b border-[#DBEAFE]">
+                  <td className="py-1 pr-4 text-[#6B7280] w-64">{label}</td>
                   <td className="py-1 font-semibold tabular-nums">{value}</td>
                 </tr>
               ))}
@@ -159,17 +159,17 @@ export function DiagnosticPrintAdvisor({ result, answers, clientName }: AdvisorP
       {/* Consultor notes */}
       {answers.consultorNotes && (
         <>
-          <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+          <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
             Notas do consultor
           </h2>
-          <p className="mb-8 whitespace-pre-wrap rounded border border-[#E2DCC8] bg-[#F5F3EE] p-3 text-xs">
+          <p className="mb-8 whitespace-pre-wrap rounded border border-[#BFDBFE] bg-[#F0F7FF] p-3 text-xs">
             {answers.consultorNotes}
           </p>
         </>
       )}
 
       {/* Footer */}
-      <div className="border-t border-[#C8C0A0] pt-3 text-xs text-[#9E9070]">
+      <div className="border-t border-[#93C5FD] pt-3 text-xs text-[#9CA3AF]">
         <span>Gerado em {formatDate(result.createdAt)}</span>
         <span className="ml-4 font-semibold">Uso restrito ao consultor</span>
       </div>
@@ -206,18 +206,18 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
 
       {/* Score in large */}
       <div className="mb-8 text-center">
-        <p className="text-xs uppercase tracking-widest text-[#9E9070] mb-1">Score geral</p>
+        <p className="text-xs uppercase tracking-widest text-[#9CA3AF] mb-1">Score geral</p>
         <p className="text-7xl font-black leading-none">{overallScore}%</p>
         <p className="mt-2 text-lg font-semibold">{RISK_LABEL[overallRisk]}</p>
       </div>
 
       {/* Summary table (no technical findings) */}
-      <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+      <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
         Avaliação por área
       </h2>
       <table className="mb-8 w-full border-collapse text-xs">
         <thead>
-          <tr className="border-b border-[#C8C0A0] text-left">
+          <tr className="border-b border-[#93C5FD] text-left">
             <th className="py-1.5 pr-3">Área</th>
             <th className="py-1.5 pr-3 w-16 text-right">Score</th>
             <th className="py-1.5 w-24">Situação</th>
@@ -225,7 +225,7 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
         </thead>
         <tbody>
           {categories.map((cat) => (
-            <tr key={cat.id} className="border-b border-[#EDE9DC]">
+            <tr key={cat.id} className="border-b border-[#DBEAFE]">
               <td className="py-1.5 pr-3 font-medium">{cat.label}</td>
               <td className="py-1.5 pr-3 text-right tabular-nums">{cat.score}%</td>
               <td className="py-1.5">{RISK_LABEL[cat.riskLevel]}</td>
@@ -237,7 +237,7 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
       {/* High risk recommendations (priority) */}
       {highRisk.length > 0 && (
         <>
-          <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+          <h2 className="mb-2 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
             Próximos passos prioritários
           </h2>
           {highRisk.map((cat) =>
@@ -258,7 +258,7 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
       {/* Medium risk recommendations */}
       {mediumRisk.length > 0 && (
         <>
-          <h2 className="mb-2 mt-4 font-bold uppercase tracking-wide text-xs text-[#9E9070]">
+          <h2 className="mb-2 mt-4 font-bold uppercase tracking-wide text-xs text-[#9CA3AF]">
             Oportunidades de melhoria
           </h2>
           {mediumRisk.map((cat) =>
@@ -277,7 +277,7 @@ export function DiagnosticPrintClient({ result, clientName, advisorName }: Clien
       )}
 
       {/* Footer */}
-      <div className="border-t border-[#C8C0A0] pt-3 mt-8 text-xs text-[#9E9070]">
+      <div className="border-t border-[#93C5FD] pt-3 mt-8 text-xs text-[#9CA3AF]">
         <span>Gerado em {formatDate(result.createdAt)}</span>
         {advisorName && <span className="ml-4">Consultor: {advisorName}</span>}
         <span className="ml-4">Documento preparado pelo seu consultor financeiro</span>

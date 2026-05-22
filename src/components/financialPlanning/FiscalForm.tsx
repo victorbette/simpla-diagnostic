@@ -15,7 +15,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularFiscal } from "@/types/financialPlanning";
 import type { PlanejamentoFiscal, DadosCliente } from "@/types/financialPlanning";
 
-const AMBER = "#8A7A45";
+const AMBER = "#2563EB";
 const DARK = "#000000";
 
 const TRABALHO_LABELS: Record<string, string> = {
@@ -71,7 +71,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal bruta</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Renda mensal bruta</Label>
               <CurrencyInput
                 value={value.rendaBrutaAnual / 12}
                 onChange={(v) => set("rendaBrutaAnual", v * 12)}
@@ -85,7 +85,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
           />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">Tipo de declaração IR</Label>
+            <Label className="text-[13px] font-medium text-[#111827]">Tipo de declaração IR</Label>
             <Select
               value={value.tipoDeclaracao}
               onValueChange={(v) =>
@@ -124,7 +124,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
 
         <div
           style={{
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             borderRadius: 10,
             padding: "16px 20px",
             display: "flex",
@@ -155,7 +155,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B6347]">Valor aportado anualmente</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
                 <CurrencyInput
                   value={value.valorPGBLAnual ?? 0}
                   onChange={(v) => set("valorPGBLAnual", v)}
@@ -187,7 +187,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B6347]">Valor aportado anualmente</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor aportado anualmente</Label>
                 <CurrencyInput
                   value={value.valorVGBLAnual ?? 0}
                   onChange={(v) => set("valorVGBLAnual", v)}
@@ -265,7 +265,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   gap: 6,
                 }}
               >
-                <Label className="text-[12px] text-[#6B6347]">Valor anual de rendimentos isentos</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor anual de rendimentos isentos</Label>
                 <CurrencyInput
                   value={value.valorRendimentosIsentos}
                   onChange={(v) => set("valorRendimentosIsentos", v)}
@@ -279,8 +279,8 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
       {/* Painel resultado */}
       <div
         style={{
-          backgroundColor: "#F5F0E0",
-          border: "1px solid #D4C08A",
+          backgroundColor: "#EFF6FF",
+          border: "1px solid #60A5FA",
           borderRadius: 10,
           padding: 20,
           display: "flex",
@@ -322,7 +322,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                 <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
                   Economia potencial
                 </p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#3D6B41", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                   {formatCurrency(resultado.economiaFiscalPotencial)}/ano
                 </p>
               </div>
@@ -331,7 +331,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
                   <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
                     Espaço disponível
                   </p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: "#8A7A45", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#2563EB", margin: 0, fontVariantNumeric: "tabular-nums" }}>
                     {formatCurrency(resultado.espacoPGBL)}/ano
                   </p>
                 </div>
@@ -346,8 +346,8 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             <Badge
               style={{
                 backgroundColor:
-                  value.tipoDeclaracao === "completa" ? "#EBF2EC" : "#EAF0F5",
-                color: value.tipoDeclaracao === "completa" ? "#3D6B41" : "#1D4ED8",
+                  value.tipoDeclaracao === "completa" ? "#DCFCE7" : "#EAF0F5",
+                color: value.tipoDeclaracao === "completa" ? "#15803D" : "#1D4ED8",
                 border:
                   value.tipoDeclaracao === "completa"
                     ? "1px solid #A8C8AB"
@@ -380,7 +380,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             <div
               style={{
                 height: 6,
-                backgroundColor: "#D4C08A",
+                backgroundColor: "#60A5FA",
                 borderRadius: 3,
                 overflow: "hidden",
               }}

@@ -69,7 +69,7 @@ Retorne APENAS um JSON válido, sem markdown, sem explicações:
   ]
 }
 
-Cards válidos para cardInferido (padrão Simpla Wealth):
+Cards válidos para cardInferido (padrão Simpla Invest):
 - "resgate_rapido": CDB, LCI, LCA, Tesouro Selic, fundos DI, poupança (liquidez imediata)
 - "resgate_longo": Tesouro IPCA+, NTN-B, CRI, CRA, debêntures IPCA, Tesouro Prefixado (prazo longo)
 - "acoes": ações BR (PETR4, VALE3, BBAS3, ITUB4 etc.)

@@ -184,9 +184,9 @@ export function FerramentaCarteira({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F5F3EE" }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F0F7FF" }}>
       {/* Header */}
-      <header className="shrink-0" style={{ backgroundColor: "#000000" }}>
+      <header className="shrink-0" style={{ backgroundColor: "#1E3A8A" }}>
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={onClose}
@@ -203,7 +203,7 @@ export function FerramentaCarteira({
               <span className="font-bold text-white" style={{ fontSize: "18px" }}>
                 Gestão de Carteira
               </span>
-              <span className="text-sm font-medium" style={{ color: "#BBA866" }}>
+              <span className="text-sm font-medium" style={{ color: "#3B82F6" }}>
                 {clientName}
               </span>
               {clientProfile && (
@@ -217,7 +217,7 @@ export function FerramentaCarteira({
             </div>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 11, color: "#3B82F6", display: "flex", alignItems: "center", gap: 4 }}>
               ● Dados salvos automaticamente
             </span>
             <button
@@ -230,9 +230,9 @@ export function FerramentaCarteira({
           {patrimonio > 0 && (
             <div
               className="shrink-0 text-right rounded-md px-3 py-1.5 border"
-              style={{ borderColor: "#BBA866" }}
+              style={{ borderColor: "#3B82F6" }}
             >
-              <p className="text-xs" style={{ color: "#BBA866" }}>Patrimônio</p>
+              <p className="text-xs" style={{ color: "#3B82F6" }}>Patrimônio</p>
               <p className="font-semibold text-sm text-white">{formatBRL(patrimonio)}</p>
             </div>
           )}
@@ -259,7 +259,7 @@ export function FerramentaCarteira({
                       className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
                       style={
                         isDone
-                          ? { backgroundColor: "#3D6B41", color: "#fff" }
+                          ? { backgroundColor: "#15803D", color: "#fff" }
                           : isCurrent
                           ? { backgroundColor: "#fff", color: "#000000" }
                           : { backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", border: "1.5px solid rgba(255,255,255,0.3)" }
@@ -287,7 +287,7 @@ export function FerramentaCarteira({
                       style={{
                         width: "24px",
                         height: "1.5px",
-                        backgroundColor: isDone ? "#3D6B41" : "rgba(255,255,255,0.2)",
+                        backgroundColor: isDone ? "#15803D" : "rgba(255,255,255,0.2)",
                       }}
                     />
                   )}
@@ -347,7 +347,7 @@ export function FerramentaCarteira({
       {/* Footer */}
       <footer
         className="shrink-0 px-4 py-3 border-t"
-        style={{ backgroundColor: "#fff", borderColor: "#E2DCC8" }}
+        style={{ backgroundColor: "#fff", borderColor: "#BFDBFE" }}
       >
         <div className="mx-auto max-w-screen-xl flex items-center justify-between">
           <button
@@ -360,14 +360,14 @@ export function FerramentaCarteira({
             <ChevronLeft className="h-4 w-4" />
             {etapa === 1 ? "Fechar" : "Anterior"}
           </button>
-          <span className="text-xs" style={{ color: "#6B6347" }}>Etapa {etapa} de 4</span>
+          <span className="text-xs" style={{ color: "#6B7280" }}>Etapa {etapa} de 4</span>
           {etapa < 4 ? (
             <button
               onClick={handleNext}
               className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: "#000000" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0a2e38")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#000000")}
+              style={{ backgroundColor: "#1E3A8A" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E40AF")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
             >
               {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
               <ChevronRight className="h-4 w-4" />
@@ -376,9 +376,9 @@ export function FerramentaCarteira({
             <button
               onClick={handleSave}
               className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: "#000000" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#0a2e38")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#000000")}
+              style={{ backgroundColor: "#1E3A8A" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E40AF")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
             >
               Salvar carteira
             </button>

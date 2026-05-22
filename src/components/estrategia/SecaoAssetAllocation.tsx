@@ -46,17 +46,17 @@ function labelDaClasse(key: string): string {
 
 function corDaClasse(key: string): string {
   const cores: Record<string, string> = {
-    resgate_rapido: "#2A4F6A",
+    resgate_rapido: "#1E40AF",
     resgate_longo: "#000000",
-    acoes: "#3D6B41",
-    fiis: "#4A8C4E",
-    exterior: "#8A7A45",
-    cripto: "#BBA866",
-    rendaFixa: "#2A4F6A",
-    rvGlobal: "#8A7A45",
+    acoes: "#15803D",
+    fiis: "#15803D",
+    exterior: "#2563EB",
+    cripto: "#3B82F6",
+    rendaFixa: "#1E40AF",
+    rvGlobal: "#2563EB",
     rfGlobal: "#B8A870",
   };
-  return cores[key] ?? "#9E9070";
+  return cores[key] ?? "#9CA3AF";
 }
 
 // MacroAlocacao keys that map to plan.ativosAtuais fields
@@ -105,14 +105,14 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#F5F3EE",
+          backgroundColor: "#F0F7FF",
           borderRadius: 8,
           flexDirection: "column",
           gap: 6,
         }}
       >
-        <PieChartIcon size={32} color="#BBA866" strokeWidth={1.5} />
-        <p style={{ fontSize: 12, color: "#9E9070", margin: 0, textAlign: "center" }}>
+        <PieChartIcon size={32} color="#3B82F6" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, textAlign: "center" }}>
           Sem dados para exibir
         </p>
       </div>
@@ -143,7 +143,7 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
                 const cy = vb.cy ?? 0;
                 return (
                   <text textAnchor="middle">
-                    <tspan x={cx} y={cy - 7} fontSize={10} fill="#6B6347">
+                    <tspan x={cx} y={cy - 7} fontSize={10} fill="#6B7280">
                       {centerLabel}
                     </tspan>
                     <tspan x={cx} y={cy + 11} fontSize={15} fontWeight="700" fill="#000000">
@@ -159,7 +159,7 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
       </ResponsiveContainer>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", justifyContent: "center", marginTop: 4 }}>
         {data.map((d) => (
-          <div key={d.key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B6347" }}>
+          <div key={d.key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
             {d.name} {d.value.toFixed(0)}%
           </div>
@@ -230,7 +230,7 @@ export function SecaoAssetAllocation({
     <div
       style={{
         ...CARD,
-        borderLeft: "4px solid #000000",
+        borderLeft: "4px solid #1E3A8A",
         borderRadius: 0,
         borderTopRightRadius: 12,
         borderBottomRightRadius: 12,
@@ -249,7 +249,7 @@ export function SecaoAssetAllocation({
             minHeight: 160,
             padding: "10px 12px",
             borderRadius: 6,
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             fontSize: 13,
             color: "#000000",
             resize: "vertical",
@@ -258,12 +258,12 @@ export function SecaoAssetAllocation({
             fontFamily: "inherit",
           }}
         />
-        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>
+        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>
           {comentario.length} caracteres
         </span>
       </div>
       <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
+        <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
         {AVAILABLE_TAGS.map((t) => (
           <button
             key={t}
@@ -273,9 +273,9 @@ export function SecaoAssetAllocation({
               padding: "3px 10px",
               borderRadius: 999,
               cursor: "pointer",
-              border: "1px solid #E2DCC8",
-              backgroundColor: tags.includes(t) ? "#000000" : "transparent",
-              color: tags.includes(t) ? "white" : "#3D3520",
+              border: "1px solid #BFDBFE",
+              backgroundColor: tags.includes(t) ? "#2563EB" : "transparent",
+              color: tags.includes(t) ? "white" : "#111827",
             }}
           >
             {t}
@@ -294,7 +294,7 @@ export function SecaoAssetAllocation({
             <div
               style={{
                 backgroundColor: "white",
-                border: "2px dashed #BBA866",
+                border: "2px dashed #3B82F6",
                 borderRadius: 12,
                 padding: "40px 32px",
                 textAlign: "center",
@@ -303,18 +303,18 @@ export function SecaoAssetAllocation({
                 boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}
             >
-              <PieChartIcon size={48} color="#BBA866" strokeWidth={1.5} style={{ marginBottom: 16 }} />
+              <PieChartIcon size={48} color="#3B82F6" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <p style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 8px" }}>
                 Carteira não definida
               </p>
-              <p style={{ fontSize: 13, color: "#6B6347", margin: "0 0 20px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px", lineHeight: 1.6 }}>
                 Use a ferramenta de carteira para definir a alocação atual e recomendada do cliente, gerar o plano de ação e consolidar o resultado.
               </p>
               <button
                 onClick={() => setCarteiraOpen(true)}
                 style={{
                   padding: "10px 24px",
-                  backgroundColor: "#000000",
+                  backgroundColor: "#1E3A8A",
                   color: "white",
                   fontWeight: 600,
                   borderRadius: 6,
@@ -401,8 +401,8 @@ export function SecaoAssetAllocation({
                 gap: 6,
                 fontSize: 13,
                 fontWeight: 700,
-                color: "#3D6B41",
-                backgroundColor: "#EBF2EC",
+                color: "#15803D",
+                backgroundColor: "#DCFCE7",
                 border: "1px solid #A7C9AB",
                 borderRadius: 999,
                 padding: "4px 12px",
@@ -413,9 +413,9 @@ export function SecaoAssetAllocation({
             <span
               style={{
                 fontSize: 11,
-                color: "#6B6347",
-                backgroundColor: "#F5F3EE",
-                border: "1px solid #E2DCC8",
+                color: "#6B7280",
+                backgroundColor: "#F0F7FF",
+                border: "1px solid #BFDBFE",
                 borderRadius: 999,
                 padding: "2px 10px",
               }}
@@ -446,21 +446,21 @@ export function SecaoAssetAllocation({
             Visão Geral
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Atual</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(totalAtual)}</p>
+            <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Atual</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF", margin: 0 }}>{formatCurrency(totalAtual)}</p>
             </div>
-            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Proposto</p>
+            <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Proposto</p>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#000000", margin: 0 }}>{formatCurrency(totalMeta)}</p>
             </div>
-            <div style={{ backgroundColor: "#EBF2EC", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#3D6B41", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
+            <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
             </div>
-            <div style={{ backgroundColor: "#F9ECEC", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#7A3535", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
+            <div style={{ backgroundColor: "#FEE2E2", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#B91C1C", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#B91C1C", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
             </div>
           </div>
           {/* Saldo líquido */}
@@ -469,16 +469,16 @@ export function SecaoAssetAllocation({
               marginTop: 12,
               padding: "10px 14px",
               borderRadius: 8,
-              backgroundColor: saldoLiquido >= 0 ? "#EBF2EC" : "#F9ECEC",
+              backgroundColor: saldoLiquido >= 0 ? "#DCFCE7" : "#FEE2E2",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <span style={{ fontSize: 12, fontWeight: 600, color: saldoLiquido >= 0 ? "#3D6B41" : "#7A3535", textTransform: "uppercase" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", textTransform: "uppercase" }}>
               Saldo Líquido (Aportes − Resgates)
             </span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: saldoLiquido >= 0 ? "#3D6B41" : "#7A3535" }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C" }}>
               {saldoLiquido >= 0 ? "+" : ""}{formatCurrency(saldoLiquido)}
             </span>
           </div>
@@ -491,13 +491,13 @@ export function SecaoAssetAllocation({
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div>
-              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
                 Atual — {formatCurrency(totalAtual)}
               </p>
               <DonutChart data={dadosAtual} centerLabel="Atual" />
             </div>
             <div>
-              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
                 Proposta — {formatCurrency(totalMeta)}
               </p>
               <DonutChart data={dadosMeta} centerLabel="Proposta" />
@@ -511,7 +511,7 @@ export function SecaoAssetAllocation({
             style={{
               display: "grid",
               gridTemplateColumns: "1fr 80px 80px 110px 90px",
-              backgroundColor: "#000000",
+              backgroundColor: "#1E3A8A",
               padding: "10px 20px",
             }}
           >
@@ -539,8 +539,8 @@ export function SecaoAssetAllocation({
             const difBRL = brlMeta - brlAtual;
             const isNovo = brlAtual === 0 && brlMeta > 100;
             const acao = isNovo ? "✦ Novo" : difBRL > 100 ? "↑ Aportar" : difBRL < -100 ? "↓ Resgatar" : "→ Manter";
-            const acaoBg = acao.includes("Aportar") || acao.includes("Novo") ? "#EBF2EC" : acao.includes("Resgatar") ? "#F9ECEC" : "#F5F3EE";
-            const acaoColor = acao.includes("Aportar") || acao.includes("Novo") ? "#3D6B41" : acao.includes("Resgatar") ? "#7A3535" : "#6B6347";
+            const acaoBg = acao.includes("Aportar") || acao.includes("Novo") ? "#DCFCE7" : acao.includes("Resgatar") ? "#FEE2E2" : "#F0F7FF";
+            const acaoColor = acao.includes("Aportar") || acao.includes("Novo") ? "#15803D" : acao.includes("Resgatar") ? "#B91C1C" : "#6B7280";
             return (
               <div
                 key={k}
@@ -548,8 +548,8 @@ export function SecaoAssetAllocation({
                   display: "grid",
                   gridTemplateColumns: "1fr 80px 80px 110px 90px",
                   padding: "10px 20px",
-                  backgroundColor: idx % 2 === 0 ? "white" : "#FAFAF8",
-                  borderBottom: "1px solid #F5F3EE",
+                  backgroundColor: idx % 2 === 0 ? "white" : "#F0F7FF",
+                  borderBottom: "1px solid #F0F7FF",
                   alignItems: "center",
                 }}
               >
@@ -557,13 +557,13 @@ export function SecaoAssetAllocation({
                   <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: corDaClasse(k), flexShrink: 0 }} />
                   {labelDaClasse(k)}
                 </div>
-                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>
+                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>
                   {formatNumber(pctAtual, 1)}%
                 </span>
-                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>
+                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>
                   {formatNumber(pctMeta, 1)}%
                 </span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: difBRL >= 0 ? "#3D6B41" : "#7A3535", textAlign: "right" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: difBRL >= 0 ? "#15803D" : "#B91C1C", textAlign: "right" }}>
                   {difBRL >= 0 ? "+" : ""}{formatCurrency(difBRL)}
                 </span>
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -594,7 +594,7 @@ export function SecaoAssetAllocation({
               Plano de Ação
             </p>
             {totalVisivel > 10 && (
-              <span style={{ fontSize: 12, color: "#8A7A45", fontWeight: 600 }}>
+              <span style={{ fontSize: 12, color: "#2563EB", fontWeight: 600 }}>
                 Ver todos ({totalVisivel}) →
               </span>
             )}
@@ -602,18 +602,18 @@ export function SecaoAssetAllocation({
 
           {/* Totals summary */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-            <div style={{ backgroundColor: "#EBF2EC", borderRadius: 8, padding: "10px 14px" }}>
-              <p style={{ fontSize: 11, color: "#3D6B41", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Aportes</p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
+            <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "10px 14px" }}>
+              <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Aportes</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
             </div>
-            <div style={{ backgroundColor: "#F9ECEC", borderRadius: 8, padding: "10px 14px" }}>
-              <p style={{ fontSize: 11, color: "#7A3535", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Resgates</p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
+            <div style={{ backgroundColor: "#FEE2E2", borderRadius: 8, padding: "10px 14px" }}>
+              <p style={{ fontSize: 11, color: "#B91C1C", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Resgates</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#B91C1C", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
             </div>
           </div>
 
           {Object.keys(groupedByClasse).length === 0 ? (
-            <p style={{ fontSize: 13, color: "#9E9070", textAlign: "center", padding: "16px 0", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", padding: "16px 0", margin: 0 }}>
               Nenhuma movimentação necessária
             </p>
           ) : (
@@ -623,22 +623,22 @@ export function SecaoAssetAllocation({
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: "#6B6347",
+                    color: "#6B7280",
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                     margin: "0 0 6px",
                     paddingBottom: 4,
-                    borderBottom: "1px solid #E2DCC8",
+                    borderBottom: "1px solid #BFDBFE",
                   }}
                 >
                   {classeLabel}
                 </p>
                 {items.map((item) => {
                   const isAportar = item.movimentacaoBRL > 0;
-                  const movColor = isAportar ? "#3D6B41" : "#7A3535";
+                  const movColor = isAportar ? "#15803D" : "#B91C1C";
                   const movPrefix = isAportar ? "+" : "-";
-                  const tipoBg = isAportar ? "#EBF2EC" : "#F9ECEC";
-                  const tipoColor = isAportar ? "#3D6B41" : "#7A3535";
+                  const tipoBg = isAportar ? "#DCFCE7" : "#FEE2E2";
+                  const tipoColor = isAportar ? "#15803D" : "#B91C1C";
                   const tipoLabel =
                     item.tipo === "novo_ativo" ? "Novo"
                     : item.tipo === "aportar" ? "Aportar"
@@ -652,7 +652,7 @@ export function SecaoAssetAllocation({
                         justifyContent: "space-between",
                         alignItems: "center",
                         padding: "8px 0",
-                        borderBottom: "1px solid #F5F3EE",
+                        borderBottom: "1px solid #F0F7FF",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>

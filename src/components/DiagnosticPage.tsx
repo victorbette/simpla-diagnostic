@@ -28,8 +28,8 @@ import { formatDate } from "@/lib/format";
 
 const RISK_BADGE: Record<string, { label: string; className: string }> = {
   high: { label: "Risco alto", className: "bg-[#E8D4D4] text-red-800 dark:bg-red-900 dark:text-red-200" },
-  medium: { label: "Atenção", className: "bg-[#EDE3C0] text-[#6B5E32] dark:bg-amber-900 dark:text-amber-200" },
-  low: { label: "Adequado", className: "bg-[#D4E8D5] text-green-800 dark:bg-green-900 dark:text-green-200" },
+  medium: { label: "Atenção", className: "bg-[#DBEAFE] text-[#1E40AF] dark:bg-amber-900 dark:text-amber-200" },
+  low: { label: "Adequado", className: "bg-[#DCFCE7] text-green-800 dark:bg-green-900 dark:text-green-200" },
 };
 
 type View = "select" | "form" | "result";

@@ -202,7 +202,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
 
         {/* Footer */}
         <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 8, fontSize: 9, color: "#9ca3af", textAlign: "center" }}>
-          Uso restrito ao consultor · {formatDate(new Date())} · Simpla Wealth Financial Planning
+          Uso restrito ao consultor · {formatDate(new Date())} · Simpla Invest Financial Planning
         </div>
       </div>
     </div>
@@ -249,10 +249,10 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
               marginTop: 12,
               padding: "8px 24px",
               borderRadius: 99,
-              background: overallScore >= 70 ? "#EBF2EC" : overallScore >= 40 ? "#F5F0E0" : "#F2EBEB",
+              background: overallScore >= 70 ? "#DCFCE7" : overallScore >= 40 ? "#EFF6FF" : "#FEE2E2",
               fontSize: 16,
               fontWeight: 700,
-              color: overallScore >= 70 ? "#3D6B41" : overallScore >= 40 ? "#8A7A45" : "#7A3535",
+              color: overallScore >= 70 ? "#15803D" : overallScore >= 40 ? "#2563EB" : "#B91C1C",
             }}
           >
             Score geral: {overallScore}/100 — {scoreLabel(overallScore)}
@@ -275,12 +275,12 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreIF >= 70 ? "#EBF2EC" : scoreIF >= 40 ? "#F5F0E0" : "#F2EBEB",
+              background: scoreIF >= 70 ? "#DCFCE7" : scoreIF >= 40 ? "#EFF6FF" : "#FEE2E2",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreIF >= 70 ? "#3D6B41" : scoreIF >= 40 ? "#8A7A45" : "#7A3535",
+              color: scoreIF >= 70 ? "#15803D" : scoreIF >= 40 ? "#2563EB" : "#B91C1C",
             }}
           >
             Situação: {scoreLabel(scoreIF)} ({scoreIF}/100)
@@ -289,7 +289,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <Row label="Projeção patrimonial" value={formatCurrency(ifResult.patrimonioProjetado)} />
           <Row label="Patrimônio necessário" value={formatCurrency(ifResult.patrimonioNecessario)} />
           {ifResult.gap > 0 && (
-            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#2563EB", marginTop: 4 }}>
               Próximo passo: aumentar aportes mensais para reduzir o gap de{" "}
               {formatCurrency(ifResult.gap)}.
             </p>
@@ -301,19 +301,19 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreProt >= 70 ? "#EBF2EC" : scoreProt >= 40 ? "#F5F0E0" : "#F2EBEB",
+              background: scoreProt >= 70 ? "#DCFCE7" : scoreProt >= 40 ? "#EFF6FF" : "#FEE2E2",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreProt >= 70 ? "#3D6B41" : scoreProt >= 40 ? "#8A7A45" : "#7A3535",
+              color: scoreProt >= 70 ? "#15803D" : scoreProt >= 40 ? "#2563EB" : "#B91C1C",
             }}
           >
             Situação: {scoreLabel(scoreProt)} ({scoreProt}/100)
           </div>
           <Row label="Capital protegido" value={`${formatNumber(protResult.percentualCoberto, 0)}%`} />
           {protResult.gap > 0 && (
-            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#2563EB", marginTop: 4 }}>
               Próximo passo: contratar ou ampliar cobertura de seguro de vida.
             </p>
           )}
@@ -324,12 +324,12 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           <div
             style={{
               padding: "8px 12px",
-              background: scoreFiscal >= 70 ? "#EBF2EC" : scoreFiscal >= 40 ? "#F5F0E0" : "#F2EBEB",
+              background: scoreFiscal >= 70 ? "#DCFCE7" : scoreFiscal >= 40 ? "#EFF6FF" : "#FEE2E2",
               borderRadius: 6,
               marginBottom: 8,
               fontSize: 11,
               fontWeight: 600,
-              color: scoreFiscal >= 70 ? "#3D6B41" : scoreFiscal >= 40 ? "#8A7A45" : "#7A3535",
+              color: scoreFiscal >= 70 ? "#15803D" : scoreFiscal >= 40 ? "#2563EB" : "#B91C1C",
             }}
           >
             Situação: {scoreLabel(scoreFiscal)} ({scoreFiscal}/100)
@@ -341,7 +341,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
             />
           )}
           {fiscalResult.gapEconomia > 5000 && (
-            <p style={{ fontSize: 11, color: "#8A7A45", marginTop: 4 }}>
+            <p style={{ fontSize: 11, color: "#2563EB", marginTop: 4 }}>
               Próximo passo: aportar no PGBL e usar dedução fiscal disponível.
             </p>
           )}
@@ -366,7 +366,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
             textAlign: "center",
           }}
         >
-          {formatDate(new Date())} · Simpla Wealth Financial Planning · Este documento é pessoal e intransferível.
+          {formatDate(new Date())} · Simpla Invest Financial Planning · Este documento é pessoal e intransferível.
         </div>
       </div>
     </div>

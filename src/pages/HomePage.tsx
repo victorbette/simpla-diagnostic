@@ -35,14 +35,14 @@ import { toast } from "sonner";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DARK = "#000000";
-const GOLD = "#BBA866";
+const GOLD = "#3B82F6";
 
 const AVATAR_COLORS = [
-  "bg-purple-200 text-[#8A7A45]",
-  "bg-teal-200 text-[#8A7A45]",
-  "bg-green-200 text-[#3D6B41]",
-  "bg-amber-200 text-[#8A7A45]",
-  "bg-red-200 text-[#7A3535]",
+  "bg-purple-200 text-[#2563EB]",
+  "bg-teal-200 text-[#2563EB]",
+  "bg-green-200 text-[#15803D]",
+  "bg-amber-200 text-[#2563EB]",
+  "bg-red-200 text-[#B91C1C]",
   "bg-indigo-200 text-indigo-700",
 ];
 
@@ -79,35 +79,35 @@ function profileConfig(perfil: string | null | undefined): ProfileConfig {
   switch (perfil) {
     case "moderado":
       return {
-        borderColor: "#8A7A45",
-        badgeBg: "#F5F0E0",
-        badgeText: "#8A7A45",
-        dotColor: "#8A7A45",
+        borderColor: "#2563EB",
+        badgeBg: "#EFF6FF",
+        badgeText: "#2563EB",
+        dotColor: "#2563EB",
         label: "MODERADO",
       };
     case "conservador":
     case "conservador_moderado":
       return {
-        borderColor: "#BBA866",
+        borderColor: "#3B82F6",
         badgeBg: "#EAF0F5",
-        badgeText: "#2A4F6A",
-        dotColor: "#BBA866",
+        badgeText: "#1E40AF",
+        dotColor: "#3B82F6",
         label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
       };
     case "arrojado":
       return {
-        borderColor: "#7A3535",
-        badgeBg: "#F2EBEB",
-        badgeText: "#7A3535",
-        dotColor: "#7A3535",
+        borderColor: "#B91C1C",
+        badgeBg: "#FEE2E2",
+        badgeText: "#B91C1C",
+        dotColor: "#B91C1C",
         label: "ARROJADO",
       };
     default:
       return {
-        borderColor: "#9E9070",
-        badgeBg: "#F5F3EE",
-        badgeText: "#6B6347",
-        dotColor: "#E2DCC8",
+        borderColor: "#9CA3AF",
+        badgeBg: "#F0F7FF",
+        badgeText: "#6B7280",
+        dotColor: "#BFDBFE",
         label: "SEM PERFIL",
       };
   }
@@ -248,27 +248,27 @@ export function HomePage() {
   const totalClientes = clientStore.clients.length;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F5F3EE" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#F0F7FF" }}>
 
       {/* ── Header ── */}
       <header
         className="sticky top-0 z-40"
-        style={{ backgroundColor: "#000000" }}
+        style={{ backgroundColor: "#1E3A8A" }}
       >
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
           {/* Logo */}
           <div className="flex-1 flex items-center">
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <img
-                src="/logo-icon.png"
-                alt="Simpla Wealth"
+                src="/logo-si.svg"
+                alt="Simpla Invest"
                 style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
               />
               <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
                 <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                  Simpla Wealth
+                  Simpla Invest
                 </span>
-                <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+                <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
                   Financial Planning
                 </span>
               </div>
@@ -281,7 +281,7 @@ export function HomePage() {
               <p className="text-white text-sm font-medium leading-tight">
                 {userLabel}
               </p>
-              <p className="text-[#9E9070] text-xs leading-tight">
+              <p className="text-[#9CA3AF] text-xs leading-tight">
                 Consultor financeiro
               </p>
             </div>
@@ -293,7 +293,7 @@ export function HomePage() {
             </div>
             <button
               onClick={signOut}
-              className="text-[#9E9070] hover:text-white transition-colors p-1"
+              className="text-[#9CA3AF] hover:text-white transition-colors p-1"
               title="Sair"
             >
               <LogOut className="h-5 w-5" />
@@ -329,7 +329,7 @@ export function HomePage() {
                   >
                     Meus Clientes
                   </h1>
-                  <span style={{ color: "#6B6347", fontSize: 18 }}>
+                  <span style={{ color: "#6B7280", fontSize: 18 }}>
                     ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
                   </span>
                 </div>
@@ -340,14 +340,14 @@ export function HomePage() {
                 <div className="relative">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: "#9E9070" }}
+                    style={{ color: "#9CA3AF" }}
                   />
                   <input
                     type="text"
                     placeholder="Buscar cliente..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2.5 text-sm border border-[#E2DCC8] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+                    className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
                     style={{ width: 280 }}
                   />
                 </div>
@@ -366,11 +366,11 @@ export function HomePage() {
             {clientStore.clients.length === 0 ? (
               /* Empty — no clients at all */
               <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Users className="h-16 w-16" style={{ color: "#9E9070" }} />
-                <h2 className="text-xl font-semibold" style={{ color: "#3D3520" }}>
+                <Users className="h-16 w-16" style={{ color: "#9CA3AF" }} />
+                <h2 className="text-xl font-semibold" style={{ color: "#111827" }}>
                   Nenhum cliente cadastrado
                 </h2>
-                <p className="text-sm" style={{ color: "#6B6347" }}>
+                <p className="text-sm" style={{ color: "#6B7280" }}>
                   Adicione seu primeiro cliente para começar
                 </p>
                 <button
@@ -385,14 +385,14 @@ export function HomePage() {
             ) : filtered.length === 0 ? (
               /* Empty — search no results */
               <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Search className="h-14 w-14" style={{ color: "#9E9070" }} />
-                <h2 className="text-lg font-semibold" style={{ color: "#3D3520" }}>
+                <Search className="h-14 w-14" style={{ color: "#9CA3AF" }} />
+                <h2 className="text-lg font-semibold" style={{ color: "#111827" }}>
                   Nenhum cliente encontrado para &ldquo;{search}&rdquo;
                 </h2>
                 <button
                   onClick={() => setSearch("")}
-                  className="mt-2 border border-[#C8C0A0] text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-[#F5F3EE] transition"
-                  style={{ color: "#3D3520" }}
+                  className="mt-2 border border-[#93C5FD] text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-[#F0F7FF] transition"
+                  style={{ color: "#111827" }}
                 >
                   Limpar busca
                 </button>
@@ -443,8 +443,8 @@ export function HomePage() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#EDE9DC] transition-colors"
-                              style={{ color: "#9E9070" }}
+                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#DBEAFE] transition-colors"
+                              style={{ color: "#9CA3AF" }}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </button>
@@ -456,7 +456,7 @@ export function HomePage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => setDeleteTarget(c)}
-                              className="text-[#7A3535] focus:text-[#7A3535]"
+                              className="text-[#B91C1C] focus:text-[#B91C1C]"
                             >
                               Excluir cliente
                             </DropdownMenuItem>
@@ -478,27 +478,27 @@ export function HomePage() {
                           >
                             {c.nome}
                           </p>
-                          <p style={{ fontSize: 12, color: "#9E9070" }}>
+                          <p style={{ fontSize: 12, color: "#9CA3AF" }}>
                             Cadastrado em {formatDate(c.dataCriacao)}
                           </p>
                         </div>
                       </div>
 
                       {/* Divider */}
-                      <div style={{ height: 1, backgroundColor: "#F5F3EE", marginBottom: 16 }} />
+                      <div style={{ height: 1, backgroundColor: "#F0F7FF", marginBottom: 16 }} />
 
                       {/* Row 3: metrics */}
                       <div className="grid grid-cols-2 gap-4 mb-5 flex-1">
                         <div>
                           <p
                             className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9E9070", fontWeight: 600 }}
+                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
                           >
                             ÚLTIMO CONTATO
                           </p>
                           <p
                             className="font-semibold"
-                            style={{ fontSize: 13, color: "#3D3520" }}
+                            style={{ fontSize: 13, color: "#111827" }}
                           >
                             {ultimoContato ? formatDate(ultimoContato) : "—"}
                           </p>
@@ -506,7 +506,7 @@ export function HomePage() {
                         <div>
                           <p
                             className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9E9070", fontWeight: 600 }}
+                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
                           >
                             FINANCIAL PLANNING
                           </p>
@@ -515,7 +515,7 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#BBA866" }}
+                                  style={{ backgroundColor: "#3B82F6" }}
                                 />
                                 <span
                                   className="font-semibold"
@@ -529,11 +529,11 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#3D6B41" }}
+                                  style={{ backgroundColor: "#15803D" }}
                                 />
                                 <span
                                   className="font-semibold"
-                                  style={{ fontSize: 13, color: "#3D6B41" }}
+                                  style={{ fontSize: 13, color: "#15803D" }}
                                 >
                                   Concluído
                                 </span>
@@ -543,11 +543,11 @@ export function HomePage() {
                               <>
                                 <span
                                   className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#E2DCC8" }}
+                                  style={{ backgroundColor: "#BFDBFE" }}
                                 />
                                 <span
                                   className="font-semibold"
-                                  style={{ fontSize: 13, color: "#6B6347" }}
+                                  style={{ fontSize: 13, color: "#6B7280" }}
                                 >
                                   Não iniciado
                                 </span>
@@ -621,7 +621,7 @@ export function HomePage() {
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="m-nome">
-                Nome completo <span className="text-[#7A3535]">*</span>
+                Nome completo <span className="text-[#B91C1C]">*</span>
               </Label>
               <Input
                 id="m-nome"
@@ -716,7 +716,7 @@ export function HomePage() {
           <DialogHeader>
             <DialogTitle>Excluir cliente</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-[#6B6347] py-2">
+          <p className="text-sm text-[#6B7280] py-2">
             Tem certeza que deseja excluir <strong>{deleteTarget?.nome}</strong>?
             Esta ação não pode ser desfeita.
           </p>

@@ -17,7 +17,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
 import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 
-const GREEN = "#3D6B41";
+const GREEN = "#15803D";
 const DARK = "#000000";
 
 interface Props {
@@ -79,7 +79,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Idade atual</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Idade atual</Label>
               <Input
                 type="number"
                 min={18}
@@ -91,7 +91,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">Idade meta para IF</Label>
+            <Label className="text-[13px] font-medium text-[#111827]">Idade meta para IF</Label>
             <Input
               type="number"
               min={value.idadeAtual + 1}
@@ -99,7 +99,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
               value={value.idadeMeta}
               onChange={(e) => set("idadeMeta", Number(e.target.value))}
             />
-            <p className="text-[11px] text-[#9E9070] italic">{anosRestantes} anos restantes</p>
+            <p className="text-[11px] text-[#9CA3AF] italic">{anosRestantes} anos restantes</p>
           </div>
 
           {rendaMensalAtual > 0 ? (
@@ -109,16 +109,16 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal atual</Label>
-              <p className="text-[13px] text-[#9E9070] italic">Informe na Coleta de Dados</p>
+              <Label className="text-[13px] font-medium text-[#111827]">Renda mensal atual</Label>
+              <p className="text-[13px] text-[#9CA3AF] italic">Informe na Coleta de Dados</p>
             </div>
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Renda mensal desejada na IF</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Renda mensal desejada na IF</Label>
               {isRendaSugerida && (
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#EAF0F5", color: "#2A4F6A", border: "1px solid #A8C4D8" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, backgroundColor: "#EAF0F5", color: "#1E40AF", border: "1px solid #A8C4D8" }}>
                   ✓ SUGERIDO
                 </span>
               )}
@@ -127,7 +127,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
               value={value.rendaMensalDesejada}
               onChange={(v) => set("rendaMensalDesejada", v)}
             />
-            <p className="text-[11px] text-[#9E9070] italic">Quanto o cliente quer receber por mês ao atingir a independência financeira</p>
+            <p className="text-[11px] text-[#9CA3AF] italic">Quanto o cliente quer receber por mês ao atingir a independência financeira</p>
           </div>
 
           {isAutoPatrimonio ? (
@@ -137,7 +137,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Patrimônio investido atual</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Patrimônio investido atual</Label>
               <CurrencyInput
                 value={value.patrimonioAtual}
                 onChange={(v) => set("patrimonioAtual", v)}
@@ -152,7 +152,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[13px] font-medium text-[#3D3520]">Aporte mensal atual</Label>
+              <Label className="text-[13px] font-medium text-[#111827]">Aporte mensal atual</Label>
               <CurrencyInput
                 value={value.aporteMensal}
                 onChange={(v) => set("aporteMensal", v)}
@@ -164,11 +164,11 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
         {/* Taxa de retorno */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Label className="text-[13px] font-medium text-[#3D3520]">
+            <Label className="text-[13px] font-medium text-[#111827]">
               Taxa de retorno real estimada
             </Label>
             <Badge
-              style={{ backgroundColor: "#EBF2EC", color: "#3D6B41", border: "1px solid #A8C8AB" }}
+              style={{ backgroundColor: "#DCFCE7", color: "#15803D", border: "1px solid #A8C8AB" }}
             >
               {value.taxaRetornoAnual}% a.a.
             </Badge>
@@ -180,9 +180,9 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             step={0.5}
             value={value.taxaRetornoAnual}
             onChange={(e) => set("taxaRetornoAnual", Number(e.target.value))}
-            className="w-full accent-[#3D6B41]"
+            className="w-full accent-[#15803D]"
           />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9E9070" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9CA3AF" }}>
             <span>3% (conservador)</span>
             <span>12% (arrojado)</span>
           </div>
@@ -190,7 +190,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
 
         {/* Metodologia */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 360 }}>
-          <Label className="text-[13px] font-medium text-[#3D3520]">Metodologia de cálculo</Label>
+          <Label className="text-[13px] font-medium text-[#111827]">Metodologia de cálculo</Label>
           <Select
             value={value.metodologia}
             onValueChange={(v) => set("metodologia", v as PlanejamentoIF["metodologia"])}
@@ -210,7 +210,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
       {/* ══ Resultado em tempo real ══ */}
       <div
         style={{
-          backgroundColor: "#EBF2EC",
+          backgroundColor: "#DCFCE7",
           border: "1px solid #A8C8AB",
           borderRadius: 10,
           padding: 20,
@@ -220,7 +220,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
         }}
       >
         <div>
-          <p style={{ fontSize: 11, color: "#3D6B41", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+          <p style={{ fontSize: 11, color: "#15803D", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
             Patrimônio necessário
           </p>
           <p style={{ fontSize: 18, fontWeight: 700, color: DARK, margin: 0, fontVariantNumeric: "tabular-nums" }}>
@@ -228,18 +228,18 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
           </p>
         </div>
         <div>
-          <p style={{ fontSize: 11, color: "#3D6B41", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+          <p style={{ fontSize: 11, color: "#15803D", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
             Projeção com aportes
           </p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#3D6B41", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+          <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0, fontVariantNumeric: "tabular-nums" }}>
             {formatCurrency(resultado.patrimonioProjetado)}
           </p>
         </div>
         <div>
-          <p style={{ fontSize: 11, color: gapPositivo ? "#7A3535" : "#3D6B41", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
+          <p style={{ fontSize: 11, color: gapPositivo ? "#B91C1C" : "#15803D", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
             {gapPositivo ? "Gap (falta)" : "Superávit"}
           </p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: gapPositivo ? "#7A3535" : "#3D6B41", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+          <p style={{ fontSize: 18, fontWeight: 700, color: gapPositivo ? "#B91C1C" : "#15803D", margin: 0, fontVariantNumeric: "tabular-nums" }}>
             {formatCurrency(Math.abs(resultado.gap))}
           </p>
         </div>
@@ -248,7 +248,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             <p style={{ fontSize: 11, color: "#92400E", fontWeight: 600, textTransform: "uppercase", margin: "0 0 4px" }}>
               Aporte necessário
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#8A7A45", margin: 0, fontVariantNumeric: "tabular-nums" }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: "#2563EB", margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(aporteNecessario)}/mês
             </p>
           </div>
@@ -258,10 +258,10 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
       {/* Progresso */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-          <span style={{ color: "#6B6347" }}>Progresso atual ({formatNumber(progressoPct, 0)}%)</span>
+          <span style={{ color: "#6B7280" }}>Progresso atual ({formatNumber(progressoPct, 0)}%)</span>
           <span style={{ fontWeight: 600, color: DARK }}>{anosRestantes} anos restantes</span>
         </div>
-        <div style={{ height: 8, backgroundColor: "#E2DCC8", borderRadius: 4, overflow: "hidden" }}>
+        <div style={{ height: 8, backgroundColor: "#BFDBFE", borderRadius: 4, overflow: "hidden" }}>
           <div
             style={{
               height: "100%",
@@ -282,7 +282,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
         />
         <div
           style={{
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             borderRadius: 10,
             padding: "16px 20px",
             display: "flex",
@@ -297,7 +297,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             </div>
             {possuiPrevidencia && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
-                <Label className="text-[12px] text-[#6B6347]">Valor acumulado</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor acumulado</Label>
                 <CurrencyInput
                   value={value.valorPrevidencia ?? 0}
                   onChange={(v) => set("valorPrevidencia", v)}
@@ -318,7 +318,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
             </div>
             {temAluguel && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280, display: "flex", flexDirection: "column", gap: 6 }}>
-                <Label className="text-[12px] text-[#6B6347]">Renda de aluguel mensal</Label>
+                <Label className="text-[12px] text-[#6B7280]">Renda de aluguel mensal</Label>
                 <CurrencyInput
                   value={value.rendaAluguelMensal ?? 0}
                   onChange={(v) => set("rendaAluguelMensal", v)}

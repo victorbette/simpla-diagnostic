@@ -58,7 +58,7 @@ export function SecaoAposentadoria({
     <>
       <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Card 1 — Simulator */}
-        <div style={{ ...CARD, borderTop: "3px solid #3D6B41" }}>
+        <div style={{ ...CARD, borderTop: "3px solid #15803D" }}>
           {resultadoIF ? (
             <>
               {/* Header row */}
@@ -67,13 +67,13 @@ export function SecaoAposentadoria({
                   <span style={{ fontSize: 13, fontWeight: 700, color: "#000000", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                     Simulação de IF / Aposentadoria
                   </span>
-                  <span style={{ fontSize: 11, color: "#6B6347", backgroundColor: "#F5F3EE", borderRadius: 999, padding: "2px 8px", border: "1px solid #E2DCC8" }}>
+                  <span style={{ fontSize: 11, color: "#6B7280", backgroundColor: "#F0F7FF", borderRadius: 999, padding: "2px 8px", border: "1px solid #BFDBFE" }}>
                     Calculado em {new Date(resultadoIF.dataCalculo).toLocaleDateString("pt-BR")}
                   </span>
                 </div>
                 <button
                   onClick={() => setModalOpen(true)}
-                  style={{ fontSize: 12, padding: "6px 14px", borderRadius: 6, backgroundColor: "#3D6B41", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
+                  style={{ fontSize: 12, padding: "6px 14px", borderRadius: 6, backgroundColor: "#15803D", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
                 >
                   Abrir simulador →
                 </button>
@@ -81,34 +81,34 @@ export function SecaoAposentadoria({
 
               {/* 2x2 metrics grid */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio na IF</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(resultadoIF.patrimonioAposentadoria)}</p>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio na IF</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF", margin: 0 }}>{formatCurrency(resultadoIF.patrimonioAposentadoria)}</p>
                 </div>
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Renda Sustentável</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(resultadoIF.rendaSustentavel)}/mês</p>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Renda Sustentável</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(resultadoIF.rendaSustentavel)}/mês</p>
                 </div>
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Renda</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: resultadoIF.gapRenda > 0 ? "#7A3535" : "#3D6B41", margin: 0 }}>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Renda</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: resultadoIF.gapRenda > 0 ? "#B91C1C" : "#15803D", margin: 0 }}>
                     {formatCurrency(Math.abs(resultadoIF.gapRenda))}/mês
                   </p>
                 </div>
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Anos Restantes</p>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Anos Restantes</p>
                   <p style={{ fontSize: 16, fontWeight: 700, color: "#000000", margin: 0 }}>{resultadoIF.anosRestantes} anos</p>
                 </div>
               </div>
 
               {/* Progress bar */}
               <div style={{ marginTop: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6347", marginBottom: 6 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
                   <span>{pct}% do patrimônio necessário</span>
-                  <span style={{ fontWeight: 600, color: "#3D6B41" }}>{pct}%</span>
+                  <span style={{ fontWeight: 600, color: "#15803D" }}>{pct}%</span>
                 </div>
-                <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden", border: "1px solid #E2DCC8" }}>
-                  <div style={{ height: "100%", width: `${pct}%`, backgroundColor: "#3D6B41", borderRadius: 4, transition: "width 0.4s" }} />
+                <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden", border: "1px solid #BFDBFE" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, backgroundColor: "#15803D", borderRadius: 4, transition: "width 0.4s" }} />
                 </div>
               </div>
 
@@ -118,8 +118,8 @@ export function SecaoAposentadoria({
                   <AreaChart data={resultadoIF.projecao}>
                     <defs>
                       <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2A4F6A" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#2A4F6A" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#1E40AF" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#1E40AF" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -131,14 +131,14 @@ export function SecaoAposentadoria({
                     />
                     <ReferenceLine
                       y={resultadoIF.patrimonioNecessario}
-                      stroke="#7A3535"
+                      stroke="#B91C1C"
                       strokeDasharray="4 4"
-                      label={{ value: "Meta", position: "right", fontSize: 10, fill: "#7A3535" }}
+                      label={{ value: "Meta", position: "right", fontSize: 10, fill: "#B91C1C" }}
                     />
                     <Area
                       type="monotone"
                       dataKey="patrimonio"
-                      stroke="#2A4F6A"
+                      stroke="#1E40AF"
                       fill="url(#gradIF)"
                       strokeWidth={2}
                     />
@@ -155,9 +155,9 @@ export function SecaoAposentadoria({
                     fontWeight: 700,
                     padding: "4px 14px",
                     borderRadius: 999,
-                    backgroundColor: resultadoIF.liberdadeAlcancada ? "#EBF2EC" : "#F9ECEC",
-                    color: resultadoIF.liberdadeAlcancada ? "#3D6B41" : "#7A3535",
-                    border: `1px solid ${resultadoIF.liberdadeAlcancada ? "#3D6B41" : "#7A3535"}`,
+                    backgroundColor: resultadoIF.liberdadeAlcancada ? "#DCFCE7" : "#FEE2E2",
+                    color: resultadoIF.liberdadeAlcancada ? "#15803D" : "#B91C1C",
+                    border: `1px solid ${resultadoIF.liberdadeAlcancada ? "#15803D" : "#B91C1C"}`,
                   }}
                 >
                   {resultadoIF.liberdadeAlcancada ? "✓ Liberdade financeira alcançada" : "✗ Liberdade financeira não alcançada"}
@@ -166,16 +166,16 @@ export function SecaoAposentadoria({
             </>
           ) : (
             /* Empty state */
-            <div style={{ textAlign: "center", padding: "32px 24px", backgroundColor: "#F5F3EE", borderRadius: 8 }}>
-              <p style={{ fontSize: 14, fontWeight: 600, color: "#6B6347", margin: "0 0 6px" }}>
+            <div style={{ textAlign: "center", padding: "32px 24px", backgroundColor: "#F0F7FF", borderRadius: 8 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "#6B7280", margin: "0 0 6px" }}>
                 Simulador de IF não executado
               </p>
-              <p style={{ fontSize: 13, color: "#8A7A45", margin: 0 }}>
+              <p style={{ fontSize: 13, color: "#2563EB", margin: 0 }}>
                 {p.idadeAtual} → {p.idadeMeta} anos · {formatCurrency(p.patrimonioAtual)} atual
               </p>
               <button
                 onClick={() => setModalOpen(true)}
-                style={{ marginTop: 12, fontSize: 13, padding: "8px 18px", borderRadius: 6, backgroundColor: "#3D6B41", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
+                style={{ marginTop: 12, fontSize: 13, padding: "8px 18px", borderRadius: 6, backgroundColor: "#15803D", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
               >
                 Abrir simulador de IF →
               </button>
@@ -184,7 +184,7 @@ export function SecaoAposentadoria({
         </div>
 
         {/* Card 2 — Comment */}
-        <div style={{ ...CARD, borderTop: "3px solid #000000" }}>
+        <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Estratégia e Recomendações
           </p>
@@ -198,7 +198,7 @@ export function SecaoAposentadoria({
                 minHeight: 200,
                 padding: "10px 12px",
                 borderRadius: 6,
-                border: "1px solid #E2DCC8",
+                border: "1px solid #BFDBFE",
                 fontSize: 13,
                 color: "#000000",
                 resize: "vertical",
@@ -207,12 +207,12 @@ export function SecaoAposentadoria({
                 fontFamily: "inherit",
               }}
             />
-            <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>
+            <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>
               {comentario.length} caracteres
             </span>
           </div>
           <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
+            <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
             {AVAILABLE_TAGS.map((t) => (
               <button
                 key={t}
@@ -222,9 +222,9 @@ export function SecaoAposentadoria({
                   padding: "3px 10px",
                   borderRadius: 999,
                   cursor: "pointer",
-                  border: "1px solid #E2DCC8",
-                  backgroundColor: tags.includes(t) ? "#000000" : "transparent",
-                  color: tags.includes(t) ? "white" : "#3D3520",
+                  border: "1px solid #BFDBFE",
+                  backgroundColor: tags.includes(t) ? "#2563EB" : "transparent",
+                  color: tags.includes(t) ? "white" : "#111827",
                 }}
               >
                 {t}

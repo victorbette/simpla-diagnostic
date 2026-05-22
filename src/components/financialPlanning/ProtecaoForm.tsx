@@ -17,7 +17,7 @@ interface ProtecaoFormProps {
 
 function scoreProtecao(pct: number): { label: string; color: string } {
   if (pct >= 80) return { label: "Boa proteção", color: "text-emerald-600" };
-  if (pct >= 50) return { label: "Proteção parcial", color: "text-[#8A7A45]" };
+  if (pct >= 50) return { label: "Proteção parcial", color: "text-[#2563EB]" };
   return { label: "Proteção insuficiente", color: "text-destructive" };
 }
 
@@ -155,7 +155,7 @@ export function ProtecaoForm({ value, onChange }: ProtecaoFormProps) {
             )}
 
             {resultado.gap > 0 && (
-              <Badge variant="outline" className="flex items-center gap-1.5 text-[#8A7A45] border-[#BBA866] bg-[#F5F0E0] w-full justify-center py-2">
+              <Badge variant="outline" className="flex items-center gap-1.5 text-[#2563EB] border-[#3B82F6] bg-[#EFF6FF] w-full justify-center py-2">
                 <ShieldAlert className="h-3.5 w-3.5" />
                 Encaminhar para análise completa de seguros
               </Badge>

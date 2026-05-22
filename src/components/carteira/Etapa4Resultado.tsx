@@ -38,10 +38,10 @@ const PERFIL_LABELS_LOCAL: Record<string, string> = {
 };
 
 const GRUPOS_DISPLAY = [
-  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#2A4F6A" },
-  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#3D6B41" },
-  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#8A7A45" },
-  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#8A7A45" },
+  { nome: "Renda Fixa", cards: ["resgate_rapido", "resgate_longo"] as SimplaCardId[], cor: "#1E40AF" },
+  { nome: "RV Brasil", cards: ["acoes", "fiis"] as SimplaCardId[], cor: "#15803D" },
+  { nome: "Internacional", cards: ["exterior"] as SimplaCardId[], cor: "#2563EB" },
+  { nome: "Criptoativos", cards: ["cripto"] as SimplaCardId[], cor: "#2563EB" },
 ];
 
 function fmtK(n: number): string {
@@ -136,7 +136,7 @@ export function Etapa4Resultado({
             { title: "Carteira Recomendada", data: pieMeta, subtit: formatBRL(patrimonio) },
           ] as const
         ).map(({ title, data, subtit }) => (
-          <div key={title} style={{ borderRadius: 12, border: "1px solid #E2DCC8", borderTop: "3px solid #3D6B41", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div key={title} style={{ borderRadius: 12, border: "1px solid #BFDBFE", borderTop: "3px solid #15803D", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <h3 className="font-semibold text-sm mb-0.5">{title}</h3>
             <p className="text-xs text-muted-foreground mb-3">{subtit}</p>
             {data.length > 0 ? (
@@ -183,12 +183,12 @@ export function Etapa4Resultado({
       </div>
 
       {/* SECTION 2 — Comparison Table (collapsible groups + card level) */}
-      <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-        <div style={{ backgroundColor: "#F5F3EE", padding: "8px 16px", borderBottom: "1px solid #F5F3EE" }}>
+      <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <div style={{ backgroundColor: "#F0F7FF", padding: "8px 16px", borderBottom: "1px solid #F0F7FF" }}>
           <h3 style={{ fontWeight: 700, fontSize: 14, color: "#000000", margin: 0 }}>Comparativo por grupo</h3>
         </div>
         <table className="w-full text-sm">
-          <thead style={{ backgroundColor: "#000000" }}>
+          <thead style={{ backgroundColor: "#1E3A8A" }}>
             <tr>
               <th style={{ padding: "8px 16px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Grupo</th>
               <th style={{ padding: "8px 16px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>% Atual</th>
@@ -209,7 +209,7 @@ export function Etapa4Resultado({
               return (
                 <Fragment key={g.nome}>
                   <tr
-                    style={{ borderTop: "1px solid #F5F3EE", fontWeight: 600, cursor: "pointer" }}
+                    style={{ borderTop: "1px solid #F0F7FF", fontWeight: 600, cursor: "pointer" }}
                     onClick={() => toggleGroup(g.nome)}
                   >
                     <td className="px-4 py-2.5">
@@ -225,10 +225,10 @@ export function Etapa4Resultado({
                     <td className="px-4 py-2.5 text-right">{formatBRL(atual.valor)}</td>
                     <td className="px-4 py-2.5 text-right">{formatPct(meta.pct)}</td>
                     <td className="px-4 py-2.5 text-right">{formatBRL(meta.valor)}</td>
-                    <td style={{ padding: "10px 16px", textAlign: "right", color: difR > 0 ? "#3D6B41" : difR < 0 ? "#7A3535" : "#9E9070" }}>
+                    <td style={{ padding: "10px 16px", textAlign: "right", color: difR > 0 ? "#15803D" : difR < 0 ? "#B91C1C" : "#9CA3AF" }}>
                       {difR === 0 ? "—" : `${difR > 0 ? "+" : ""}${formatBRL(difR)}`}
                     </td>
-                    <td style={{ padding: "10px 16px", textAlign: "right", color: difP > 0 ? "#3D6B41" : difP < 0 ? "#7A3535" : "#9E9070" }}>
+                    <td style={{ padding: "10px 16px", textAlign: "right", color: difP > 0 ? "#15803D" : difP < 0 ? "#B91C1C" : "#9CA3AF" }}>
                       {difP === 0 ? "—" : `${difP > 0 ? "+" : ""}${formatPct(difP)}`}
                     </td>
                   </tr>
@@ -250,17 +250,17 @@ export function Etapa4Resultado({
                       return (
                         <tr
                           key={cardId}
-                          style={{ borderTop: "1px solid #F5F3EE", backgroundColor: "#F5F3EE", fontSize: 11, color: "#6B6347" }}
+                          style={{ borderTop: "1px solid #F0F7FF", backgroundColor: "#F0F7FF", fontSize: 11, color: "#6B7280" }}
                         >
                           <td className="px-4 py-2 pl-10">{card.label}</td>
                           <td className="px-4 py-2 text-right">{formatPct(aP)}</td>
                           <td className="px-4 py-2 text-right">{formatBRL(aV)}</td>
                           <td className="px-4 py-2 text-right">{formatPct(mP)}</td>
                           <td className="px-4 py-2 text-right">{formatBRL(mV)}</td>
-                          <td style={{ padding: "8px 16px", textAlign: "right", color: dR > 0 ? "#3D6B41" : dR < 0 ? "#7A3535" : undefined }}>
+                          <td style={{ padding: "8px 16px", textAlign: "right", color: dR > 0 ? "#15803D" : dR < 0 ? "#B91C1C" : undefined }}>
                             {dR === 0 ? "—" : `${dR > 0 ? "+" : ""}${formatBRL(dR)}`}
                           </td>
-                          <td style={{ padding: "8px 16px", textAlign: "right", color: dP > 0 ? "#3D6B41" : dP < 0 ? "#7A3535" : undefined }}>
+                          <td style={{ padding: "8px 16px", textAlign: "right", color: dP > 0 ? "#15803D" : dP < 0 ? "#B91C1C" : undefined }}>
                             {dP === 0 ? "—" : `${dP > 0 ? "+" : ""}${formatPct(dP)}`}
                           </td>
                         </tr>
@@ -291,16 +291,16 @@ export function Etapa4Resultado({
       </div>
 
       {/* SECTION 3 — Bar Chart */}
-      <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+      <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", backgroundColor: "white", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <h3 style={{ fontWeight: 700, fontSize: 14, color: "#000000", marginBottom: 12 }}>Atual vs. Proposta por grupo (R$)</h3>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={barData} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#F0F7FF" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={fmtK} tick={{ fontSize: 11 }} width={56} />
-            <Tooltip formatter={(v: number) => formatBRL(v)} contentStyle={{ borderRadius: 8, border: "1px solid #E2DCC8", backgroundColor: "white" }} />
+            <Tooltip formatter={(v: number) => formatBRL(v)} contentStyle={{ borderRadius: 8, border: "1px solid #BFDBFE", backgroundColor: "white" }} />
             <Legend />
-            <Bar dataKey="Atual" fill="#9E9070" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Atual" fill="#9CA3AF" radius={[3, 3, 0, 0]} />
             <Bar dataKey="Meta" fill="#000000" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -308,8 +308,8 @@ export function Etapa4Resultado({
 
       {/* SECTION 4 — Plan Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", borderTop: "3px solid #3D6B41", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#3D6B41", marginBottom: 8 }}>Aportes e novos</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", borderTop: "3px solid #15803D", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#15803D", marginBottom: 8 }}>Aportes e novos</h4>
           {aportes.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -327,7 +327,7 @@ export function Etapa4Resultado({
                       </span>
                       <span className="truncate">{item.nomeAtivo}</span>
                     </div>
-                    <span className="text-[#3D6B41] font-medium shrink-0">
+                    <span className="text-[#15803D] font-medium shrink-0">
                       +{formatBRL(item.movimentacaoBRL)}
                     </span>
                   </div>
@@ -335,15 +335,15 @@ export function Etapa4Resultado({
               })}
               <div className="border-t pt-1 flex justify-between text-xs font-semibold">
                 <span>Total</span>
-                <span className="text-[#3D6B41]">
+                <span className="text-[#15803D]">
                   {formatBRL(aportes.reduce((s, p) => s + p.movimentacaoBRL, 0))}
                 </span>
               </div>
             </>
           )}
         </div>
-        <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", borderTop: "3px solid #7A3535", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#7A3535", marginBottom: 8 }}>Resgates</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", borderTop: "3px solid #B91C1C", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#B91C1C", marginBottom: 8 }}>Resgates</h4>
           {resgates.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -361,7 +361,7 @@ export function Etapa4Resultado({
                       </span>
                       <span className="truncate">{item.nomeAtivo}</span>
                     </div>
-                    <span className="text-[#7A3535] font-medium shrink-0">
+                    <span className="text-[#B91C1C] font-medium shrink-0">
                       {formatBRL(item.movimentacaoBRL)}
                     </span>
                   </div>
@@ -369,15 +369,15 @@ export function Etapa4Resultado({
               })}
               <div className="border-t pt-1 flex justify-between text-xs font-semibold">
                 <span>Total</span>
-                <span className="text-[#7A3535]">
+                <span className="text-[#B91C1C]">
                   {formatBRL(resgates.reduce((s, p) => s + p.movimentacaoBRL, 0))}
                 </span>
               </div>
             </>
           )}
         </div>
-        <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", borderTop: "3px solid #000000", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#6B6347", marginBottom: 8 }}>Mantidos</h4>
+        <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", borderTop: "3px solid #1E3A8A", padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <h4 style={{ fontWeight: 700, fontSize: 13, color: "#6B7280", marginBottom: 8 }}>Mantidos</h4>
           {mantidos.length === 0 ? (
             <p className="text-xs text-muted-foreground">Nenhum</p>
           ) : (
@@ -406,20 +406,20 @@ export function Etapa4Resultado({
 
       {/* SECTION 5 — Nota */}
       {notaConsultor && (
-        <div style={{ borderRadius: 12, border: "1px solid #E2DCC8", backgroundColor: "#F5F3EE", padding: 16 }}>
+        <div style={{ borderRadius: 12, border: "1px solid #BFDBFE", backgroundColor: "#F0F7FF", padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <h3 style={{ fontWeight: 600, fontSize: 14, color: "#000000", margin: 0 }}>Notas do consultor</h3>
-            <button onClick={onGoToEtapa3} style={{ background: "none", border: "none", color: "#6B6347", cursor: "pointer", fontSize: 13 }}>
+            <button onClick={onGoToEtapa3} style={{ background: "none", border: "none", color: "#6B7280", cursor: "pointer", fontSize: 13 }}>
               Editar
             </button>
           </div>
-          <p style={{ fontSize: 13, whiteSpace: "pre-wrap", color: "#6B6347", margin: 0 }}>{notaConsultor}</p>
+          <p style={{ fontSize: 13, whiteSpace: "pre-wrap", color: "#6B7280", margin: 0 }}>{notaConsultor}</p>
         </div>
       )}
 
       {/* Action Buttons */}
-      <div style={{ display: "flex", gap: 12, paddingTop: 16, borderTop: "1px solid #E2DCC8" }}>
-        <button onClick={onSave} style={{ backgroundColor: "#3D6B41", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+      <div style={{ display: "flex", gap: 12, paddingTop: 16, borderTop: "1px solid #BFDBFE" }}>
+        <button onClick={onSave} style={{ backgroundColor: "#15803D", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
           Salvar carteira
         </button>
         <button onClick={() => window.print()} style={{ backgroundColor: "white", color: "#000000", border: "1.5px solid #000000", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>

@@ -16,8 +16,8 @@ import type { DadosCliente, PerfilRisco } from "@/types/financialPlanning";
 import { formatCurrency as _formatCurrency } from "@/lib/format";
 
 const DARK = "#000000";
-const AMBER = "#8A7A45";
-const GOLD = "#BBA866";
+const AMBER = "#2563EB";
+const GOLD = "#3B82F6";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -45,7 +45,7 @@ const PERFIL_CARDS: {
     label: "Conservador",
     alocacao: "RF 92% · RV 4% · Internacional 4%",
     descricao: "Foco em preservação de capital e liquidez. Baixa tolerância a risco.",
-    color: "#BBA866",
+    color: "#3B82F6",
     bgSelected: "#EAF0F5",
     icon: Shield,
   },
@@ -54,7 +54,7 @@ const PERFIL_CARDS: {
     label: "Conservador Moderado",
     alocacao: "RF 78% · RV 13% · Internacional 9%",
     descricao: "Equilíbrio com predominância em renda fixa e alguma exposição a RV.",
-    color: "#2A4F6A",
+    color: "#1E40AF",
     bgSelected: "#EAF0F5",
     icon: TrendingUp,
   },
@@ -63,8 +63,8 @@ const PERFIL_CARDS: {
     label: "Moderado",
     alocacao: "RF 66% · RV 20% · Internacional 13%",
     descricao: "Equilíbrio entre segurança e crescimento. Aceita volatilidade moderada.",
-    color: "#8A7A45",
-    bgSelected: "#F5F0E0",
+    color: "#2563EB",
+    bgSelected: "#EFF6FF",
     icon: BarChart2,
   },
   {
@@ -72,8 +72,8 @@ const PERFIL_CARDS: {
     label: "Arrojado",
     alocacao: "RF 52% · RV 29% · Internacional 17,5%",
     descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.",
-    color: "#7A3535",
-    bgSelected: "#F2EBEB",
+    color: "#B91C1C",
+    bgSelected: "#FEE2E2",
     icon: Zap,
   },
 ];
@@ -110,8 +110,8 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
   }
 
   const fieldCls = "flex flex-col gap-1.5";
-  const labelCls = "text-[13px] font-medium text-[#3D3520]";
-  const inputCls = "w-full border border-[#E2DCC8] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#000000] focus:ring-2 focus:ring-[rgba(4,26,32,0.1)] bg-white";
+  const labelCls = "text-[13px] font-medium text-[#111827]";
+  const inputCls = "w-full border border-[#BFDBFE] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E3A8A] focus:ring-2 focus:ring-[rgba(4,26,32,0.1)] bg-white";
 
   const selectedCard = value.suitabilityPerfil
     ? PERFIL_CARDS.find((c) => c.perfil === value.suitabilityPerfil)
@@ -146,13 +146,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <Label className={labelCls}>Idade</Label>
             <div className="flex items-center gap-2">
               <div
-                className="flex h-10 items-center px-3 rounded-lg border border-[#E2DCC8] bg-[#EAF0F5] text-sm font-semibold text-[#2A4F6A] flex-1"
-                style={{ borderLeft: "3px solid #BBA866" }}
+                className="flex h-10 items-center px-3 rounded-lg border border-[#BFDBFE] bg-[#EAF0F5] text-sm font-semibold text-[#1E40AF] flex-1"
+                style={{ borderLeft: "3px solid #3B82F6" }}
               >
                 {calculatedAge ? `${calculatedAge} anos` : "—"}
               </div>
               {calculatedAge && (
-                <span className="text-[10px] font-bold text-[#2A4F6A] bg-[#EAF0F5] border border-[#A8C4D8] rounded px-1.5 py-0.5 whitespace-nowrap">
+                <span className="text-[10px] font-bold text-[#1E40AF] bg-[#EAF0F5] border border-[#A8C4D8] rounded px-1.5 py-0.5 whitespace-nowrap">
                   ✓ CALCULADO
                 </span>
               )}
@@ -232,7 +232,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <FPSectionHeader
           title="Situação Financeira"
           subtitle="Patrimônio, renda e fluxo mensal"
-          borderColor="#BBA866"
+          borderColor="#3B82F6"
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -250,7 +250,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                 onChange={(v) => set(key, v)}
               />
               {hint && (
-                <p className="text-[11px] text-[#9E9070] italic">{hint}</p>
+                <p className="text-[11px] text-[#9CA3AF] italic">{hint}</p>
               )}
             </div>
           ))}
@@ -263,7 +263,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             value={value.gastoCartaoMensal}
             onChange={(v) => set("gastoCartaoMensal", v)}
           />
-          <p className="text-[11px] text-[#9E9070] italic">
+          <p className="text-[11px] text-[#9CA3AF] italic">
             Some todas as faturas do mês, incluindo cartões adicionais
           </p>
         </div>
@@ -272,7 +272,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div>
             <Label className={labelCls}>Perfil de viagens</Label>
-            <p className="text-[11px] text-[#9E9070] italic">
+            <p className="text-[11px] text-[#9CA3AF] italic">
               Usado para planejamento de reserva de emergência e seguros
             </p>
           </div>
@@ -280,7 +280,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <div
               style={{
                 borderRadius: 10,
-                border: "1px solid #E2DCC8",
+                border: "1px solid #BFDBFE",
                 padding: "14px 16px",
                 display: "flex",
                 alignItems: "flex-start",
@@ -290,13 +290,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
               <Switch
                 checked={value.fazViagensNacionais}
                 onCheckedChange={(v) => set("fazViagensNacionais", v)}
-                style={value.fazViagensNacionais ? { backgroundColor: "#000000" } : undefined}
+                style={value.fazViagensNacionais ? { backgroundColor: "#1E3A8A" } : undefined}
               />
               <div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
                   Viagens nacionais
                 </p>
-                <p style={{ fontSize: 11, color: "#9E9070", margin: "2px 0 0" }}>
+                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
                   Viaja dentro do Brasil regularmente
                 </p>
               </div>
@@ -304,7 +304,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <div
               style={{
                 borderRadius: 10,
-                border: "1px solid #E2DCC8",
+                border: "1px solid #BFDBFE",
                 padding: "14px 16px",
                 display: "flex",
                 alignItems: "flex-start",
@@ -314,13 +314,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
               <Switch
                 checked={value.fazViagensInternacionais}
                 onCheckedChange={(v) => set("fazViagensInternacionais", v)}
-                style={value.fazViagensInternacionais ? { backgroundColor: "#000000" } : undefined}
+                style={value.fazViagensInternacionais ? { backgroundColor: "#1E3A8A" } : undefined}
               />
               <div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
                   Viagens internacionais
                 </p>
-                <p style={{ fontSize: 11, color: "#9E9070", margin: "2px 0 0" }}>
+                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
                   Viaja para o exterior
                 </p>
               </div>
@@ -334,10 +334,10 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <FPSectionHeader
           title="Proteção Atual"
           subtitle="Seguros de vida e invalidez existentes"
-          borderColor="#7A3535"
+          borderColor="#B91C1C"
         />
 
-        <div style={{ borderRadius: 10, border: "1px solid #E2DCC8", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Switch checked={value.temSeguroVida} onCheckedChange={(v) => set("temSeguroVida", v)} />
@@ -345,7 +345,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </div>
             {value.temSeguroVida && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280 }} className={fieldCls}>
-                <Label className="text-[12px] text-[#6B6347]">Valor da apólice</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor da apólice</Label>
                 <CurrencyInput value={value.valorApoliceVida} onChange={(v) => set("valorApoliceVida", v)} />
               </div>
             )}
@@ -358,7 +358,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </div>
             {value.temSeguroInvalidez && (
               <div style={{ marginLeft: 44, marginTop: 12, maxWidth: 280 }} className={fieldCls}>
-                <Label className="text-[12px] text-[#6B6347]">Valor da apólice</Label>
+                <Label className="text-[12px] text-[#6B7280]">Valor da apólice</Label>
                 <CurrencyInput value={value.valorApoliceInvalidez} onChange={(v) => set("valorApoliceInvalidez", v)} />
               </div>
             )}
@@ -371,7 +371,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <FPSectionHeader
           title="Vínculo Profissional"
           subtitle="Tipo de relação com o mercado de trabalho"
-          borderColor="#6B6347"
+          borderColor="#6B7280"
         />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
@@ -383,11 +383,11 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                 type="button"
                 onClick={() => set("tipoTrabalho", key)}
                 style={{
-                  border: selected ? `2px solid ${GOLD}` : "1.5px solid #E2DCC8",
+                  border: selected ? `2px solid ${GOLD}` : "1.5px solid #BFDBFE",
                   borderRadius: 10,
                   padding: "16px 12px",
                   backgroundColor: selected ? DARK : "white",
-                  color: selected ? "white" : "#3D3520",
+                  color: selected ? "white" : "#111827",
                   cursor: "pointer",
                   display: "flex",
                   flexDirection: "column",
@@ -428,7 +428,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                 type="button"
                 onClick={() => selectPerfil(perfil)}
                 style={{
-                  border: selected ? `2px solid ${color}` : "1.5px solid #E2DCC8",
+                  border: selected ? `2px solid ${color}` : "1.5px solid #BFDBFE",
                   borderRadius: 10,
                   padding: "16px 18px",
                   backgroundColor: selected ? bgSelected : "white",
@@ -450,8 +450,8 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                   <Icon style={{ width: 20, height: 20, color }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: DARK }}>{label}</span>
                 </div>
-                <p style={{ fontSize: 11, color: "#6B6347", margin: 0, fontWeight: 500 }}>{alocacao}</p>
-                <p style={{ fontSize: 12, color: "#3D3520", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
+                <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
+                <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
               </button>
             );
           })}
@@ -466,11 +466,11 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
 
             {/* Allocation table */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B6347", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
                 Alocação recomendada (Padrão Simpla)
               </p>
-              <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #E2DCC8" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F5F3EE", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B6347", textTransform: "uppercase" }}>
+              <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #BFDBFE" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F0F7FF", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" }}>
                   <span>Classe</span>
                   <span>% Recomendado</span>
                 </div>
@@ -484,12 +484,12 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
                         gridTemplateColumns: "1fr auto",
                         padding: "8px 12px",
                         backgroundColor: "white",
-                        borderTop: i === 0 ? "1px solid #E2DCC8" : undefined,
-                        borderBottom: i < arr.length - 1 ? "1px solid #F5F3EE" : undefined,
+                        borderTop: i === 0 ? "1px solid #BFDBFE" : undefined,
+                        borderBottom: i < arr.length - 1 ? "1px solid #F0F7FF" : undefined,
                         fontSize: 13,
                       }}
                     >
-                      <span style={{ color: "#3D3520" }}>{CARD_LABELS[key] ?? key}</span>
+                      <span style={{ color: "#111827" }}>{CARD_LABELS[key] ?? key}</span>
                       <span style={{ fontWeight: 700, color: selectedCard.color }}>{pct}%</span>
                     </div>
                   ))}

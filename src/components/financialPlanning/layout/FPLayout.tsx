@@ -4,7 +4,7 @@ import { FPSidebar } from "./FPSidebar";
 import type { FPStep } from "./FPSidebar";
 
 const DARK = "#000000";
-const GOLD = "#BBA866";
+const GOLD = "#3B82F6";
 
 const STEP_META: Record<FPStep, { title: string; subtitle: string; next: string | null }> = {
   coleta: {
@@ -105,7 +105,7 @@ export function FPLayout({
       {/* ── Header ── */}
       <header
         style={{
-          backgroundColor: "#000000",
+          backgroundColor: "#1E3A8A",
           flexShrink: 0,
           padding: "0 24px",
           height: 56,
@@ -119,15 +119,15 @@ export function FPLayout({
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/logo-icon.png"
-              alt="Simpla Wealth"
+              src="/logo-si.svg"
+              alt="Simpla Invest"
               style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
             />
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
               <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                Simpla Wealth
+                Simpla Invest
               </span>
-              <span style={{ color: "#BBA866", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.05em" }}>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
                 Financial Planning
               </span>
             </div>
@@ -140,7 +140,7 @@ export function FPLayout({
             <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>
               {userLabel}
             </p>
-            <p style={{ color: "#9E9070", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
+            <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
               Consultor financeiro
             </p>
           </div>
@@ -168,7 +168,7 @@ export function FPLayout({
             style={{
               background: "none",
               border: "none",
-              color: "#9E9070",
+              color: "#9CA3AF",
               cursor: "pointer",
               padding: 4,
             }}
@@ -194,7 +194,7 @@ export function FPLayout({
         <main
           style={{
             flex: 1,
-            backgroundColor: "#F5F3EE",
+            backgroundColor: "#F0F7FF",
             overflowY: "auto",
             padding: 32,
             display: "flex",
@@ -216,7 +216,7 @@ export function FPLayout({
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#9E9070",
+                  color: "#9CA3AF",
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
                   margin: "0 0 4px",
@@ -227,19 +227,19 @@ export function FPLayout({
               <h1 style={{ fontSize: 28, fontWeight: 700, color: DARK, margin: "0 0 4px" }}>
                 {meta.title}
               </h1>
-              <p style={{ fontSize: 14, color: "#6B6347", margin: 0 }}>
+              <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>
                 {meta.subtitle}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               {dirty && !saving && (
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8A7A45" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#8A7A45", display: "inline-block" }} />
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563EB" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#2563EB", display: "inline-block" }} />
                   Não salvo
                 </span>
               )}
               {ultimoSalvo && !dirty && !saving && (
-                <span style={{ fontSize: 12, color: "#9E9070" }}>
+                <span style={{ fontSize: 12, color: "#9CA3AF" }}>
                   Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
@@ -296,8 +296,8 @@ export function FPLayout({
               style={{
                 border: `1.5px solid ${DARK}`,
                 backgroundColor: "white",
-                color: stepIndex === 0 ? "#9E9070" : DARK,
-                borderColor: stepIndex === 0 ? "#E2DCC8" : DARK,
+                color: stepIndex === 0 ? "#9CA3AF" : DARK,
+                borderColor: stepIndex === 0 ? "#BFDBFE" : DARK,
                 borderRadius: 8,
                 padding: "10px 20px",
                 fontSize: 14,
@@ -320,8 +320,8 @@ export function FPLayout({
                     backgroundColor: d.active
                       ? DARK
                       : d.complete
-                      ? "#3D6B41"
-                      : "#E2DCC8",
+                      ? "#15803D"
+                      : "#BFDBFE",
                     display: "inline-block",
                     transition: "width 0.2s",
                   }}

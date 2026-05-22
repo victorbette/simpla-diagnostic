@@ -42,13 +42,13 @@ function formatAxis(v: number) {
 }
 
 const cardGreenTop: React.CSSProperties = {
-  borderTop: "3px solid #3D6B41",
+  borderTop: "3px solid #15803D",
   borderRadius: 12,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
 const badgePctStyle: React.CSSProperties = {
-  backgroundColor: "#000000",
+  backgroundColor: "#1E3A8A",
   color: "white",
   borderRadius: 6,
   padding: "2px 8px",
@@ -129,14 +129,14 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
   return (
     <div className="flex flex-col gap-6">
       {/* Persistence bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 8, border: "1px solid #E2DCC8" }}>
-        <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 8, border: "1px solid #BFDBFE" }}>
+        <span style={{ fontSize: 11, color: "#3B82F6", display: "flex", alignItems: "center", gap: 4 }}>
           {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
         </span>
         {temDadosSalvos && (
           <button
             onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) limpar(); }}
-            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B6347", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B7280", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
           >
             Limpar dados
           </button>
@@ -155,42 +155,42 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-idade-atual" style={{ color: "#6B6347" }}>Idade atual</Label>
+                  <Label htmlFor="lf-idade-atual" style={{ color: "#6B7280" }}>Idade atual</Label>
                   <Input id="lf-idade-atual" type="number" min={18} max={80}
                     value={params.idadeAtual} onChange={e => setP({ idadeAtual: Number(e.target.value) })}
-                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
+                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-apos" style={{ color: "#6B6347" }}>Idade IF</Label>
+                  <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade IF</Label>
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
                     value={params.idadeAposentadoria} onChange={e => setP({ idadeAposentadoria: Number(e.target.value) })}
-                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
+                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-vida" style={{ color: "#6B6347" }}>Expectativa</Label>
+                  <Label htmlFor="lf-vida" style={{ color: "#6B7280" }}>Expectativa</Label>
                   <Input id="lf-vida" type="number" min={params.idadeAposentadoria + 1} max={110}
                     value={params.expectativaVida} onChange={e => setP({ expectativaVida: Number(e.target.value) })}
-                    style={{ borderColor: "#E2DCC8", color: "#000000" }} />
+                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B6347" }}>Patrimônio atual</Label>
+                <Label style={{ color: "#6B7280" }}>Patrimônio atual</Label>
                 <CurrencyInput value={params.patrimonioInicial} onChange={v => setP({ patrimonioInicial: v })} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B6347" }}>Aporte mensal</Label>
+                <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
                 <CurrencyInput value={params.aporteMensal} onChange={v => setP({ aporteMensal: v })} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B6347" }}>Renda mensal desejada na IF</Label>
+                <Label style={{ color: "#6B7280" }}>Renda mensal desejada na IF</Label>
                 <CurrencyInput value={params.rendaDesejada} onChange={v => setP({ rendaDesejada: v })} />
               </div>
 
               {/* Rentabilidade slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B6347" }}>Rentabilidade nominal anual</Label>
+                  <Label style={{ color: "#6B7280" }}>Rentabilidade nominal anual</Label>
                   <span style={badgePctStyle}>{formatNumber(params.rentabilidadeAnual * 100, 1)}%</span>
                 </div>
                 <input
@@ -200,7 +200,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                   className="w-full"
                   style={{ accentColor: "#000000" }}
                 />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9E9070" }}>
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
                   <span>3% (conservador)</span>
                   <span>15% (arrojado)</span>
                 </div>
@@ -209,7 +209,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               {/* Inflação slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B6347" }}>Inflação anual</Label>
+                  <Label style={{ color: "#6B7280" }}>Inflação anual</Label>
                   <span style={badgePctStyle}>{formatNumber(params.inflacaoAnual * 100, 1)}%</span>
                 </div>
                 <input
@@ -219,7 +219,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                   className="w-full"
                   style={{ accentColor: "#000000" }}
                 />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9E9070" }}>
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
                   <span>2%</span>
                   <span>10%</span>
                 </div>
@@ -255,32 +255,32 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               </div>
 
               {showForm && (
-                <div className="space-y-3 rounded-xl border p-3" style={{ backgroundColor: "#F5F3EE", borderColor: "#E2DCC8" }}>
+                <div className="space-y-3 rounded-xl border p-3" style={{ backgroundColor: "#F0F7FF", borderColor: "#BFDBFE" }}>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs" style={{ color: "#6B6347" }}>Nome do objetivo</Label>
+                    <Label className="text-xs" style={{ color: "#6B7280" }}>Nome do objetivo</Label>
                     <Input
                       placeholder="ex: Compra de imóvel"
                       value={novoNome}
                       onChange={e => setNovoNome(e.target.value)}
-                      style={{ borderColor: "#E2DCC8", color: "#000000" }}
+                      style={{ borderColor: "#BFDBFE", color: "#000000" }}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs" style={{ color: "#6B6347" }}>Valor</Label>
+                      <Label className="text-xs" style={{ color: "#6B7280" }}>Valor</Label>
                       <CurrencyInput value={novoValor} onChange={setNovoValor} />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs" style={{ color: "#6B6347" }}>Idade de realização</Label>
+                      <Label className="text-xs" style={{ color: "#6B7280" }}>Idade de realização</Label>
                       <Input
                         type="number" min={params.idadeAtual}
                         value={novaIdade} onChange={e => setNovaIdade(Number(e.target.value))}
-                        style={{ borderColor: "#E2DCC8", color: "#000000" }}
+                        style={{ borderColor: "#BFDBFE", color: "#000000" }}
                       />
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label className="text-xs" style={{ color: "#6B6347" }}>Tipo</Label>
+                    <Label className="text-xs" style={{ color: "#6B7280" }}>Tipo</Label>
                     <Select value={novoTipo} onValueChange={v => setNovoTipo(v as LifeGoalTipo)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -297,14 +297,14 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               )}
 
               {objetivos.length === 0 && !showForm && (
-                <p style={{ fontSize: 12, color: "#9E9070" }}>Nenhum objetivo cadastrado.</p>
+                <p style={{ fontSize: 12, color: "#9CA3AF" }}>Nenhum objetivo cadastrado.</p>
               )}
 
               {objetivos.map(o => (
                 <div
                   key={o.id}
                   className="flex items-center gap-2 rounded-lg p-2.5"
-                  style={{ border: "1px solid #E2DCC8" }}
+                  style={{ border: "1px solid #BFDBFE" }}
                 >
                   <span
                     className="shrink-0"
@@ -313,15 +313,15 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                       fontWeight: 600,
                       borderRadius: 5,
                       padding: "2px 7px",
-                      backgroundColor: o.tipo === "aporte" ? "#EBF2EC" : "#F2EBEB",
-                      color: o.tipo === "aporte" ? "#3D6B41" : "#7A3535",
+                      backgroundColor: o.tipo === "aporte" ? "#DCFCE7" : "#FEE2E2",
+                      color: o.tipo === "aporte" ? "#15803D" : "#B91C1C",
                     }}
                   >
                     {o.tipo === "aporte" ? "+" : "−"} {o.idadeRealizacao} anos
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: "#000000" }}>{o.nome}</p>
-                    <p style={{ fontSize: 11, color: "#6B6347" }}>{formatCurrency(o.valor)}</p>
+                    <p style={{ fontSize: 11, color: "#6B7280" }}>{formatCurrency(o.valor)}</p>
                   </div>
                   <Button size="icon" variant="ghost" onClick={() => removeObjetivo(o.id)}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -339,7 +339,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             {/* Patrimônio na IF */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Patrimônio na IF
                 </p>
                 <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
@@ -351,7 +351,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             {/* Renda sustentável */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Renda sustentável
                 </p>
                 <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
@@ -363,11 +363,11 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             {/* Gap / Superávit */}
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9E9070", letterSpacing: "0.06em", marginBottom: 4 }}>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
                   {result.gapRenda >= 0 ? "Superávit de renda" : "Gap de renda"}
                 </p>
                 <p
-                  style={{ fontSize: 20, fontWeight: 700, color: result.gapRenda >= 0 ? "#3D6B41" : "#7A3535" }}
+                  style={{ fontSize: 20, fontWeight: 700, color: result.gapRenda >= 0 ? "#15803D" : "#B91C1C" }}
                   className="tabular-nums"
                 >
                   {formatCurrency(Math.abs(result.gapRenda))}
@@ -380,8 +380,8 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               <CardContent className="pt-4 pb-4 flex items-center justify-center">
                 {result.liberdadeAlcancada ? (
                   <span style={{
-                    backgroundColor: "#EBF2EC",
-                    color: "#3D6B41",
+                    backgroundColor: "#DCFCE7",
+                    color: "#15803D",
                     border: "1px solid #A8C8AB",
                     borderRadius: 8,
                     padding: "6px 14px",
@@ -392,8 +392,8 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                   </span>
                 ) : (
                   <span style={{
-                    backgroundColor: "#F2EBEB",
-                    color: "#7A3535",
+                    backgroundColor: "#FEE2E2",
+                    color: "#B91C1C",
                     border: "1px solid #C8A8A8",
                     borderRadius: 8,
                     padding: "6px 14px",
@@ -417,10 +417,10 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 <div className="space-y-1.5">
                   {objetivos.map(o => (
                     <div key={o.id} className="flex justify-between text-sm border-b pb-1.5 last:border-0">
-                      <span style={{ color: "#6B6347" }}>{o.nome} (idade {o.idadeRealizacao})</span>
+                      <span style={{ color: "#6B7280" }}>{o.nome} (idade {o.idadeRealizacao})</span>
                       <span
                         className="tabular-nums font-medium"
-                        style={{ color: o.tipo === "despesa" ? "#7A3535" : "#3D6B41" }}
+                        style={{ color: o.tipo === "despesa" ? "#B91C1C" : "#15803D" }}
                       >
                         {o.tipo === "despesa" ? "−" : "+"}{formatCurrency(o.valor)}
                       </span>
@@ -436,7 +436,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             onClick={() => onSave(params, objetivos, result)}
             style={{
               width: "100%",
-              backgroundColor: "#3D6B41",
+              backgroundColor: "#15803D",
               color: "white",
               border: "none",
               borderRadius: 8,
@@ -461,19 +461,19 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="gradLF" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#BBA866" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#BBA866" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#F5F3EE" />
-              <XAxis dataKey="idade" tick={{ fontSize: 10, fill: "#6B6347" }} />
-              <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10, fill: "#6B6347" }} width={55} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#F0F7FF" />
+              <XAxis dataKey="idade" tick={{ fontSize: 10, fill: "#6B7280" }} />
+              <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10, fill: "#6B7280" }} width={55} />
               <Tooltip
                 formatter={(v) => formatCurrency(v as number)}
                 labelFormatter={(l) => `Idade ${l}`}
                 contentStyle={{
                   backgroundColor: "white",
-                  border: "1px solid #E2DCC8",
+                  border: "1px solid #BFDBFE",
                   borderRadius: 8,
                   fontSize: 12,
                 }}
@@ -481,16 +481,16 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               {patrimonioAlvo > 0 && (
                 <ReferenceLine
                   y={patrimonioAlvo}
-                  stroke="#7A3535"
+                  stroke="#B91C1C"
                   strokeDasharray="4 4"
-                  label={{ value: "Meta IF", position: "right", fontSize: 9, fill: "#7A3535" }}
+                  label={{ value: "Meta IF", position: "right", fontSize: 9, fill: "#B91C1C" }}
                 />
               )}
               <Area
                 type="monotone"
                 dataKey="comObjetivos"
                 name="Com objetivos"
-                stroke="#BBA866"
+                stroke="#3B82F6"
                 fill="url(#gradLF)"
                 strokeWidth={2}
               />

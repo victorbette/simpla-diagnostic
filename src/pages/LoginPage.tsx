@@ -48,7 +48,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Simpla Wealth Financial Planning</CardTitle>
+          <CardTitle className="text-2xl font-bold">Simpla Invest Financial Planning</CardTitle>
           <CardDescription>Entre com seu e-mail e senha para acessar.</CardDescription>
         </CardHeader>
 

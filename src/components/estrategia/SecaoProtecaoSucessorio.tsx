@@ -36,7 +36,7 @@ function Gauge({ score, color }: { score: number; color: string }) {
     <svg width="112" height="60" viewBox="0 0 112 60">
       <path
         d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke="#E2DCC8" strokeWidth="9" strokeLinecap="round"
+        fill="none" stroke="#BFDBFE" strokeWidth="9" strokeLinecap="round"
       />
       <path
         d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
@@ -46,7 +46,7 @@ function Gauge({ score, color }: { score: number; color: string }) {
       <text x={cx} y={cy - 6} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>
         {Math.round(score)}
       </text>
-      <text x={cx} y={cy + 6} textAnchor="middle" fontSize="9" fill="#9E9070">
+      <text x={cx} y={cy + 6} textAnchor="middle" fontSize="9" fill="#9CA3AF">
         /100
       </text>
     </svg>
@@ -62,15 +62,15 @@ function NeedBar({ label, need, coverage, total }: { label: string; need: number
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-        <span style={{ color: "#6B6347" }}>{label}</span>
+        <span style={{ color: "#6B7280" }}>{label}</span>
         <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(need)}</span>
       </div>
-      <div style={{ height: 8, backgroundColor: "#F5F3EE", borderRadius: 4, overflow: "hidden", position: "relative" }}>
-        <div style={{ height: "100%", width: `${needPct}%`, backgroundColor: "#E2DCC8", borderRadius: 4 }} />
+      <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden", position: "relative" }}>
+        <div style={{ height: "100%", width: `${needPct}%`, backgroundColor: "#BFDBFE", borderRadius: 4 }} />
         <div style={{
           position: "absolute", top: 0, left: 0,
           height: "100%", width: `${covPct}%`,
-          backgroundColor: covPct >= needPct - 1 ? "#3D6B41" : "#BBA866",
+          backgroundColor: covPct >= needPct - 1 ? "#15803D" : "#3B82F6",
           borderRadius: 4,
         }} />
       </div>
@@ -100,7 +100,7 @@ export function SecaoProtecaoSucessorio({
     <div
       style={{
         ...CARD,
-        borderLeft: "4px solid #000000",
+        borderLeft: "4px solid #1E3A8A",
         borderRadius: 0,
         borderTopRightRadius: 12,
         borderBottomRightRadius: 12,
@@ -119,7 +119,7 @@ export function SecaoProtecaoSucessorio({
             minHeight: 160,
             padding: "10px 12px",
             borderRadius: 6,
-            border: "1px solid #E2DCC8",
+            border: "1px solid #BFDBFE",
             fontSize: 13,
             color: "#000000",
             resize: "vertical",
@@ -128,12 +128,12 @@ export function SecaoProtecaoSucessorio({
             fontFamily: "inherit",
           }}
         />
-        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>
+        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>
           {comentario.length} caracteres
         </span>
       </div>
       <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
+        <span style={{ fontSize: 12, color: "#6B7280", marginRight: 4 }}>Tags:</span>
         {AVAILABLE_TAGS.map((t) => (
           <button
             key={t}
@@ -143,9 +143,9 @@ export function SecaoProtecaoSucessorio({
               padding: "3px 10px",
               borderRadius: 999,
               cursor: "pointer",
-              border: "1px solid #E2DCC8",
-              backgroundColor: tags.includes(t) ? "#000000" : "transparent",
-              color: tags.includes(t) ? "white" : "#3D3520",
+              border: "1px solid #BFDBFE",
+              backgroundColor: tags.includes(t) ? "#2563EB" : "transparent",
+              color: tags.includes(t) ? "white" : "#111827",
             }}
           >
             {t}
@@ -205,7 +205,7 @@ export function SecaoProtecaoSucessorio({
             <div
               style={{
                 backgroundColor: "white",
-                border: "2px dashed #7A3535",
+                border: "2px dashed #B91C1C",
                 borderRadius: 12,
                 padding: "40px 32px",
                 textAlign: "center",
@@ -214,18 +214,18 @@ export function SecaoProtecaoSucessorio({
                 boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}
             >
-              <Shield size={48} color="#7A3535" strokeWidth={1.5} style={{ marginBottom: 16 }} />
+              <Shield size={48} color="#B91C1C" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <p style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 8px" }}>
                 Análise de Proteção não realizada
               </p>
-              <p style={{ fontSize: 13, color: "#6B6347", margin: "0 0 20px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px", lineHeight: 1.6 }}>
                 Calcule a necessidade de capital segurado, gaps de cobertura e planejamento sucessório do cliente.
               </p>
               <button
                 onClick={() => setSeguroModal(true)}
                 style={{
                   padding: "10px 24px",
-                  backgroundColor: "#000000",
+                  backgroundColor: "#1E3A8A",
                   color: "white",
                   fontWeight: 600,
                   borderRadius: 6,
@@ -247,12 +247,12 @@ export function SecaoProtecaoSucessorio({
 
   // ── State B — análise realizada ────────────────────────────────────────────
   const rs = resultadoSeguro;
-  const scoreColor = rs.scoreProtecao >= 70 ? "#3D6B41" : rs.scoreProtecao >= 40 ? "#8A7A45" : "#7A3535";
+  const scoreColor = rs.scoreProtecao >= 70 ? "#15803D" : rs.scoreProtecao >= 40 ? "#2563EB" : "#B91C1C";
   const coveragePct = rs.totalNeed > 0 ? Math.min(100, Math.round((rs.totalCoverage / rs.totalNeed) * 100)) : 100;
 
   const pieCoverage = [
-    { name: "Coberto", value: rs.totalCoverage, color: "#3D6B41" },
-    { name: "Gap", value: rs.gap, color: "#7A3535" },
+    { name: "Coberto", value: rs.totalCoverage, color: "#15803D" },
+    { name: "Gap", value: rs.gap, color: "#B91C1C" },
   ].filter((d) => d.value > 0);
 
   return (
@@ -268,8 +268,8 @@ export function SecaoProtecaoSucessorio({
                 gap: 6,
                 fontSize: 13,
                 fontWeight: 700,
-                color: "#3D6B41",
-                backgroundColor: "#EBF2EC",
+                color: "#15803D",
+                backgroundColor: "#DCFCE7",
                 border: "1px solid #A7C9AB",
                 borderRadius: 999,
                 padding: "4px 12px",
@@ -280,9 +280,9 @@ export function SecaoProtecaoSucessorio({
             <span
               style={{
                 fontSize: 11,
-                color: "#6B6347",
-                backgroundColor: "#F5F3EE",
-                border: "1px solid #E2DCC8",
+                color: "#6B7280",
+                backgroundColor: "#F0F7FF",
+                border: "1px solid #BFDBFE",
                 borderRadius: 999,
                 padding: "2px 10px",
               }}
@@ -295,9 +295,9 @@ export function SecaoProtecaoSucessorio({
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: "#7A3535",
+              color: "#B91C1C",
               backgroundColor: "transparent",
-              border: "1px solid #7A3535",
+              border: "1px solid #B91C1C",
               borderRadius: 6,
               padding: "6px 14px",
               cursor: "pointer",
@@ -322,7 +322,7 @@ export function SecaoProtecaoSucessorio({
                   fontWeight: 700,
                   padding: "2px 10px",
                   borderRadius: 999,
-                  backgroundColor: rs.scoreProtecao >= 70 ? "#EBF2EC" : rs.scoreProtecao >= 40 ? "#F5F0E0" : "#F9ECEC",
+                  backgroundColor: rs.scoreProtecao >= 70 ? "#DCFCE7" : rs.scoreProtecao >= 40 ? "#EFF6FF" : "#FEE2E2",
                   color: scoreColor,
                   border: `1px solid ${scoreColor}50`,
                 }}
@@ -333,28 +333,28 @@ export function SecaoProtecaoSucessorio({
 
             {/* 3 key metrics */}
             <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-              <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Necessário</p>
+              <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Necessário</p>
                 <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: 0 }}>{formatCurrency(rs.totalNeed)}</p>
               </div>
-              <div style={{ backgroundColor: "#EBF2EC", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ fontSize: 11, color: "#3D6B41", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Segurado</p>
-                <p style={{ fontSize: 15, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rs.totalCoverage)}</p>
+              <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Segurado</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(rs.totalCoverage)}</p>
               </div>
-              <div style={{ backgroundColor: rs.gap > 0 ? "#F9ECEC" : "#EBF2EC", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ fontSize: 11, color: rs.gap > 0 ? "#7A3535" : "#3D6B41", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Cobertura</p>
-                <p style={{ fontSize: 15, fontWeight: 700, color: rs.gap > 0 ? "#7A3535" : "#3D6B41", margin: 0 }}>{formatCurrency(rs.gap)}</p>
+              <div style={{ backgroundColor: rs.gap > 0 ? "#FEE2E2" : "#DCFCE7", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ fontSize: 11, color: rs.gap > 0 ? "#B91C1C" : "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Cobertura</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: rs.gap > 0 ? "#B91C1C" : "#15803D", margin: 0 }}>{formatCurrency(rs.gap)}</p>
               </div>
             </div>
           </div>
 
           {/* Coverage progress bar */}
           <div style={{ marginTop: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B6347", marginBottom: 6 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
               <span>Cobertura atual</span>
               <span style={{ fontWeight: 700, color: scoreColor }}>{coveragePct}%</span>
             </div>
-            <div style={{ height: 10, backgroundColor: "#F5F3EE", borderRadius: 5, overflow: "hidden", border: "1px solid #E2DCC8" }}>
+            <div style={{ height: 10, backgroundColor: "#F0F7FF", borderRadius: 5, overflow: "hidden", border: "1px solid #BFDBFE" }}>
               <div
                 style={{
                   height: "100%",
@@ -381,9 +381,9 @@ export function SecaoProtecaoSucessorio({
                   fontWeight: 600,
                   padding: "3px 12px",
                   borderRadius: 999,
-                  backgroundColor: ok ? "#EBF2EC" : "#F9ECEC",
-                  color: ok ? "#3D6B41" : "#7A3535",
-                  border: `1px solid ${ok ? "#A7C9AB" : "#C9A0A0"}`,
+                  backgroundColor: ok ? "#DCFCE7" : "#FEE2E2",
+                  color: ok ? "#15803D" : "#B91C1C",
+                  border: `1px solid ${ok ? "#86EFAC" : "#C9A0A0"}`,
                 }}
               >
                 {ok ? "✓" : "✗"} {label}
@@ -419,7 +419,7 @@ export function SecaoProtecaoSucessorio({
               </ResponsiveContainer>
               <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
                 {pieCoverage.map((d) => (
-                  <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#6B6347" }}>
+                  <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#6B7280" }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
                     {d.name}: {formatCurrency(d.value)}
                   </div>
@@ -429,7 +429,7 @@ export function SecaoProtecaoSucessorio({
 
             {/* Breakdown bars */}
             <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B6347", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 12px" }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 12px" }}>
                 Necessidades vs Cobertura
               </p>
               <NeedBar
@@ -445,28 +445,28 @@ export function SecaoProtecaoSucessorio({
                 total={rs.totalNeed}
               />
               {rs.immediateTotal > 0 && (
-                <div style={{ marginTop: 8, padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 6 }}>
+                <div style={{ marginTop: 8, padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 6 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 2 }}>
-                    <span style={{ color: "#6B6347" }}>↳ Custo de inventário</span>
+                    <span style={{ color: "#6B7280" }}>↳ Custo de inventário</span>
                     <span style={{ fontWeight: 600 }}>{formatCurrency(rs.inventoryCost)}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                    <span style={{ color: "#6B6347" }}>↳ Educação dos filhos</span>
+                    <span style={{ color: "#6B7280" }}>↳ Educação dos filhos</span>
                     <span style={{ fontWeight: 600 }}>{formatCurrency(rs.educationTotal)}</span>
                   </div>
                 </div>
               )}
               <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B6347" }}>
-                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#3D6B41" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
+                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#15803D" }} />
                   Coberto
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B6347" }}>
-                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#BBA866" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
+                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#3B82F6" }} />
                   Parcial
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B6347" }}>
-                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#E2DCC8" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
+                  <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#BFDBFE" }} />
                   Necessário
                 </div>
               </div>
@@ -483,26 +483,26 @@ export function SecaoProtecaoSucessorio({
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {/* Invalidez */}
               {rs.disabilityTotal > 0 && (
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#6B6347", textTransform: "uppercase", margin: "0 0 10px" }}>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "14px 16px" }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", margin: "0 0 10px" }}>
                     Invalidez
                   </p>
                   {[
                     { label: "Necessário", value: rs.disabilityTotal, color: "#000000" },
-                    { label: "Coberto", value: rs.disabilityCoverage, color: "#3D6B41" },
-                    { label: "Gap", value: rs.disabilityGap, color: rs.disabilityGap > 0 ? "#7A3535" : "#3D6B41" },
+                    { label: "Coberto", value: rs.disabilityCoverage, color: "#15803D" },
+                    { label: "Gap", value: rs.disabilityGap, color: rs.disabilityGap > 0 ? "#B91C1C" : "#15803D" },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                      <span style={{ color: "#6B6347" }}>{label}</span>
+                      <span style={{ color: "#6B7280" }}>{label}</span>
                       <span style={{ fontWeight: 600, color }}>{formatCurrency(value)}</span>
                     </div>
                   ))}
-                  <div style={{ marginTop: 8, height: 6, backgroundColor: "#E2DCC8", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ marginTop: 8, height: 6, backgroundColor: "#BFDBFE", borderRadius: 3, overflow: "hidden" }}>
                     <div
                       style={{
                         height: "100%",
                         width: `${rs.disabilityTotal > 0 ? Math.min(100, (rs.disabilityCoverage / rs.disabilityTotal) * 100) : 0}%`,
-                        backgroundColor: rs.disabilityGap > 0 ? "#BBA866" : "#3D6B41",
+                        backgroundColor: rs.disabilityGap > 0 ? "#3B82F6" : "#15803D",
                         borderRadius: 3,
                       }}
                     />
@@ -512,26 +512,26 @@ export function SecaoProtecaoSucessorio({
 
               {/* Doença grave */}
               {rs.criticalIllnessTotal > 0 && (
-                <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "14px 16px" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#6B6347", textTransform: "uppercase", margin: "0 0 10px" }}>
+                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "14px 16px" }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", margin: "0 0 10px" }}>
                     Doença Grave
                   </p>
                   {[
                     { label: "Necessário", value: rs.criticalIllnessTotal, color: "#000000" },
-                    { label: "Coberto", value: rs.criticalIllnessCoverage, color: "#3D6B41" },
-                    { label: "Gap", value: rs.criticalIllnessGap, color: rs.criticalIllnessGap > 0 ? "#7A3535" : "#3D6B41" },
+                    { label: "Coberto", value: rs.criticalIllnessCoverage, color: "#15803D" },
+                    { label: "Gap", value: rs.criticalIllnessGap, color: rs.criticalIllnessGap > 0 ? "#B91C1C" : "#15803D" },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                      <span style={{ color: "#6B6347" }}>{label}</span>
+                      <span style={{ color: "#6B7280" }}>{label}</span>
                       <span style={{ fontWeight: 600, color }}>{formatCurrency(value)}</span>
                     </div>
                   ))}
-                  <div style={{ marginTop: 8, height: 6, backgroundColor: "#E2DCC8", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ marginTop: 8, height: 6, backgroundColor: "#BFDBFE", borderRadius: 3, overflow: "hidden" }}>
                     <div
                       style={{
                         height: "100%",
                         width: `${rs.criticalIllnessTotal > 0 ? Math.min(100, (rs.criticalIllnessCoverage / rs.criticalIllnessTotal) * 100) : 0}%`,
-                        backgroundColor: rs.criticalIllnessGap > 0 ? "#BBA866" : "#3D6B41",
+                        backgroundColor: rs.criticalIllnessGap > 0 ? "#3B82F6" : "#15803D",
                         borderRadius: 3,
                       }}
                     />

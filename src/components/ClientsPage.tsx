@@ -30,10 +30,10 @@ import { formatDate } from "@/lib/format";
 const AVATAR_COLORS = [
   "bg-[#EAF0F5]0",
   "bg-emerald-500",
-  "bg-[#F5F3EE]0",
+  "bg-[#F0F7FF]0",
   "bg-rose-500",
-  "bg-[#F5F0E0]0",
-  "bg-[#F5F0E0]0",
+  "bg-[#EFF6FF]0",
+  "bg-[#EFF6FF]0",
   "bg-indigo-500",
   "bg-orange-500",
 ];

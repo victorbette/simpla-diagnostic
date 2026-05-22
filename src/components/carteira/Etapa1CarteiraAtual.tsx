@@ -113,14 +113,14 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
         {/* AI Import Panel */}
         <div
           className="rounded-lg border bg-card"
-          style={{ borderTop: "3px solid #BBA866", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+          style={{ borderTop: "3px solid #3B82F6", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
         >
           <button
             onClick={() => setIaOpen(!iaOpen)}
             className="flex items-center justify-between w-full px-4 py-3 text-sm font-medium"
           >
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4" style={{ color: "#BBA866" }} />
+              <Sparkles className="h-4 w-4" style={{ color: "#3B82F6" }} />
               <span style={{ fontWeight: 600, color: "#000000" }}>Importar com IA</span>
               <span className="text-xs text-muted-foreground font-normal">
                 — envie extratos, prints, PDF ou planilhas
@@ -136,7 +136,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
               {/* Drop zone */}
               <div
                 className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40 transition-colors"
-                style={{ borderColor: "#E2DCC8" }}
+                style={{ borderColor: "#BFDBFE" }}
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -188,7 +188,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                 disabled={iaArquivos.length === 0 || iaLoading}
                 onClick={handleAnalisarIA}
                 style={{
-                  backgroundColor: "#BBA866",
+                  backgroundColor: "#3B82F6",
                   color: "white",
                   border: "none",
                   borderRadius: 6,
@@ -213,7 +213,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
               {iaProgress && (
                 <p className="text-xs text-muted-foreground">{iaProgress}</p>
               )}
-              {iaError && <p className="text-xs text-[#7A3535]">{iaError}</p>}
+              {iaError && <p className="text-xs text-[#B91C1C]">{iaError}</p>}
 
               {/* Triagem table */}
               {iaExtraidos.length > 0 && (
@@ -221,7 +221,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                   <p className="text-sm font-medium">Ativos extraídos — revise e confirme</p>
                   <div className="overflow-x-auto rounded border">
                     <table className="w-full text-xs">
-                      <thead style={{ backgroundColor: "#000000" }}>
+                      <thead style={{ backgroundColor: "#1E3A8A" }}>
                         <tr>
                           <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }} className="w-8"></th>
                           <th style={{ color: "white", padding: "8px 8px", fontWeight: 600, textAlign: "left" }}>Nome</th>
@@ -311,7 +311,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
                   <button
                     onClick={handleAdicionarSelecionados}
                     style={{
-                      backgroundColor: "#000000",
+                      backgroundColor: "#1E3A8A",
                       color: "white",
                       border: "none",
                       borderRadius: 6,
@@ -343,7 +343,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
               {/* Group header */}
               <div
                 className="flex items-center justify-between px-4 py-2 border-b"
-                style={{ backgroundColor: "#F5F3EE" }}
+                style={{ backgroundColor: "#F0F7FF" }}
               >
                 <span style={{ fontWeight: 600, color: "#000000", fontSize: 14 }}>{grupoNome}</span>
                 <div className="text-right text-xs text-muted-foreground">
@@ -393,7 +393,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
       <div className="sticky top-20 space-y-4">
         <div
           className="rounded-lg border bg-card p-4 space-y-4"
-          style={{ borderTop: "3px solid #BBA866", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+          style={{ borderTop: "3px solid #3B82F6", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
         >
           <h3 className="font-semibold text-sm" style={{ fontWeight: 700, color: "#000000", fontSize: 14 }}>Resumo da carteira atual</h3>
 
@@ -401,7 +401,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl }: Prop
           <div>
             <p
               className="text-xs text-muted-foreground mb-0.5"
-              style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9E9070" }}
+              style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}
             >
               Patrimônio total
             </p>
