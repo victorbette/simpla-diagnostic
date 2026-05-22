@@ -3,22 +3,24 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { calcularIF, calcularProtecao, calcularFiscal, calcularSucessorio } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { EstrategiaData } from "./EstrategiaInicialPage";
+import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
   clientName: string;
   data: EstrategiaData;
+  resultados?: ResultadosEstrategia;
   mode: "consultor" | "cliente";
   onClose: () => void;
 }
 
-export function EstrategiaPrint({ plan, clientName, data, mode, onClose }: Props) {
+export function EstrategiaPrint({ plan, clientName, data, resultados: resultadosProp, mode, onClose }: Props) {
   const ifR = calcularIF(plan.planejamentoIF);
   const protR = calcularProtecao(plan.protecao);
   const fiscalR = calcularFiscal(plan.fiscal);
   const sucR = calcularSucessorio(plan.sucessorio);
-  const resultados = data.resultados ?? defaultResultados;
+  const resultados = resultadosProp ?? defaultResultados;
   const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
   useEffect(() => {
