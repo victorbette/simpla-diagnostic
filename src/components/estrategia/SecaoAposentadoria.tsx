@@ -236,6 +236,7 @@ export function SecaoAposentadoria({
 
       <FerramentaModal open={modalOpen} onClose={() => setModalOpen(false)} title="Simulador de Liberdade Financeira">
         <FerramentaLiberdadeFinanceira
+          clientId={plan.clientId}
           planejamentoIF={plan.planejamentoIF}
           onSave={(params, _objetivos, result) => {
             onResultadoIF({

@@ -216,6 +216,17 @@ export function FerramentaCarteira({
               )}
             </div>
           </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+              ● Dados salvos automaticamente
+            </span>
+            <button
+              onClick={() => { if (window.confirm("Limpar todos os dados da carteira?")) { setState(makeInitial(clientProfile, patrimonyInicial)); try { localStorage.removeItem(storageKey); } catch {} } }}
+              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+            >
+              Limpar dados
+            </button>
+          </div>
           {patrimonio > 0 && (
             <div
               className="shrink-0 text-right rounded-md px-3 py-1.5 border"

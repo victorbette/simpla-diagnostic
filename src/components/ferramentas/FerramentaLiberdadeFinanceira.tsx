@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Plus, Trash2 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -29,6 +30,7 @@ import type { PlanejamentoIF } from "@/types/financialPlanning";
 function generateId() { return Math.random().toString(36).substring(2, 9); }
 
 interface Props {
+  clientId: string;
   planejamentoIF: PlanejamentoIF;
   onSave: (params: SimulationParams, objetivos: LifeGoal[], result: SimulationResult) => void;
 }
@@ -54,7 +56,7 @@ const badgePctStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props) {
+export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave }: Props) {
   const [params, setParams] = useState<SimulationParams>({
     idadeAtual: planejamentoIF.idadeAtual,
     idadeAposentadoria: planejamentoIF.idadeMeta,
@@ -71,6 +73,31 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
   const [novaIdade, setNovaIdade] = useState(params.idadeAtual + 5);
   const [novoTipo, setNovoTipo] = useState<LifeGoalTipo>("despesa");
   const [showForm, setShowForm] = useState(false);
+
+  const CHAVE = `ferramenta_if_${clientId}`;
+  const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
+
+  // Computed initial params from planejamentoIF (for use in reset)
+  const initialParams: SimulationParams = {
+    idadeAtual: planejamentoIF.idadeAtual,
+    idadeAposentadoria: planejamentoIF.idadeMeta,
+    expectativaVida: 90,
+    patrimonioInicial: planejamentoIF.patrimonioAtual,
+    aporteMensal: planejamentoIF.aporteMensal,
+    rendaDesejada: planejamentoIF.rendaMensalDesejada,
+    rentabilidadeAnual: planejamentoIF.taxaRetornoAnual / 100,
+    inflacaoAnual: planejamentoIF.inflacaoAnual / 100,
+  };
+
+  const { limpar } = useFerramentaStorage(
+    CHAVE,
+    { params, objetivos },
+    (v) => {
+      if (v.params) setParams({ ...initialParams, ...v.params });
+      if (v.objetivos) setObjetivos(v.objetivos);
+    },
+    { params: initialParams, objetivos: [] },
+  );
 
   const setP = (patch: Partial<SimulationParams>) => setParams(p => ({ ...p, ...patch }));
 
@@ -101,6 +128,20 @@ export function FerramentaLiberdadeFinanceira({ planejamentoIF, onSave }: Props)
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Persistence bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 8, border: "1px solid #E2DCC8" }}>
+        <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+          {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
+        </span>
+        {temDadosSalvos && (
+          <button
+            onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) limpar(); }}
+            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B6347", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+          >
+            Limpar dados
+          </button>
+        )}
+      </div>
       {/* Top row: params + results side by side */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* ── Coluna esquerda: Inputs ── */}

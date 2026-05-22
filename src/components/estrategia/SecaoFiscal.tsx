@@ -468,6 +468,7 @@ export function SecaoFiscal({
         title="Calculadora PGBL Completa"
       >
         <FerramentaPGBL
+          clientId={plan.clientId}
           fiscal={plan.fiscal}
           onSave={(result) => {
             onResultadoFiscal({

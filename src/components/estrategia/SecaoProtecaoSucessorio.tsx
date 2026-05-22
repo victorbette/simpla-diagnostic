@@ -270,6 +270,7 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
 
       <FerramentaModal open={seguroModal} onClose={() => setSeguroModal(false)} title="Análise Completa de Seguros">
         <FerramentaSeguro
+          clientId={plan.clientId}
           protecao={plan.protecao}
           onSave={(insuranceData, result) => {
             const score = result.totalNeed > 0
