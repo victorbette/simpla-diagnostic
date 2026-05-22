@@ -4,7 +4,7 @@ import { useState } from "react";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
-import type { ResultadoCarteira, MacroAlocacao } from "@/types/estrategiaResultados";
+import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import type { CarteiraResultado, Ativo } from "@/lib/carteira/types";
 
 interface Props {
@@ -25,24 +25,46 @@ const CARD: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const ASSET_KEYS: (keyof MacroAlocacao)[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
-const ASSET_LABELS: Record<keyof MacroAlocacao, string> = {
-  rendaFixa: "Renda Fixa",
-  acoes: "Ações BR",
-  fiis: "FIIs",
-  rvGlobal: "RV Global",
-  rfGlobal: "RF Global",
-  cripto: "Cripto",
-};
-const ASSET_COLORS: Record<keyof MacroAlocacao, string> = {
-  rendaFixa: "#2A4F6A",
-  acoes: "#3D6B41",
-  fiis: "#4A6B3D",
-  rvGlobal: "#000000",
-  rfGlobal: "#6B6347",
-  cripto: "#BBA866",
-};
-const CARD_TO_CLASSE: Record<string, keyof MacroAlocacao> = {
+const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function labelDaClasse(key: string): string {
+  const labels: Record<string, string> = {
+    resgate_rapido: "Resgate Rápido",
+    resgate_longo: "Resgate Longo",
+    acoes: "Ações BR",
+    fiis: "FIIs",
+    exterior: "Internacional",
+    cripto: "Cripto",
+    rendaFixa: "Renda Fixa",
+    rvGlobal: "RV Global",
+    rfGlobal: "RF Global",
+  };
+  return labels[key] ?? key;
+}
+
+function corDaClasse(key: string): string {
+  const cores: Record<string, string> = {
+    resgate_rapido: "#2A4F6A",
+    resgate_longo: "#000000",
+    acoes: "#3D6B41",
+    fiis: "#4A8C4E",
+    exterior: "#8A7A45",
+    cripto: "#BBA866",
+    rendaFixa: "#2A4F6A",
+    rvGlobal: "#8A7A45",
+    rfGlobal: "#B8A870",
+  };
+  return cores[key] ?? "#9E9070";
+}
+
+// MacroAlocacao keys that map to plan.ativosAtuais fields
+const MACRO_KEYS = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"] as const;
+type MacroKey = (typeof MACRO_KEYS)[number];
+
+// Map SimplaCardId → MacroKey for action plan grouping
+const CARD_TO_MACRO: Record<string, MacroKey> = {
   resgate_rapido: "rendaFixa",
   resgate_longo: "rendaFixa",
   acoes: "acoes",
@@ -51,9 +73,7 @@ const CARD_TO_CLASSE: Record<string, keyof MacroAlocacao> = {
   cripto: "cripto",
 };
 
-const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
-
-function computeMacro(ativos: Ativo[], total: number): MacroAlocacao {
+function computeMacroFromRecomendados(ativos: Ativo[], total: number): Record<MacroKey, number> {
   const soma: Record<string, number> = {};
   for (const a of ativos) soma[a.card] = (soma[a.card] ?? 0) + a.valorBRL;
   const t = total || 1;
@@ -67,6 +87,8 @@ function computeMacro(ativos: Ativo[], total: number): MacroAlocacao {
   };
 }
 
+// ── DonutChart component ───────────────────────────────────────────────────────
+
 interface DonutChartProps {
   data: { name: string; value: number; color: string; key: string }[];
   centerLabel: string;
@@ -74,6 +96,29 @@ interface DonutChartProps {
 
 function DonutChart({ data, centerLabel }: DonutChartProps) {
   const total = data.reduce((s, d) => s + d.value, 0);
+
+  if (data.length === 0) {
+    return (
+      <div
+        style={{
+          height: 220,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F5F3EE",
+          borderRadius: 8,
+          flexDirection: "column",
+          gap: 6,
+        }}
+      >
+        <PieChartIcon size={32} color="#BBA866" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, color: "#9E9070", margin: 0, textAlign: "center" }}>
+          Sem dados para exibir
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <ResponsiveContainer width="100%" height={220}>
@@ -83,8 +128,8 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
             dataKey="value"
             cx="50%"
             cy="50%"
-            innerRadius={50}
-            outerRadius={85}
+            innerRadius={55}
+            outerRadius={90}
             strokeWidth={1.5}
             stroke="white"
           >
@@ -109,7 +154,7 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
               }}
             />
           </Pie>
-          <Tooltip formatter={(v) => [`${v}%`]} />
+          <Tooltip formatter={(v) => [`${Number(v).toFixed(1)}%`]} />
         </PieChart>
       </ResponsiveContainer>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", justifyContent: "center", marginTop: 4 }}>
@@ -124,6 +169,8 @@ function DonutChart({ data, centerLabel }: DonutChartProps) {
   );
 }
 
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export function SecaoAssetAllocation({
   plan,
   clientName,
@@ -137,20 +184,26 @@ export function SecaoAssetAllocation({
   const [carteiraOpen, setCarteiraOpen] = useState(false);
 
   function handleCarteiraSave(r: CarteiraResultado) {
-    const total = r.patrimonio || 1;
+    // Use the total of recommended assets for macroMeta (avoids 0-division when
+    // step 1 was skipped and patrimonyInicial is 0)
+    const totalRec =
+      r.ativosRecomendados.reduce((s, a) => s + a.valorBRL, 0) || r.patrimonio || 1;
+
+    // Aportes: movimentacaoBRL > 0; Resgates: movimentacaoBRL < 0 (always positive display)
     const totalAportar = r.planoAcao
-      .filter((i) => i.tipo === "aportar" || i.tipo === "novo_ativo")
+      .filter((i) => i.movimentacaoBRL > 0)
       .reduce((s, i) => s + i.movimentacaoBRL, 0);
     const totalResgatar = r.planoAcao
-      .filter((i) => i.tipo === "resgatar_parcial" || i.tipo === "resgatar_total")
+      .filter((i) => i.movimentacaoBRL < 0)
       .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
+
     onResultadoCarteira({
       patrimonio: r.patrimonio,
       planoAcaoCount: r.planoAcao.length,
       totalAportar,
       totalResgatar,
-      macroAtual: computeMacro(r.ativosAtuais, total),
-      macroMeta: computeMacro(r.ativosRecomendados, total),
+      macroAtual: computeMacroFromRecomendados(r.ativosAtuais, r.patrimonio || 1),
+      macroMeta: computeMacroFromRecomendados(r.ativosRecomendados, totalRec),
       planoAcao: r.planoAcao.map((i) => ({
         id: i.id,
         card: i.card,
@@ -172,6 +225,7 @@ export function SecaoAssetAllocation({
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
 
+  // ── Comment card (always visible) ──────────────────────────────────────────
   const commentCard = (
     <div
       style={{
@@ -249,12 +303,7 @@ export function SecaoAssetAllocation({
                 boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
               }}
             >
-              <PieChartIcon
-                size={48}
-                color="#BBA866"
-                strokeWidth={1.5}
-                style={{ marginBottom: 16 }}
-              />
+              <PieChartIcon size={48} color="#BBA866" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <p style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 8px" }}>
                 Carteira não definida
               </p>
@@ -297,24 +346,44 @@ export function SecaoAssetAllocation({
   // ── State B — carteira defined ─────────────────────────────────────────────
   const rc = resultadoCarteira;
 
-  function makePieData(macro: MacroAlocacao) {
-    return ASSET_KEYS
-      .map((k) => ({ name: ASSET_LABELS[k], value: parseFloat(macro[k].toFixed(1)), color: ASSET_COLORS[k], key: k }))
-      .filter((d) => d.value > 0.1);
-  }
+  // ATUAL: derived from plan.ativosAtuais (Financial Planning step 2)
+  const totalAtual = plan.ativosAtuais?.total ?? 0;
+  const dadosAtual = MACRO_KEYS
+    .map((k) => ({
+      key: k,
+      name: labelDaClasse(k),
+      value: totalAtual > 0 ? ((plan.ativosAtuais[k] ?? 0) / totalAtual) * 100 : 0,
+      color: corDaClasse(k),
+    }))
+    .filter((d) => d.value > 0.1);
 
-  const pieAtual = makePieData(rc.macroAtual);
-  const pieMeta = makePieData(rc.macroMeta);
+  // PROPOSTA: from resultados.carteira.macroMeta
+  const totalMeta = rc.patrimonio;
+  const dadosMeta = MACRO_KEYS
+    .map((k) => ({
+      key: k,
+      name: labelDaClasse(k),
+      value: parseFloat((rc.macroMeta[k] ?? 0).toFixed(1)),
+      color: corDaClasse(k),
+    }))
+    .filter((d) => d.value > 0.1);
 
-  const tableKeys = ASSET_KEYS.filter((k) => rc.macroAtual[k] > 0.5 || rc.macroMeta[k] > 0.5);
+  // Saldo líquido
+  const saldoLiquido = rc.totalAportar - rc.totalResgatar;
 
+  // Comparative table — all keys that appear in either source
+  const tableKeys = MACRO_KEYS.filter(
+    (k) => (plan.ativosAtuais[k] ?? 0) > 0 || (rc.macroMeta[k] ?? 0) > 0.1
+  );
+
+  // Action plan grouped by class (max 10, exclude manter)
   const actionItems = rc.planoAcao.filter((i) => i.tipo !== "manter").slice(0, 10);
   const totalVisivel = rc.planoAcao.filter((i) => i.tipo !== "manter").length;
 
   const groupedByClasse: Record<string, typeof actionItems> = {};
   for (const item of actionItems) {
-    const classeKey = item.card ? (CARD_TO_CLASSE[item.card] ?? "rendaFixa") : "rendaFixa";
-    const label = ASSET_LABELS[classeKey];
+    const classeKey = item.card ? (CARD_TO_MACRO[item.card] ?? "rendaFixa") : "rendaFixa";
+    const label = labelDaClasse(classeKey);
     if (!groupedByClasse[label]) groupedByClasse[label] = [];
     groupedByClasse[label].push(item);
   }
@@ -371,24 +440,47 @@ export function SecaoAssetAllocation({
           </button>
         </div>
 
-        {/* Card 1 — 3 metrics */}
+        {/* Card 1 — 4 metrics (2×2) */}
         <div style={CARD}>
           <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Visão Geral
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(rc.patrimonio)}</p>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Atual</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(totalAtual)}</p>
             </div>
             <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Proposto</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#000000", margin: 0 }}>{formatCurrency(totalMeta)}</p>
+            </div>
+            <div style={{ backgroundColor: "#EBF2EC", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#3D6B41", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
             </div>
-            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
+            <div style={{ backgroundColor: "#F9ECEC", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#7A3535", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
               <p style={{ fontSize: 16, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
             </div>
+          </div>
+          {/* Saldo líquido */}
+          <div
+            style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              borderRadius: 8,
+              backgroundColor: saldoLiquido >= 0 ? "#EBF2EC" : "#F9ECEC",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 600, color: saldoLiquido >= 0 ? "#3D6B41" : "#7A3535", textTransform: "uppercase" }}>
+              Saldo Líquido (Aportes − Resgates)
+            </span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: saldoLiquido >= 0 ? "#3D6B41" : "#7A3535" }}>
+              {saldoLiquido >= 0 ? "+" : ""}{formatCurrency(saldoLiquido)}
+            </span>
           </div>
         </div>
 
@@ -399,12 +491,16 @@ export function SecaoAssetAllocation({
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div>
-              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>Atual</p>
-              <DonutChart data={pieAtual} centerLabel="Atual" />
+              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
+                Atual — {formatCurrency(totalAtual)}
+              </p>
+              <DonutChart data={dadosAtual} centerLabel="Atual" />
             </div>
             <div>
-              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>Proposta</p>
-              <DonutChart data={pieMeta} centerLabel="Proposta" />
+              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
+                Proposta — {formatCurrency(totalMeta)}
+              </p>
+              <DonutChart data={dadosMeta} centerLabel="Proposta" />
             </div>
           </div>
         </div>
@@ -414,12 +510,12 @@ export function SecaoAssetAllocation({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 72px 72px 108px 88px",
+              gridTemplateColumns: "1fr 80px 80px 110px 90px",
               backgroundColor: "#000000",
               padding: "10px 20px",
             }}
           >
-            {["Classe", "Atual", "Proposta", "Dif. R$", "Ação"].map((h) => (
+            {["Classe", "Atual %", "Proposta %", "Dif. R$", "Ação"].map((h) => (
               <span
                 key={h}
                 style={{
@@ -436,19 +532,21 @@ export function SecaoAssetAllocation({
             ))}
           </div>
           {tableKeys.map((k, idx) => {
-            const atual = rc.macroAtual[k];
-            const meta = rc.macroMeta[k];
-            const difPct = meta - atual;
-            const difBRL = (difPct / 100) * rc.patrimonio;
-            const acao = difBRL > 500 ? "Aportar" : difBRL < -500 ? "Resgatar" : "Manter";
-            const acaoBg = acao === "Aportar" ? "#EBF2EC" : acao === "Resgatar" ? "#F9ECEC" : "#F5F3EE";
-            const acaoColor = acao === "Aportar" ? "#3D6B41" : acao === "Resgatar" ? "#7A3535" : "#6B6347";
+            const brlAtual = plan.ativosAtuais[k] ?? 0;
+            const pctAtual = totalAtual > 0 ? (brlAtual / totalAtual) * 100 : 0;
+            const pctMeta = rc.macroMeta[k] ?? 0;
+            const brlMeta = (pctMeta / 100) * totalMeta;
+            const difBRL = brlMeta - brlAtual;
+            const isNovo = brlAtual === 0 && brlMeta > 100;
+            const acao = isNovo ? "✦ Novo" : difBRL > 100 ? "↑ Aportar" : difBRL < -100 ? "↓ Resgatar" : "→ Manter";
+            const acaoBg = acao.includes("Aportar") || acao.includes("Novo") ? "#EBF2EC" : acao.includes("Resgatar") ? "#F9ECEC" : "#F5F3EE";
+            const acaoColor = acao.includes("Aportar") || acao.includes("Novo") ? "#3D6B41" : acao.includes("Resgatar") ? "#7A3535" : "#6B6347";
             return (
               <div
                 key={k}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 72px 72px 108px 88px",
+                  gridTemplateColumns: "1fr 80px 80px 110px 90px",
                   padding: "10px 20px",
                   backgroundColor: idx % 2 === 0 ? "white" : "#FAFAF8",
                   borderBottom: "1px solid #F5F3EE",
@@ -456,11 +554,15 @@ export function SecaoAssetAllocation({
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#000000" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: ASSET_COLORS[k], flexShrink: 0 }} />
-                  {ASSET_LABELS[k]}
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: corDaClasse(k), flexShrink: 0 }} />
+                  {labelDaClasse(k)}
                 </div>
-                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>{formatNumber(atual, 1)}%</span>
-                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>{formatNumber(meta, 1)}%</span>
+                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>
+                  {formatNumber(pctAtual, 1)}%
+                </span>
+                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>
+                  {formatNumber(pctMeta, 1)}%
+                </span>
                 <span style={{ fontSize: 12, fontWeight: 600, color: difBRL >= 0 ? "#3D6B41" : "#7A3535", textAlign: "right" }}>
                   {difBRL >= 0 ? "+" : ""}{formatCurrency(difBRL)}
                 </span>
@@ -469,11 +571,12 @@ export function SecaoAssetAllocation({
                     style={{
                       fontSize: 10,
                       fontWeight: 700,
-                      padding: "2px 8px",
+                      padding: "2px 7px",
                       borderRadius: 999,
                       backgroundColor: acaoBg,
                       color: acaoColor,
                       border: `1px solid ${acaoColor}40`,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {acao}
@@ -491,7 +594,7 @@ export function SecaoAssetAllocation({
               Plano de Ação
             </p>
             {totalVisivel > 10 && (
-              <span style={{ fontSize: 12, color: "#8A7A45", fontWeight: 600, cursor: "default" }}>
+              <span style={{ fontSize: 12, color: "#8A7A45", fontWeight: 600 }}>
                 Ver todos ({totalVisivel}) →
               </span>
             )}
@@ -509,7 +612,6 @@ export function SecaoAssetAllocation({
             </div>
           </div>
 
-          {/* Items grouped by class */}
           {Object.keys(groupedByClasse).length === 0 ? (
             <p style={{ fontSize: 13, color: "#9E9070", textAlign: "center", padding: "16px 0", margin: 0 }}>
               Nenhuma movimentação necessária
@@ -532,12 +634,11 @@ export function SecaoAssetAllocation({
                   {classeLabel}
                 </p>
                 {items.map((item) => {
-                  const isAportar = item.tipo === "aportar" || item.tipo === "novo_ativo";
-                  const isResgatar = item.tipo === "resgatar_parcial" || item.tipo === "resgatar_total";
-                  const movColor = isAportar ? "#3D6B41" : isResgatar ? "#7A3535" : "#000000";
+                  const isAportar = item.movimentacaoBRL > 0;
+                  const movColor = isAportar ? "#3D6B41" : "#7A3535";
                   const movPrefix = isAportar ? "+" : "-";
-                  const tipoBg = isAportar ? "#EBF2EC" : isResgatar ? "#F9ECEC" : "#F5F3EE";
-                  const tipoColor = isAportar ? "#3D6B41" : isResgatar ? "#7A3535" : "#6B6347";
+                  const tipoBg = isAportar ? "#EBF2EC" : "#F9ECEC";
+                  const tipoColor = isAportar ? "#3D6B41" : "#7A3535";
                   const tipoLabel =
                     item.tipo === "novo_ativo" ? "Novo"
                     : item.tipo === "aportar" ? "Aportar"
@@ -555,15 +656,7 @@ export function SecaoAssetAllocation({
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                        <span
-                          style={{
-                            fontSize: 13,
-                            color: "#000000",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <span style={{ fontSize: 13, color: "#000000", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {item.nomeAtivo}
                         </span>
                         <span
