@@ -62,7 +62,6 @@ export interface EstrategiaData {
   acoes: AcaoItem[];
   consideracoesFinais: string;
   comentarioGeral: string;
-  resultados: ResultadosEstrategia;
 }
 
 export type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia };
@@ -164,7 +163,6 @@ function defaultData(plan: FinancialPlan): EstrategiaData {
     acoes: gerarAcoesIniciais(plan),
     consideracoesFinais: "",
     comentarioGeral: "",
-    resultados: defaultResultados,
   };
 }
 
@@ -187,7 +185,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed = JSON.parse(saved) as EstrategiaData;
-        if (!parsed.resultados) parsed.resultados = defaultResultados;
         if (parsed.comentarioGeral === undefined) parsed.comentarioGeral = "";
         return parsed;
       }
@@ -195,6 +192,15 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       // ignore
     }
     return defaultData(plan);
+  });
+
+  const resultadosKey = `resultados_estrategia_${plan.clientId}`;
+  const [resultados, setResultados] = useState<ResultadosEstrategia>(() => {
+    try {
+      const saved = localStorage.getItem(`resultados_estrategia_${plan.clientId}`);
+      if (saved) return JSON.parse(saved) as ResultadosEstrategia;
+    } catch { /**/ }
+    return defaultResultados;
   });
 
   const [secaoAtiva, setSecaoAtiva] = useState<SecaoId>("assetAllocation");
@@ -221,6 +227,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     });
   }, [storageKey, onSave]);
 
+  // Persiste resultados separadamente (nunca sobrescrito pelo Supabase)
+  useEffect(() => {
+    try { localStorage.setItem(resultadosKey, JSON.stringify(resultados)); } catch { /**/ }
+  }, [resultados, resultadosKey]);
+
   // Carrega do Supabase na montagem — tem prioridade sobre localStorage
   useEffect(() => {
     if (!onLoadCloud) return;
@@ -228,7 +239,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       if (!remoto) return;
       setDataRaw((local) => {
         const merged = { ...local, ...(remoto as Partial<EstrategiaData>) };
-        if (!merged.resultados) merged.resultados = defaultResultados;
         if (merged.comentarioGeral === undefined) merged.comentarioGeral = "";
         try { localStorage.setItem(storageKey, JSON.stringify(merged)); } catch { /**/ }
         return merged;
@@ -324,8 +334,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
-            resultadoCarteira={data.resultados.carteira}
-            onResultadoCarteira={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, carteira: r } }))}
+            resultadoCarteira={resultados.carteira}
+            onResultadoCarteira={(r) => setResultados((prev) => ({ ...prev, carteira: r }))}
           />
         );
       case "aposentadoria":
@@ -336,8 +346,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
-            resultadoIF={data.resultados.if}
-            onResultadoIF={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, if: r } }))}
+            resultadoIF={resultados.if}
+            onResultadoIF={(r) => setResultados((prev) => ({ ...prev, if: r }))}
           />
         );
       case "protecaoSucessorio":
@@ -348,8 +358,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
-            resultadoSeguro={data.resultados.seguro}
-            onResultadoSeguro={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, seguro: r } }))}
+            resultadoSeguro={resultados.seguro}
+            onResultadoSeguro={(r) => setResultados((prev) => ({ ...prev, seguro: r }))}
           />
         );
       case "fiscal":
@@ -360,8 +370,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onComentarioChange={onComentarioChange}
             tags={tags}
             onTagsChange={onTagsChange}
-            resultadoFiscal={data.resultados.fiscal}
-            onResultadoFiscal={(r) => setData((prev) => ({ ...prev, resultados: { ...prev.resultados, fiscal: r } }))}
+            resultadoFiscal={resultados.fiscal}
+            onResultadoFiscal={(r) => setResultados((prev) => ({ ...prev, fiscal: r }))}
           />
         );
       case "proximosPassos":
@@ -378,7 +388,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         return (
           <SecaoRevisao
             estrategia={data}
-            resultados={data.resultados}
+            resultados={resultados}
             plan={plan}
             clientName={clientName}
             onNavigate={irParaSecao}
@@ -399,7 +409,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     return (
       <EstrategiaFinalPage
         estrategia={data}
-        resultados={data.resultados}
+        resultados={resultados}
         plan={plan}
         clientName={clientName}
         clientProfile={plan.dadosCliente.suitabilityPerfil ?? null}
@@ -659,6 +669,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           plan={plan}
           clientName={clientName}
           data={data}
+          resultados={resultados}
           mode={printMode}
           onClose={() => setPrintMode(null)}
         />

@@ -270,12 +270,20 @@ export function SecaoProtecaoSucessorio({ plan, comentario, onComentarioChange, 
 
       <FerramentaModal open={seguroModal} onClose={() => setSeguroModal(false)} title="Análise Completa de Seguros">
         <FerramentaSeguro
+          clientId={plan.clientId}
           protecao={plan.protecao}
-          onSave={(_data, result) => {
+          onSave={(insuranceData, result) => {
+            const score = result.totalNeed > 0
+              ? Math.round(Math.min(100, (result.totalCoverage / result.totalNeed) * 100))
+              : 100;
             onResultadoSeguro({
               totalNeed: result.totalNeed,
               totalCoverage: result.totalCoverage,
               gap: result.gap,
+              scoreProtecao: score,
+              temSeguroVida: insuranceData.policies.length > 0,
+              temSeguroInvalidez: insuranceData.livingPolicies.some(p => p.type === "disability"),
+              dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });
             setSeguroModal(false);

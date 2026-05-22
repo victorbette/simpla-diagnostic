@@ -1,22 +1,11 @@
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label } from "recharts";
+import { PieChart as PieChartIcon } from "lucide-react";
 import { useState } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-import { Pencil } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import {
-  calcularAlocacaoAtual,
-  ALOCACAO_ALVO,
-  PERFIL_LABELS,
-} from "@/types/financialPlanning";
-import type { FinancialPlan, PerfilRisco, MacroalocacaoAlvo } from "@/types/financialPlanning";
+import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
-import type { ResultadoCarteira } from "@/types/estrategiaResultados";
-import type { CarteiraResultado } from "@/lib/carteira/types";
+import type { ResultadoCarteira, MacroAlocacao } from "@/types/estrategiaResultados";
+import type { CarteiraResultado, Ativo } from "@/lib/carteira/types";
 
 interface Props {
   plan: FinancialPlan;
@@ -29,42 +18,126 @@ interface Props {
   onResultadoCarteira: (r: ResultadoCarteira) => void;
 }
 
-const ASSET_KEYS: (keyof MacroalocacaoAlvo)[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
-const ASSET_LABELS: Record<keyof MacroalocacaoAlvo, string> = {
-  rendaFixa: "Renda Fixa", acoes: "Ações BR", fiis: "FIIs",
-  rvGlobal: "RV Global", rfGlobal: "RF Global", cripto: "Cripto",
+const CARD: React.CSSProperties = {
+  backgroundColor: "white",
+  borderRadius: 12,
+  padding: 24,
+  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
-const ASSET_COLORS: Record<keyof MacroalocacaoAlvo, string> = {
-  rendaFixa: "#2A4F6A", acoes: "#3D6B41", fiis: "#4A6B3D",
-  rvGlobal: "#000000", rfGlobal: "#6B6347", cripto: "#BBA866",
+
+const ASSET_KEYS: (keyof MacroAlocacao)[] = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"];
+const ASSET_LABELS: Record<keyof MacroAlocacao, string> = {
+  rendaFixa: "Renda Fixa",
+  acoes: "Ações BR",
+  fiis: "FIIs",
+  rvGlobal: "RV Global",
+  rfGlobal: "RF Global",
+  cripto: "Cripto",
+};
+const ASSET_COLORS: Record<keyof MacroAlocacao, string> = {
+  rendaFixa: "#2A4F6A",
+  acoes: "#3D6B41",
+  fiis: "#4A6B3D",
+  rvGlobal: "#000000",
+  rfGlobal: "#6B6347",
+  cripto: "#BBA866",
+};
+const CARD_TO_CLASSE: Record<string, keyof MacroAlocacao> = {
+  resgate_rapido: "rendaFixa",
+  resgate_longo: "rendaFixa",
+  acoes: "acoes",
+  fiis: "fiis",
+  exterior: "rvGlobal",
+  cripto: "cripto",
 };
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
 
-const CARD: React.CSSProperties = {
-  backgroundColor: "white", borderRadius: 12, padding: 24,
-  boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-};
+function computeMacro(ativos: Ativo[], total: number): MacroAlocacao {
+  const soma: Record<string, number> = {};
+  for (const a of ativos) soma[a.card] = (soma[a.card] ?? 0) + a.valorBRL;
+  const t = total || 1;
+  return {
+    rendaFixa: ((soma["resgate_rapido"] ?? 0) + (soma["resgate_longo"] ?? 0)) / t * 100,
+    acoes: (soma["acoes"] ?? 0) / t * 100,
+    fiis: (soma["fiis"] ?? 0) / t * 100,
+    rvGlobal: (soma["exterior"] ?? 0) / t * 100,
+    rfGlobal: 0,
+    cripto: (soma["cripto"] ?? 0) / t * 100,
+  };
+}
 
-function Gauge({ score }: { score: number }) {
-  const r = 36, cx = 46, cy = 44;
-  const circ = Math.PI * r;
-  const filled = (Math.min(100, Math.max(0, score)) / 100) * circ;
-  const color = score >= 70 ? "#3D6B41" : score >= 40 ? "#8A7A45" : "#7A3535";
+interface DonutChartProps {
+  data: { name: string; value: number; color: string; key: string }[];
+  centerLabel: string;
+}
+
+function DonutChart({ data, centerLabel }: DonutChartProps) {
+  const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <svg width="92" height="52" viewBox="0 0 92 52">
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke="#E2DCC8" strokeWidth="8" strokeLinecap="round" />
-      <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`} fill="none" stroke={color} strokeWidth="8" strokeLinecap="round" strokeDasharray={`${filled} ${circ}`} />
-      <text x={cx} y={cy - 8} textAnchor="middle" fontSize="14" fontWeight="700" fill={color}>{score}</text>
-    </svg>
+    <div>
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            cx="50%"
+            cy="50%"
+            innerRadius={50}
+            outerRadius={85}
+            strokeWidth={1.5}
+            stroke="white"
+          >
+            {data.map((d, i) => (
+              <Cell key={i} fill={d.color} />
+            ))}
+            <Label
+              content={({ viewBox }) => {
+                const vb = viewBox as { cx?: number; cy?: number };
+                const cx = vb.cx ?? 0;
+                const cy = vb.cy ?? 0;
+                return (
+                  <text textAnchor="middle">
+                    <tspan x={cx} y={cy - 7} fontSize={10} fill="#6B6347">
+                      {centerLabel}
+                    </tspan>
+                    <tspan x={cx} y={cy + 11} fontSize={15} fontWeight="700" fill="#000000">
+                      {total.toFixed(0)}%
+                    </tspan>
+                  </text>
+                );
+              }}
+            />
+          </Pie>
+          <Tooltip formatter={(v) => [`${v}%`]} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", justifyContent: "center", marginTop: 4 }}>
+        {data.map((d) => (
+          <div key={d.key} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B6347" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
+            {d.name} {d.value.toFixed(0)}%
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
-export function SecaoAssetAllocation({ plan, clientName, comentario, onComentarioChange, tags, onTagsChange, resultadoCarteira, onResultadoCarteira }: Props) {
-  const [lastEdit, setLastEdit] = useState<string>("");
+export function SecaoAssetAllocation({
+  plan,
+  clientName,
+  comentario,
+  onComentarioChange,
+  tags,
+  onTagsChange,
+  resultadoCarteira,
+  onResultadoCarteira,
+}: Props) {
   const [carteiraOpen, setCarteiraOpen] = useState(false);
 
   function handleCarteiraSave(r: CarteiraResultado) {
+    const total = r.patrimonio || 1;
     const totalAportar = r.planoAcao
       .filter((i) => i.tipo === "aportar" || i.tipo === "novo_ativo")
       .reduce((s, i) => s + i.movimentacaoBRL, 0);
@@ -76,247 +149,450 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
       planoAcaoCount: r.planoAcao.length,
       totalAportar,
       totalResgatar,
+      macroAtual: computeMacro(r.ativosAtuais, total),
+      macroMeta: computeMacro(r.ativosRecomendados, total),
+      planoAcao: r.planoAcao.map((i) => ({
+        id: i.id,
+        card: i.card,
+        nomeAtivo: i.nomeAtivo,
+        segmento: i.segmento,
+        tipo: i.tipo,
+        valorAtualBRL: i.valorAtualBRL,
+        valorMetaBRL: i.valorMetaBRL,
+        movimentacaoBRL: i.movimentacaoBRL,
+        prioridade: i.prioridade,
+      })),
+      dataCalculo: new Date().toISOString(),
       savedAt: new Date().toISOString(),
     });
     setCarteiraOpen(false);
   }
 
-  const perfil = plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
-  const total = plan.ativosAtuais.total || ASSET_KEYS.reduce((s, k) => s + plan.ativosAtuais[k], 0);
-  const alocacaoAtual = calcularAlocacaoAtual({ ...plan.ativosAtuais, total: total || 1 });
-  const alvo: MacroalocacaoAlvo | null = perfil ? ALOCACAO_ALVO[perfil as PerfilRisco] : null;
-  const ifScore = Math.round(Math.min(100, total > 0 ? 60 : 0));
-
-  const gaps = alvo
-    ? ASSET_KEYS.filter((k) => Math.abs(alocacaoAtual[k] - alvo[k]) > 5).map((k) => ({
-        key: k,
-        label: ASSET_LABELS[k],
-        diff: alocacaoAtual[k] - alvo[k],
-      }))
-    : [];
-
-  const pieData = ASSET_KEYS.filter((k) => plan.ativosAtuais[k] > 0).map((k) => ({
-    name: ASSET_LABELS[k], value: parseFloat(alocacaoAtual[k].toFixed(1)),
-    color: ASSET_COLORS[k], raw: plan.ativosAtuais[k],
-  }));
-
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
 
-  function handleComentario(v: string) {
-    onComentarioChange(v);
-    setLastEdit(new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
+  const commentCard = (
+    <div
+      style={{
+        ...CARD,
+        borderLeft: "4px solid #000000",
+        borderRadius: 0,
+        borderTopRightRadius: 12,
+        borderBottomRightRadius: 12,
+      }}
+    >
+      <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        Estratégia e Recomendações
+      </p>
+      <div style={{ position: "relative" }}>
+        <textarea
+          value={comentario}
+          onChange={(e) => onComentarioChange(e.target.value)}
+          placeholder="Descreva a estratégia de asset allocation recomendada: rebalanceamento, classes de ativos prioritários, instrumentos sugeridos..."
+          style={{
+            width: "100%",
+            minHeight: 160,
+            padding: "10px 12px",
+            borderRadius: 6,
+            border: "1px solid #E2DCC8",
+            fontSize: 13,
+            color: "#000000",
+            resize: "vertical",
+            outline: "none",
+            boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
+        />
+        <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>
+          {comentario.length} caracteres
+        </span>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+        <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
+        {AVAILABLE_TAGS.map((t) => (
+          <button
+            key={t}
+            onClick={() => toggleTag(t)}
+            style={{
+              fontSize: 12,
+              padding: "3px 10px",
+              borderRadius: 999,
+              cursor: "pointer",
+              border: "1px solid #E2DCC8",
+              backgroundColor: tags.includes(t) ? "#000000" : "transparent",
+              color: tags.includes(t) ? "white" : "#3D3520",
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── State A — carteira not defined ─────────────────────────────────────────
+  if (!resultadoCarteira) {
+    return (
+      <>
+        <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <div
+              style={{
+                backgroundColor: "white",
+                border: "2px dashed #BBA866",
+                borderRadius: 12,
+                padding: "40px 32px",
+                textAlign: "center",
+                maxWidth: 480,
+                width: "100%",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              }}
+            >
+              <PieChartIcon
+                size={48}
+                color="#BBA866"
+                strokeWidth={1.5}
+                style={{ marginBottom: 16 }}
+              />
+              <p style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 8px" }}>
+                Carteira não definida
+              </p>
+              <p style={{ fontSize: 13, color: "#6B6347", margin: "0 0 20px", lineHeight: 1.6 }}>
+                Use a ferramenta de carteira para definir a alocação atual e recomendada do cliente, gerar o plano de ação e consolidar o resultado.
+              </p>
+              <button
+                onClick={() => setCarteiraOpen(true)}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#000000",
+                  color: "white",
+                  fontWeight: 600,
+                  borderRadius: 6,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 14,
+                }}
+              >
+                Definir Carteira →
+              </button>
+            </div>
+          </div>
+          {commentCard}
+        </div>
+        {carteiraOpen && (
+          <FerramentaCarteira
+            clientName={clientName}
+            clientId={plan.clientId}
+            clientProfile={plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null}
+            patrimonyInicial={plan.ativosAtuais.total}
+            onClose={() => setCarteiraOpen(false)}
+            onSave={handleCarteiraSave}
+          />
+        )}
+      </>
+    );
+  }
+
+  // ── State B — carteira defined ─────────────────────────────────────────────
+  const rc = resultadoCarteira;
+
+  function makePieData(macro: MacroAlocacao) {
+    return ASSET_KEYS
+      .map((k) => ({ name: ASSET_LABELS[k], value: parseFloat(macro[k].toFixed(1)), color: ASSET_COLORS[k], key: k }))
+      .filter((d) => d.value > 0.1);
+  }
+
+  const pieAtual = makePieData(rc.macroAtual);
+  const pieMeta = makePieData(rc.macroMeta);
+
+  const tableKeys = ASSET_KEYS.filter((k) => rc.macroAtual[k] > 0.5 || rc.macroMeta[k] > 0.5);
+
+  const actionItems = rc.planoAcao.filter((i) => i.tipo !== "manter").slice(0, 10);
+  const totalVisivel = rc.planoAcao.filter((i) => i.tipo !== "manter").length;
+
+  const groupedByClasse: Record<string, typeof actionItems> = {};
+  for (const item of actionItems) {
+    const classeKey = item.card ? (CARD_TO_CLASSE[item.card] ?? "rendaFixa") : "rendaFixa";
+    const label = ASSET_LABELS[classeKey];
+    if (!groupedByClasse[label]) groupedByClasse[label] = [];
+    groupedByClasse[label].push(item);
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 20 }}>
-      {/* Coluna esquerda */}
-      <div>
-        {/* Diagnóstico card */}
-        <div style={{ ...CARD, borderTop: "3px solid #000000", position: "relative" }}>
-          <span style={{ position: "absolute", top: 16, right: 16, fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#EDE9DC", color: "#000000" }}>
-            SOMENTE LEITURA
-          </span>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Diagnóstico Inicial
-          </p>
+    <>
+      <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* Section header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#3D6B41",
+                backgroundColor: "#EBF2EC",
+                border: "1px solid #A7C9AB",
+                borderRadius: 999,
+                padding: "4px 12px",
+              }}
+            >
+              ✓ Carteira definida
+            </span>
+            <span
+              style={{
+                fontSize: 11,
+                color: "#6B6347",
+                backgroundColor: "#F5F3EE",
+                border: "1px solid #E2DCC8",
+                borderRadius: 999,
+                padding: "2px 10px",
+              }}
+            >
+              {new Date(rc.dataCalculo).toLocaleDateString("pt-BR")}
+            </span>
+          </div>
+          <button
+            onClick={() => setCarteiraOpen(true)}
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#000000",
+              backgroundColor: "transparent",
+              border: "1px solid #000000",
+              borderRadius: 6,
+              padding: "6px 14px",
+              cursor: "pointer",
+            }}
+          >
+            Editar carteira →
+          </button>
+        </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        {/* Card 1 — 3 metrics */}
+        <div style={CARD}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Visão Geral
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(rc.patrimonio)}</p>
+            </div>
+            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
+            </div>
+            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "12px 16px" }}>
+              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2 — Two donut PieCharts */}
+        <div style={CARD}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Alocação Atual vs Proposta
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 6px", textTransform: "uppercase", fontWeight: 600 }}>Perfil de Risco</p>
-              <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: "#EDE9DC", color: "#000000" }}>
-                {perfil ? PERFIL_LABELS[perfil as PerfilRisco] : "Não definido"}
+              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>Atual</p>
+              <DonutChart data={pieAtual} centerLabel="Atual" />
+            </div>
+            <div>
+              <p style={{ fontSize: 12, color: "#6B6347", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>Proposta</p>
+              <DonutChart data={pieMeta} centerLabel="Proposta" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3 — Comparative table */}
+        <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 72px 72px 108px 88px",
+              backgroundColor: "#000000",
+              padding: "10px 20px",
+            }}
+          >
+            {["Classe", "Atual", "Proposta", "Dif. R$", "Ação"].map((h) => (
+              <span
+                key={h}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "white",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.04em",
+                  textAlign: h === "Classe" ? "left" : "right",
+                }}
+              >
+                {h}
               </span>
-            </div>
-            <div>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Score AA</p>
-              <Gauge score={ifScore} />
-            </div>
-            <div>
-              <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#2A4F6A", margin: 0 }}>{formatCurrency(total)}</p>
-            </div>
-            {alvo && (
-              <div>
-                <p style={{ fontSize: 11, color: "#6B6347", margin: "0 0 6px", textTransform: "uppercase", fontWeight: 600 }}>RF Atual vs Meta</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10, color: "#6B6347", width: 40 }}>Atual</span>
-                    <div style={{ flex: 1, height: 6, backgroundColor: "#F5F3EE", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.min(100, alocacaoAtual.rendaFixa)}%`, backgroundColor: "#000000", borderRadius: 3 }} />
-                    </div>
-                    <span style={{ fontSize: 10, color: "#000000", fontWeight: 600 }}>{formatNumber(alocacaoAtual.rendaFixa, 0)}%</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 10, color: "#6B6347", width: 40 }}>Meta</span>
-                    <div style={{ flex: 1, height: 6, backgroundColor: "#F5F3EE", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.min(100, alvo.rendaFixa)}%`, backgroundColor: "#BBA866", borderRadius: 3 }} />
-                    </div>
-                    <span style={{ fontSize: 10, color: "#BBA866", fontWeight: 600 }}>{alvo.rendaFixa}%</span>
-                  </div>
+            ))}
+          </div>
+          {tableKeys.map((k, idx) => {
+            const atual = rc.macroAtual[k];
+            const meta = rc.macroMeta[k];
+            const difPct = meta - atual;
+            const difBRL = (difPct / 100) * rc.patrimonio;
+            const acao = difBRL > 500 ? "Aportar" : difBRL < -500 ? "Resgatar" : "Manter";
+            const acaoBg = acao === "Aportar" ? "#EBF2EC" : acao === "Resgatar" ? "#F9ECEC" : "#F5F3EE";
+            const acaoColor = acao === "Aportar" ? "#3D6B41" : acao === "Resgatar" ? "#7A3535" : "#6B6347";
+            return (
+              <div
+                key={k}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 72px 72px 108px 88px",
+                  padding: "10px 20px",
+                  backgroundColor: idx % 2 === 0 ? "white" : "#FAFAF8",
+                  borderBottom: "1px solid #F5F3EE",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#000000" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: ASSET_COLORS[k], flexShrink: 0 }} />
+                  {ASSET_LABELS[k]}
+                </div>
+                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>{formatNumber(atual, 1)}%</span>
+                <span style={{ fontSize: 12, color: "#6B6347", textAlign: "right" }}>{formatNumber(meta, 1)}%</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: difBRL >= 0 ? "#3D6B41" : "#7A3535", textAlign: "right" }}>
+                  {difBRL >= 0 ? "+" : ""}{formatCurrency(difBRL)}
+                </span>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      backgroundColor: acaoBg,
+                      color: acaoColor,
+                      border: `1px solid ${acaoColor}40`,
+                    }}
+                  >
+                    {acao}
+                  </span>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Card 4 — Action plan */}
+        <div style={CARD}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Plano de Ação
+            </p>
+            {totalVisivel > 10 && (
+              <span style={{ fontSize: 12, color: "#8A7A45", fontWeight: 600, cursor: "default" }}>
+                Ver todos ({totalVisivel}) →
+              </span>
             )}
           </div>
 
-          {gaps.length > 0 && (
-            <div style={{ backgroundColor: "#F5F3EE", borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B6347", margin: "0 0 8px", textTransform: "uppercase" }}>Gaps identificados</p>
-              {gaps.map((g) => (
-                <div key={g.key} style={{ fontSize: 12, color: g.diff > 0 ? "#8A7A45" : "#7A3535", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: g.diff > 0 ? "#8A7A45" : "#7A3535", flexShrink: 0 }} />
-                  {g.label} {g.diff > 0 ? "acima" : "abaixo"} do recomendado: {g.diff > 0 ? "+" : ""}{formatNumber(g.diff, 1)}%
-                </div>
-              ))}
+          {/* Totals summary */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+            <div style={{ backgroundColor: "#EBF2EC", borderRadius: 8, padding: "10px 14px" }}>
+              <p style={{ fontSize: 11, color: "#3D6B41", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Aportes</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#3D6B41", margin: 0 }}>{formatCurrency(rc.totalAportar)}</p>
             </div>
-          )}
-        </div>
-
-        {/* Estratégia card */}
-        <div style={{ ...CARD, borderTop: "3px solid #000000", marginTop: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <Pencil style={{ width: 14, height: 14, color: "#6B6347" }} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: 0 }}>Estratégia e Recomendações</p>
-          </div>
-          <div style={{ position: "relative" }}>
-            <textarea
-              value={comentario}
-              onChange={(e) => handleComentario(e.target.value)}
-              placeholder="Descreva a estratégia de asset allocation recomendada: rebalanceamento, classes de ativos prioritários, instrumentos sugeridos..."
-              style={{
-                width: "100%", minHeight: 200, padding: "10px 12px", borderRadius: 6, border: "1px solid #E2DCC8",
-                fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit",
-              }}
-            />
-            <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9E9070" }}>{comentario.length} caracteres</span>
+            <div style={{ backgroundColor: "#F9ECEC", borderRadius: 8, padding: "10px 14px" }}>
+              <p style={{ fontSize: 11, color: "#7A3535", margin: "0 0 2px", textTransform: "uppercase", fontWeight: 600 }}>Total Resgates</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#7A3535", margin: 0 }}>{formatCurrency(rc.totalResgatar)}</p>
+            </div>
           </div>
 
-          <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-            <span style={{ fontSize: 12, color: "#6B6347", marginRight: 4 }}>Tags:</span>
-            {AVAILABLE_TAGS.map((t) => (
-              <button
-                key={t}
-                onClick={() => toggleTag(t)}
-                style={{
-                  fontSize: 12, padding: "3px 10px", borderRadius: 999, cursor: "pointer",
-                  border: "1px solid #E2DCC8",
-                  backgroundColor: tags.includes(t) ? "#000000" : "transparent",
-                  color: tags.includes(t) ? "white" : "#3D3520",
-                }}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12 }}>
-            <span style={{ fontSize: 11, color: "#9E9070" }}>
-              {lastEdit ? `Última edição: ${lastEdit}` : "Não editado"}
-            </span>
-            <button style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, backgroundColor: "#000000", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}>
-              Salvar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Coluna direita */}
-      <div>
-        {/* Carteira card */}
-        <div style={{ ...CARD, borderTop: "3px solid #000000" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: 0 }}>Carteira Atual</p>
-            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: total > 0 ? "#EBF2EC" : "#F5F3EE", color: total > 0 ? "#3D6B41" : "#6B6347", fontWeight: 600 }}>
-              {total > 0 ? "✓ Com dados" : "Sem dados"}
-            </span>
-          </div>
-
-          {total > 0 && pieData.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={pieData} dataKey="value" cx="50%" cy="50%" outerRadius={70} innerRadius={40} labelLine={false}>
-                    {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v, name) => [`${v}%`, name]} />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 8 }}>
-                {pieData.map((d) => (
-                  <div key={d.name} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", fontSize: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
-                      {d.name}
-                    </div>
-                    <span style={{ color: "#6B6347" }}>{d.value}%</span>
-                    <span style={{ color: "#000000", fontWeight: 600 }}>{formatCurrency(d.raw)}</span>
-                  </div>
-                ))}
-              </div>
-            </>
+          {/* Items grouped by class */}
+          {Object.keys(groupedByClasse).length === 0 ? (
+            <p style={{ fontSize: 13, color: "#9E9070", textAlign: "center", padding: "16px 0", margin: 0 }}>
+              Nenhuma movimentação necessária
+            </p>
           ) : (
-            <div style={{ textAlign: "center", padding: "24px 0", color: "#9E9070" }}>
-              <p style={{ fontSize: 13, margin: "0 0 12px" }}>Carteira detalhada não montada</p>
-              <button
-                onClick={() => setCarteiraOpen(true)}
-                style={{ padding: "8px 16px", borderRadius: 6, border: "1.5px solid #000000", backgroundColor: "transparent", color: "#000000", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
-              >
-                Montar carteira detalhada →
-              </button>
-            </div>
-          )}
-
-          {total > 0 && (
-            <button
-              onClick={() => setCarteiraOpen(true)}
-              style={{ marginTop: 12, width: "100%", padding: "8px 0", border: "1.5px solid #000000", borderRadius: 6, backgroundColor: "transparent", color: "#000000", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
-            >
-              Abrir ferramenta de carteira →
-            </button>
-          )}
-        </div>
-
-        {/* Status card */}
-        <div style={{ ...CARD, marginTop: 16, border: "1px solid #E2DCC8" }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase" }}>Status da Seção</p>
-          {[
-            { label: "Diagnóstico revisado", ok: true },
-            { label: "Ferramenta de carteira usada", ok: resultadoCarteira !== null },
-            { label: "Carteira com dados", ok: total > 0 },
-            { label: "Estratégia redigida", ok: comentario.length > 50 },
-          ].map(({ label, ok }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontSize: 13 }}>
-              <span style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: ok ? "#EBF2EC" : "#F5F3EE", color: ok ? "#3D6B41" : "#9E9070", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
-                {ok ? "✓" : "○"}
-              </span>
-              <span style={{ color: ok ? "#3D3520" : "#9E9070" }}>{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {resultadoCarteira && (
-          <div style={{ ...CARD, marginTop: 16, borderTop: "3px solid #000000", backgroundColor: "#EDE9DC" }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              ✓ Resultado da Ferramenta
-            </p>
-            {[
-              { label: "Patrimônio mapeado", value: formatCurrency(resultadoCarteira.patrimonio) },
-              { label: "Itens no plano de ação", value: `${resultadoCarteira.planoAcaoCount}` },
-              { label: "Total a aportar", value: formatCurrency(resultadoCarteira.totalAportar), color: "#3D6B41" },
-              { label: "Total a resgatar", value: formatCurrency(resultadoCarteira.totalResgatar), color: "#7A3535" },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #E2DCC8", paddingBottom: 5, marginBottom: 5, fontSize: 12 }}>
-                <span style={{ color: "#6B6347" }}>{label}</span>
-                <span style={{ fontWeight: 600, color: color ?? "#000000" }}>{value}</span>
+            Object.entries(groupedByClasse).map(([classeLabel, items]) => (
+              <div key={classeLabel} style={{ marginBottom: 16 }}>
+                <p
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#6B6347",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    margin: "0 0 6px",
+                    paddingBottom: 4,
+                    borderBottom: "1px solid #E2DCC8",
+                  }}
+                >
+                  {classeLabel}
+                </p>
+                {items.map((item) => {
+                  const isAportar = item.tipo === "aportar" || item.tipo === "novo_ativo";
+                  const isResgatar = item.tipo === "resgatar_parcial" || item.tipo === "resgatar_total";
+                  const movColor = isAportar ? "#3D6B41" : isResgatar ? "#7A3535" : "#000000";
+                  const movPrefix = isAportar ? "+" : "-";
+                  const tipoBg = isAportar ? "#EBF2EC" : isResgatar ? "#F9ECEC" : "#F5F3EE";
+                  const tipoColor = isAportar ? "#3D6B41" : isResgatar ? "#7A3535" : "#6B6347";
+                  const tipoLabel =
+                    item.tipo === "novo_ativo" ? "Novo"
+                    : item.tipo === "aportar" ? "Aportar"
+                    : item.tipo === "resgatar_total" ? "Resgatar total"
+                    : "Resgatar parcial";
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 0",
+                        borderBottom: "1px solid #F5F3EE",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                        <span
+                          style={{
+                            fontSize: 13,
+                            color: "#000000",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.nomeAtivo}
+                        </span>
+                        <span
+                          style={{
+                            flexShrink: 0,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: "2px 7px",
+                            borderRadius: 999,
+                            backgroundColor: tipoBg,
+                            color: tipoColor,
+                          }}
+                        >
+                          {tipoLabel}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
+                        {movPrefix}{formatCurrency(Math.abs(item.movimentacaoBRL))}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-            <p style={{ fontSize: 10, color: "#6B6347", margin: "6px 0 0", textAlign: "right" }}>
-              Salvo em {new Date(resultadoCarteira.savedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
-            </p>
-          </div>
-        )}
+            ))
+          )}
+        </div>
+
+        {/* Card 5 — Comment */}
+        {commentCard}
       </div>
 
       {carteiraOpen && (
@@ -329,6 +605,6 @@ export function SecaoAssetAllocation({ plan, clientName, comentario, onComentari
           onSave={handleCarteiraSave}
         />
       )}
-    </div>
+    </>
   );
 }

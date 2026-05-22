@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import { calcularBeneficioPGBL, getAliquotaRegressiva } from "@/lib/taxCalc";
 import type { PlanejamentoFiscal } from "@/types/financialPlanning";
 
 interface Props {
+  clientId: string;
   fiscal: PlanejamentoFiscal;
   onSave: (result: ReturnType<typeof calcularBeneficioPGBL>) => void;
 }
@@ -28,7 +30,7 @@ interface PGBLState {
   tipoDeclaracao: "completa" | "simplificada";
 }
 
-export function FerramentaPGBL({ fiscal, onSave }: Props) {
+export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
   const [state, setState] = useState<PGBLState>({
     rendaMensalBruta: fiscal.rendaBrutaAnual / 12,
     aportePGBLMensal: fiscal.temPGBL ? fiscal.valorPGBLAnual / 12 : 0,
@@ -36,6 +38,34 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
     tipoDeclaracao: fiscal.tipoDeclaracao === "nao_sei" ? "completa" : fiscal.tipoDeclaracao,
   });
   const [aporteSimulado, setAporteSimulado] = useState(state.aportePGBLMensal);
+
+  const CHAVE = `ferramenta_pgbl_${clientId}`;
+  const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
+
+  const initialState: PGBLState = {
+    rendaMensalBruta: fiscal.rendaBrutaAnual / 12,
+    aportePGBLMensal: fiscal.temPGBL ? fiscal.valorPGBLAnual / 12 : 0,
+    numeroDependentes: 0,
+    tipoDeclaracao: fiscal.tipoDeclaracao === "nao_sei" ? "completa" : fiscal.tipoDeclaracao,
+  };
+
+  const estadoCompleto = { ...state, aporteSimulado };
+
+  const { limpar } = useFerramentaStorage(
+    CHAVE,
+    estadoCompleto,
+    (v) => {
+      setState(s => ({
+        ...s,
+        rendaMensalBruta: v.rendaMensalBruta ?? s.rendaMensalBruta,
+        aportePGBLMensal: v.aportePGBLMensal ?? s.aportePGBLMensal,
+        numeroDependentes: v.numeroDependentes ?? s.numeroDependentes,
+        tipoDeclaracao: (v.tipoDeclaracao as PGBLState["tipoDeclaracao"]) ?? s.tipoDeclaracao,
+      }));
+      if (v.aporteSimulado !== undefined) setAporteSimulado(v.aporteSimulado);
+    },
+    { ...initialState, aporteSimulado: initialState.aportePGBLMensal },
+  );
 
   const set = (patch: Partial<PGBLState>) => setState(s => ({ ...s, ...patch }));
 
@@ -58,6 +88,20 @@ export function FerramentaPGBL({ fiscal, onSave }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Persistence bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 8, border: "1px solid #E2DCC8", marginBottom: 8 }}>
+        <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+          {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
+        </span>
+        {temDadosSalvos && (
+          <button
+            onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) { limpar(); setAporteSimulado(initialState.aportePGBLMensal); } }}
+            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B6347", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+          >
+            Limpar dados
+          </button>
+        )}
+      </div>
       {/* Inputs */}
       <Card style={{ borderTop: "3px solid #8A7A45", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <CardContent className="pt-5">

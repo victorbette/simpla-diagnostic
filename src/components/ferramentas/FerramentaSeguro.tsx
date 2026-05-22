@@ -26,12 +26,14 @@ import {
   type LivingPolicy,
 } from "@/lib/insuranceCalc";
 import type { ProtecaoSimplificada } from "@/types/financialPlanning";
+import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 
 type Tab = "imediatas" | "continuas" | "vida" | "apolices";
 
 interface Props {
   protecao: ProtecaoSimplificada;
   onSave: (data: InsuranceData, result: ReturnType<typeof calcularSeguro>) => void;
+  clientId: string;
 }
 
 function prefill(protecao: ProtecaoSimplificada): InsuranceData {
@@ -53,9 +55,24 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: "apolices", label: "Apólices atuais" },
 ];
 
-export function FerramentaSeguro({ protecao, onSave }: Props) {
+export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
   const [data, setData] = useState<InsuranceData>(() => prefill(protecao));
   const [tab, setTab] = useState<Tab>("imediatas");
+
+  const CHAVE = `ferramenta_seguro_${clientId}`;
+  const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
+
+  const initialData = prefill(protecao);
+
+  const { limpar } = useFerramentaStorage(
+    CHAVE,
+    { data, tab },
+    (v) => {
+      if (v.data) setData({ ...initialInsuranceData, ...v.data });
+      if (v.tab) setTab(v.tab as Tab);
+    },
+    { data: initialData, tab: "imediatas" as Tab },
+  );
 
   const resultado = calcularSeguro(data);
   const coveragePct = resultado.totalNeed > 0
@@ -107,6 +124,19 @@ export function FerramentaSeguro({ protecao, onSave }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, padding: "8px 12px", backgroundColor: "#F5F3EE", borderRadius: 8, border: "1px solid #E2DCC8" }}>
+        <span style={{ fontSize: 11, color: "#BBA866", display: "flex", alignItems: "center", gap: 4 }}>
+          {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
+        </span>
+        {temDadosSalvos && (
+          <button
+            onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) limpar(); }}
+            style={{ background: "transparent", border: "1px solid rgba(0,0,0,0.15)", color: "#6B6347", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
+          >
+            Limpar dados
+          </button>
+        )}
+      </div>
       {/* Tabs */}
       <div className="flex gap-1 border-b">
         {TAB_LABELS.map(t => (
