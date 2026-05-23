@@ -16,6 +16,7 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoCarteira: ResultadoCarteira | null;
   onResultadoCarteira: (r: ResultadoCarteira) => void;
+  onLimparCarteira?: () => void;
 }
 
 const CARD: React.CSSProperties = {
@@ -180,6 +181,7 @@ export function SecaoAssetAllocation({
   onTagsChange,
   resultadoCarteira,
   onResultadoCarteira,
+  onLimparCarteira,
 }: Props) {
   const [carteiraOpen, setCarteiraOpen] = useState(false);
 
@@ -337,6 +339,7 @@ export function SecaoAssetAllocation({
             patrimonyInicial={plan.ativosAtuais.total}
             onClose={() => setCarteiraOpen(false)}
             onSave={handleCarteiraSave}
+            onLimpar={onLimparCarteira}
           />
         )}
       </>

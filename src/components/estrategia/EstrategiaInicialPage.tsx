@@ -336,6 +336,17 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onTagsChange={onTagsChange}
             resultadoCarteira={resultados.carteira}
             onResultadoCarteira={(r) => setResultados((prev) => ({ ...prev, carteira: r }))}
+            onLimparCarteira={() => {
+              setResultados((prev) => ({ ...prev, carteira: null }));
+              try {
+                const salvo = localStorage.getItem(resultadosKey);
+                if (salvo) {
+                  const parsed = JSON.parse(salvo);
+                  parsed.carteira = null;
+                  localStorage.setItem(resultadosKey, JSON.stringify(parsed));
+                }
+              } catch { /**/ }
+            }}
           />
         );
       case "aposentadoria":

@@ -38,6 +38,7 @@ interface Props {
   patrimonyInicial?: number;
   onClose: () => void;
   onSave?: (r: CarteiraResultado) => void;
+  onLimpar?: () => void;
 }
 
 type Etapa = 1 | 2 | 3 | 4;
@@ -75,7 +76,7 @@ const PERFIL_LABELS: Record<string, string> = {
 };
 
 export function FerramentaCarteira({
-  clientName, clientId, clientProfile, patrimonyInicial = 0, onClose, onSave,
+  clientName, clientId, clientProfile, patrimonyInicial = 0, onClose, onSave, onLimpar,
 }: Props) {
   const storageKey = `carteira_v2_${clientId}`;
 
@@ -186,9 +187,12 @@ export function FerramentaCarteira({
 
         <button
           onClick={() => {
-            if (window.confirm("Limpar todos os dados da carteira?")) {
+            if (window.confirm(
+              "Limpar todos os dados da carteira?\n\nIsso removerá também os dados de Asset Allocation da Estratégia Inicial."
+            )) {
               setState(makeInitial(clientProfile, patrimonyInicial));
               try { localStorage.removeItem(storageKey); } catch {}
+              onLimpar?.();
             }
           }}
           style={{
