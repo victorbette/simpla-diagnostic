@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { X, ChevronLeft, ChevronRight, Save, RefreshCw, Loader2 } from "lucide-react";
+import { useCotacoes } from "../../hooks/useCotacoes";
 import type { Ativo, ItemPlanoAcao, CarteiraResultado, SimplaCardId } from "@/lib/carteira/types";
 import {
   calcularPatrimonio,
@@ -114,6 +115,25 @@ export function FerramentaCarteira({
     [ativosAtuais, usdBrl, patrimonyInicial],
   );
 
+  // ── Cotações em tempo real ──────────────────────────────────────────────────
+  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscarCotacoes } = useCotacoes();
+
+  const atualizarCotacoes = useCallback(() => {
+    const tickers = ativosAtuais
+      .filter((a) => ["acoes", "fiis", "exterior", "cripto"].includes(a.card))
+      .map((a) => ({
+        ticker: a.nome.trim(),
+        tipo: a.card as "acoes" | "fiis" | "exterior" | "cripto",
+      }))
+      .filter((t) => t.ticker.length >= 2);
+    if (tickers.length > 0) buscarCotacoes(tickers);
+  }, [ativosAtuais, buscarCotacoes]);
+
+  useEffect(() => {
+    if (etapa === 1) atualizarCotacoes();
+  }, [etapa]); // eslint-disable-line react-hooks/exhaustive-deps
+  // ────────────────────────────────────────────────────────────────────────────
+
   function patch(p: Partial<State>) { setState((prev) => ({ ...prev, ...p })); }
   function handleAtivosAtuais(ativos: Ativo[]) { patch({ ativosAtuais: atualizarPcts(ativos, usdBrl) }); }
   function handleUsdBrl(v: number) { patch({ usdBrl: v, ativosAtuais: atualizarPcts(ativosAtuais, v) }); }
@@ -183,6 +203,34 @@ export function FerramentaCarteira({
         <span style={{ color: "#93C5FD", fontSize: 11, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
           ● Dados salvos automaticamente
         </span>
+
+        {/* Atualizar cotações — visível nas etapas 1 e 2 */}
+        {etapa <= 2 && (
+          <>
+            <button
+              onClick={atualizarCotacoes}
+              disabled={carregandoCotacoes}
+              style={{
+                background: "transparent",
+                border: "0.5px solid rgba(255,255,255,0.3)",
+                color: "#93C5FD", borderRadius: 6,
+                padding: "4px 10px", fontSize: 11,
+                cursor: carregandoCotacoes ? "default" : "pointer",
+                display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
+                opacity: carregandoCotacoes ? 0.7 : 1,
+              }}
+            >
+              {carregandoCotacoes
+                ? <><Loader2 style={{ width: 12, height: 12, animation: "spin 1s linear infinite" }} />Atualizando...</>
+                : <><RefreshCw style={{ width: 12, height: 12 }} />Atualizar cotações</>
+              }
+            </button>
+            {erroCotacoes && (
+              <span style={{ fontSize: 11, color: "#FCA5A5", flexShrink: 0 }}>⚠ Erro ao buscar cotações</span>
+            )}
+          </>
+        )}
+
         <button
           onClick={() => {
             if (window.confirm("Limpar todos os dados da carteira?")) {
@@ -274,6 +322,7 @@ export function FerramentaCarteira({
             onAtivos={handleAtivosAtuais}
             usdBrl={usdBrl}
             onUsdBrl={handleUsdBrl}
+            cotacoes={cotacoes}
           />
         )}
         {etapa === 2 && (
