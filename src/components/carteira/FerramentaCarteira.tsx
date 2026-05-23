@@ -346,6 +346,7 @@ export function FerramentaCarteira({
             usdBrl={usdBrl}
             onUsdBrl={handleUsdBrl}
             cotacoes={cotacoes}
+            carregandoCotacoes={carregandoCotacoes}
             onBuscarCotacao={buscarCotacoes}
           />
         )}

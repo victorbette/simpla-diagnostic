@@ -27,33 +27,52 @@ async function buscarBrapi(
   const resultado: Record<string, Cotacao> = {};
   if (tickers.length === 0) return resultado;
 
-  const simbolos = tickers.map((t) => t.ticker.toUpperCase()).join(",");
-  const url = `https://brapi.dev/api/quote/${simbolos}?token=demo&fundamental=false`;
+  const LOTE = 5;
+  const lotes: TickerRequest[][] = [];
+  for (let i = 0; i < tickers.length; i += LOTE) {
+    lotes.push(tickers.slice(i, i + LOTE));
+  }
 
-  console.log("[Brapi] buscando:", simbolos);
+  for (let li = 0; li < lotes.length; li++) {
+    const lote = lotes[li];
+    const simbolos = lote.map((t) => t.ticker.toUpperCase()).join(",");
+    console.log("[Brapi] buscando lote:", simbolos);
 
-  const resp = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!resp.ok) throw new Error(`Brapi erro ${resp.status}`);
+    try {
+      const url = `https://brapi.dev/api/quote/${simbolos}?token=demo&fundamental=false`;
+      const resp = await fetch(url, { headers: { Accept: "application/json" } });
 
-  const data = await resp.json();
-  const quotes: Record<string, unknown>[] = data?.results ?? [];
+      if (!resp.ok) {
+        console.warn("[Brapi] erro lote", simbolos, resp.status);
+      } else {
+        const data = await resp.json();
+        const quotes: Record<string, unknown>[] = data?.results ?? [];
+        console.log("[Brapi] retornou:", quotes.map((q) => q.symbol));
 
-  console.log("[Brapi] retornou:", quotes.map((q) => q.symbol));
+        for (const quote of quotes) {
+          const raw = (quote.symbol as string) ?? "";
+          const ticker = raw.replace(".SA", "").toUpperCase();
+          const tipo = lote.find((t) => t.ticker.toUpperCase() === ticker)?.tipo ?? "acoes";
 
-  for (const quote of quotes) {
-    const raw = (quote.symbol as string) ?? "";
-    const ticker = raw.replace(".SA", "").toUpperCase();
-    const tipo = tickers.find((t) => t.ticker.toUpperCase() === ticker)?.tipo ?? "acoes";
+          resultado[ticker] = {
+            ticker,
+            tipo,
+            preco: (quote.regularMarketPrice as number) ?? 0,
+            moeda: "BRL",
+            nome: (quote.shortName as string) ?? (quote.longName as string) ?? ticker,
+            variacaoPct: (quote.regularMarketChangePercent as number) ?? 0,
+            atualizadoEm: new Date().toISOString(),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("[Brapi] erro no lote", simbolos, err);
+    }
 
-    resultado[ticker] = {
-      ticker,
-      tipo,
-      preco: (quote.regularMarketPrice as number) ?? 0,
-      moeda: "BRL",
-      nome: (quote.shortName as string) ?? (quote.longName as string) ?? ticker,
-      variacaoPct: (quote.regularMarketChangePercent as number) ?? 0,
-      atualizadoEm: new Date().toISOString(),
-    };
+    // Intervalo entre lotes para não sobrecarregar a API
+    if (li < lotes.length - 1) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
   }
 
   // Marcar como não encontrado os que não vieram
@@ -270,6 +289,32 @@ export function useCotacoes() {
       }
 
       setCotacoes((prev) => ({ ...prev, ...novas }));
+
+      // Retry individual para BR tickers que vieram sem preço
+      const brTickers2 = precisaBuscar.filter((t) => t.tipo === "acoes" || t.tipo === "fiis");
+      const semCotacao = brTickers2.filter((t) => {
+        const c = novas[t.ticker.toUpperCase()];
+        return !c || !!c.erro || c.preco === 0;
+      });
+
+      if (semCotacao.length > 0) {
+        setTimeout(async () => {
+          try {
+            const retry = await buscarBrapi(semCotacao);
+            const validos = Object.fromEntries(
+              Object.entries(retry).filter(([, v]) => v.preco > 0)
+            );
+            if (Object.keys(validos).length > 0) {
+              for (const [key, cot] of Object.entries(validos)) {
+                cache[key] = { cotacao: cot, ts: Date.now() };
+              }
+              setCotacoes((prev) => ({ ...prev, ...validos }));
+            }
+          } catch (e) {
+            console.warn("[useCotacoes] retry falhou:", e);
+          }
+        }, 500);
+      }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return;
       console.error("[useCotacoes] erro:", err);

@@ -17,6 +17,7 @@ interface Props {
   ativosAtuaisRef?: Ativo[];
   disabled?: boolean;
   cotacoes?: Record<string, Cotacao>;
+  carregando?: boolean;
   onBuscarCotacao?: (tickers: TickerRequest[]) => void;
 }
 
@@ -207,6 +208,7 @@ export function TabelaAtivos({
   ativosAtuaisRef = [],
   disabled = false,
   cotacoes = {},
+  carregando = false,
   onBuscarCotacao,
 }: Props) {
   function addAtivo() {
@@ -324,7 +326,7 @@ export function TabelaAtivos({
           {ativos.map((a) => {
             const key = (a.nome ?? "").trim().toUpperCase();
             const cot = cotacoes[key];
-            // Cripto quotes from Yahoo are in USD — convert to BRL
+            const buscandoEste = carregando && !cot && key.length >= 2;
             const cotPrecoDisplay = cot && !cot.erro && cot.preco > 0
               ? (card.id === "cripto" ? cot.preco * usdBrl : cot.preco)
               : null;
@@ -353,15 +355,25 @@ export function TabelaAtivos({
                     type="number"
                     value={a.cotacaoBRL ?? ""}
                     onChange={(e) => updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })}
-                    style={{ textAlign: "right", paddingRight: cotPrecoDisplay != null ? 70 : undefined }}
+                    style={{ textAlign: "right", paddingRight: (buscandoEste || cotPrecoDisplay != null || cot?.erro) ? 70 : undefined }}
                     disabled={disabled}
                   />
-                  {cotPrecoDisplay != null && (
+                  {buscandoEste && (
+                    <span style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#9CA3AF" }}>
+                      ⟳
+                    </span>
+                  )}
+                  {cotPrecoDisplay != null && !buscandoEste && (
                     <QuoteBtn
                       cotacao={{ ...cot!, preco: cotPrecoDisplay }}
                       onApply={(v) => updateAtivo(a.id, { cotacaoBRL: v })}
                       currency="R$"
                     />
+                  )}
+                  {cot?.erro && !buscandoEste && (
+                    <span style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#B45309", whiteSpace: "nowrap" as const }}>
+                      não encontrado
+                    </span>
                   )}
                 </div>
                 <SInput
@@ -409,8 +421,9 @@ export function TabelaAtivos({
         )}
 
         {ativos.map((a) => {
-          const key = a.nome.trim().toUpperCase();
+          const key = (a.nome ?? "").trim().toUpperCase();
           const cot = cotacoes[key];
+          const buscandoEste = carregando && !cot && key.length >= 2;
           return (
             <AtivoRow key={a.id} template={tplUsd}>
               <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
@@ -436,15 +449,25 @@ export function TabelaAtivos({
                   type="number"
                   value={a.cotacaoUSD ?? ""}
                   onChange={(e) => updateAtivo(a.id, { cotacaoUSD: parseFloat(e.target.value) || 0 })}
-                  style={{ textAlign: "right", paddingRight: cot && !cot.erro ? 72 : undefined }}
+                  style={{ textAlign: "right", paddingRight: (buscandoEste || (cot && !cot.erro) || cot?.erro) ? 72 : undefined }}
                   disabled={disabled}
                 />
-                {cot && !cot.erro && (
+                {buscandoEste && (
+                  <span style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#9CA3AF" }}>
+                    ⟳
+                  </span>
+                )}
+                {cot && !cot.erro && !buscandoEste && (
                   <QuoteBtn
                     cotacao={cot}
                     onApply={(v) => updateAtivo(a.id, { cotacaoUSD: v })}
                     currency="US$"
                   />
+                )}
+                {cot?.erro && !buscandoEste && (
+                  <span style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#B45309", whiteSpace: "nowrap" as const }}>
+                    não encontrado
+                  </span>
                 )}
               </div>
               <SInput

@@ -28,6 +28,7 @@ interface Props {
   usdBrl: number;
   onUsdBrl: (v: number) => void;
   cotacoes?: Record<string, Cotacao>;
+  carregandoCotacoes?: boolean;
   onBuscarCotacao?: (tickers: TickerRequest[]) => void;
 }
 
@@ -49,7 +50,7 @@ const GRUPO_DOTS: Record<string, string> = {
 
 const GRUPO_ORDER = ["Renda Fixa", "Renda Variável Brasil", "Internacional", "Criptoativos"];
 
-export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotacoes = {}, onBuscarCotacao }: Props) {
+export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotacoes = {}, carregandoCotacoes = false, onBuscarCotacao }: Props) {
   const [iaOpen, setIaOpen] = useState(false);
   const [iaArquivos, setIaArquivos] = useState<File[]>([]);
   const [iaLoading, setIaLoading] = useState(false);
@@ -343,6 +344,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotaco
                     usdBrl={usdBrl}
                     modo="atual"
                     cotacoes={cotacoes}
+                    carregando={carregandoCotacoes}
                     onBuscarCotacao={onBuscarCotacao}
                   />
                 </div>
