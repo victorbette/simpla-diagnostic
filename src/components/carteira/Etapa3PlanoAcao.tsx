@@ -14,7 +14,7 @@ interface Props {
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
 
 const TIPO_CONFIG: Record<PlanoAcaoItem["acao"], { bg: string; color: string; label: string }> = {
-  manter:           { bg: "#F0F7FF",  color: "#374151", label: "→ Manter" },
+  manter:           { bg: "#F3F4F6",  color: "#6B7280", label: "→ Manter" },
   aportar:          { bg: "#DCFCE7",  color: "#15803D", label: "↑ Aportar" },
   resgatar_parcial: { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar" },
   resgatar_total:   { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar tudo" },
@@ -34,17 +34,23 @@ export function Etapa3PlanoAcao({
   const [filtro, setFiltro] = useState<Filtro>("todos");
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
-    onPlanoAcao(planoAcao.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    onPlanoAcao(planoAcao.map((p) => {
+      if (p.id !== id) return p;
+      const next = { ...p, ...patch };
+      // when switching to manter, zero out the movimentação
+      if (patch.acao === 'manter') next.movimentacaoBRL = 0;
+      return next;
+    }));
   }
 
   const { totalAportes, totalResgates, saldoLiquido, nMovs } = useMemo(() => {
-    const ap = planoAcao.filter((p) => p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-    const re = planoAcao.filter((p) => p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+    const ap = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
+    const re = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
     return {
       totalAportes: ap,
       totalResgates: re,
       saldoLiquido: ap - re,
-      nMovs: planoAcao.filter((p) => p.acao !== "manter").length,
+      nMovs: planoAcao.filter((p) => p.acao !== 'manter').length,
     };
   }, [planoAcao]);
 
@@ -171,14 +177,16 @@ export function Etapa3PlanoAcao({
                 </div>
 
                 <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
-                <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorMetaBRL)}</span>
+                <span style={{ fontSize: 12, color: "#6B7280" }}>
+                  {item.acao === 'manter' ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
+                </span>
 
                 <span style={{
                   fontSize: 12, fontWeight: 600,
-                  color: item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
+                  color: item.acao === 'manter' ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
                 }}>
-                  {item.movimentacaoBRL === 0
-                    ? "—"
+                  {item.acao === 'manter' || item.movimentacaoBRL === 0
+                    ? formatBRL(0)
                     : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
                   }
                 </span>

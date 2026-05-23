@@ -10,27 +10,37 @@ export function gerarPlanoAcao(ativosAtuais: Ativo[], ativosRecomendados: Ativo[
   const plano: PlanoAcaoItem[] = [];
   const p = patrimonio || 1;
 
-  // Process recommended ativos
   for (const rec of ativosRecomendados) {
-    const atual = ativosAtuais.find(a => a.nome.trim().toLowerCase() === rec.nome.trim().toLowerCase());
+    const atual = ativosAtuais.find(
+      a => a.nome.trim().toLowerCase() === rec.nome.trim().toLowerCase() && a.card === rec.card
+    );
     const valorAtualBRL = atual?.valorBRL ?? 0;
-    const valorMetaBRL = rec.valorBRL;
-    const mov = Math.round((valorMetaBRL - valorAtualBRL) * 100) / 100;
+    const valorMetaBRL = rec.valorBRL ?? 0;
+    const diff = valorMetaBRL - valorAtualBRL;
 
-    let acao: PlanoAcaoItem['acao'] = 'manter';
-    if (!atual) acao = 'novo';
-    else if (mov > 100) acao = 'aportar';
-    else if (mov < -100) acao = Math.abs(mov) >= valorAtualBRL * 0.95 ? 'resgatar_total' : 'resgatar_parcial';
+    let acao: PlanoAcaoItem['acao'];
+    if (!atual || valorAtualBRL === 0) {
+      acao = 'novo';
+    } else if (Math.abs(diff) < 1) {
+      acao = 'manter';
+    } else if (diff > 0) {
+      acao = 'aportar';
+    } else {
+      acao = Math.abs(diff) >= valorAtualBRL * 0.95 ? 'resgatar_total' : 'resgatar_parcial';
+    }
 
-    const abs = Math.abs(mov);
+    const movimentacaoBRL = acao === 'manter' ? 0 : Math.round(diff * 100) / 100;
+    const abs = Math.abs(movimentacaoBRL);
     const prioridade: PlanoAcaoItem['prioridade'] = abs > p * 0.1 ? 'alta' : abs > p * 0.03 ? 'media' : 'baixa';
 
-    plano.push({ id: genId(), card: rec.card, nomeAtivo: rec.nome, segmento: rec.segmento, acao, valorAtualBRL, valorMetaBRL, movimentacaoBRL: mov, observacao: '', prioridade });
+    plano.push({ id: genId(), card: rec.card, nomeAtivo: rec.nome, segmento: rec.segmento, acao, valorAtualBRL, valorMetaBRL, movimentacaoBRL, observacao: '', prioridade });
   }
 
-  // Ativos only in atual (not in recommended) → resgatar_total
   for (const atual of ativosAtuais) {
-    if (!ativosRecomendados.find(r => r.nome.trim().toLowerCase() === atual.nome.trim().toLowerCase())) {
+    const naRec = ativosRecomendados.find(
+      r => r.nome.trim().toLowerCase() === atual.nome.trim().toLowerCase() && r.card === atual.card
+    );
+    if (!naRec) {
       const abs = atual.valorBRL;
       plano.push({ id: genId(), card: atual.card, nomeAtivo: atual.nome, segmento: atual.segmento, acao: 'resgatar_total', valorAtualBRL: atual.valorBRL, valorMetaBRL: 0, movimentacaoBRL: -atual.valorBRL, observacao: '', prioridade: abs > p * 0.03 ? 'media' : 'baixa' });
     }

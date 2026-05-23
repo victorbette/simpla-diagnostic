@@ -105,21 +105,24 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
     [ativosRecomendados, totalRec]
   );
 
-  const totalAportes = planoAcao.filter((p) => p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-  const totalResgates = planoAcao.filter((p) => p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+  const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
+  const totalResgates = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
 
   const aportes = planoAcao.filter((p) => p.acao === "aportar" || p.acao === "novo");
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
   const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
-  // Per card breakdown
+  // Per card breakdown — "manter" items contribute valorAtualBRL, others contribute valorAtual + movimentação
   const cardTotais = useMemo(
     () => CARD_ORDER.map((cardId) => {
       const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
+      const projetado = planoAcao
+        .filter((p) => p.card === cardId)
+        .reduce((s, p) => s + (p.acao === 'manter' ? p.valorAtualBRL : p.valorAtualBRL + p.movimentacaoBRL), 0);
       const meta = ativosRecomendados.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
-      return { cardId, atual, meta, dif: meta - atual };
+      return { cardId, atual, meta: projetado || meta, dif: (projetado || meta) - atual };
     }),
-    [ativosAtuais, ativosRecomendados]
+    [ativosAtuais, ativosRecomendados, planoAcao]
   );
 
   const cardStyle = (accent: string): React.CSSProperties => ({
