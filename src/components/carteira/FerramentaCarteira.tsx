@@ -135,23 +135,6 @@ export function FerramentaCarteira({
     if (etapa === 1) atualizarCotacoes();
   }, [etapa]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Teste pontual da Edge Function — verificar console do browser
-  useEffect(() => {
-    fetch("https://gimcyirqinmlwbakcnhq.supabase.co/functions/v1/cotacoes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tickers: [
-          { ticker: "PETR4", tipo: "acoes" },
-          { ticker: "VOO",   tipo: "exterior" },
-          { ticker: "BTC",   tipo: "cripto" },
-        ],
-      }),
-    })
-      .then((r) => r.json())
-      .then((d) => console.log("[TESTE COTAÇÕES]", d))
-      .catch((e) => console.error("[TESTE COTAÇÕES ERRO]", e));
-  }, []);
   // ────────────────────────────────────────────────────────────────────────────
 
   function patch(p: Partial<State>) { setState((prev) => ({ ...prev, ...p })); }

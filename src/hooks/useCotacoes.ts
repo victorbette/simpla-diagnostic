@@ -16,12 +16,192 @@ export interface TickerRequest {
   tipo: "acoes" | "fiis" | "exterior" | "cripto";
 }
 
-const EDGE_URL = "https://gimcyirqinmlwbakcnhq.supabase.co/functions/v1/cotacoes";
-
-// Module-level cache: ticker → { cotacao, timestamp }
+// Cache em memória — 5 minutos
 const cache: Record<string, { cotacao: Cotacao; ts: number }> = {};
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const CACHE_TTL = 5 * 60 * 1000;
 
+// ── BRAPI — Ações BR e FIIs ──────────────────────────────────
+async function buscarBrapi(
+  tickers: TickerRequest[]
+): Promise<Record<string, Cotacao>> {
+  const resultado: Record<string, Cotacao> = {};
+  if (tickers.length === 0) return resultado;
+
+  const simbolos = tickers.map((t) => t.ticker.toUpperCase()).join(",");
+  const url = `https://brapi.dev/api/quote/${simbolos}?token=demo&fundamental=false`;
+
+  const resp = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!resp.ok) throw new Error(`Brapi erro ${resp.status}`);
+
+  const data = await resp.json();
+  const quotes: Record<string, unknown>[] = data?.results ?? [];
+
+  for (const quote of quotes) {
+    const raw = (quote.symbol as string) ?? "";
+    const ticker = raw.replace(".SA", "").toUpperCase();
+    const tipo = tickers.find((t) => t.ticker.toUpperCase() === ticker)?.tipo ?? "acoes";
+
+    resultado[ticker] = {
+      ticker,
+      tipo,
+      preco: (quote.regularMarketPrice as number) ?? 0,
+      moeda: "BRL",
+      nome: (quote.shortName as string) ?? (quote.longName as string) ?? ticker,
+      variacaoPct: (quote.regularMarketChangePercent as number) ?? 0,
+      atualizadoEm: new Date().toISOString(),
+    };
+  }
+
+  // Marcar como não encontrado os que não vieram
+  for (const t of tickers) {
+    const key = t.ticker.toUpperCase();
+    if (!resultado[key]) {
+      resultado[key] = {
+        ticker: key,
+        tipo: t.tipo,
+        preco: 0,
+        moeda: "BRL",
+        nome: key,
+        variacaoPct: 0,
+        atualizadoEm: new Date().toISOString(),
+        erro: "não encontrado",
+      };
+    }
+  }
+
+  return resultado;
+}
+
+// ── COINGECKO — Criptoativos ─────────────────────────────────
+const CRIPTO_IDS: Record<string, string> = {
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  BNB: "binancecoin",
+  SOL: "solana",
+  ADA: "cardano",
+  DOT: "polkadot",
+  AVAX: "avalanche-2",
+  MATIC: "matic-network",
+  LINK: "chainlink",
+  UNI: "uniswap",
+  XRP: "ripple",
+  DOGE: "dogecoin",
+  SHIB: "shiba-inu",
+  LTC: "litecoin",
+};
+
+async function buscarCripto(tickers: TickerRequest[]): Promise<Record<string, Cotacao>> {
+  const resultado: Record<string, Cotacao> = {};
+  if (tickers.length === 0) return resultado;
+
+  const ids = tickers
+    .map((t) => CRIPTO_IDS[t.ticker.toUpperCase()])
+    .filter(Boolean)
+    .join(",");
+
+  if (!ids) {
+    for (const t of tickers) {
+      resultado[t.ticker.toUpperCase()] = {
+        ticker: t.ticker.toUpperCase(),
+        tipo: "cripto",
+        preco: 0,
+        moeda: "BRL",
+        nome: t.ticker,
+        variacaoPct: 0,
+        atualizadoEm: new Date().toISOString(),
+        erro: "ticker cripto não mapeado",
+      };
+    }
+    return resultado;
+  }
+
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,brl&include_24hr_change=true`;
+  const resp = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!resp.ok) throw new Error(`CoinGecko erro ${resp.status}`);
+
+  const data = await resp.json();
+
+  for (const t of tickers) {
+    const key = t.ticker.toUpperCase();
+    const id = CRIPTO_IDS[key];
+    const quote = id ? (data[id] as Record<string, number> | undefined) : null;
+
+    if (!quote) {
+      resultado[key] = {
+        ticker: key,
+        tipo: "cripto",
+        preco: 0,
+        moeda: "BRL",
+        nome: key,
+        variacaoPct: 0,
+        atualizadoEm: new Date().toISOString(),
+        erro: "não encontrado",
+      };
+      continue;
+    }
+
+    resultado[key] = {
+      ticker: key,
+      tipo: "cripto",
+      preco: quote.brl ?? quote.usd ?? 0,
+      moeda: "BRL",
+      nome: key,
+      variacaoPct: quote.usd_24h_change ?? 0,
+      atualizadoEm: new Date().toISOString(),
+    };
+  }
+
+  return resultado;
+}
+
+// ── YAHOO FINANCE via allorigins — Internacional ─────────────
+async function buscarInternacional(tickers: TickerRequest[]): Promise<Record<string, Cotacao>> {
+  const resultado: Record<string, Cotacao> = {};
+  if (tickers.length === 0) return resultado;
+
+  const simbolos = tickers.map((t) => t.ticker.toUpperCase()).join(",");
+  const yahooUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${simbolos}&fields=regularMarketPrice,currency,shortName,regularMarketChangePercent`;
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`;
+
+  const resp = await fetch(proxyUrl, { headers: { Accept: "application/json" } });
+  if (!resp.ok) throw new Error(`Internacional erro ${resp.status}`);
+
+  const data = await resp.json();
+  const quotes: Record<string, unknown>[] = data?.quoteResponse?.result ?? [];
+
+  for (const t of tickers) {
+    const key = t.ticker.toUpperCase();
+    const quote = quotes.find((q) => (q.symbol as string)?.toUpperCase() === key);
+
+    if (!quote) {
+      resultado[key] = {
+        ticker: key,
+        tipo: t.tipo,
+        preco: 0,
+        moeda: "USD",
+        nome: key,
+        variacaoPct: 0,
+        atualizadoEm: new Date().toISOString(),
+        erro: "não encontrado",
+      };
+      continue;
+    }
+
+    resultado[key] = {
+      ticker: key,
+      tipo: t.tipo,
+      preco: (quote.regularMarketPrice as number) ?? 0,
+      moeda: (quote.currency as string) ?? "USD",
+      nome: (quote.shortName as string) ?? key,
+      variacaoPct: (quote.regularMarketChangePercent as number) ?? 0,
+      atualizadoEm: new Date().toISOString(),
+    };
+  }
+
+  return resultado;
+}
+
+// ── HOOK PRINCIPAL ───────────────────────────────────────────
 export function useCotacoes() {
   const [cotacoes, setCotacoes] = useState<Record<string, Cotacao>>({});
   const [carregando, setCarregando] = useState(false);
@@ -31,6 +211,7 @@ export function useCotacoes() {
   const buscarCotacoes = useCallback(async (tickers: TickerRequest[]) => {
     if (tickers.length === 0) return;
 
+    // Verificar cache
     const agora = Date.now();
     const cached: Record<string, Cotacao> = {};
     const precisaBuscar: TickerRequest[] = [];
@@ -58,34 +239,37 @@ export function useCotacoes() {
     setErro(null);
 
     try {
-      const resp = await fetch(EDGE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tickers: precisaBuscar }),
-        signal: abortRef.current.signal,
-      });
+      // Separar por fonte
+      const brTickers = precisaBuscar.filter((t) => t.tipo === "acoes" || t.tipo === "fiis");
+      const criptoTickers = precisaBuscar.filter((t) => t.tipo === "cripto");
+      const extTickers = precisaBuscar.filter((t) => t.tipo === "exterior");
 
-      if (!resp.ok) {
-        const texto = await resp.text();
-        throw new Error(`Erro ${resp.status}: ${texto}`);
+      // Buscar em paralelo
+      const [brResult, criptoResult, extResult] = await Promise.allSettled([
+        brTickers.length > 0 ? buscarBrapi(brTickers) : Promise.resolve({}),
+        criptoTickers.length > 0 ? buscarCripto(criptoTickers) : Promise.resolve({}),
+        extTickers.length > 0 ? buscarInternacional(extTickers) : Promise.resolve({}),
+      ]);
+
+      const novas: Record<string, Cotacao> = {};
+
+      for (const result of [brResult, criptoResult, extResult]) {
+        if (result.status === "fulfilled") {
+          Object.assign(novas, result.value);
+        } else {
+          console.error("[useCotacoes] erro parcial:", result.reason);
+        }
       }
 
-      const data = await resp.json();
-      const novas: Record<string, Cotacao> = data?.cotacoes ?? {};
-
       for (const [key, cot] of Object.entries(novas)) {
-        cache[key] = { cotacao: cot as Cotacao, ts: Date.now() };
+        cache[key] = { cotacao: cot, ts: Date.now() };
       }
 
       setCotacoes((prev) => ({ ...prev, ...novas }));
     } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        console.error("[useCotacoes] erro completo:", {
-          message: err.message,
-          err,
-        });
-        setErro(err.message ?? "Erro desconhecido");
-      }
+      if (err instanceof Error && err.name === "AbortError") return;
+      console.error("[useCotacoes] erro:", err);
+      setErro(err instanceof Error ? err.message : "Erro ao buscar cotações");
     } finally {
       setCarregando(false);
     }
