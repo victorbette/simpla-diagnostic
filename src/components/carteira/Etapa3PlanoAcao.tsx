@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { ItemPlanoAcao } from "@/lib/carteira/types";
@@ -17,29 +16,47 @@ interface Props {
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo_ativo";
 
-const ACAO_BADGE_STYLE: Record<ItemPlanoAcao["tipo"], { bg: string; color: string; label: string }> = {
-  manter:          { bg: "#F0F7FF", color: "#111827", label: "Manter" },
-  aportar:         { bg: "#EAF0F5", color: "#1E40AF", label: "Aportar" },
-  resgatar_parcial:{ bg: "#EFF6FF", color: "#2563EB", label: "Resgatar parcial" },
-  resgatar_total:  { bg: "#FEE2E2", color: "#B91C1C", label: "Resgatar tudo" },
-  novo_ativo:      { bg: "#DBEAFE", color: "#000000", label: "Novo ativo" },
+const TIPO_CONFIG: Record<ItemPlanoAcao["tipo"], { bg: string; color: string; label: string }> = {
+  manter:           { bg: "#F0F7FF",  color: "#374151", label: "→ Manter" },
+  aportar:          { bg: "#DCFCE7",  color: "#15803D", label: "↑ Aportar" },
+  resgatar_parcial: { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar" },
+  resgatar_total:   { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar tudo" },
+  novo_ativo:       { bg: "#DBEAFE",  color: "#1E40AF", label: "Novo ativo" },
 };
 
 function AcaoBadge({ tipo }: { tipo: ItemPlanoAcao["tipo"] }) {
-  const { bg, color, label } = ACAO_BADGE_STYLE[tipo];
+  const { bg, color, label } = TIPO_CONFIG[tipo];
   return (
-    <span style={{ backgroundColor: bg, color, fontSize: 11, borderRadius: 4, padding: "2px 6px" }}>
+    <span style={{
+      backgroundColor: bg, color, fontSize: 11, borderRadius: 4,
+      padding: "2px 6px", whiteSpace: "nowrap" as const, flexShrink: 0,
+    }}>
       {label}
     </span>
   );
 }
 
+function SInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      {...props}
+      style={{
+        border: `0.5px solid ${focused ? "#2563EB" : "#BFDBFE"}`,
+        borderRadius: 6, padding: "4px 8px", fontSize: 12,
+        backgroundColor: "white", color: "#111827", outline: "none",
+        width: "100%", boxSizing: "border-box" as const,
+        boxShadow: focused ? "0 0 0 2px rgba(37,99,235,0.15)" : "none",
+        ...props.style,
+      }}
+      onFocus={(e) => { setFocused(true); props.onFocus?.(e); }}
+      onBlur={(e) => { setFocused(false); props.onBlur?.(e); }}
+    />
+  );
+}
+
 export function Etapa3PlanoAcao({
-  planoAcao,
-  onPlanoAcao,
-  patrimonio: _patrimonio,
-  notaConsultor,
-  onNotaConsultor,
+  planoAcao, onPlanoAcao, patrimonio: _patrimonio, notaConsultor, onNotaConsultor,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
 
@@ -48,77 +65,65 @@ export function Etapa3PlanoAcao({
   }
 
   const { totalAportes, totalResgates, saldoLiquido, nMovs } = useMemo(() => {
-    const ap = planoAcao
-      .filter((p) => p.movimentacaoBRL > 0)
-      .reduce((s, p) => s + p.movimentacaoBRL, 0);
-    const re = planoAcao
-      .filter((p) => p.movimentacaoBRL < 0)
-      .reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
-    return {
-      totalAportes: ap,
-      totalResgates: re,
-      saldoLiquido: ap - re,
-      nMovs: planoAcao.filter((p) => p.tipo !== "manter").length,
-    };
+    const ap = planoAcao.filter((p) => p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
+    const re = planoAcao.filter((p) => p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+    return { totalAportes: ap, totalResgates: re, saldoLiquido: ap - re, nMovs: planoAcao.filter((p) => p.tipo !== "manter").length };
   }, [planoAcao]);
 
   const filtrados = useMemo(() => {
     if (filtro === "todos") return planoAcao;
-    if (filtro === "resgatar")
-      return planoAcao.filter(
-        (p) => p.tipo === "resgatar_parcial" || p.tipo === "resgatar_total"
-      );
+    if (filtro === "resgatar") return planoAcao.filter((p) => p.tipo === "resgatar_parcial" || p.tipo === "resgatar_total");
     return planoAcao.filter((p) => p.tipo === filtro);
   }, [planoAcao, filtro]);
 
-  // Group by SIMPLA_CARDS order, using item.card
   const cardsComItens: SimplaCardId[] = SIMPLA_CARDS.map((c) => c.id).filter((k) =>
     filtrados.some((p) => p.card === k)
   );
 
+  const selectStyle: React.CSSProperties = {
+    border: "0.5px solid #BFDBFE", borderRadius: 6,
+    padding: "4px 6px", fontSize: 12,
+    backgroundColor: "white", color: "#111827",
+    cursor: "pointer", outline: "none",
+  };
+
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", borderTop: "3px solid #15803D", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total aportes</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(totalAportes)}</p>
-        </div>
-        <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", borderTop: "3px solid #B91C1C", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Total resgates</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#B91C1C", margin: 0 }}>{formatBRL(totalResgates)}</p>
-        </div>
-        <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", borderTop: `3px solid ${saldoLiquido >= 0 ? "#15803D" : "#B91C1C"}`, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Saldo líquido</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", margin: 0 }}>{formatBRL(saldoLiquido)}</p>
-        </div>
-        <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", borderTop: "3px solid #1E3A8A", padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>Movimentações</p>
-          <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: 0 }}>{nMovs}</p>
-        </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        {[
+          { label: "Total Aportes",   value: formatBRL(totalAportes),  color: "#15803D", border: "#15803D" },
+          { label: "Total Resgates",  value: formatBRL(totalResgates), color: "#B91C1C", border: "#B91C1C" },
+          { label: "Saldo Líquido",   value: formatBRL(saldoLiquido),  color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", border: "#1E3A8A" },
+          { label: "Movimentações",   value: String(nMovs),            color: "#111827", border: "#6B7280" },
+        ].map(({ label, value, color, border }) => (
+          <div key={label} style={{
+            border: "0.5px solid #BFDBFE", borderTop: `3px solid ${border}`,
+            borderRadius: 8, padding: "12px 14px", backgroundColor: "white",
+          }}>
+            <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.05em", margin: "0 0 6px" }}>{label}</p>
+            <p style={{ fontSize: 20, fontWeight: 700, color, margin: 0 }}>{value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Filter buttons */}
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-        {(
-          [
-            ["todos", "Todos"],
-            ["aportar", "Aportar"],
-            ["resgatar", "Resgatar"],
-            ["manter", "Manter"],
-            ["novo_ativo", "Novo ativo"],
-          ] as [Filtro, string][]
-        ).map(([f, label]) => (
+      {/* Filter pills */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+        {([
+          ["todos", "Todos"],
+          ["aportar", "Aportar"],
+          ["resgatar", "Resgatar"],
+          ["manter", "Manter"],
+          ["novo_ativo", "Novo ativo"],
+        ] as [Filtro, string][]).map(([f, label]) => (
           <button
             key={f}
             onClick={() => setFiltro(f)}
             style={{
-              padding: "4px 12px",
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-              border: filtro === f ? "1.5px solid #000000" : "1px solid #BFDBFE",
+              padding: "4px 12px", borderRadius: 6,
+              fontSize: 12, fontWeight: 500, cursor: "pointer",
+              border: filtro === f ? "none" : "0.5px solid #BFDBFE",
               backgroundColor: filtro === f ? "#1E3A8A" : "white",
               color: filtro === f ? "white" : "#6B7280",
             }}
@@ -135,125 +140,121 @@ export function Etapa3PlanoAcao({
         const groupTotal = groupItems.reduce((s, p) => s + p.movimentacaoBRL, 0);
 
         return (
-          <div key={cardId} className="rounded-lg border overflow-hidden">
-            <div style={{ backgroundColor: "#F0F7FF", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #F0F7FF" }}>
+          <div key={cardId} style={{ border: "0.5px solid #BFDBFE", borderRadius: 8, overflow: "hidden", backgroundColor: "white" }}>
+            {/* Group header */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              backgroundColor: "#F8FAFC", padding: "8px 16px",
+              borderBottom: "0.5px solid #BFDBFE",
+            }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span
-                  style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: card.cor }}
-                />
-                <span style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>
-                  {card.grupo} — {card.label}
-                </span>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: card.cor, display: "inline-block" }} />
+                <span style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{card.grupo} — {card.label}</span>
               </div>
-              <span
-                style={{ fontSize: 13, fontWeight: 500, color: groupTotal > 0 ? "#15803D" : groupTotal < 0 ? "#B91C1C" : "#9CA3AF" }}
-              >
-                {groupTotal === 0
-                  ? "—"
-                  : `${groupTotal > 0 ? "+" : ""}${formatBRL(groupTotal)}`}
+              <span style={{
+                fontSize: 12, fontWeight: 500, padding: "2px 8px", borderRadius: 6,
+                backgroundColor: groupTotal > 0 ? "#DCFCE7" : groupTotal < 0 ? "#FEE2E2" : "#F0F7FF",
+                color: groupTotal > 0 ? "#15803D" : groupTotal < 0 ? "#B91C1C" : "#9CA3AF",
+              }}>
+                {groupTotal === 0 ? "—" : `${groupTotal > 0 ? "+" : ""}${formatBRL(groupTotal)}`}
               </span>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead style={{ backgroundColor: "#1E3A8A" }}>
-                  <tr>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Ativo</th>
-                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Atual R$</th>
-                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Meta R$</th>
-                    <th style={{ padding: "8px 12px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11, whiteSpace: "nowrap" }}>Movimentação</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Ação</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Observação</th>
-                    <th style={{ padding: "8px 12px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Prioridade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupItems.map((item) => (
-                    <tr key={item.id} className="border-t">
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <AcaoBadge tipo={item.tipo} />
-                          <span
-                            className="inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 font-medium"
-                            style={{
-                              backgroundColor: card.cor + "18",
-                              color: card.cor,
-                            }}
-                          >
-                            {card.label}
-                          </span>
-                          <span className="font-medium">{item.nomeAtivo}</span>
-                          {item.segmento && (
-                            <span className="text-muted-foreground">· {item.segmento}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">
-                        {formatBRL(item.valorAtualBRL)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-muted-foreground whitespace-nowrap">
-                        {formatBRL(item.valorMetaBRL)}
-                      </td>
-                      <td
-                        style={{ padding: "8px 12px", textAlign: "right", fontWeight: 500, whiteSpace: "nowrap", color: item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF" }}
-                      >
-                        {item.movimentacaoBRL === 0
-                          ? "—"
-                          : `${item.movimentacaoBRL > 0 ? "+" : ""}${formatBRL(
-                              item.movimentacaoBRL
-                            )}`}
-                      </td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={item.tipo}
-                          className="text-xs border rounded px-1 py-0.5 bg-background"
-                          onChange={(e) =>
-                            updateItem(item.id, {
-                              tipo: e.target.value as ItemPlanoAcao["tipo"],
-                            })
-                          }
-                        >
-                          <option value="manter">Manter</option>
-                          <option value="aportar">Aportar</option>
-                          <option value="resgatar_parcial">Resgatar parcialmente</option>
-                          <option value="resgatar_total">Resgatar tudo</option>
-                          <option value="novo_ativo">Novo ativo</option>
-                        </select>
-                      </td>
-                      <td className="px-3 py-2 min-w-[140px]">
-                        <Input
-                          className="h-7 text-xs"
-                          value={item.observacao}
-                          onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                          placeholder="observação..."
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={item.prioridade}
-                          className="text-xs border rounded px-1 py-0.5 bg-background"
-                          onChange={(e) =>
-                            updateItem(item.id, {
-                              prioridade: e.target.value as ItemPlanoAcao["prioridade"],
-                            })
-                          }
-                        >
-                          <option value="alta">Alta</option>
-                          <option value="media">Média</option>
-                          <option value="baixa">Baixa</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+            {/* Table header */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr",
+              gap: 8, padding: "8px 16px",
+              backgroundColor: "#1E3A8A",
+            }}>
+              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Ação", "Observação", "Prioridade"].map((h) => (
+                <span key={h} style={{ color: "white", fontSize: 11, fontWeight: 600 }}>{h}</span>
+              ))}
             </div>
+
+            {/* Rows */}
+            {groupItems.map((item) => {
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr",
+                    gap: 8, padding: "10px 16px",
+                    borderTop: "0.5px solid #BFDBFE",
+                    alignItems: "center",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                >
+                  {/* Col: Ativo */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" as const }}>
+                      <AcaoBadge tipo={item.tipo} />
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                    </div>
+                    {item.segmento && (
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{card.label} · {item.segmento}</span>
+                    )}
+                  </div>
+
+                  {/* Col: Atual */}
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
+
+                  {/* Col: Meta */}
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorMetaBRL)}</span>
+
+                  {/* Col: Movimentação */}
+                  <span style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
+                  }}>
+                    {item.movimentacaoBRL === 0
+                      ? "—"
+                      : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
+                    }
+                  </span>
+
+                  {/* Col: Ação */}
+                  <select
+                    value={item.tipo}
+                    onChange={(e) => updateItem(item.id, { tipo: e.target.value as ItemPlanoAcao["tipo"] })}
+                    style={selectStyle}
+                  >
+                    <option value="manter">Manter</option>
+                    <option value="aportar">Aportar</option>
+                    <option value="resgatar_parcial">Resgatar parcialmente</option>
+                    <option value="resgatar_total">Resgatar tudo</option>
+                    <option value="novo_ativo">Novo ativo</option>
+                  </select>
+
+                  {/* Col: Observação */}
+                  <SInput
+                    value={item.observacao}
+                    onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                    placeholder="observação..."
+                  />
+
+                  {/* Col: Prioridade */}
+                  <select
+                    value={item.prioridade}
+                    onChange={(e) => updateItem(item.id, { prioridade: e.target.value as ItemPlanoAcao["prioridade"] })}
+                    style={selectStyle}
+                  >
+                    <option value="alta">Alta</option>
+                    <option value="media">Média</option>
+                    <option value="baixa">Baixa</option>
+                  </select>
+                </div>
+              );
+            })}
           </div>
         );
       })}
 
       {/* Empty state */}
       {filtrados.length === 0 && (
-        <div className="rounded-lg border bg-muted/40 p-8 text-center text-sm text-muted-foreground">
+        <div style={{ border: "0.5px solid #BFDBFE", borderRadius: 8, padding: 32, textAlign: "center", fontSize: 13, color: "#9CA3AF", backgroundColor: "white" }}>
           {planoAcao.length === 0
             ? "Plano de ação vazio. Defina a carteira recomendada na etapa anterior."
             : "Nenhum item corresponde ao filtro selecionado."}
@@ -261,16 +262,15 @@ export function Etapa3PlanoAcao({
       )}
 
       {/* Nota do consultor */}
-      <div className="space-y-2">
-        <Label>Notas e justificativas do plano</Label>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <Label style={{ fontSize: 12, color: "#374151" }}>Notas e justificativas do plano</Label>
         <Textarea
           value={notaConsultor}
           onChange={(e) => onNotaConsultor(e.target.value)}
           placeholder="Explique os pontos principais do plano, justifique as movimentações relevantes..."
-          className="min-h-[140px]"
+          className="min-h-[120px]"
         />
       </div>
-
     </div>
   );
 }

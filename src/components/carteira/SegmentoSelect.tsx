@@ -22,21 +22,31 @@ export function SegmentoSelect({ cardId, value, onChange, disabled = false }: Pr
   if (!cardTemSegmentos(cardId)) return null;
 
   const card = getCard(cardId);
-  const cor = card.cor;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild disabled={disabled}>
         <button
-          className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer disabled:cursor-default disabled:opacity-60"
           style={{
-            backgroundColor: `${cor}18`,
-            borderColor: `${cor}4d`,
-            color: cor,
+            backgroundColor: "#DBEAFE",
+            color: "#1E40AF",
+            border: "0.5px solid #BFDBFE",
+            borderRadius: 99,
+            padding: "3px 8px",
+            fontSize: 11,
+            cursor: disabled ? "default" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 3,
+            opacity: disabled ? 0.6 : 1,
+            whiteSpace: "nowrap" as const,
+            transition: "background-color 150ms",
           }}
+          onMouseEnter={(e) => { if (!disabled) (e.currentTarget as HTMLElement).style.backgroundColor = "#BFDBFE"; }}
+          onMouseLeave={(e) => { if (!disabled) (e.currentTarget as HTMLElement).style.backgroundColor = "#DBEAFE"; }}
         >
           <span>{value || card.segmentoPadrao}</span>
-          <ChevronDown className="h-3 w-3 opacity-70" />
+          <ChevronDown style={{ width: 10, height: 10, opacity: 0.7 }} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[160px]">
@@ -48,7 +58,7 @@ export function SegmentoSelect({ cardId, value, onChange, disabled = false }: Pr
           >
             <span
               className="inline-flex h-4 w-4 items-center justify-center rounded-full shrink-0"
-              style={{ backgroundColor: value === seg ? cor : "transparent" }}
+              style={{ backgroundColor: value === seg ? "#2563EB" : "transparent" }}
             >
               {value === seg && <Check className="h-2.5 w-2.5 text-white" />}
             </span>

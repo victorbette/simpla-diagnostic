@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, ItemPlanoAcao, CarteiraResultado, SimplaCardId } from "@/lib/carteira/types";
 import {
   calcularPatrimonio,
@@ -17,13 +16,7 @@ const VALID_CARDS: SimplaCardId[] = ["resgate_rapido", "resgate_longo", "acoes",
 function migrarAtivo(a: any): Ativo {
   const rawCard = a.card ?? a.classe ?? a.klass;
   const card: SimplaCardId = VALID_CARDS.includes(rawCard) ? rawCard : "resgate_rapido";
-  return {
-    ...a,
-    card,
-    segmento: a.segmento ?? "",
-    valorBRL: Number(a.valorBRL) || 0,
-    pctCarteira: Number(a.pctCarteira) || 0,
-  };
+  return { ...a, card, segmento: a.segmento ?? "", valorBRL: Number(a.valorBRL) || 0, pctCarteira: Number(a.pctCarteira) || 0 };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +25,7 @@ function migrarItemPlano(p: any): ItemPlanoAcao {
   const card: SimplaCardId = VALID_CARDS.includes(rawCard) ? rawCard : "resgate_rapido";
   return { ...p, card, segmento: p.segmento ?? "" };
 }
+
 import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
 import { Etapa2CarteiraRecomendada } from "./Etapa2CarteiraRecomendada";
 import { Etapa3PlanoAcao } from "./Etapa3PlanoAcao";
@@ -50,7 +44,7 @@ type Etapa = 1 | 2 | 3 | 4;
 
 const ETAPAS = [
   { n: 1 as Etapa, label: "Carteira Atual" },
-  { n: 2 as Etapa, label: "Carteira Recomendada" },
+  { n: 2 as Etapa, label: "Recomendada" },
   { n: 3 as Etapa, label: "Plano de Ação" },
   { n: 4 as Etapa, label: "Resultado" },
 ];
@@ -73,6 +67,13 @@ function makeInitial(perfil: string | null, patrimonio: number): State {
   };
 }
 
+const PERFIL_LABELS: Record<string, string> = {
+  conservador: "Conservador",
+  conservador_moderado: "Cons. Moderado",
+  moderado: "Moderado",
+  arrojado: "Arrojado",
+};
+
 export function FerramentaCarteira({
   clientName, clientId, clientProfile, patrimonyInicial = 0, onClose, onSave,
 }: Props) {
@@ -87,17 +88,10 @@ export function FerramentaCarteira({
         const parsed = JSON.parse(raw) as any;
         const base = makeInitial(clientProfile, patrimonyInicial);
         return {
-          ...base,
-          ...parsed,
-          ativosAtuais: Array.isArray(parsed.ativosAtuais)
-            ? parsed.ativosAtuais.map(migrarAtivo)
-            : base.ativosAtuais,
-          ativosRecomendados: Array.isArray(parsed.ativosRecomendados)
-            ? parsed.ativosRecomendados.map(migrarAtivo)
-            : base.ativosRecomendados,
-          planoAcao: Array.isArray(parsed.planoAcao)
-            ? parsed.planoAcao.map(migrarItemPlano)
-            : base.planoAcao,
+          ...base, ...parsed,
+          ativosAtuais: Array.isArray(parsed.ativosAtuais) ? parsed.ativosAtuais.map(migrarAtivo) : base.ativosAtuais,
+          ativosRecomendados: Array.isArray(parsed.ativosRecomendados) ? parsed.ativosRecomendados.map(migrarAtivo) : base.ativosRecomendados,
+          planoAcao: Array.isArray(parsed.planoAcao) ? parsed.planoAcao.map(migrarItemPlano) : base.planoAcao,
         };
       }
     } catch {}
@@ -105,7 +99,6 @@ export function FerramentaCarteira({
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -121,21 +114,10 @@ export function FerramentaCarteira({
     [ativosAtuais, usdBrl, patrimonyInicial],
   );
 
-  function patch(p: Partial<State>) {
-    setState((prev) => ({ ...prev, ...p }));
-  }
-
-  function handleAtivosAtuais(ativos: Ativo[]) {
-    patch({ ativosAtuais: atualizarPcts(ativos, usdBrl) });
-  }
-
-  function handleUsdBrl(v: number) {
-    patch({ usdBrl: v, ativosAtuais: atualizarPcts(ativosAtuais, v) });
-  }
-
-  function handleAtivosRec(ativos: Ativo[]) {
-    patch({ ativosRecomendados: ativos });
-  }
+  function patch(p: Partial<State>) { setState((prev) => ({ ...prev, ...p })); }
+  function handleAtivosAtuais(ativos: Ativo[]) { patch({ ativosAtuais: atualizarPcts(ativos, usdBrl) }); }
+  function handleUsdBrl(v: number) { patch({ usdBrl: v, ativosAtuais: atualizarPcts(ativosAtuais, v) }); }
+  function handleAtivosRec(ativos: Ativo[]) { patch({ ativosRecomendados: ativos }); }
 
   function goToEtapa(n: Etapa) {
     if (n === 3) {
@@ -145,245 +127,243 @@ export function FerramentaCarteira({
     setEtapa(n);
   }
 
-  function handleNext() {
-    if (etapa < 4) goToEtapa((etapa + 1) as Etapa);
-  }
-
-  function handleBack() {
-    if (etapa > 1) setEtapa((etapa - 1) as Etapa);
-  }
+  function handleNext() { if (etapa < 4) goToEtapa((etapa + 1) as Etapa); }
+  function handleBack() { if (etapa > 1) setEtapa((etapa - 1) as Etapa); }
 
   function handleSave() {
     const resultado: CarteiraResultado = {
-      clientId,
-      patrimonio,
-      ativosAtuais,
-      ativosRecomendados,
-      planoAcao,
-      notaConsultor,
-      dataElaboracao: new Date().toISOString(),
-      usdBrl,
+      clientId, patrimonio, ativosAtuais, ativosRecomendados, planoAcao, notaConsultor,
+      dataElaboracao: new Date().toISOString(), usdBrl,
     };
-    try {
-      localStorage.setItem(storageKey, JSON.stringify({ ...state, savedAt: new Date().toISOString() }));
-    } catch {}
+    try { localStorage.setItem(storageKey, JSON.stringify({ ...state, savedAt: new Date().toISOString() })); } catch {}
     onSave?.(resultado);
   }
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const PERFIL_LABELS: Record<string, string> = {
-    conservador: "Conservador",
-    conservador_moderado: "Conservador Moderado",
-    moderado: "Moderado",
-    arrojado: "Arrojado",
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: "#F0F7FF" }}>
-      {/* Header */}
-      <header className="shrink-0" style={{ backgroundColor: "#1E3A8A" }}>
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            onClick={onClose}
-            className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-colors"
-            style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)")}
-            aria-label="Fechar"
-          >
-            <X className="h-4 w-4 text-white" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-bold text-white" style={{ fontSize: "18px" }}>
-                Gestão de Carteira
-              </span>
-              <span className="text-sm font-medium" style={{ color: "#3B82F6" }}>
-                {clientName}
-              </span>
-              {clientProfile && (
-                <span
-                  className="rounded-full text-xs px-2 py-0.5 text-white"
-                  style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
-                >
-                  {PERFIL_LABELS[clientProfile] ?? clientProfile}
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="shrink-0 flex items-center gap-2">
-            <span style={{ fontSize: 11, color: "#3B82F6", display: "flex", alignItems: "center", gap: 4 }}>
-              ● Dados salvos automaticamente
-            </span>
-            <button
-              onClick={() => { if (window.confirm("Limpar todos os dados da carteira?")) { setState(makeInitial(clientProfile, patrimonyInicial)); try { localStorage.removeItem(storageKey); } catch {} } }}
-              style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}
-            >
-              Limpar dados
-            </button>
-          </div>
-          {patrimonio > 0 && (
-            <div
-              className="shrink-0 text-right rounded-md px-3 py-1.5 border"
-              style={{ borderColor: "#3B82F6" }}
-            >
-              <p className="text-xs" style={{ color: "#3B82F6" }}>Patrimônio</p>
-              <p className="font-semibold text-sm text-white">{formatBRL(patrimonio)}</p>
-            </div>
-          )}
-        </div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", backgroundColor: "#F0F7FF" }}>
 
-        {/* Stepper */}
-        <div className="px-4 pb-3 overflow-x-auto">
-          <div className="flex items-center min-w-max">
-            {ETAPAS.map((e, i) => {
-              const isCurrent = e.n === etapa;
-              const isDone = e.n < etapa;
-              return (
-                <div key={e.n} className="flex items-center">
-                  <button
-                    onClick={() => e.n <= etapa && goToEtapa(e.n)}
-                    disabled={e.n > etapa}
-                    className={cn(
-                      "flex items-center gap-2 px-2 py-1 transition-colors rounded",
-                      e.n > etapa ? "cursor-default" : "cursor-pointer",
-                    )}
-                  >
-                    {/* Circle indicator */}
-                    <span
-                      className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold shrink-0"
-                      style={
-                        isDone
-                          ? { backgroundColor: "#15803D", color: "#fff" }
-                          : isCurrent
-                          ? { backgroundColor: "#fff", color: "#000000" }
-                          : { backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", border: "1.5px solid rgba(255,255,255,0.3)" }
-                      }
-                    >
-                      {isDone ? "✓" : e.n}
-                    </span>
-                    {/* Label */}
-                    <span
-                      className="text-xs font-medium whitespace-nowrap"
-                      style={
-                        isCurrent
-                          ? { color: "#fff" }
-                          : isDone
-                          ? { color: "rgba(255,255,255,0.7)" }
-                          : { color: "rgba(255,255,255,0.35)" }
-                      }
-                    >
-                      {e.label}
-                    </span>
-                  </button>
-                  {i < ETAPAS.length - 1 && (
-                    <div
-                      className="mx-1 shrink-0"
-                      style={{
-                        width: "24px",
-                        height: "1.5px",
-                        backgroundColor: isDone ? "#15803D" : "rgba(255,255,255,0.2)",
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+      {/* ── HEADER ── */}
+      <header style={{
+        backgroundColor: "#1E3A8A", flexShrink: 0,
+        padding: "12px 20px", display: "flex", alignItems: "center", gap: 10,
+      }}>
+        <button
+          onClick={onClose}
+          aria-label="Fechar"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 28, height: 28, borderRadius: "50%",
+            border: "none", cursor: "pointer", flexShrink: 0,
+            backgroundColor: "rgba(255,255,255,0.1)",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)")}
+        >
+          <X style={{ width: 16, height: 16, color: "#93C5FD" }} />
+        </button>
+
+        <span style={{ color: "white", fontSize: 15, fontWeight: 500, flexShrink: 0 }}>Gestão de Carteira</span>
+        <span style={{ color: "#93C5FD", fontSize: 13, flexShrink: 0 }}>{clientName}</span>
+        {clientProfile && (
+          <span style={{
+            backgroundColor: "rgba(255,255,255,0.15)", color: "#93C5FD",
+            borderRadius: 999, fontSize: 11, padding: "2px 8px", flexShrink: 0,
+          }}>
+            {PERFIL_LABELS[clientProfile] ?? clientProfile}
+          </span>
+        )}
+
+        <div style={{ flex: 1 }} />
+
+        <span style={{ color: "#93C5FD", fontSize: 11, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+          ● Dados salvos automaticamente
+        </span>
+        <button
+          onClick={() => {
+            if (window.confirm("Limpar todos os dados da carteira?")) {
+              setState(makeInitial(clientProfile, patrimonyInicial));
+              try { localStorage.removeItem(storageKey); } catch {}
+            }
+          }}
+          style={{
+            border: "1px solid rgba(255,255,255,0.2)", color: "white",
+            backgroundColor: "rgba(255,255,255,0.08)", fontSize: 11,
+            padding: "4px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.15)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+        >
+          Limpar dados
+        </button>
+        {patrimonio > 0 && (
+          <div style={{
+            backgroundColor: "#2563EB", color: "white",
+            padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500, flexShrink: 0,
+          }}>
+            Patrimônio {formatBRL(patrimonio)}
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-screen-xl px-4 py-6">
-          {etapa === 1 && (
-            <Etapa1CarteiraAtual
-              ativos={ativosAtuais}
-              onAtivos={handleAtivosAtuais}
-              usdBrl={usdBrl}
-              onUsdBrl={handleUsdBrl}
-            />
-          )}
-          {etapa === 2 && (
-            <Etapa2CarteiraRecomendada
-              ativosRec={ativosRecomendados}
-              onAtivosRec={handleAtivosRec}
-              ativosAtuais={ativosAtuais}
-              patrimonio={patrimonio}
-              clientProfile={clientProfile}
-            />
-          )}
-          {etapa === 3 && (
-            <Etapa3PlanoAcao
-              planoAcao={planoAcao}
-              onPlanoAcao={(p) => patch({ planoAcao: p })}
-              patrimonio={patrimonio}
-              notaConsultor={notaConsultor}
-              onNotaConsultor={(s) => patch({ notaConsultor: s })}
-            />
-          )}
-          {etapa === 4 && (
-            <Etapa4Resultado
-              ativosAtuais={ativosAtuais}
-              ativosRecomendados={ativosRecomendados}
-              planoAcao={planoAcao}
-              patrimonio={patrimonio}
-              notaConsultor={notaConsultor}
-              clientName={clientName}
-              clientProfile={clientProfile}
-              usdBrl={usdBrl}
-              onGoToEtapa3={() => setEtapa(3)}
-              onSave={handleSave}
-            />
-          )}
+      {/* ── STEPPER ── */}
+      <div style={{
+        flexShrink: 0, padding: "10px 20px",
+        backgroundColor: "white", borderBottom: "0.5px solid #BFDBFE",
+        overflowX: "auto",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", minWidth: "max-content", gap: 0 }}>
+          {ETAPAS.map((e, i) => {
+            const isCurrent = e.n === etapa;
+            const isDone = e.n < etapa;
+            const isPending = e.n > etapa;
+            return (
+              <div key={e.n} style={{ display: "flex", alignItems: "center" }}>
+                <button
+                  onClick={() => !isPending && goToEtapa(e.n)}
+                  disabled={isPending}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    cursor: isPending ? "default" : "pointer",
+                    background: "none", border: "none", padding: "2px 6px",
+                  }}
+                >
+                  <span style={{
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0, fontSize: 12,
+                    ...(isDone
+                      ? { backgroundColor: "#15803D", color: "white" }
+                      : isCurrent
+                      ? { backgroundColor: "#2563EB", color: "white", fontWeight: 500 }
+                      : { border: "1.5px solid #BFDBFE", color: "#9CA3AF" }),
+                  }}>
+                    {isDone ? "✓" : e.n}
+                  </span>
+                  <span style={{
+                    fontSize: 12, whiteSpace: "nowrap" as const,
+                    ...(isDone
+                      ? { color: "#15803D" }
+                      : isCurrent
+                      ? { color: "#2563EB", fontWeight: 500 }
+                      : { color: "#9CA3AF" }),
+                  }}>
+                    {e.label}
+                  </span>
+                </button>
+                {i < ETAPAS.length - 1 && (
+                  <div style={{
+                    width: 28, height: 0, margin: "0 4px", flexShrink: 0,
+                    borderTop: `1.5px ${isPending ? "dashed" : "solid"} ${isDone ? "#15803D" : "#BFDBFE"}`,
+                  }} />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Footer */}
-      <footer
-        className="shrink-0 px-4 py-3 border-t"
-        style={{ backgroundColor: "#fff", borderColor: "#BFDBFE" }}
-      >
-        <div className="mx-auto max-w-screen-xl flex items-center justify-between">
+      {/* ── BODY ── */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+        {etapa === 1 && (
+          <Etapa1CarteiraAtual
+            ativos={ativosAtuais}
+            onAtivos={handleAtivosAtuais}
+            usdBrl={usdBrl}
+            onUsdBrl={handleUsdBrl}
+          />
+        )}
+        {etapa === 2 && (
+          <Etapa2CarteiraRecomendada
+            ativosRec={ativosRecomendados}
+            onAtivosRec={handleAtivosRec}
+            ativosAtuais={ativosAtuais}
+            patrimonio={patrimonio}
+            clientProfile={clientProfile}
+          />
+        )}
+        {etapa === 3 && (
+          <Etapa3PlanoAcao
+            planoAcao={planoAcao}
+            onPlanoAcao={(p) => patch({ planoAcao: p })}
+            patrimonio={patrimonio}
+            notaConsultor={notaConsultor}
+            onNotaConsultor={(s) => patch({ notaConsultor: s })}
+          />
+        )}
+        {etapa === 4 && (
+          <Etapa4Resultado
+            ativosAtuais={ativosAtuais}
+            ativosRecomendados={ativosRecomendados}
+            planoAcao={planoAcao}
+            patrimonio={patrimonio}
+            notaConsultor={notaConsultor}
+            clientName={clientName}
+            clientProfile={clientProfile}
+            usdBrl={usdBrl}
+            onGoToEtapa3={() => setEtapa(3)}
+            onSave={handleSave}
+          />
+        )}
+      </div>
+
+      {/* ── FOOTER ── */}
+      <footer style={{
+        flexShrink: 0, backgroundColor: "white",
+        borderTop: "0.5px solid #BFDBFE", padding: "12px 20px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <button
+          onClick={etapa === 1 ? onClose : handleBack}
+          style={{
+            display: "flex", alignItems: "center", gap: 4,
+            border: "1px solid #BFDBFE", borderRadius: 6,
+            padding: "6px 12px", fontSize: 13, fontWeight: 500,
+            color: "#374151", backgroundColor: "transparent", cursor: "pointer",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F0F7FF")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+        >
+          <ChevronLeft style={{ width: 14, height: 14 }} />
+          {etapa === 1 ? "Fechar" : "Anterior"}
+        </button>
+
+        <span style={{ fontSize: 12, color: "#6B7280" }}>Etapa {etapa} de 4</span>
+
+        {etapa < 4 ? (
           <button
-            onClick={etapa === 1 ? onClose : handleBack}
-            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-            style={{ borderColor: "#000000", color: "#000000", backgroundColor: "transparent" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(4,26,32,0.05)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            onClick={handleNext}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              backgroundColor: "#2563EB", color: "white",
+              border: "none", borderRadius: 6,
+              padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1D4ED8")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
           >
-            <ChevronLeft className="h-4 w-4" />
-            {etapa === 1 ? "Fechar" : "Anterior"}
+            {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
+            <ChevronRight style={{ width: 14, height: 14 }} />
           </button>
-          <span className="text-xs" style={{ color: "#6B7280" }}>Etapa {etapa} de 4</span>
-          {etapa < 4 ? (
-            <button
-              onClick={handleNext}
-              className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: "#1E3A8A" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E40AF")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
-            >
-              {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          ) : (
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: "#1E3A8A" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1E40AF")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
-            >
-              Salvar carteira
-            </button>
-          )}
-        </div>
+        ) : (
+          <button
+            onClick={handleSave}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              backgroundColor: "#15803D", color: "white",
+              border: "none", borderRadius: 6,
+              padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#166534")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#15803D")}
+          >
+            <Save style={{ width: 14, height: 14 }} />
+            Salvar carteira
+          </button>
+        )}
       </footer>
     </div>
   );
