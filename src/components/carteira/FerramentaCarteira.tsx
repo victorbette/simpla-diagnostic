@@ -64,15 +64,17 @@ function migrateAtivo(a: any): Ativo {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateItemPlano(p: any): PlanoAcaoItem {
   const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto"];
-  const VALID_TIPO = ["manter", "aportar", "resgatar_parcial", "resgatar_total", "novo"];
+  const VALID_ACAO = ["manter", "aportar", "resgatar_parcial", "resgatar_total", "novo"];
   const card: CardId = VALID.includes(p.card) ? p.card : "resgate_rapido";
-  const tipo: PlanoAcaoItem["tipo"] = VALID_TIPO.includes(p.tipo) ? p.tipo : "manter";
+  // support both 'acao' (new) and 'tipo' (legacy localStorage data)
+  const acaoRaw = p.acao ?? p.tipo;
+  const acao: PlanoAcaoItem["acao"] = VALID_ACAO.includes(acaoRaw) ? acaoRaw : "manter";
   return {
     id: String(p.id ?? Math.random()),
     card,
     nomeAtivo: String(p.nomeAtivo ?? p.nome ?? ""),
     segmento: String(p.segmento ?? ""),
-    tipo,
+    acao,
     valorAtualBRL: Number(p.valorAtualBRL) || 0,
     valorMetaBRL: Number(p.valorMetaBRL) || 0,
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,

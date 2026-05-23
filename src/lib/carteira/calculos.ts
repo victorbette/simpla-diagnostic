@@ -17,22 +17,22 @@ export function gerarPlanoAcao(ativosAtuais: Ativo[], ativosRecomendados: Ativo[
     const valorMetaBRL = rec.valorBRL;
     const mov = Math.round((valorMetaBRL - valorAtualBRL) * 100) / 100;
 
-    let tipo: PlanoAcaoItem['tipo'] = 'manter';
-    if (!atual) tipo = 'novo';
-    else if (mov > 100) tipo = 'aportar';
-    else if (mov < -100) tipo = Math.abs(mov) >= valorAtualBRL * 0.95 ? 'resgatar_total' : 'resgatar_parcial';
+    let acao: PlanoAcaoItem['acao'] = 'manter';
+    if (!atual) acao = 'novo';
+    else if (mov > 100) acao = 'aportar';
+    else if (mov < -100) acao = Math.abs(mov) >= valorAtualBRL * 0.95 ? 'resgatar_total' : 'resgatar_parcial';
 
     const abs = Math.abs(mov);
     const prioridade: PlanoAcaoItem['prioridade'] = abs > p * 0.1 ? 'alta' : abs > p * 0.03 ? 'media' : 'baixa';
 
-    plano.push({ id: genId(), card: rec.card, nomeAtivo: rec.nome, segmento: rec.segmento, tipo, valorAtualBRL, valorMetaBRL, movimentacaoBRL: mov, observacao: '', prioridade });
+    plano.push({ id: genId(), card: rec.card, nomeAtivo: rec.nome, segmento: rec.segmento, acao, valorAtualBRL, valorMetaBRL, movimentacaoBRL: mov, observacao: '', prioridade });
   }
 
   // Ativos only in atual (not in recommended) → resgatar_total
   for (const atual of ativosAtuais) {
     if (!ativosRecomendados.find(r => r.nome.trim().toLowerCase() === atual.nome.trim().toLowerCase())) {
       const abs = atual.valorBRL;
-      plano.push({ id: genId(), card: atual.card, nomeAtivo: atual.nome, segmento: atual.segmento, tipo: 'resgatar_total', valorAtualBRL: atual.valorBRL, valorMetaBRL: 0, movimentacaoBRL: -atual.valorBRL, observacao: '', prioridade: abs > p * 0.03 ? 'media' : 'baixa' });
+      plano.push({ id: genId(), card: atual.card, nomeAtivo: atual.nome, segmento: atual.segmento, acao: 'resgatar_total', valorAtualBRL: atual.valorBRL, valorMetaBRL: 0, movimentacaoBRL: -atual.valorBRL, observacao: '', prioridade: abs > p * 0.03 ? 'media' : 'baixa' });
     }
   }
 

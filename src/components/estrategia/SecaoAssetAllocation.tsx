@@ -211,7 +211,7 @@ export function SecaoAssetAllocation({
         card: i.card,
         nomeAtivo: i.nomeAtivo,
         segmento: i.segmento,
-        tipo: i.tipo,
+        tipo: i.acao,
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,

@@ -13,7 +13,7 @@ interface Props {
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
 
-const TIPO_CONFIG: Record<PlanoAcaoItem["tipo"], { bg: string; color: string; label: string }> = {
+const TIPO_CONFIG: Record<PlanoAcaoItem["acao"], { bg: string; color: string; label: string }> = {
   manter:           { bg: "#F0F7FF",  color: "#374151", label: "→ Manter" },
   aportar:          { bg: "#DCFCE7",  color: "#15803D", label: "↑ Aportar" },
   resgatar_parcial: { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar" },
@@ -44,14 +44,14 @@ export function Etapa3PlanoAcao({
       totalAportes: ap,
       totalResgates: re,
       saldoLiquido: ap - re,
-      nMovs: planoAcao.filter((p) => p.tipo !== "manter").length,
+      nMovs: planoAcao.filter((p) => p.acao !== "manter").length,
     };
   }, [planoAcao]);
 
   const filtrados = useMemo(() => {
     if (filtro === "todos") return planoAcao;
-    if (filtro === "resgatar") return planoAcao.filter((p) => p.tipo === "resgatar_parcial" || p.tipo === "resgatar_total");
-    return planoAcao.filter((p) => p.tipo === filtro);
+    if (filtro === "resgatar") return planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
+    return planoAcao.filter((p) => p.acao === filtro);
   }, [planoAcao, filtro]);
 
   const cardsComItens = CARD_ORDER.filter((k) => filtrados.some((p) => p.card === k));
@@ -157,11 +157,11 @@ export function Etapa3PlanoAcao({
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <span style={{
-                      backgroundColor: TIPO_CONFIG[item.tipo].bg,
-                      color: TIPO_CONFIG[item.tipo].color,
+                      backgroundColor: TIPO_CONFIG[item.acao].bg,
+                      color: TIPO_CONFIG[item.acao].color,
                       fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
                     }}>
-                      {TIPO_CONFIG[item.tipo].label}
+                      {TIPO_CONFIG[item.acao].label}
                     </span>
                     <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
                   </div>
@@ -184,8 +184,8 @@ export function Etapa3PlanoAcao({
                 </span>
 
                 <select
-                  value={item.tipo}
-                  onChange={(e) => updateItem(item.id, { tipo: e.target.value as PlanoAcaoItem["tipo"] })}
+                  value={item.acao}
+                  onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
                   style={selectStyle}
                 >
                   <option value="manter">Manter</option>
@@ -207,7 +207,7 @@ export function Etapa3PlanoAcao({
                 />
 
                 <select
-                  value={item.prioridade}
+                  value={item.prioridade ?? "baixa"}
                   onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
                   style={selectStyle}
                 >

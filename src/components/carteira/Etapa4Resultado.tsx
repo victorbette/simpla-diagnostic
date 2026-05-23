@@ -108,9 +108,9 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
   const totalAportes = planoAcao.filter((p) => p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
   const totalResgates = planoAcao.filter((p) => p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
 
-  const aportes = planoAcao.filter((p) => p.tipo === "aportar" || p.tipo === "novo");
-  const resgates = planoAcao.filter((p) => p.tipo === "resgatar_parcial" || p.tipo === "resgatar_total");
-  const mantidos = planoAcao.filter((p) => p.tipo === "manter");
+  const aportes = planoAcao.filter((p) => p.acao === "aportar" || p.acao === "novo");
+  const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
+  const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
   // Per card breakdown
   const cardTotais = useMemo(

@@ -15,13 +15,12 @@ export interface Ativo {
   valorBRL: number;
 }
 
-// PlanoAcaoItem keeps 'tipo' (not 'acao') and 'prioridade'/'segmento' for SecaoAssetAllocation compat
 export interface PlanoAcaoItem {
   id: string;
   card: CardId;
   nomeAtivo: string;
   segmento: string;
-  tipo: 'manter' | 'aportar' | 'resgatar_parcial' | 'resgatar_total' | 'novo';
+  acao: 'manter' | 'aportar' | 'resgatar_parcial' | 'resgatar_total' | 'novo';
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
