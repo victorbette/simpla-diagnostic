@@ -277,53 +277,152 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            {/* Nacionais */}
             <div
               style={{
                 borderRadius: 10,
-                border: "1px solid #BFDBFE",
+                border: `1px solid ${value.fazViagensNacionais ? "#2563EB" : "#BFDBFE"}`,
                 padding: "14px 16px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
+                transition: "border-color 0.2s",
               }}
             >
-              <Switch
-                checked={value.fazViagensNacionais}
-                onCheckedChange={(v) => set("fazViagensNacionais", v)}
-                style={value.fazViagensNacionais ? { backgroundColor: "#1E3A8A" } : undefined}
-              />
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
-                  Viagens nacionais
-                </p>
-                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
-                  Viaja dentro do Brasil regularmente
-                </p>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <Switch
+                  checked={value.fazViagensNacionais}
+                  onCheckedChange={(v) => {
+                    set("fazViagensNacionais", v);
+                    if (!v) set("viagensNacionaisQtdAnual", 0);
+                  }}
+                  style={value.fazViagensNacionais ? { backgroundColor: "#1E3A8A" } : undefined}
+                />
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
+                    Viagens nacionais
+                  </p>
+                  <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
+                    Viaja dentro do Brasil regularmente
+                  </p>
+                </div>
               </div>
+              {value.fazViagensNacionais && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", margin: "0 0 8px" }}>
+                    Quantas vezes por ano?
+                  </p>
+                  <input
+                    type="number"
+                    min={1}
+                    max={52}
+                    value={value.viagensNacionaisQtdAnual || ""}
+                    onChange={(e) => set("viagensNacionaisQtdAnual", Math.min(52, Math.max(1, Number(e.target.value))))}
+                    placeholder="Ex: 4"
+                    style={{
+                      width: 120,
+                      padding: "8px 12px",
+                      border: "1px solid #BFDBFE",
+                      borderRadius: 8,
+                      fontSize: 14,
+                      textAlign: "center",
+                      outline: "none",
+                      color: "#111827",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                    {[1, 2, 4, 6, 12].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => set("viagensNacionaisQtdAnual", n)}
+                        style={{
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          border: "1px solid #BFDBFE",
+                          fontSize: 12,
+                          cursor: "pointer",
+                          backgroundColor: value.viagensNacionaisQtdAnual === n ? "#2563EB" : "white",
+                          color: value.viagensNacionaisQtdAnual === n ? "white" : "#6B7280",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {n}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Internacionais */}
             <div
               style={{
                 borderRadius: 10,
-                border: "1px solid #BFDBFE",
+                border: `1px solid ${value.fazViagensInternacionais ? "#2563EB" : "#BFDBFE"}`,
                 padding: "14px 16px",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 12,
+                transition: "border-color 0.2s",
               }}
             >
-              <Switch
-                checked={value.fazViagensInternacionais}
-                onCheckedChange={(v) => set("fazViagensInternacionais", v)}
-                style={value.fazViagensInternacionais ? { backgroundColor: "#1E3A8A" } : undefined}
-              />
-              <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
-                  Viagens internacionais
-                </p>
-                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
-                  Viaja para o exterior
-                </p>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                <Switch
+                  checked={value.fazViagensInternacionais}
+                  onCheckedChange={(v) => {
+                    set("fazViagensInternacionais", v);
+                    if (!v) set("viagensInternacionaisQtdAnual", 0);
+                  }}
+                  style={value.fazViagensInternacionais ? { backgroundColor: "#1E3A8A" } : undefined}
+                />
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>
+                    Viagens internacionais
+                  </p>
+                  <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
+                    Viaja para o exterior
+                  </p>
+                </div>
               </div>
+              {value.fazViagensInternacionais && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE" }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", margin: "0 0 8px" }}>
+                    Quantas vezes por ano?
+                  </p>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={value.viagensInternacionaisQtdAnual || ""}
+                    onChange={(e) => set("viagensInternacionaisQtdAnual", Math.min(12, Math.max(1, Number(e.target.value))))}
+                    placeholder="Ex: 2"
+                    style={{
+                      width: 120,
+                      padding: "8px 12px",
+                      border: "1px solid #BFDBFE",
+                      borderRadius: 8,
+                      fontSize: 14,
+                      textAlign: "center",
+                      outline: "none",
+                      color: "#111827",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                    {[1, 2, 3, 4, 6].map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => set("viagensInternacionaisQtdAnual", n)}
+                        style={{
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          border: "1px solid #BFDBFE",
+                          fontSize: 12,
+                          cursor: "pointer",
+                          backgroundColor: value.viagensInternacionaisQtdAnual === n ? "#2563EB" : "white",
+                          color: value.viagensInternacionaisQtdAnual === n ? "white" : "#6B7280",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {n}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
