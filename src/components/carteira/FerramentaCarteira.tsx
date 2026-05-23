@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Save, RefreshCw, Loader2 } from "lucide-react";
-import { useCotacoes } from "../../hooks/useCotacoes";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, ItemPlanoAcao, CarteiraResultado, SimplaCardId } from "@/lib/carteira/types";
 import {
   calcularPatrimonio,
@@ -115,48 +114,6 @@ export function FerramentaCarteira({
     [ativosAtuais, usdBrl, patrimonyInicial],
   );
 
-  // ── Cotações em tempo real ──────────────────────────────────────────────────
-  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscarCotacoes, limparCache } = useCotacoes();
-
-  const atualizarCotacoes = useCallback(() => {
-    const tickers = ativosAtuais
-      .filter((a) => {
-        const nome = (a.nome ?? "").trim();
-        return ["acoes", "fiis", "exterior", "cripto"].includes(a.card) && nome.length >= 2;
-      })
-      .map((a) => ({
-        ticker: (a.nome ?? "").trim(),
-        tipo: a.card as "acoes" | "fiis" | "exterior" | "cripto",
-      }));
-    if (tickers.length > 0) buscarCotacoes(tickers);
-  }, [ativosAtuais, buscarCotacoes]);
-
-  const handleAtualizarCotacoes = useCallback(() => {
-    limparCache();
-    atualizarCotacoes();
-  }, [limparCache, atualizarCotacoes]);
-
-  // Dispara busca com debounce sempre que nomes de ativos mudam (etapas 1 e 2)
-  const nomesAtivos = ativosAtuais
-    .map((a) => (a.nome ?? "").trim())
-    .filter((n) => n.length >= 2)
-    .join(",");
-
-  const cotacoesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (etapa !== 1 && etapa !== 2) return;
-    if (cotacoesDebounceRef.current) clearTimeout(cotacoesDebounceRef.current);
-    cotacoesDebounceRef.current = setTimeout(() => {
-      atualizarCotacoes();
-    }, 1000);
-    return () => {
-      if (cotacoesDebounceRef.current) clearTimeout(cotacoesDebounceRef.current);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [etapa, nomesAtivos]);
-
-  // ────────────────────────────────────────────────────────────────────────────
-
   function patch(p: Partial<State>) { setState((prev) => ({ ...prev, ...p })); }
   function handleAtivosAtuais(ativos: Ativo[]) { patch({ ativosAtuais: atualizarPcts(ativos, usdBrl) }); }
   function handleUsdBrl(v: number) { patch({ usdBrl: v, ativosAtuais: atualizarPcts(ativosAtuais, v) }); }
@@ -226,33 +183,6 @@ export function FerramentaCarteira({
         <span style={{ color: "#93C5FD", fontSize: 11, display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
           ● Dados salvos automaticamente
         </span>
-
-        {/* Atualizar cotações — visível nas etapas 1 e 2 */}
-        {etapa <= 2 && (
-          <>
-            <button
-              onClick={handleAtualizarCotacoes}
-              disabled={carregandoCotacoes}
-              style={{
-                background: "transparent",
-                border: "0.5px solid rgba(255,255,255,0.3)",
-                color: "#93C5FD", borderRadius: 6,
-                padding: "4px 10px", fontSize: 11,
-                cursor: carregandoCotacoes ? "default" : "pointer",
-                display: "flex", alignItems: "center", gap: 4, flexShrink: 0,
-                opacity: carregandoCotacoes ? 0.7 : 1,
-              }}
-            >
-              {carregandoCotacoes
-                ? <><Loader2 style={{ width: 12, height: 12, animation: "spin 1s linear infinite" }} />Atualizando...</>
-                : <><RefreshCw style={{ width: 12, height: 12 }} />Atualizar cotações</>
-              }
-            </button>
-            {erroCotacoes && (
-              <span style={{ fontSize: 11, color: "#FCA5A5", flexShrink: 0 }}>⚠ Erro ao buscar cotações</span>
-            )}
-          </>
-        )}
 
         <button
           onClick={() => {
@@ -345,9 +275,6 @@ export function FerramentaCarteira({
             onAtivos={handleAtivosAtuais}
             usdBrl={usdBrl}
             onUsdBrl={handleUsdBrl}
-            cotacoes={cotacoes}
-            carregandoCotacoes={carregandoCotacoes}
-            onBuscarCotacao={buscarCotacoes}
           />
         )}
         {etapa === 2 && (

@@ -4,7 +4,6 @@ import type { SimplaCard } from "@/lib/carteira/segmentos";
 import { segmentoPadrao } from "@/lib/carteira/segmentos";
 import { calcularValorBRL, genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
 import type { Ativo } from "@/lib/carteira/types";
-import type { Cotacao, TickerRequest } from "../../hooks/useCotacoes";
 import { SegmentoSelect } from "./SegmentoSelect";
 
 interface Props {
@@ -16,9 +15,6 @@ interface Props {
   modo: "atual" | "recomendada";
   ativosAtuaisRef?: Ativo[];
   disabled?: boolean;
-  cotacoes?: Record<string, Cotacao>;
-  carregando?: boolean;
-  onBuscarCotacao?: (tickers: TickerRequest[]) => void;
 }
 
 // ── Shared sub-components ────────────────────────────────────────────────────
@@ -124,56 +120,6 @@ function HeaderRow({ template, children }: { template: string; children: React.R
   );
 }
 
-// Inline button that applies a live quote to the price field
-function QuoteBtn({
-  cotacao, onApply, currency = "R$",
-}: {
-  cotacao: Cotacao;
-  onApply: (v: number) => void;
-  currency?: string;
-}) {
-  if (cotacao.erro) {
-    return (
-      <span style={{ fontSize: 10, color: "#B45309", whiteSpace: "nowrap" as const }}>
-        não encontrado
-      </span>
-    );
-  }
-  const label = `↓ ${currency} ${cotacao.preco.toFixed(2)}`;
-  return (
-    <button
-      onClick={() => onApply(cotacao.preco)}
-      title={`Usar cotação Yahoo Finance: ${label}`}
-      style={{
-        position: "absolute", right: 4, top: "50%",
-        transform: "translateY(-50%)",
-        backgroundColor: "#DBEAFE", border: "none",
-        borderRadius: 4, padding: "2px 5px",
-        fontSize: 10, color: "#1E40AF",
-        cursor: "pointer", whiteSpace: "nowrap" as const,
-        lineHeight: 1.4,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-// Variation % badge shown next to the ticker name
-function VarBadge({ cotacao }: { cotacao: Cotacao | undefined }) {
-  if (!cotacao || cotacao.erro) return null;
-  const pct = cotacao.variacaoPct ?? 0;
-  return (
-    <span style={{
-      fontSize: 10, fontWeight: 500,
-      color: pct >= 0 ? "#15803D" : "#B91C1C",
-      flexShrink: 0,
-    }}>
-      {pct >= 0 ? "+" : ""}{pct.toFixed(2)}%
-    </span>
-  );
-}
-
 function AddBtn({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) {
   const [hov, setHov] = useState(false);
   return (
@@ -207,9 +153,6 @@ export function TabelaAtivos({
   modo,
   ativosAtuaisRef = [],
   disabled = false,
-  cotacoes = {},
-  carregando = false,
-  onBuscarCotacao,
 }: Props) {
   function addAtivo() {
     const novo: Ativo = {
@@ -323,72 +266,33 @@ export function TabelaAtivos({
             </div>
           )}
 
-          {ativos.map((a) => {
-            const key = (a.nome ?? "").trim().toUpperCase();
-            const cot = cotacoes[key];
-            const buscandoEste = carregando && !cot && key.length >= 2;
-            const cotPrecoDisplay = cot && !cot.erro && cot.preco > 0
-              ? (card.id === "cripto" ? cot.preco * usdBrl : cot.preco)
-              : null;
-            return (
-              <AtivoRow key={a.id} template={tpl}>
-                {/* Name + variation badge */}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
-                  <SInput
-                    value={a.nome}
-                    onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                    onBlur={(e) => {
-                      const nome = e.target.value.trim();
-                      if (nome.length >= 2) {
-                        onBuscarCotacao?.([{ ticker: nome, tipo: card.id as "acoes" | "fiis" | "exterior" | "cripto" }]);
-                      }
-                    }}
-                    placeholder="Nome do ativo"
-                    disabled={disabled}
-                    style={{ flex: 1 }}
-                  />
-                  <VarBadge cotacao={cot} />
-                </div>
-                {/* Cotação BRL with inline quote button */}
-                <div style={{ position: "relative" }}>
-                  <SInput
-                    type="number"
-                    value={a.cotacaoBRL ?? ""}
-                    onChange={(e) => updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })}
-                    style={{ textAlign: "right", paddingRight: (buscandoEste || cotPrecoDisplay != null || cot?.erro) ? 70 : undefined }}
-                    disabled={disabled}
-                  />
-                  {buscandoEste && (
-                    <span style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#9CA3AF" }}>
-                      ⟳
-                    </span>
-                  )}
-                  {cotPrecoDisplay != null && !buscandoEste && (
-                    <QuoteBtn
-                      cotacao={{ ...cot!, preco: cotPrecoDisplay }}
-                      onApply={(v) => updateAtivo(a.id, { cotacaoBRL: v })}
-                      currency="R$"
-                    />
-                  )}
-                  {cot?.erro && !buscandoEste && (
-                    <span style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#B45309", whiteSpace: "nowrap" as const }}>
-                      não encontrado
-                    </span>
-                  )}
-                </div>
-                <SInput
-                  type="number"
-                  value={a.quantidade ?? ""}
-                  onChange={(e) => updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })}
-                  style={{ textAlign: "right" }}
-                  disabled={disabled}
-                />
-                <ReadonlyVal>{formatBRL(a.valorBRL)}</ReadonlyVal>
-                <MutedVal>{formatPct(a.pctCarteira)}</MutedVal>
-                <RemoveBtn onClick={() => removeAtivo(a.id)} disabled={disabled} />
-              </AtivoRow>
-            );
-          })}
+          {ativos.map((a) => (
+            <AtivoRow key={a.id} template={tpl}>
+              <SInput
+                value={a.nome}
+                onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
+                placeholder="Nome do ativo"
+                disabled={disabled}
+              />
+              <SInput
+                type="number"
+                value={a.cotacaoBRL ?? ""}
+                onChange={(e) => updateAtivo(a.id, { cotacaoBRL: parseFloat(e.target.value) || 0 })}
+                style={{ textAlign: "right" }}
+                disabled={disabled}
+              />
+              <SInput
+                type="number"
+                value={a.quantidade ?? ""}
+                onChange={(e) => updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })}
+                style={{ textAlign: "right" }}
+                disabled={disabled}
+              />
+              <ReadonlyVal>{formatBRL(a.valorBRL)}</ReadonlyVal>
+              <MutedVal>{formatPct(a.pctCarteira)}</MutedVal>
+              <RemoveBtn onClick={() => removeAtivo(a.id)} disabled={disabled} />
+            </AtivoRow>
+          ))}
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "0.5px solid #BFDBFE" }}>
             <AddBtn label={`Adicionar ${card.label}`} onClick={addAtivo} disabled={disabled} />
@@ -420,69 +324,34 @@ export function TabelaAtivos({
           </div>
         )}
 
-        {ativos.map((a) => {
-          const key = (a.nome ?? "").trim().toUpperCase();
-          const cot = cotacoes[key];
-          const buscandoEste = carregando && !cot && key.length >= 2;
-          return (
-            <AtivoRow key={a.id} template={tplUsd}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, minWidth: 0 }}>
-                <SInput
-                  value={a.nome}
-                  onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
-                  onBlur={(e) => {
-                    const nome = e.target.value.trim();
-                    if (nome.length >= 2) {
-                      onBuscarCotacao?.([{ ticker: nome, tipo: "exterior" }]);
-                    }
-                  }}
-                  placeholder="Nome do ativo"
-                  disabled={disabled}
-                  style={{ flex: 1 }}
-                />
-                <VarBadge cotacao={cot} />
-              </div>
-              <SegmentoSelect cardId={card.id} value={a.segmento} onChange={(v) => updateAtivo(a.id, { segmento: v })} disabled={disabled} />
-              {/* Cotação USD with inline quote button */}
-              <div style={{ position: "relative" }}>
-                <SInput
-                  type="number"
-                  value={a.cotacaoUSD ?? ""}
-                  onChange={(e) => updateAtivo(a.id, { cotacaoUSD: parseFloat(e.target.value) || 0 })}
-                  style={{ textAlign: "right", paddingRight: (buscandoEste || (cot && !cot.erro) || cot?.erro) ? 72 : undefined }}
-                  disabled={disabled}
-                />
-                {buscandoEste && (
-                  <span style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#9CA3AF" }}>
-                    ⟳
-                  </span>
-                )}
-                {cot && !cot.erro && !buscandoEste && (
-                  <QuoteBtn
-                    cotacao={cot}
-                    onApply={(v) => updateAtivo(a.id, { cotacaoUSD: v })}
-                    currency="US$"
-                  />
-                )}
-                {cot?.erro && !buscandoEste && (
-                  <span style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", fontSize: 10, color: "#B45309", whiteSpace: "nowrap" as const }}>
-                    não encontrado
-                  </span>
-                )}
-              </div>
-              <SInput
-                type="number"
-                value={a.quantidade ?? ""}
-                onChange={(e) => updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })}
-                style={{ textAlign: "right" }}
-                disabled={disabled}
-              />
-              <ReadonlyVal>{formatBRL(a.valorBRL)}</ReadonlyVal>
-              <MutedVal>{formatPct(a.pctCarteira)}</MutedVal>
-              <RemoveBtn onClick={() => removeAtivo(a.id)} disabled={disabled} />
-            </AtivoRow>
-          );
-        })}
+        {ativos.map((a) => (
+          <AtivoRow key={a.id} template={tplUsd}>
+            <SInput
+              value={a.nome}
+              onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
+              placeholder="Nome do ativo"
+              disabled={disabled}
+            />
+            <SegmentoSelect cardId={card.id} value={a.segmento} onChange={(v) => updateAtivo(a.id, { segmento: v })} disabled={disabled} />
+            <SInput
+              type="number"
+              value={a.cotacaoUSD ?? ""}
+              onChange={(e) => updateAtivo(a.id, { cotacaoUSD: parseFloat(e.target.value) || 0 })}
+              style={{ textAlign: "right" }}
+              disabled={disabled}
+            />
+            <SInput
+              type="number"
+              value={a.quantidade ?? ""}
+              onChange={(e) => updateAtivo(a.id, { quantidade: parseFloat(e.target.value) || 0 })}
+              style={{ textAlign: "right" }}
+              disabled={disabled}
+            />
+            <ReadonlyVal>{formatBRL(a.valorBRL)}</ReadonlyVal>
+            <MutedVal>{formatPct(a.pctCarteira)}</MutedVal>
+            <RemoveBtn onClick={() => removeAtivo(a.id)} disabled={disabled} />
+          </AtivoRow>
+        ))}
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "0.5px solid #BFDBFE" }}>
           <AddBtn label={`Adicionar ${card.label}`} onClick={addAtivo} disabled={disabled} />
