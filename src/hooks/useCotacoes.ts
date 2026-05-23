@@ -30,11 +30,15 @@ async function buscarBrapi(
   const simbolos = tickers.map((t) => t.ticker.toUpperCase()).join(",");
   const url = `https://brapi.dev/api/quote/${simbolos}?token=demo&fundamental=false`;
 
+  console.log("[Brapi] buscando:", simbolos);
+
   const resp = await fetch(url, { headers: { Accept: "application/json" } });
   if (!resp.ok) throw new Error(`Brapi erro ${resp.status}`);
 
   const data = await resp.json();
   const quotes: Record<string, unknown>[] = data?.results ?? [];
+
+  console.log("[Brapi] retornou:", quotes.map((q) => q.symbol));
 
   for (const quote of quotes) {
     const raw = (quote.symbol as string) ?? "";

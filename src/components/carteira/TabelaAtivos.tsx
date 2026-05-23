@@ -4,7 +4,7 @@ import type { SimplaCard } from "@/lib/carteira/segmentos";
 import { segmentoPadrao } from "@/lib/carteira/segmentos";
 import { calcularValorBRL, genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
 import type { Ativo } from "@/lib/carteira/types";
-import type { Cotacao } from "../../hooks/useCotacoes";
+import type { Cotacao, TickerRequest } from "../../hooks/useCotacoes";
 import { SegmentoSelect } from "./SegmentoSelect";
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
   ativosAtuaisRef?: Ativo[];
   disabled?: boolean;
   cotacoes?: Record<string, Cotacao>;
+  onBuscarCotacao?: (tickers: TickerRequest[]) => void;
 }
 
 // ── Shared sub-components ────────────────────────────────────────────────────
@@ -206,6 +207,7 @@ export function TabelaAtivos({
   ativosAtuaisRef = [],
   disabled = false,
   cotacoes = {},
+  onBuscarCotacao,
 }: Props) {
   function addAtivo() {
     const novo: Ativo = {
@@ -333,6 +335,12 @@ export function TabelaAtivos({
                   <SInput
                     value={a.nome}
                     onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
+                    onBlur={(e) => {
+                      const nome = e.target.value.trim();
+                      if (nome.length >= 2) {
+                        onBuscarCotacao?.([{ ticker: nome, tipo: card.id as "acoes" | "fiis" | "exterior" | "cripto" }]);
+                      }
+                    }}
                     placeholder="Nome do ativo"
                     disabled={disabled}
                     style={{ flex: 1 }}
@@ -409,6 +417,12 @@ export function TabelaAtivos({
                 <SInput
                   value={a.nome}
                   onChange={(e) => updateAtivo(a.id, { nome: e.target.value })}
+                  onBlur={(e) => {
+                    const nome = e.target.value.trim();
+                    if (nome.length >= 2) {
+                      onBuscarCotacao?.([{ ticker: nome, tipo: "exterior" }]);
+                    }
+                  }}
                   placeholder="Nome do ativo"
                   disabled={disabled}
                   style={{ flex: 1 }}

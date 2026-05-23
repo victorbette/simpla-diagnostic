@@ -116,7 +116,7 @@ export function FerramentaCarteira({
   );
 
   // ── Cotações em tempo real ──────────────────────────────────────────────────
-  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscarCotacoes } = useCotacoes();
+  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscarCotacoes, limparCache } = useCotacoes();
 
   const atualizarCotacoes = useCallback(() => {
     const tickers = ativosAtuais
@@ -131,9 +131,29 @@ export function FerramentaCarteira({
     if (tickers.length > 0) buscarCotacoes(tickers);
   }, [ativosAtuais, buscarCotacoes]);
 
+  const handleAtualizarCotacoes = useCallback(() => {
+    limparCache();
+    atualizarCotacoes();
+  }, [limparCache, atualizarCotacoes]);
+
+  // Dispara busca com debounce sempre que nomes de ativos mudam (etapas 1 e 2)
+  const nomesAtivos = ativosAtuais
+    .map((a) => (a.nome ?? "").trim())
+    .filter((n) => n.length >= 2)
+    .join(",");
+
+  const cotacoesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (etapa === 1) atualizarCotacoes();
-  }, [etapa]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (etapa !== 1 && etapa !== 2) return;
+    if (cotacoesDebounceRef.current) clearTimeout(cotacoesDebounceRef.current);
+    cotacoesDebounceRef.current = setTimeout(() => {
+      atualizarCotacoes();
+    }, 1000);
+    return () => {
+      if (cotacoesDebounceRef.current) clearTimeout(cotacoesDebounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapa, nomesAtivos]);
 
   // ────────────────────────────────────────────────────────────────────────────
 
@@ -211,7 +231,7 @@ export function FerramentaCarteira({
         {etapa <= 2 && (
           <>
             <button
-              onClick={atualizarCotacoes}
+              onClick={handleAtualizarCotacoes}
               disabled={carregandoCotacoes}
               style={{
                 background: "transparent",
@@ -326,6 +346,7 @@ export function FerramentaCarteira({
             usdBrl={usdBrl}
             onUsdBrl={handleUsdBrl}
             cotacoes={cotacoes}
+            onBuscarCotacao={buscarCotacoes}
           />
         )}
         {etapa === 2 && (

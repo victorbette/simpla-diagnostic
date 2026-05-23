@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from "react";
 import { Upload, X, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Ativo } from "@/lib/carteira/types";
-import type { Cotacao } from "../../hooks/useCotacoes";
+import type { Cotacao, TickerRequest } from "../../hooks/useCotacoes";
 import type { AtivoExtraido } from "@/lib/carteira/leitorIA";
 import { lerCarteiraClaude } from "@/lib/carteira/leitorIA";
 import {
@@ -28,6 +28,7 @@ interface Props {
   usdBrl: number;
   onUsdBrl: (v: number) => void;
   cotacoes?: Record<string, Cotacao>;
+  onBuscarCotacao?: (tickers: TickerRequest[]) => void;
 }
 
 const CONTEXT_LABELS: Record<SimplaCardId, string> = {
@@ -48,7 +49,7 @@ const GRUPO_DOTS: Record<string, string> = {
 
 const GRUPO_ORDER = ["Renda Fixa", "Renda Variável Brasil", "Internacional", "Criptoativos"];
 
-export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotacoes = {} }: Props) {
+export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotacoes = {}, onBuscarCotacao }: Props) {
   const [iaOpen, setIaOpen] = useState(false);
   const [iaArquivos, setIaArquivos] = useState<File[]>([]);
   const [iaLoading, setIaLoading] = useState(false);
@@ -342,6 +343,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, usdBrl, onUsdBrl, cotaco
                     usdBrl={usdBrl}
                     modo="atual"
                     cotacoes={cotacoes}
+                    onBuscarCotacao={onBuscarCotacao}
                   />
                 </div>
               ))}
