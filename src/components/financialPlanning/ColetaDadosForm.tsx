@@ -182,7 +182,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <Label className={labelCls}>Tem filhos?</Label>
             <div style={{ display: "flex", alignItems: "center", gap: 12, height: 40 }}>
               <Switch
-                checked={value.temFilhos}
+                checked={!!value.temFilhos}
                 onCheckedChange={(v) => set("temFilhos", v)}
               />
               {value.temFilhos && (
@@ -288,10 +288,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             >
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <Switch
-                  checked={value.fazViagensNacionais}
-                  onCheckedChange={(v) => {
-                    set("fazViagensNacionais", v);
-                    if (!v) set("viagensNacionaisQtdAnual", 0);
+                  checked={!!value.fazViagensNacionais}
+                  onCheckedChange={(checked: boolean) => {
+                    onChange({
+                      ...value,
+                      fazViagensNacionais: checked,
+                      viagensNacionaisQtdAnual: checked ? value.viagensNacionaisQtdAnual : 0,
+                    });
                   }}
                   style={value.fazViagensNacionais ? { backgroundColor: "#1E3A8A" } : undefined}
                 />
@@ -362,10 +365,13 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             >
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <Switch
-                  checked={value.fazViagensInternacionais}
-                  onCheckedChange={(v) => {
-                    set("fazViagensInternacionais", v);
-                    if (!v) set("viagensInternacionaisQtdAnual", 0);
+                  checked={!!value.fazViagensInternacionais}
+                  onCheckedChange={(checked: boolean) => {
+                    onChange({
+                      ...value,
+                      fazViagensInternacionais: checked,
+                      viagensInternacionaisQtdAnual: checked ? value.viagensInternacionaisQtdAnual : 0,
+                    });
                   }}
                   style={value.fazViagensInternacionais ? { backgroundColor: "#1E3A8A" } : undefined}
                 />
@@ -439,7 +445,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
         <div style={{ borderRadius: 10, border: "1px solid #BFDBFE", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Switch checked={value.temSeguroVida} onCheckedChange={(v) => set("temSeguroVida", v)} />
+              <Switch checked={!!value.temSeguroVida} onCheckedChange={(v) => set("temSeguroVida", v)} />
               <Label className={labelCls + " cursor-pointer"}>Possui seguro de vida?</Label>
             </div>
             {value.temSeguroVida && (
@@ -452,7 +458,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
 
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <Switch checked={value.temSeguroInvalidez} onCheckedChange={(v) => set("temSeguroInvalidez", v)} />
+              <Switch checked={!!value.temSeguroInvalidez} onCheckedChange={(v) => set("temSeguroInvalidez", v)} />
               <Label className={labelCls + " cursor-pointer"}>Possui seguro de invalidez?</Label>
             </div>
             {value.temSeguroInvalidez && (
