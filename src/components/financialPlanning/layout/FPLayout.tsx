@@ -194,6 +194,7 @@ export function FPLayout({
         <main
           style={{
             flex: 1,
+            minWidth: 0,
             backgroundColor: "#F0F7FF",
             overflowY: "auto",
             padding: 32,

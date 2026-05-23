@@ -128,7 +128,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
   });
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* Visão Geral */}
       <div style={cardStyle("#1E3A8A")}>

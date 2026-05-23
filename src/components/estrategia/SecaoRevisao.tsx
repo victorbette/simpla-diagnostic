@@ -427,7 +427,7 @@ export function SecaoRevisao({
   return (
     <div
       style={{
-        maxWidth: 900,
+        width: "100%",
         display: "flex",
         flexDirection: "column",
         gap: 24,

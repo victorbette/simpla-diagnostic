@@ -365,7 +365,7 @@ export function SecaoFiscal({
   return (
     <>
       <div
-        style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}
+        style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}
       >
         {/* Card 1 — PGBL tool */}
         <div style={{ ...CARD, borderTop: "3px solid #2563EB" }}>

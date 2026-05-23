@@ -27,7 +27,7 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 800 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
       <ImportarIA onConfirmar={handleIA} modo="atual" />
 
       {CARD_ORDER.map((cardId) => (

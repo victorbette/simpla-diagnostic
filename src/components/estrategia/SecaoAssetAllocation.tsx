@@ -291,7 +291,7 @@ export function SecaoAssetAllocation({
   if (!resultadoCarteira) {
     return (
       <>
-        <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div
               style={{
@@ -393,7 +393,7 @@ export function SecaoAssetAllocation({
 
   return (
     <>
-      <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Section header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

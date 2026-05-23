@@ -56,7 +56,7 @@ export function Etapa2CarteiraRecomendada({ ativos, onAtivos, ativosAtuais, aloc
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 800 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
 
       {/* ── CARD ALOCAÇÃO META ── */}
       <div style={{ backgroundColor: "white", border: "0.5px solid #BFDBFE", borderRadius: 12, padding: 20, marginBottom: 4 }}>

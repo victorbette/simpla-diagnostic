@@ -594,7 +594,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         </div>
 
         {/* Main content */}
-        <div style={{ flex: 1, backgroundColor: "#F0F7FF", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, minWidth: 0, backgroundColor: "#F0F7FF", display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {/* Scrollable area */}
           <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
             {/* Breadcrumb */}

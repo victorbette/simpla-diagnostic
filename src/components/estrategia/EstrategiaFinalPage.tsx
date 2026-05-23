@@ -265,8 +265,7 @@ export function EstrategiaFinalPage({
       <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
         <div
           style={{
-            maxWidth: 900,
-            margin: "0 auto",
+            width: "100%",
             padding: 40,
             display: "flex",
             flexDirection: "column",

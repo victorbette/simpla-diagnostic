@@ -47,7 +47,7 @@ export function SecaoProximosPassos({
   }
 
   return (
-    <div style={{ maxWidth: 800, display: "flex", flexDirection: "column", gap: 20 }}>
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Ações prioritárias */}
       <div style={{ ...CARD, borderTop: "3px solid #1E40AF" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
