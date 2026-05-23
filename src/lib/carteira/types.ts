@@ -1,51 +1,56 @@
-import type { SimplaCardId } from "./segmentos";
-
-export type { SimplaCardId };
+export type CardId =
+  | 'resgate_longo'
+  | 'resgate_rapido'
+  | 'acoes'
+  | 'fiis'
+  | 'exterior'
+  | 'cripto';
 
 export interface Ativo {
   id: string;
-  card: SimplaCardId;
-  segmento: string;
+  card: CardId;
   nome: string;
+  segmento: string;
   vencimento?: string;
-  posicaoBRL?: number;
-  cotacaoBRL?: number;
-  cotacaoUSD?: number;
-  quantidade?: number;
   valorBRL: number;
-  pctCarteira: number;
-  pctMeta?: number;
-  valorMetaBRL?: number;
 }
 
-export interface ItemPlanoAcao {
+// PlanoAcaoItem keeps 'tipo' (not 'acao') and 'prioridade'/'segmento' for SecaoAssetAllocation compat
+export interface PlanoAcaoItem {
   id: string;
-  card: SimplaCardId;
+  card: CardId;
   nomeAtivo: string;
   segmento: string;
-  tipo: "manter" | "aportar" | "resgatar_parcial" | "resgatar_total" | "novo_ativo";
+  tipo: 'manter' | 'aportar' | 'resgatar_parcial' | 'resgatar_total' | 'novo';
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
   observacao: string;
-  prioridade: "alta" | "media" | "baixa";
+  prioridade: 'alta' | 'media' | 'baixa';
 }
 
 export interface CarteiraResultado {
-  clientId: string;
   patrimonio: number;
   ativosAtuais: Ativo[];
   ativosRecomendados: Ativo[];
-  planoAcao: ItemPlanoAcao[];
-  notaConsultor: string;
-  dataElaboracao: string;
-  usdBrl: number;
+  alocacaoMeta: Record<CardId, number>;
+  planoAcao: PlanoAcaoItem[];
 }
 
-export interface MacroResumo {
-  rendaFixa: number;
-  rendaVariavelBrasil: number;
-  internacional: number;
-  multimercados: number;
-  cripto: number;
-}
+export const CARD_META = {
+  resgate_longo:  { label: 'Resgate Longo',       sub: 'Pós-fixado · Inflação · Prefixado', cor: '#1E40AF', corBg: '#EFF6FF', segmentos: ['Pós-fixado','Inflação','Prefixado','Fundos RF','Fundos MM','COE'], temVencimento: true  },
+  resgate_rapido: { label: 'Resgate Rápido',       sub: 'Liquidez imediata',                 cor: '#2563EB', corBg: '#DBEAFE', segmentos: ['Pós-fixado'],                                                    temVencimento: true  },
+  acoes:          { label: 'Ações',                sub: 'Renda variável brasileira',          cor: '#15803D', corBg: '#DCFCE7', segmentos: [],                                                               temVencimento: false },
+  fiis:           { label: 'Fundos Imobiliários',  sub: 'FIIs listados na B3',               cor: '#059669', corBg: '#D1FAE5', segmentos: [],                                                               temVencimento: false },
+  exterior:       { label: 'Exterior',             sub: 'Renda Variável · Renda Fixa',       cor: '#B45309', corBg: '#FEF3C7', segmentos: ['Renda Variável','Renda Fixa'],                                   temVencimento: false },
+  cripto:         { label: 'Cripto',               sub: 'Criptoativos',                      cor: '#1D4ED8', corBg: '#EFF6FF', segmentos: [],                                                               temVencimento: false },
+} as const;
+
+export const CARD_ORDER: CardId[] = ['resgate_longo','resgate_rapido','acoes','fiis','exterior','cripto'];
+
+export const ALOCACAO_PADRAO: Record<string, Record<CardId, number>> = {
+  conservador:          { resgate_longo: 42, resgate_rapido: 50, acoes: 2, fiis: 2, exterior: 4,    cripto: 0   },
+  conservador_moderado: { resgate_longo: 43, resgate_rapido: 35, acoes: 7, fiis: 6, exterior: 9,    cripto: 0   },
+  moderado:             { resgate_longo: 41, resgate_rapido: 25, acoes: 13,fiis: 7, exterior: 13,   cripto: 1   },
+  arrojado:             { resgate_longo: 37, resgate_rapido: 15, acoes: 20,fiis: 9, exterior: 17.5, cripto: 1.5 },
+};
