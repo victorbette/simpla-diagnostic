@@ -120,18 +120,38 @@ export function FerramentaCarteira({
 
   const atualizarCotacoes = useCallback(() => {
     const tickers = ativosAtuais
-      .filter((a) => ["acoes", "fiis", "exterior", "cripto"].includes(a.card))
+      .filter((a) => {
+        const nome = (a.nome ?? "").trim();
+        return ["acoes", "fiis", "exterior", "cripto"].includes(a.card) && nome.length >= 2;
+      })
       .map((a) => ({
-        ticker: a.nome.trim(),
+        ticker: (a.nome ?? "").trim(),
         tipo: a.card as "acoes" | "fiis" | "exterior" | "cripto",
-      }))
-      .filter((t) => t.ticker.length >= 2);
+      }));
     if (tickers.length > 0) buscarCotacoes(tickers);
   }, [ativosAtuais, buscarCotacoes]);
 
   useEffect(() => {
     if (etapa === 1) atualizarCotacoes();
   }, [etapa]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Teste pontual da Edge Function — verificar console do browser
+  useEffect(() => {
+    fetch("https://gimcyirqinmlwbakcnhq.supabase.co/functions/v1/cotacoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tickers: [
+          { ticker: "PETR4", tipo: "acoes" },
+          { ticker: "VOO",   tipo: "exterior" },
+          { ticker: "BTC",   tipo: "cripto" },
+        ],
+      }),
+    })
+      .then((r) => r.json())
+      .then((d) => console.log("[TESTE COTAÇÕES]", d))
+      .catch((e) => console.error("[TESTE COTAÇÕES ERRO]", e));
+  }, []);
   // ────────────────────────────────────────────────────────────────────────────
 
   function patch(p: Partial<State>) { setState((prev) => ({ ...prev, ...p })); }

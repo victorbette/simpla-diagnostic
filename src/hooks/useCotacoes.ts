@@ -1,5 +1,4 @@
 import { useState, useCallback, useRef } from "react";
-import { supabase } from "../integrations/supabase/client";
 
 export interface Cotacao {
   ticker: string;
@@ -17,7 +16,9 @@ export interface TickerRequest {
   tipo: "acoes" | "fiis" | "exterior" | "cripto";
 }
 
-// Module-level cache shared across hook instances: ticker → { cotacao, timestamp }
+const EDGE_URL = "https://gimcyirqinmlwbakcnhq.supabase.co/functions/v1/cotacoes";
+
+// Module-level cache: ticker → { cotacao, timestamp }
 const cache: Record<string, { cotacao: Cotacao; ts: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
@@ -57,12 +58,19 @@ export function useCotacoes() {
     setErro(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("cotacoes", {
-        body: { tickers: precisaBuscar },
+      const resp = await fetch(EDGE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tickers: precisaBuscar }),
+        signal: abortRef.current.signal,
       });
 
-      if (error) throw new Error(error.message);
+      if (!resp.ok) {
+        const texto = await resp.text();
+        throw new Error(`Erro ${resp.status}: ${texto}`);
+      }
 
+      const data = await resp.json();
       const novas: Record<string, Cotacao> = data?.cotacoes ?? {};
 
       for (const [key, cot] of Object.entries(novas)) {
@@ -72,8 +80,11 @@ export function useCotacoes() {
       setCotacoes((prev) => ({ ...prev, ...novas }));
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
-        console.error("[useCotacoes]", err);
-        setErro(err.message);
+        console.error("[useCotacoes] erro completo:", {
+          message: err.message,
+          err,
+        });
+        setErro(err.message ?? "Erro desconhecido");
       }
     } finally {
       setCarregando(false);

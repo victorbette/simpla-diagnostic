@@ -320,10 +320,10 @@ export function TabelaAtivos({
           )}
 
           {ativos.map((a) => {
-            const key = a.nome.trim().toUpperCase();
+            const key = (a.nome ?? "").trim().toUpperCase();
             const cot = cotacoes[key];
-            // Cripto quotes from Yahoo are in USD — convert to BRL for display
-            const cotPrecoDisplay = cot && !cot.erro
+            // Cripto quotes from Yahoo are in USD — convert to BRL
+            const cotPrecoDisplay = cot && !cot.erro && cot.preco > 0
               ? (card.id === "cripto" ? cot.preco * usdBrl : cot.preco)
               : null;
             return (
