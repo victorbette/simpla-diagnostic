@@ -2,38 +2,24 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer,
 } from "recharts";
+import {
+  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
+  Baby, Shield, TrendingUp, MoreHorizontal,
+} from "lucide-react";
 import type { ProjecaoPoint } from "@/types/estrategiaResultados";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
 import { formatCurrency } from "@/lib/format";
 
+const ICON_MAP: Record<string, React.ElementType> = {
+  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
+  Baby, Shield, TrendingUp, MoreHorizontal,
+};
+
 function formatAxis(v: number) {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
   return String(v);
-}
-
-interface ObjLabelProps {
-  viewBox?: { x: number; y: number; height: number };
-  nome: string;
-  color: string;
-}
-
-function ObjLabel({ viewBox, nome, color }: ObjLabelProps) {
-  if (!viewBox) return null;
-  const label = nome.length > 7 ? nome.slice(0, 6) + "…" : nome;
-  return (
-    <text
-      x={viewBox.x + 3}
-      y={18}
-      fontSize={9}
-      fill={color}
-      fontWeight={700}
-      style={{ pointerEvents: "none" }}
-    >
-      {label}
-    </text>
-  );
 }
 
 interface Props {
@@ -50,9 +36,67 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, patrimonioAl
     return undefined;
   }, undefined);
 
+  const objsByIdade = new Map<number, ObjetivoVida[]>();
+  for (const obj of objetivos) {
+    const list = objsByIdade.get(obj.idadeRealizacao) ?? [];
+    list.push(obj);
+    objsByIdade.set(obj.idadeRealizacao, list);
+  }
+
+  const renderDot = (dotProps: Record<string, unknown>) => {
+    const cx = dotProps.cx as number;
+    const cy = dotProps.cy as number;
+    const payload = dotProps.payload as { idade: number };
+    const objsDaIdade = objsByIdade.get(payload.idade) ?? [];
+    if (objsDaIdade.length === 0) return <g />;
+
+    const r = 18;
+    return (
+      <g>
+        {objsDaIdade.map((obj, i) => {
+          const meta = OBJETIVO_META[obj.tipo];
+          const Icon = ICON_MAP[meta.iconName];
+          const offsetY = cy - r - 4 - i * (r * 2 + 4);
+          const iconSize = (r - 2) * 2;
+
+          return (
+            <g key={obj.id}>
+              <circle
+                cx={cx}
+                cy={offsetY}
+                r={r}
+                fill={`${meta.color}20`}
+                stroke={meta.color}
+                strokeWidth={1.5}
+              />
+              <foreignObject
+                x={cx - r + 2}
+                y={offsetY - r + 2}
+                width={iconSize}
+                height={iconSize}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <Icon style={{ width: 15, height: 15, color: meta.color }} />
+                </div>
+              </foreignObject>
+            </g>
+          );
+        })}
+      </g>
+    );
+  };
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={projecao} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+      <AreaChart data={projecao} margin={{ top: 50, right: 16, bottom: 0, left: 8 }}>
         <defs>
           <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
@@ -101,26 +145,14 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, patrimonioAl
           />
         )}
 
-        {objetivos.map((obj) => {
-          const meta = OBJETIVO_META[obj.tipo];
-          return (
-            <ReferenceLine
-              key={obj.id}
-              x={obj.idadeRealizacao}
-              stroke={meta.color}
-              strokeWidth={1.5}
-              strokeDasharray="3 3"
-              label={<ObjLabel nome={obj.nome} color={meta.color} />}
-            />
-          );
-        })}
-
         <Area
           type="monotone"
           dataKey="patrimonio"
           stroke="#2563EB"
           strokeWidth={2}
           fill="url(#gradIF)"
+          dot={renderDot}
+          activeDot={{ r: 4 }}
         />
       </AreaChart>
     </ResponsiveContainer>
