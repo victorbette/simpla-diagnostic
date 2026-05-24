@@ -65,7 +65,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, patrimonioAl
                 cx={cx}
                 cy={offsetY}
                 r={r}
-                fill={`${meta.color}20`}
+                fill="white"
                 stroke={meta.color}
                 strokeWidth={1.5}
               />
@@ -87,6 +87,14 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, patrimonioAl
                   <Icon style={{ width: 15, height: 15, color: meta.color }} />
                 </div>
               </foreignObject>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={5}
+                fill="white"
+                stroke="#374151"
+                strokeWidth={1.5}
+              />
             </g>
           );
         })}
