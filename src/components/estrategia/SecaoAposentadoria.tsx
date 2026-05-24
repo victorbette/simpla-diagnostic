@@ -5,7 +5,6 @@ import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import { GraficoIF } from "@/components/shared/GraficoIF";
-
 interface Props {
   plan: FinancialPlan;
   comentario: string;
@@ -165,20 +164,20 @@ export function SecaoAposentadoria({
           planejamentoIF={plan.planejamentoIF}
           onSave={(params, objetivos, result) => {
             onResultadoIF({
-              patrimonioAposentadoria: result.patrimonioAposentadoria,
+              patrimonioAposentadoria: result.patrimonioNaIF,
               rendaSustentavel: result.rendaSustentavel,
               gapRenda: result.gapRenda,
-              liberdadeAlcancada: result.liberdadeAlcancada,
-              aporteAjustado: result.aporteAjustado,
-              patrimonioNecessario: result.taxaReal > 0 ? (params.rendaDesejada * 12) / result.taxaReal : result.patrimonioAposentadoria,
+              liberdadeAlcancada: result.ifAlcancada,
+              aporteAjustado: result.aporteNecessario,
+              patrimonioNecessario: result.patrimonioNecessario,
               patrimonioAtual: params.patrimonioInicial,
               idadeAtual: params.idadeAtual,
-              idadeMeta: params.idadeAposentadoria,
-              anosRestantes: Math.max(0, params.idadeAposentadoria - params.idadeAtual),
-              rendaMensalDesejada: params.rendaDesejada,
+              idadeMeta: params.idadeMeta,
+              anosRestantes: Math.max(0, params.idadeMeta - params.idadeAtual),
+              rendaMensalDesejada: params.rendaMensalDesejada,
               aporteAtual: params.aporteMensal,
-              taxaRetorno: params.rentabilidadeAnual,
-              projecao: result.projecao.map((p) => ({ idade: p.idade, patrimonio: p.patrimonio, fase: p.fase })),
+              taxaRetorno: params.taxaRetornoAnual,
+              projecao: result.projecao,
               objetivos,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),

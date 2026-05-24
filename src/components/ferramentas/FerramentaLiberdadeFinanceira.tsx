@@ -6,10 +6,10 @@ import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
-  simularLiberdadeFinanceira,
-  type SimulationParams,
-  type SimulationResult,
-  type LifeGoal,
+  calcularProjecaoIF,
+  calcularTaxaReal,
+  type ProjecaoIFParams,
+  type ProjecaoIFResult,
 } from "@/lib/financialFreedomCalc";
 import type { PlanejamentoIF } from "@/types/financialPlanning";
 import type { ObjetivoVida } from "@/types/objetivos";
@@ -20,7 +20,18 @@ import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 interface Props {
   clientId: string;
   planejamentoIF: PlanejamentoIF;
-  onSave: (params: SimulationParams, objetivos: ObjetivoVida[], result: SimulationResult) => void;
+  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => void;
+}
+
+interface UIParams {
+  idadeAtual: number;
+  idadeAposentadoria: number;
+  expectativaVida: number;
+  patrimonioInicial: number;
+  aporteMensal: number;
+  rendaDesejada: number;
+  rentabilidadeAnual: number; // nominal, decimal
+  inflacaoAnual: number;      // decimal
 }
 
 const cardGreenTop: React.CSSProperties = {
@@ -41,7 +52,7 @@ const badgePctStyle: React.CSSProperties = {
 const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
 
 export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave }: Props) {
-  const initialParams: SimulationParams = {
+  const initialParams: UIParams = {
     idadeAtual: planejamentoIF.idadeAtual,
     idadeAposentadoria: planejamentoIF.idadeMeta,
     expectativaVida: 90,
@@ -52,7 +63,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
     inflacaoAnual: planejamentoIF.inflacaoAnual / 100,
   };
 
-  const [params, setParams] = useState<SimulationParams>(initialParams);
+  const [params, setParams] = useState<UIParams>(initialParams);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
 
   const CHAVE = `ferramenta_if_${clientId}`;
@@ -70,18 +81,28 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
     { params: initialParams, objetivos: [] },
   );
 
-  const setP = (patch: Partial<SimulationParams>) => setParams((p) => ({ ...p, ...patch }));
+  const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
 
-  const result = useMemo(() => {
-    const lifeGoals: LifeGoal[] = objetivos.map((o) => ({
+  // Real rate via Fisher equation; feed directly into calc engine
+  const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
+
+  const projecaoParams: ProjecaoIFParams = useMemo(() => ({
+    idadeAtual: params.idadeAtual,
+    idadeMeta: params.idadeAposentadoria,
+    patrimonioInicial: params.patrimonioInicial,
+    aporteMensal: params.aporteMensal,
+    rendaMensalDesejada: params.rendaDesejada,
+    taxaRetornoAnual: taxaRetornoReal,
+    objetivos: objetivos.map((o) => ({
       id: o.id,
       nome: o.nome,
       valor: o.valor,
       idadeRealizacao: o.idadeRealizacao,
       tipo: OBJETIVO_META[o.tipo].tipo,
-    }));
-    return simularLiberdadeFinanceira({ ...params, objetivos: lifeGoals });
-  }, [params, objetivos]);
+    })),
+  }), [params, objetivos, taxaRetornoReal]);
+
+  const result = useMemo(() => calcularProjecaoIF(projecaoParams), [projecaoParams]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -122,19 +143,22 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="lf-idade-atual" style={{ color: "#6B7280" }}>Idade atual</Label>
                   <Input id="lf-idade-atual" type="number" min={18} max={80}
-                    value={params.idadeAtual} onChange={(e) => setP({ idadeAtual: Number(e.target.value) })}
+                    value={params.idadeAtual}
+                    onChange={(e) => setP({ idadeAtual: Number(e.target.value) })}
                     style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade IF</Label>
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
-                    value={params.idadeAposentadoria} onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                    value={params.idadeAposentadoria}
+                    onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
                     style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="lf-vida" style={{ color: "#6B7280" }}>Expectativa</Label>
                   <Input id="lf-vida" type="number" min={params.idadeAposentadoria + 1} max={110}
-                    value={params.expectativaVida} onChange={(e) => setP({ expectativaVida: Number(e.target.value) })}
+                    value={params.expectativaVida}
+                    onChange={(e) => setP({ expectativaVida: Number(e.target.value) })}
                     style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
               </div>
@@ -152,6 +176,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 <CurrencyInput value={params.rendaDesejada} onChange={(v) => setP({ rendaDesejada: v })} />
               </div>
 
+              {/* Nominal return slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label style={{ color: "#6B7280" }}>Rentabilidade nominal anual</Label>
@@ -169,20 +194,26 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 </div>
               </div>
 
+              {/* Inflation slider — min 0% to allow pure real-rate testing */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B7280" }}>Inflação anual</Label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Label style={{ color: "#6B7280" }}>Inflação anual</Label>
+                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
+                      → real: {formatNumber(taxaRetornoReal * 100, 1)}%
+                    </span>
+                  </div>
                   <span style={badgePctStyle}>{formatNumber(params.inflacaoAnual * 100, 1)}%</span>
                 </div>
                 <input
-                  type="range" min={2} max={10} step={0.5}
+                  type="range" min={0} max={10} step={0.5}
                   value={params.inflacaoAnual * 100}
                   onChange={(e) => setP({ inflacaoAnual: Number(e.target.value) / 100 })}
                   className="w-full"
                   style={{ accentColor: "#000000" }}
                 />
                 <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  <span>2%</span><span>10%</span>
+                  <span>0%</span><span>10%</span>
                 </div>
               </div>
             </CardContent>
@@ -201,15 +232,28 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
 
         {/* Right: Results */}
         <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
+          {/* KPI grid — 2×2 + full-width aporte */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
                 <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Patrimônio na IF
                 </p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
-                  {formatCurrency(result.patrimonioAposentadoria)}
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#000000" }} className="tabular-nums">
+                  {formatCurrency(result.patrimonioNaIF)}
                 </p>
+              </CardContent>
+            </Card>
+
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Patrimônio necessário
+                </p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
+                  {formatCurrency(result.patrimonioNecessario)}
+                </p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>regra dos 4%</p>
               </CardContent>
             </Card>
 
@@ -218,8 +262,8 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
                   Renda sustentável
                 </p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: "#000000" }} className="tabular-nums">
-                  {formatCurrency(result.rendaSustentavel)}
+                <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D" }} className="tabular-nums">
+                  {formatCurrency(result.rendaSustentavel)}/mês
                 </p>
               </CardContent>
             </Card>
@@ -227,39 +271,50 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
                 <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  {result.gapRenda >= 0 ? "Superávit de renda" : "Gap de renda"}
+                  {result.gapRenda > 0 ? "Gap de renda" : "Superávit de renda"}
                 </p>
                 <p
-                  style={{ fontSize: 20, fontWeight: 700, color: result.gapRenda >= 0 ? "#15803D" : "#B91C1C" }}
+                  style={{ fontSize: 18, fontWeight: 700, color: result.gapRenda > 0 ? "#B91C1C" : "#15803D" }}
                   className="tabular-nums"
                 >
-                  {formatCurrency(Math.abs(result.gapRenda))}
+                  {formatCurrency(Math.abs(result.gapRenda))}/mês
                 </p>
               </CardContent>
             </Card>
+          </div>
 
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4 flex items-center justify-center">
-                {result.liberdadeAlcancada ? (
+          {/* Aporte necessário — full width highlight */}
+          <Card style={{ ...cardGreenTop, borderTop: "3px solid #1E3A8A" }}>
+            <CardContent className="pt-4 pb-4" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Aporte necessário para atingir IF
+                </p>
+                <p style={{ fontSize: 22, fontWeight: 700, color: "#1E3A8A" }} className="tabular-nums">
+                  {formatCurrency(result.aporteNecessario)}/mês
+                </p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                {result.ifAlcancada ? (
                   <span style={{
                     backgroundColor: "#DCFCE7", color: "#15803D",
                     border: "1px solid #A8C8AB", borderRadius: 8,
                     padding: "6px 14px", fontSize: 13, fontWeight: 600,
                   }}>
-                    Liberdade alcançada ✓
+                    IF alcançada ✓
                   </span>
                 ) : (
                   <span style={{
-                    backgroundColor: "#FEE2E2", color: "#B91C1C",
-                    border: "1px solid #C8A8A8", borderRadius: 8,
+                    backgroundColor: "#FEF3C7", color: "#92400E",
+                    border: "1px solid #FDE68A", borderRadius: 8,
                     padding: "6px 14px", fontSize: 13, fontWeight: 600,
                   }}>
-                    Gap: {formatCurrency(Math.abs(result.gapRenda))}
+                    Aporte atual: {formatCurrency(params.aporteMensal)}
                   </span>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {objetivos.length > 0 && (
             <Card style={cardGreenTop}>
@@ -285,7 +340,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
           )}
 
           <button
-            onClick={() => onSave(params, objetivos, result)}
+            onClick={() => onSave(projecaoParams, objetivos, result)}
             style={{
               width: "100%", backgroundColor: "#15803D", color: "white",
               border: "none", borderRadius: 8, padding: "12px 0",
