@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
@@ -50,10 +50,6 @@ export function SecaoAposentadoria({
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
 
-  const pct = resultadoIF
-    ? Math.min(100, Math.round((resultadoIF.patrimonioAtual / Math.max(1, resultadoIF.patrimonioNecessario)) * 100))
-    : 0;
-
   return (
     <>
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
@@ -79,7 +75,7 @@ export function SecaoAposentadoria({
                 </button>
               </div>
 
-              {/* 2x2 metrics grid */}
+              {/* 2 metrics */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
                 <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
                   <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio na IF</p>
@@ -89,79 +85,45 @@ export function SecaoAposentadoria({
                   <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Renda Sustentável</p>
                   <p style={{ fontSize: 16, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(resultadoIF.rendaSustentavel)}/mês</p>
                 </div>
-                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Renda</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: resultadoIF.gapRenda > 0 ? "#B91C1C" : "#15803D", margin: 0 }}>
-                    {formatCurrency(Math.abs(resultadoIF.gapRenda))}/mês
-                  </p>
-                </div>
-                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Anos Restantes</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: "#000000", margin: 0 }}>{resultadoIF.anosRestantes} anos</p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
-                  <span>{pct}% do patrimônio necessário</span>
-                  <span style={{ fontWeight: 600, color: "#15803D" }}>{pct}%</span>
-                </div>
-                <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden", border: "1px solid #BFDBFE" }}>
-                  <div style={{ height: "100%", width: `${pct}%`, backgroundColor: "#15803D", borderRadius: 4, transition: "width 0.4s" }} />
-                </div>
               </div>
 
               {/* Area chart */}
-              <div style={{ marginTop: 16 }}>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={resultadoIF.projecao}>
+              <div style={{ marginTop: 20 }}>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={resultadoIF.projecao} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1E40AF" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#1E40AF" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="idade" tick={{ fontSize: 10 }} />
-                    <YAxis tickFormatter={formatAxis} tick={{ fontSize: 10 }} />
-                    <Tooltip
-                      formatter={(v) => formatCurrency(v as number)}
-                      labelFormatter={(l) => `Idade ${l}`}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
+                    <XAxis
+                      dataKey="idade"
+                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                      axisLine={false}
+                      tickLine={false}
                     />
-                    <ReferenceLine
-                      y={resultadoIF.patrimonioNecessario}
-                      stroke="#B91C1C"
-                      strokeDasharray="4 4"
-                      label={{ value: "Meta", position: "right", fontSize: 10, fill: "#B91C1C" }}
+                    <YAxis
+                      tickFormatter={formatAxis}
+                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "white", border: "1px solid #E5E7EB", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
+                      formatter={(v: number) => [formatCurrency(v), "Patrimônio"]}
+                      labelFormatter={(l) => `Idade ${l}`}
                     />
                     <Area
                       type="monotone"
                       dataKey="patrimonio"
-                      stroke="#1E40AF"
-                      fill="url(#gradIF)"
+                      stroke="#2563EB"
                       strokeWidth={2}
+                      fill="url(#gradIF)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              </div>
-
-              {/* IF status badge */}
-              <div style={{ marginTop: 12 }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    padding: "4px 14px",
-                    borderRadius: 999,
-                    backgroundColor: resultadoIF.liberdadeAlcancada ? "#DCFCE7" : "#FEE2E2",
-                    color: resultadoIF.liberdadeAlcancada ? "#15803D" : "#B91C1C",
-                    border: `1px solid ${resultadoIF.liberdadeAlcancada ? "#15803D" : "#B91C1C"}`,
-                  }}
-                >
-                  {resultadoIF.liberdadeAlcancada ? "✓ Liberdade financeira alcançada" : "✗ Liberdade financeira não alcançada"}
-                </span>
               </div>
             </>
           ) : (
