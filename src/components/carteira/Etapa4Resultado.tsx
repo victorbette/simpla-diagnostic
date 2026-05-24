@@ -81,7 +81,7 @@ function PieSection({
   );
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta: _alocacaoMeta, planoAcao, patrimonio, onSave }: Props) {
+export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, onSave }: Props) {
   const grupoAtual = useMemo(
     () => GRUPOS.map((g) => {
       const valor = totalByCards(ativosAtuais, g.cards);
@@ -91,18 +91,14 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
     [ativosAtuais, patrimonio]
   );
 
-  const totalRec = useMemo(
-    () => ativosRecomendados.reduce((s, a) => s + a.valorBRL, 0),
-    [ativosRecomendados]
-  );
-
+  // grupoMeta: use alocacaoMeta slider values (same patrimônio base as atual)
   const grupoMeta = useMemo(
     () => GRUPOS.map((g) => {
-      const valor = totalByCards(ativosRecomendados, g.cards);
-      const pct = totalRec > 0 ? (valor / totalRec) * 100 : 0;
+      const pct = g.cards.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
+      const valor = (pct / 100) * patrimonio;
       return { nome: g.nome, valor, pct: Math.round(pct * 10) / 10, cor: g.cor };
     }),
-    [ativosRecomendados, totalRec]
+    [alocacaoMeta, patrimonio]
   );
 
   const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
@@ -112,17 +108,15 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
   const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
-  // Per card breakdown — "manter" items contribute valorAtualBRL, others contribute valorAtual + movimentação
+  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × patrimônio
   const cardTotais = useMemo(
     () => CARD_ORDER.map((cardId) => {
       const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
-      const projetado = planoAcao
-        .filter((p) => p.card === cardId)
-        .reduce((s, p) => s + (p.acao === 'manter' ? p.valorAtualBRL : p.valorAtualBRL + p.movimentacaoBRL), 0);
-      const meta = ativosRecomendados.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
-      return { cardId, atual, meta: projetado || meta, dif: (projetado || meta) - atual };
+      const pctMeta = alocacaoMeta[cardId] ?? 0;
+      const meta = (pctMeta / 100) * patrimonio;
+      return { cardId, atual, meta, dif: meta - atual };
     }),
-    [ativosAtuais, ativosRecomendados, planoAcao]
+    [ativosAtuais, alocacaoMeta, patrimonio]
   );
 
   const cardStyle = (accent: string): React.CSSProperties => ({

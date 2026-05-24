@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, CardId, CarteiraResultado, PlanoAcaoItem } from "@/lib/carteira/types";
 import { CARD_ORDER, ALOCACAO_PADRAO } from "@/lib/carteira/types";
-import { gerarPlanoAcao, formatBRL } from "@/lib/carteira/calculos";
+import { gerarPlanoAcao, formatBRL, calcularPatrimonio } from "@/lib/carteira/calculos";
 import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
 import { Etapa2CarteiraRecomendada } from "./Etapa2CarteiraRecomendada";
 import { Etapa3PlanoAcao } from "./Etapa3PlanoAcao";
@@ -133,7 +133,10 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const patrimonio = ativosAtuais.reduce((s, a) => s + a.valorBRL, 0) || patrimonyInicial;
+  const patrimonio = useMemo(
+    () => calcularPatrimonio(ativosAtuais) || patrimonyInicial,
+    [ativosAtuais, patrimonyInicial]
+  );
 
   function goToEtapa(n: Etapa) {
     if (n === 3) {
