@@ -140,8 +140,31 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
   function goToEtapa(n: Etapa) {
     if (n === 3) {
-      const novo = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio);
-      setPlanoAcao(novo);
+      const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio);
+
+      setPlanoAcao((prev) => {
+        if (prev.length === 0) {
+          // First time entering step 3 — use generated plan
+          return novoPlano;
+        }
+        // Merge: recalculated values + preserved consultant edits
+        return novoPlano.map((itemNovo) => {
+          const existente = prev.find(
+            (e) =>
+              e.nomeAtivo.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() &&
+              e.card === itemNovo.card
+          );
+          if (existente) {
+            return {
+              ...itemNovo,                       // recalculated financials
+              acao: existente.acao,              // consultant's action choice
+              observacao: existente.observacao,  // consultant's notes
+              prioridade: existente.prioridade,  // consultant's priority
+            };
+          }
+          return itemNovo; // newly added asset — use defaults
+        });
+      });
     }
     setEtapa(n);
   }

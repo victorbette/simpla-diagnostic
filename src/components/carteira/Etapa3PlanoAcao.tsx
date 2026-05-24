@@ -37,8 +37,13 @@ export function Etapa3PlanoAcao({
     onPlanoAcao(planoAcao.map((p) => {
       if (p.id !== id) return p;
       const next = { ...p, ...patch };
-      // when switching to manter, zero out the movimentação
-      if (patch.acao === 'manter') next.movimentacaoBRL = 0;
+      if (patch.acao === 'manter') {
+        // switching to manter: zero out movimentação
+        next.movimentacaoBRL = 0;
+      } else if (patch.acao !== undefined && p.acao === 'manter') {
+        // switching away from manter: restore the original diff
+        next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
+      }
       return next;
     }));
   }
