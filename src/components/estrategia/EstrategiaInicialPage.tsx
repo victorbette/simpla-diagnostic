@@ -284,12 +284,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     if (secaoIndex < SECOES.length - 1) setSecaoAtiva(SECOES[secaoIndex + 1].id);
   };
 
-  // Count sections with comments (non-revisao)
-  const nonRevisaoSections = SECOES.filter((s) => s.id !== "revisao");
-  const concluidasCount = nonRevisaoSections.filter(
-    (s) => (data.comentarios[s.id]?.length ?? 0) > 20
-  ).length;
-
   // Avatar
   const firstChar = clientName.trim().charAt(0).toUpperCase();
   const charCode = firstChar.charCodeAt(0);
@@ -299,21 +293,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "Não definido";
 
-  function renderStatusBadge(secaoId: SecaoId) {
-    const len = data.comentarios[secaoId]?.length ?? 0;
-    if (len > 20) {
-      return (
-        <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#EFF6FF", color: "#2563EB" }}>
-          Em revisão
-        </span>
-      );
-    }
-    return (
-      <span style={{ fontSize: 10, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#F0F7FF", color: "#6B7280" }}>
-        Pendente
-      </span>
-    );
-  }
 
   function renderContent() {
     const comentario = data.comentarios[secaoAtiva] ?? "";
@@ -414,7 +393,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     }
   }
 
-  const progressPct = (concluidasCount / 5) * 100;
 
   if (mostrarFinal) {
     return (
@@ -555,42 +533,11 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                       {secao.label}
                     </span>
                   </div>
-                  {renderStatusBadge(secao.id)}
                 </button>
               );
             })}
           </nav>
 
-          {/* Sidebar footer */}
-          <div style={{ padding: 16, borderTop: "1px solid #F0F7FF" }}>
-            <div style={{ fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
-              {concluidasCount} de 5 seções com estratégia
-            </div>
-            <div style={{ height: 4, backgroundColor: "#F0F7FF", borderRadius: 2, marginBottom: 12, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progressPct}%`, backgroundColor: "#3B82F6", borderRadius: 2, transition: "width 0.3s" }} />
-            </div>
-            {onSaveCloud && (
-              <button
-                onClick={() => handleSalvarCloud(data)}
-                disabled={salvando}
-                style={{ width: "100%", padding: "9px 0", border: "none", borderRadius: 6, backgroundColor: salvando ? "#2563EB" : "#3B82F6", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", marginBottom: 8, opacity: salvando ? 0.85 : 1 }}
-              >
-                {salvando ? "Salvando..." : ultimoSalvo ? `✓ Salvo às ${ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Salvar estratégia"}
-              </button>
-            )}
-            <button
-              onClick={() => setPrintMode("consultor")}
-              style={{ width: "100%", padding: "8px 0", border: "1px solid #000000", borderRadius: 6, backgroundColor: "transparent", color: "#000000", fontSize: 13, cursor: "pointer", marginBottom: 8 }}
-            >
-              Gerar PDF Consultor
-            </button>
-            <button
-              onClick={() => setPrintMode("cliente")}
-              style={{ width: "100%", padding: "8px 0", border: "none", borderRadius: 6, backgroundColor: "#1E3A8A", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
-            >
-              Gerar PDF Cliente
-            </button>
-          </div>
         </div>
 
         {/* Main content */}
