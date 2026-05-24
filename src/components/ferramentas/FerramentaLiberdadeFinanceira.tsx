@@ -83,11 +83,6 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
     return simularLiberdadeFinanceira({ ...params, objetivos: lifeGoals });
   }, [params, objetivos]);
 
-  const patrimonioAlvo = (() => {
-    const idx = result.projecao.findIndex((p) => p.fase === "decumulacao");
-    return idx > 0 ? (result.projecao[idx - 1]?.patrimonio ?? 0) : 0;
-  })();
-
   return (
     <div className="flex flex-col gap-6">
       {/* Persistence bar */}
@@ -312,7 +307,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             projecao={result.projecao}
             objetivos={objetivos}
             height={300}
-            patrimonioAlvo={patrimonioAlvo}
+            idadeMeta={params.idadeAposentadoria}
           />
         </CardContent>
       </Card>

@@ -85,6 +85,7 @@ export function SecaoAposentadoria({
                   projecao={resultadoIF.projecao}
                   objetivos={resultadoIF.objetivos ?? []}
                   height={280}
+                  idadeMeta={resultadoIF.idadeMeta}
                 />
               </div>
             </>
