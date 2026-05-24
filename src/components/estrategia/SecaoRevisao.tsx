@@ -1,7 +1,5 @@
 import React from "react";
 import {
-  CheckCircle,
-  AlertCircle,
   PieChart as PieChartIcon,
   Flame,
   Shield,
@@ -35,14 +33,6 @@ interface Props {
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const SECOES_CONTENT: { id: SecaoId; label: string; color: string }[] = [
-  { id: "assetAllocation", label: "Asset Allocation", color: "#000000" },
-  { id: "aposentadoria", label: "Aposentadoria / IF", color: "#15803D" },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório", color: "#B91C1C" },
-  { id: "fiscal", label: "Planejamento Fiscal", color: "#2563EB" },
-  { id: "proximosPassos", label: "Próximos Passos", color: "#1E40AF" },
-];
 
 const CLASSE_COLORS: Record<string, string> = {
   rendaFixa: "#1E40AF",
@@ -385,11 +375,6 @@ export function SecaoRevisao({
   onFinalizar,
   onComentarioGeralChange,
 }: Props): React.ReactElement {
-  const pendentes = SECOES_CONTENT.filter(
-    (s) => (estrategia.comentarios[s.id]?.length ?? 0) <= 20
-  ).length;
-  const todasConcluidas = pendentes === 0;
-
   // ── Asset Allocation data ──
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const alocAtualRaw = calcularAlocacaoAtual(plan.ativosAtuais);
@@ -433,60 +418,7 @@ export function SecaoRevisao({
         gap: 24,
       }}
     >
-      {/* ── BLOCO 1: Banner de status ── */}
-      <div
-        style={{
-          padding: "16px 20px",
-          borderRadius: 10,
-          backgroundColor: todasConcluidas ? "#DCFCE7" : "#EFF6FF",
-          border: `1px solid ${todasConcluidas ? "#86EFAC" : "#60A5FA"}`,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        {todasConcluidas ? (
-          <CheckCircle style={{ width: 18, height: 18, color: "#15803D", flexShrink: 0 }} />
-        ) : (
-          <AlertCircle style={{ width: 18, height: 18, color: "#2563EB", flexShrink: 0 }} />
-        )}
-        <span
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: todasConcluidas ? "#15803D" : "#2563EB",
-          }}
-        >
-          {todasConcluidas
-            ? "Estratégia completa — todas as seções revisadas"
-            : `${pendentes} seção${pendentes > 1 ? "ões" : ""} pendente${pendentes > 1 ? "s" : ""} — revise antes de finalizar`}
-        </span>
-        {!todasConcluidas && (
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {SECOES_CONTENT.filter(
-              (s) => (estrategia.comentarios[s.id]?.length ?? 0) <= 20
-            ).map((s) => (
-              <span
-                key={s.id}
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: "2px 8px",
-                  borderRadius: 999,
-                  backgroundColor: "white",
-                  border: `1px solid ${s.color}`,
-                  color: s.color,
-                }}
-              >
-                {s.label}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── BLOCO 2: Cards por área ── */}
+      {/* ── BLOCO 1: Cards por área ── */}
 
       {/* Card 1: Asset Allocation */}
       <AreaCard borderColor="#000000">
@@ -1092,19 +1024,6 @@ export function SecaoRevisao({
           Finalizar e ver Estratégia Inicial
           <ArrowRight style={{ width: 18, height: 18 }} />
         </button>
-        {pendentes > 0 && (
-          <p
-            style={{
-              fontSize: 13,
-              color: "#2563EB",
-              margin: 0,
-              textAlign: "center",
-            }}
-          >
-            ⚠ {pendentes} seção{pendentes > 1 ? "ões" : ""} pendente{pendentes > 1 ? "s" : ""} não{" "}
-            {pendentes > 1 ? "serão incluídas" : "será incluída"}
-          </p>
-        )}
       </div>
     </div>
   );
