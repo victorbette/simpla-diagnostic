@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -107,8 +107,51 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
 
   const result = useMemo(() => calcularProjecaoIF(projecaoParams), [projecaoParams]);
 
+  // ── DIAGNÓSTICO PASSO 3 ── remover após confirmar ───────────────────────
+  const [diagResult, setDiagResult] = useState<string | null>(null);
+  useEffect(() => {
+    const taxaReal = calcularTaxaReal(0.12, 0.05); // 12% nominal, 5% inflação → ~6.7% real
+    const teste = calcularProjecaoIF({
+      idadeAtual: 43,
+      idadeMeta: 60,
+      patrimonioInicial: 100_000,
+      aporteMensal: 15_400,
+      rendaMensalDesejada: 20_000,
+      taxaRetornoAnual: taxaReal,
+      objetivos: [{
+        id: 'diag',
+        nome: 'Casa Nova',
+        idadeRealizacao: 48,   // campo correto: idadeRealizacao (não o.idade)
+        valor: 500_000,         // campo correto: valor (não o.valorBRL)
+        tipo: 'despesa' as const,
+      }],
+    });
+    const p47 = teste.projecao.find(p => p.idade === 47)?.patrimonio ?? 0;
+    const p48 = teste.projecao.find(p => p.idade === 48)?.patrimonio ?? 0;
+    const p49 = teste.projecao.find(p => p.idade === 49)?.patrimonio ?? 0;
+    const diff = p47 - p48;
+    const ok = diff > 400_000; // ~500k objetivo menos ~100k crescimento anual
+    const msg = `Diagnóstico IF\n47: R$${p47.toLocaleString('pt-BR')}\n48: R$${p48.toLocaleString('pt-BR')}\n49: R$${p49.toLocaleString('pt-BR')}\nQueda 47→48: R$${diff.toLocaleString('pt-BR')}\n${ok ? '✅ Objetivo aplicado corretamente' : '❌ Objetivo NÃO aplicado'}`;
+    console.log(msg);
+    setDiagResult(msg);
+  }, []);
+  // ── FIM DIAGNÓSTICO ──────────────────────────────────────────────────────
+
   return (
     <div className="flex flex-col gap-6">
+      {/* ── DIAGNÓSTICO visual — remover após confirmar ── */}
+      {diagResult && (
+        <pre style={{
+          fontSize: 11, padding: "10px 14px", borderRadius: 8,
+          backgroundColor: diagResult.includes('✅') ? '#DCFCE7' : '#FEE2E2',
+          border: `1px solid ${diagResult.includes('✅') ? '#86EFAC' : '#FCA5A5'}`,
+          color: '#111827', whiteSpace: 'pre-wrap', fontFamily: 'monospace',
+        }}>
+          {diagResult}
+        </pre>
+      )}
+      {/* ── FIM DIAGNÓSTICO ── */}
+
       {/* Persistence bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
