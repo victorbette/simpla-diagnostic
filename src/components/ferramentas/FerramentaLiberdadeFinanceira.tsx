@@ -86,21 +86,24 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
   // Real rate via Fisher equation; feed directly into calc engine
   const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
 
-  const projecaoParams: ProjecaoIFParams = useMemo(() => ({
-    idadeAtual: params.idadeAtual,
-    idadeMeta: params.idadeAposentadoria,
-    patrimonioInicial: params.patrimonioInicial,
-    aporteMensal: params.aporteMensal,
-    rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: taxaRetornoReal,
-    objetivos: objetivos.map((o) => ({
+  const projecaoParams: ProjecaoIFParams = useMemo(() => {
+    const mapped = objetivos.map((o) => ({
       id: o.id,
       nome: o.nome,
-      valor: o.valor,
-      idadeRealizacao: o.idadeRealizacao,
+      valor: Number(o.valor),
+      idadeRealizacao: Math.round(Number(o.idadeRealizacao)),
       tipo: OBJETIVO_META[o.tipo].tipo,
-    })),
-  }), [params, objetivos, taxaRetornoReal]);
+    }));
+    return {
+      idadeAtual: params.idadeAtual,
+      idadeMeta: params.idadeAposentadoria,
+      patrimonioInicial: params.patrimonioInicial,
+      aporteMensal: params.aporteMensal,
+      rendaMensalDesejada: params.rendaDesejada,
+      taxaRetornoAnual: taxaRetornoReal,
+      objetivos: mapped,
+    };
+  }, [params, objetivos, taxaRetornoReal]);
 
   const result = useMemo(() => calcularProjecaoIF(projecaoParams), [projecaoParams]);
 

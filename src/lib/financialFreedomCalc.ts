@@ -162,12 +162,16 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const taxaMensalReal = Math.pow(1 + taxaRetornoAnual, 1 / 12) - 1;
 
   // Net effect per age: positive = extra inflow, negative = outflow
+  // Only objectives strictly after idadeAtual can be applied (loop starts at idadeAtual+1)
   const objsByIdade = new Map<number, number>();
   for (const obj of objetivos) {
+    const idade = Math.round(Number(obj.idadeRealizacao));
+    const valor = Number(obj.valor);
+    if (!isFinite(idade) || !isFinite(valor) || idade <= idadeAtual) continue;
     const sinal = obj.tipo === "aporte" ? 1 : -1;
     objsByIdade.set(
-      obj.idadeRealizacao,
-      (objsByIdade.get(obj.idadeRealizacao) ?? 0) + sinal * obj.valor,
+      idade,
+      (objsByIdade.get(idade) ?? 0) + sinal * valor,
     );
   }
 
