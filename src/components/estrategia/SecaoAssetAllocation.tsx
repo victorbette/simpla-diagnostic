@@ -276,12 +276,7 @@ export function SecaoAssetAllocation({
       const brlMeta = (pctMeta / 100) * patrimonio;
       const difBRL = brlMeta - brlAtual;
 
-      let acao = "→ Manter";
-      if (pctAtual === 0 && pctMeta > 0) acao = "✦ Novo";
-      else if (difBRL > 100) acao = "↑ Aportar";
-      else if (difBRL < -100) acao = "↓ Resgatar";
-
-      return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctAtual, brlAtual, pctMeta, brlMeta, difBRL, acao };
+      return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctAtual, brlAtual, pctMeta, brlMeta, difBRL };
     })
     .filter((d) => d.pctAtual > 0 || d.pctMeta > 0);
 
@@ -298,14 +293,6 @@ export function SecaoAssetAllocation({
     groupedByCard[cardLabel].push(item);
   }
 
-  const acaoBadge = (acao: string) => {
-    const isUp = acao.includes("Aportar") || acao.includes("Novo");
-    const isDown = acao.includes("Resgatar");
-    return {
-      bg: isUp ? "#DCFCE7" : isDown ? "#FEE2E2" : "#F0F7FF",
-      color: isUp ? "#15803D" : isDown ? "#B91C1C" : "#6B7280",
-    };
-  };
 
   return (
     <>
@@ -379,20 +366,18 @@ export function SecaoAssetAllocation({
 
         {/* Card 3 — Comparative table */}
         <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px 80px", backgroundColor: "#1E3A8A", padding: "10px 20px" }}>
-            {["Classe", "% Atual", "R$ Atual", "% Meta", "R$ Meta", "Dif R$", "Ação"].map((h, i) => (
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", backgroundColor: "#1E3A8A", padding: "10px 20px" }}>
+            {["Classe", "% Atual", "R$ Atual", "% Meta", "R$ Meta", "Dif R$"].map((h, i) => (
               <span key={h} style={{ fontSize: 11, fontWeight: 700, color: "white", textTransform: "uppercase", letterSpacing: "0.04em", textAlign: i === 0 ? "left" : "right" }}>
                 {h}
               </span>
             ))}
           </div>
 
-          {dadosTabela.map((d, idx) => {
-            const badge = acaoBadge(d.acao);
-            return (
+          {dadosTabela.map((d, idx) => (
               <div
                 key={d.cardId}
-                style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px 80px", padding: "10px 20px", backgroundColor: idx % 2 === 0 ? "white" : "#F0F7FF", borderBottom: "1px solid #F0F7FF", alignItems: "center" }}
+                style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", padding: "10px 20px", backgroundColor: idx % 2 === 0 ? "white" : "#F0F7FF", borderBottom: "1px solid #F0F7FF", alignItems: "center" }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#000000" }}>
                   <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.cor, flexShrink: 0 }} />
@@ -405,18 +390,12 @@ export function SecaoAssetAllocation({
                 <span style={{ fontSize: 12, fontWeight: 600, color: d.difBRL > 0 ? "#15803D" : d.difBRL < 0 ? "#B91C1C" : "#9CA3AF", textAlign: "right" }}>
                   {d.difBRL === 0 ? "—" : `${d.difBRL > 0 ? "+" : ""}${formatBRL(d.difBRL)}`}
                 </span>
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color, border: `1px solid ${badge.color}40`, whiteSpace: "nowrap" }}>
-                    {d.acao}
-                  </span>
-                </div>
               </div>
-            );
-          })}
+          ))}
 
           {/* Total row */}
           {dadosTabela.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px 80px", padding: "10px 20px", backgroundColor: "#F8FAFC", borderTop: "2px solid #BFDBFE", alignItems: "center" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", padding: "10px 20px", backgroundColor: "#F8FAFC", borderTop: "2px solid #BFDBFE", alignItems: "center" }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>
                 {formatPct(dadosTabela.reduce((s, d) => s + d.pctAtual, 0))}
@@ -427,7 +406,6 @@ export function SecaoAssetAllocation({
               </span>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonio)}</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>R$ 0,00</span>
-              <span />
             </div>
           )}
         </div>
