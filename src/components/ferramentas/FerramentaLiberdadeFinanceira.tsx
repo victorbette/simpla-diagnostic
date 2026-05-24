@@ -284,37 +284,70 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
           </div>
 
           {/* Aporte necessário — full width highlight */}
-          <Card style={{ ...cardGreenTop, borderTop: "3px solid #1E3A8A" }}>
-            <CardContent className="pt-4 pb-4" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Aporte necessário para atingir IF
-                </p>
-                <p style={{ fontSize: 22, fontWeight: 700, color: "#1E3A8A" }} className="tabular-nums">
-                  {formatCurrency(result.aporteNecessario)}/mês
-                </p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                {result.ifAlcancada ? (
-                  <span style={{
-                    backgroundColor: "#DCFCE7", color: "#15803D",
-                    border: "1px solid #A8C8AB", borderRadius: 8,
-                    padding: "6px 14px", fontSize: 13, fontWeight: 600,
-                  }}>
-                    IF alcançada ✓
-                  </span>
-                ) : (
-                  <span style={{
-                    backgroundColor: "#FEF3C7", color: "#92400E",
-                    border: "1px solid #FDE68A", borderRadius: 8,
-                    padding: "6px 14px", fontSize: 13, fontWeight: 600,
-                  }}>
-                    Aporte atual: {formatCurrency(params.aporteMensal)}
-                  </span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {(() => {
+            const comObj = result.aporteNecessario;
+            const semObj = result.aporteNecessarioSemObjetivos;
+            const delta = comObj - semObj;
+            const temObjs = objetivos.length > 0;
+            const aporteAtual = params.aporteMensal;
+            const suficiente = aporteAtual >= comObj;
+            return (
+              <Card style={{ ...cardGreenTop, borderTop: "3px solid #1E3A8A" }}>
+                <CardContent className="pt-4 pb-4">
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                        {temObjs ? "Aporte necessário (com objetivos)" : "Aporte necessário para atingir IF"}
+                      </p>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: "#1E3A8A", margin: 0 }} className="tabular-nums">
+                        {formatCurrency(comObj)}/mês
+                      </p>
+
+                      {temObjs && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 12, color: "#6B7280" }}>
+                            Sem objetivos: {formatCurrency(semObj)}/mês
+                          </span>
+                          {delta > 0 && (
+                            <span style={{
+                              fontSize: 11, fontWeight: 600,
+                              backgroundColor: "#FEF3C7", color: "#92400E",
+                              border: "1px solid #FDE68A", borderRadius: 6,
+                              padding: "1px 7px",
+                            }}>
+                              +{formatCurrency(delta)}/mês pelos objetivos
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                      {result.ifAlcancada ? (
+                        <span style={{
+                          backgroundColor: "#DCFCE7", color: "#15803D",
+                          border: "1px solid #A8C8AB", borderRadius: 8,
+                          padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                        }}>
+                          IF alcançada ✓
+                        </span>
+                      ) : (
+                        <span style={{
+                          backgroundColor: suficiente ? "#DCFCE7" : "#FEE2E2",
+                          color: suficiente ? "#15803D" : "#B91C1C",
+                          border: `1px solid ${suficiente ? "#A8C8AB" : "#C8A8A8"}`,
+                          borderRadius: 8,
+                          padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                        }}>
+                          Atual: {formatCurrency(aporteAtual)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
 
           {objetivos.length > 0 && (
             <Card style={cardGreenTop}>

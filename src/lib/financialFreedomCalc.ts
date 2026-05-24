@@ -144,8 +144,10 @@ export interface ProjecaoIFResult {
   /** rendaMensalDesejada − rendaSustentavel  (positive = falta renda) */
   gapRenda: number;
   ifAlcancada: boolean;
-  /** Monthly PMT to reach patrimonioNecessario */
+  /** Monthly contribution to reach patrimonioNecessario accounting for all objectives */
   aporteNecessario: number;
+  /** Monthly contribution to reach patrimonioNecessario ignoring objectives (PMT baseline) */
+  aporteNecessarioSemObjetivos: number;
 }
 
 const IDADE_MAX_IF = 90;
@@ -204,17 +206,49 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const gapRenda = rendaMensalDesejada - rendaSustentavel; // positive = falta renda
   const ifAlcancada = rendaSustentavel >= rendaMensalDesejada;
 
-  // PMT formula: monthly contribution to reach patrimonioNecessario
+  // Closed-form PMT ignoring objectives (baseline)
   const n = (idadeMeta - idadeAtual) * 12;
   const r = taxaMensalReal;
-  let aporteNecessario = 0;
+  let aporteNecessarioSemObjetivos = 0;
   if (n > 0) {
     if (r === 0) {
-      aporteNecessario = Math.max(0, (patrimonioNecessario - patrimonioInicial) / n);
+      aporteNecessarioSemObjetivos = Math.max(0, (patrimonioNecessario - patrimonioInicial) / n);
     } else {
       const fator = Math.pow(1 + r, n);
-      aporteNecessario = Math.max(0, ((patrimonioNecessario - patrimonioInicial * fator) * r) / (fator - 1));
+      aporteNecessarioSemObjetivos = Math.max(
+        0,
+        ((patrimonioNecessario - patrimonioInicial * fator) * r) / (fator - 1),
+      );
     }
+  }
+
+  // Binary search accounting for objectives — simulates the same accumulation path
+  function simularPatrimonioFinal(aporte: number): number {
+    let p = patrimonioInicial;
+    for (let idade = idadeAtual + 1; idade <= idadeMeta; idade++) {
+      for (let m = 0; m < 12; m++) {
+        p = p * (1 + taxaMensalReal) + aporte;
+      }
+      const objEffect = objsByIdade.get(idade) ?? 0;
+      if (objEffect !== 0) p += objEffect;
+      p = Math.max(0, p);
+    }
+    return p;
+  }
+
+  let aporteNecessario = aporteNecessarioSemObjetivos;
+  if (objetivos.length > 0 && n > 0) {
+    let low = 0;
+    let high = patrimonioNecessario; // generous upper bound — always yields FV > target
+    for (let i = 0; i < 60; i++) {
+      const mid = (low + high) / 2;
+      if (simularPatrimonioFinal(mid) >= patrimonioNecessario) {
+        high = mid;
+      } else {
+        low = mid;
+      }
+    }
+    aporteNecessario = Math.ceil(high);
   }
 
   return {
@@ -225,5 +259,6 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     gapRenda,
     ifAlcancada,
     aporteNecessario,
+    aporteNecessarioSemObjetivos,
   };
 }
