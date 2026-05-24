@@ -1,6 +1,6 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer,
+  ResponsiveContainer,
 } from "recharts";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
@@ -32,12 +32,6 @@ interface Props {
 }
 
 export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }: Props) {
-  const idadeIF = projecao.reduce<number | undefined>((found, p, i) => {
-    if (found !== undefined) return found;
-    if (i > 0 && p.fase === "decumulacao" && projecao[i - 1]?.fase === "acumulacao") return p.idade;
-    return undefined;
-  }, undefined);
-
   const objsByIdade = new Map<number, ObjetivoVida[]>();
   for (const obj of objetivos) {
     const list = objsByIdade.get(obj.idadeRealizacao) ?? [];
@@ -170,15 +164,6 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
           tickLine={false}
         />
         <Tooltip content={<CustomTooltip />} />
-
-        {idadeIF !== undefined && (
-          <ReferenceLine
-            x={idadeIF}
-            stroke="#15803D"
-            strokeDasharray="4 4"
-            strokeWidth={1.5}
-          />
-        )}
 
         <Area
           type="monotone"
