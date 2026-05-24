@@ -522,12 +522,12 @@ export function SecaoRevisao({
                 {metrica("Patrimônio", safeCurrency(resultados.carteira.patrimonio))}
                 {metrica(
                   "Total Aportes",
-                  safeCurrency(resultados.carteira.totalAportar),
+                  safeCurrency(resultados.carteira.totalAportes ?? 0),
                   "#15803D"
                 )}
                 {metrica(
                   "Total Resgates",
-                  safeCurrency(resultados.carteira.totalResgatar),
+                  safeCurrency(resultados.carteira.totalResgates ?? 0),
                   "#B91C1C"
                 )}
               </div>

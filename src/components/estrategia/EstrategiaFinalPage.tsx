@@ -444,8 +444,8 @@ export function EstrategiaFinalPage({
                     }}
                   >
                     {metricaItem("Patrimônio", formatCurrency(resultados.carteira.patrimonio))}
-                    {metricaItem("Total Aportes", formatCurrency(resultados.carteira.totalAportar), "#15803D")}
-                    {metricaItem("Total Resgates", formatCurrency(resultados.carteira.totalResgatar), "#B91C1C")}
+                    {metricaItem("Total Aportes", formatCurrency(resultados.carteira.totalAportes ?? 0), "#15803D")}
+                    {metricaItem("Total Resgates", formatCurrency(resultados.carteira.totalResgates ?? 0), "#B91C1C")}
                   </div>
                   <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
                     Plano de ação: <strong>{resultados.carteira.planoAcaoCount}</strong> movimentações

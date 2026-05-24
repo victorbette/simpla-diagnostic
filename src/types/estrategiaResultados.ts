@@ -1,11 +1,5 @@
-export interface MacroAlocacao {
-  rendaFixa: number;
-  acoes: number;
-  fiis: number;
-  rvGlobal: number;
-  rfGlobal: number;
-  cripto: number;
-}
+// macroAtual / macroMeta are keyed by CardId (resgate_rapido, resgate_longo, acoes, fiis, exterior, cripto)
+// and store percentages (0–100).
 
 export interface PlanoAcaoItem {
   id: string;
@@ -22,10 +16,10 @@ export interface PlanoAcaoItem {
 export interface ResultadoCarteira {
   patrimonio: number;
   planoAcaoCount: number;
-  totalAportar: number;
-  totalResgatar: number;
-  macroAtual: MacroAlocacao;
-  macroMeta: MacroAlocacao;
+  totalAportes: number;
+  totalResgates: number;
+  macroAtual: Record<string, number>;   // CardId → % atual
+  macroMeta: Record<string, number>;    // CardId → % meta (do slider)
   planoAcao: PlanoAcaoItem[];
   dataCalculo: string;
   savedAt: string;
@@ -63,13 +57,11 @@ export interface ResultadoSeguro {
   scoreProtecao: number;
   temSeguroVida: boolean;
   temSeguroInvalidez: boolean;
-  // Breakdown de necessidades
   immediateTotal: number;
   ongoingTotal: number;
   educationTotal: number;
   lifestyleTotal: number;
   inventoryCost: number;
-  // Coberturas em vida
   disabilityTotal: number;
   disabilityGap: number;
   disabilityCoverage: number;

@@ -118,8 +118,8 @@ export function EstrategiaPrint({ plan, clientName, data, resultados: resultados
             <div style={{ padding: 14, backgroundColor: "#DBEAFE", borderRadius: 8, border: "1px solid #BFDBFE", marginBottom: 12 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: "#000000", margin: "0 0 8px", textTransform: "uppercase" }}>Ferramenta de Carteira</p>
               {row("Patrimônio mapeado", formatCurrency(resultados.carteira.patrimonio))}
-              {row("Total a aportar", formatCurrency(resultados.carteira.totalAportar))}
-              {row("Total a resgatar", formatCurrency(resultados.carteira.totalResgatar))}
+              {row("Total a aportar", formatCurrency(resultados.carteira.totalAportes ?? 0))}
+              {row("Total a resgatar", formatCurrency(resultados.carteira.totalResgates ?? 0))}
               {row("Ações no plano", String(resultados.carteira.planoAcaoCount))}
             </div>
           )}
