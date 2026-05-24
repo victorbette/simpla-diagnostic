@@ -1,12 +1,10 @@
 import { useState } from "react";
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-} from "recharts";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
+import { GraficoIF } from "@/components/shared/GraficoIF";
 
 interface Props {
   plan: FinancialPlan;
@@ -26,12 +24,6 @@ const CARD: React.CSSProperties = {
   padding: 24,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
-
-function formatAxis(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-  return String(v);
-}
 
 export function SecaoAposentadoria({
   plan,
@@ -89,41 +81,11 @@ export function SecaoAposentadoria({
 
               {/* Area chart */}
               <div style={{ marginTop: 20 }}>
-                <ResponsiveContainer width="100%" height={280}>
-                  <AreaChart data={resultadoIF.projecao} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
-                    <XAxis
-                      dataKey="idade"
-                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tickFormatter={formatAxis}
-                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: "white", border: "1px solid #E5E7EB", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}
-                      formatter={(v: number) => [formatCurrency(v), "Patrimônio"]}
-                      labelFormatter={(l) => `Idade ${l}`}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="patrimonio"
-                      stroke="#2563EB"
-                      strokeWidth={2}
-                      fill="url(#gradIF)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <GraficoIF
+                  projecao={resultadoIF.projecao}
+                  objetivos={resultadoIF.objetivos ?? []}
+                  height={280}
+                />
               </div>
             </>
           ) : (
@@ -200,7 +162,7 @@ export function SecaoAposentadoria({
         <FerramentaLiberdadeFinanceira
           clientId={plan.clientId}
           planejamentoIF={plan.planejamentoIF}
-          onSave={(params, _objetivos, result) => {
+          onSave={(params, objetivos, result) => {
             onResultadoIF({
               patrimonioAposentadoria: result.patrimonioAposentadoria,
               rendaSustentavel: result.rendaSustentavel,
@@ -216,6 +178,7 @@ export function SecaoAposentadoria({
               aporteAtual: params.aporteMensal,
               taxaRetorno: params.rentabilidadeAnual,
               projecao: result.projecao.map((p) => ({ idade: p.idade, patrimonio: p.patrimonio, fase: p.fase })),
+              objetivos,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });

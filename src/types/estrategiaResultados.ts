@@ -1,5 +1,6 @@
 // macroAtual / macroMeta are keyed by CardId (resgate_rapido, resgate_longo, acoes, fiis, exterior, cripto)
 // and store percentages (0–100).
+import type { ObjetivoVida } from "@/types/objetivos";
 
 export interface PlanoAcaoItem {
   id: string;
@@ -46,6 +47,7 @@ export interface ResultadoIF {
   aporteAtual: number;
   taxaRetorno: number;
   projecao: ProjecaoPoint[];
+  objetivos?: ObjetivoVida[];
   dataCalculo: string;
   savedAt: string;
 }
