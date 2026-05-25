@@ -113,7 +113,7 @@ export function simularLiberdadeFinanceira(params: SimulationParams): Simulation
   };
 }
 
-// ─── Correct IF projection engine (4% rule, compound monthly rate) ────────────
+// ─── Correct IF projection engine (annuity PV/PMT, compound monthly rate) ────
 
 export interface ObjetivoIF {
   id: string;
@@ -126,6 +126,8 @@ export interface ObjetivoIF {
 export interface ProjecaoIFParams {
   idadeAtual: number;
   idadeMeta: number;
+  /** Life expectancy — projection ends here and determines PV/PMT horizon */
+  idadeMaxima: number;
   patrimonioInicial: number;
   aporteMensal: number;
   rendaMensalDesejada: number;
@@ -137,9 +139,9 @@ export interface ProjecaoIFParams {
 export interface ProjecaoIFResult {
   projecao: Array<{ idade: number; patrimonio: number; fase: "acumulacao" | "decumulacao" }>;
   patrimonioNaIF: number;
-  /** (rendaMensalDesejada × 12) / 0.04  [4% rule] */
+  /** PV of annuity: rendaMensal for (idadeMaxima - idadeMeta) × 12 months at taxaMensalReal */
   patrimonioNecessario: number;
-  /** patrimonioNaIF × 0.04 / 12  [4% rule] */
+  /** PMT: monthly withdrawal that exhausts patrimonioNaIF over (idadeMaxima - idadeMeta) × 12 months */
   rendaSustentavel: number;
   /** rendaMensalDesejada − rendaSustentavel  (positive = falta renda) */
   gapRenda: number;
@@ -150,11 +152,23 @@ export interface ProjecaoIFResult {
   aporteNecessarioSemObjetivos: number;
 }
 
-const IDADE_MAX_IF = 90;
+/** PV of annuity: how much patrimônio is needed to pay rendaMensal for n months at taxaMensalReal */
+function pvAnuidade(rendaMensal: number, taxaMensalReal: number, meses: number): number {
+  if (meses <= 0) return 0;
+  if (Math.abs(taxaMensalReal) < 0.0001) return rendaMensal * meses;
+  return rendaMensal * (1 - Math.pow(1 + taxaMensalReal, -meses)) / taxaMensalReal;
+}
+
+/** PMT: monthly withdrawal sustainable from patrimônio over n months at taxaMensalReal */
+function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): number {
+  if (meses <= 0) return 0;
+  if (Math.abs(taxaMensalReal) < 0.0001) return patrimonio / meses;
+  return patrimonio * taxaMensalReal / (1 - Math.pow(1 + taxaMensalReal, -meses));
+}
 
 export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const {
-    idadeAtual, idadeMeta, patrimonioInicial, aporteMensal,
+    idadeAtual, idadeMeta, idadeMaxima, patrimonioInicial, aporteMensal,
     rendaMensalDesejada, taxaRetornoAnual, objetivos = [],
   } = params;
 
@@ -180,7 +194,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   projecao.push({ idade: idadeAtual, patrimonio: Math.round(patrimonio), fase: "acumulacao" });
 
-  for (let idade = idadeAtual + 1; idade <= IDADE_MAX_IF; idade++) {
+  for (let idade = idadeAtual + 1; idade <= idadeMaxima; idade++) {
     const estaAcumulando = idade <= idadeMeta;
 
     // Simulate 12 months of compound growth + contribution or withdrawal
@@ -205,8 +219,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   }
 
   const patrimonioNaIF = projecao.find((p) => p.idade === idadeMeta)?.patrimonio ?? 0;
-  const patrimonioNecessario = (rendaMensalDesejada * 12) / 0.04;
-  const rendaSustentavel = (patrimonioNaIF * 0.04) / 12;
+  const mesesRetirada = (idadeMaxima - idadeMeta) * 12;
+  const patrimonioNecessario = Math.round(pvAnuidade(rendaMensalDesejada, taxaMensalReal, mesesRetirada));
+  const rendaSustentavel = Math.round(pmtMensal(patrimonioNaIF, taxaMensalReal, mesesRetirada) * 100) / 100;
   const gapRenda = rendaMensalDesejada - rendaSustentavel; // positive = falta renda
   const ifAlcancada = rendaSustentavel >= rendaMensalDesejada;
 

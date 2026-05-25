@@ -97,6 +97,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
     return {
       idadeAtual: params.idadeAtual,
       idadeMeta: params.idadeAposentadoria,
+      idadeMaxima: params.expectativaVida,
       patrimonioInicial: params.patrimonioInicial,
       aporteMensal: params.aporteMensal,
       rendaMensalDesejada: params.rendaDesejada,
