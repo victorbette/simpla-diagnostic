@@ -71,15 +71,18 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  // X-axis: January ticks every 5 years, domain extends to age 100
+  // X-axis: ticks at birthday month, every 5 years, domain extends to age 100
+  // Derive birth month from first point whose idade is a whole number
+  const firstBirthday = projecaoCompleta.find(
+    (p) => p.mes > 0 && Number(p.idade) === Math.floor(Number(p.idade)),
+  );
+  const mesAniversario = firstBirthday?.mesDoAno ?? projecaoCompleta[0].mesDoAno;
+
   const totalMeses = (IDADE_MAXIMA_EXIBICAO - idadeAtual) * 12;
-  const xTicks: number[] = [];
-  // Always show the first point
-  xTicks.push(0);
-  for (const p of projecaoCompleta) {
-    if (p.mes === 0) continue;
-    if (p.mesDoAno === 1 && p.ano % 5 === 0) xTicks.push(p.mes);
-  }
+  const xTicks = projecaoCompleta
+    .filter((p) => p.mesDoAno === mesAniversario && Math.floor(Number(p.idade) || 0) % 5 === 0)
+    .map((p) => p.mes);
+  if (!xTicks.includes(0)) xTicks.unshift(0);
 
   // IF marker point (look up in the full array by mes index)
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
@@ -213,8 +216,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
           tickFormatter={(mes: number) => {
             const ponto = projecaoCompleta.find((p) => p.mes === mes);
             if (!ponto) return "";
-            // First tick shows "Ano atual" context; rest show year
-            return String(ponto.ano);
+            return String(Math.floor(Number(ponto.idade) || 0));
           }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
