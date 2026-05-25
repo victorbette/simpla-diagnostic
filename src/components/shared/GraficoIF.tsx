@@ -63,7 +63,6 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   }
 
   const idadeAtual = Math.floor(Number(projecaoCompleta[0].idade) || 0);
-  const mesNascimentoDoAno = projecaoCompleta[0].mesDoAno;
 
   // Y-axis: ceil max patrimônio to next 500k multiple
   const maxPatrimonio = Math.max(...projecaoCompleta.map((p) => Number(p.patrimonio) || 0), 0);
@@ -72,12 +71,15 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  // X-axis: ticks at birth month, every 5 years, domain extends to age 100
+  // X-axis: January ticks every 5 years, domain extends to age 100
   const totalMeses = (IDADE_MAXIMA_EXIBICAO - idadeAtual) * 12;
-  const xTicks = projecaoCompleta
-    .filter((p) => p.mesDoAno === mesNascimentoDoAno && Math.floor(Number(p.idade) || 0) % 5 === 0)
-    .map((p) => p.mes);
-  if (!xTicks.includes(0)) xTicks.unshift(0);
+  const xTicks: number[] = [];
+  // Always show the first point
+  xTicks.push(0);
+  for (const p of projecaoCompleta) {
+    if (p.mes === 0) continue;
+    if (p.mesDoAno === 1 && p.ano % 5 === 0) xTicks.push(p.mes);
+  }
 
   // IF marker point (look up in the full array by mes index)
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
@@ -122,8 +124,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
         minWidth: 160,
       }}>
         <p style={{ margin: "0 0 2px", color: "#6B7280" }}>
-          {mesLabel}
-          <span style={{ marginLeft: 6, color: "#9CA3AF" }}>{idade.toFixed(1)} anos</span>
+          {mesLabel} · {idade.toFixed(1)} anos
         </p>
         <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(patrimonio)}</p>
         {ifPonto && ponto.mes === ifPonto.mes && (
@@ -212,7 +213,8 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
           tickFormatter={(mes: number) => {
             const ponto = projecaoCompleta.find((p) => p.mes === mes);
             if (!ponto) return "";
-            return String(Math.floor(Number(ponto.idade) || 0));
+            // First tick shows "Ano atual" context; rest show year
+            return String(ponto.ano);
           }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}

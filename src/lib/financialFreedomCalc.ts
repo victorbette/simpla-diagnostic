@@ -198,6 +198,13 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   const taxaMensalReal = Math.pow(1 + taxaRetornoAnual, 1 / 12) - 1;
 
+  // Anchor projection to today — month 0 is the current calendar month
+  const hoje = new Date();
+  const anoInicio = hoje.getFullYear();
+  const mesInicio = hoje.getMonth() + 1; // 1-12
+  // Exact decimal age today (e.g. born Mar/1983, today May/2026 → 43.17)
+  const idadeExataHoje = (anoInicio - anoNascimento) + (mesInicio - mesNascimento) / 12;
+
   const objByMesAno = new Map<string, number>();
   for (const obj of objetivos) {
     const sinal = OBJETIVO_META[obj.tipo].tipo === "aporte" ? 1 : -1;
@@ -210,16 +217,14 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   const projecao: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
-
-  // Track calendar month/year — starts at birth month of current age year
-  let anoAtual = anoNascimento + idadeAtual;
-  let mesAtual = mesNascimento;
+  let anoAtual = anoInicio;
+  let mesAtual = mesInicio;
 
   projecao.push({
     mes: 0,
     ano: anoAtual,
     mesDoAno: mesAtual,
-    idade: idadeAtual,
+    idade: Math.round(idadeExataHoje * 10) / 10,
     patrimonio: Math.round(patrimonio),
     fase: "acumulacao",
   });
@@ -244,7 +249,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
-      idade: Math.round((idadeAtual + m / 12) * 10) / 10,
+      idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
       patrimonio: Math.round(patrimonio),
       fase: acumulando ? "acumulacao" : "decumulacao",
     });
@@ -276,8 +281,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   // Lightweight simulation to IF date only — used by binary search
   function simularNaIF(aporte: number): number {
     let p = patrimonioInicial;
-    let anoS = anoNascimento + idadeAtual;
-    let mesS = mesNascimento;
+    let anoS = anoInicio;
+    let mesS = mesInicio;
     for (let m = 1; m <= mesInicioRetirada; m++) {
       mesS++;
       if (mesS > 12) { mesS = 1; anoS++; }
