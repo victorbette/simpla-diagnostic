@@ -127,7 +127,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual: params.idadeAtual,
     idadeMeta: params.idadeAposentadoria,
-    idadeMaxima: 90,
+    idadeMaxima: 100,
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -20,7 +19,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const COR_APOSENTADORIA = "#0891B2";
-const IDADE_MAXIMA_EXIBICAO = 100;
 
 interface Props {
   projecao: PontoProjecao[];
@@ -31,28 +29,8 @@ interface Props {
 }
 
 export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Props) {
-  // useMemo must come before any conditional return (React hooks rule)
-  const projecaoCompleta = useMemo<PontoProjecao[]>(() => {
-    if (!projecao?.length) return [];
-    const ultimo = projecao[projecao.length - 1];
-    const idadeUltima = Number(ultimo.idade) || 90;
-    const mesesExtras = Math.round((IDADE_MAXIMA_EXIBICAO - idadeUltima) * 12);
-    if (mesesExtras <= 0) return projecao;
-    const extras: PontoProjecao[] = [];
-    for (let m = 1; m <= mesesExtras; m++) {
-      const mesDoAno = ((ultimo.mesDoAno - 1 + m) % 12) + 1;
-      const anoExtra = ultimo.ano + Math.floor((ultimo.mesDoAno - 1 + m) / 12);
-      extras.push({
-        mes: ultimo.mes + m,
-        ano: anoExtra,
-        mesDoAno,
-        idade: Math.round((idadeUltima + m / 12) * 10) / 10,
-        patrimonio: 0,
-        fase: "decumulacao",
-      });
-    }
-    return [...projecao, ...extras];
-  }, [projecao]);
+  // Projection already runs to age 100 — use it directly
+  const projecaoCompleta = projecao ?? [];
 
   if (!projecaoCompleta.length) {
     return (
@@ -78,7 +56,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   );
   const mesAniversario = firstBirthday?.mesDoAno ?? projecaoCompleta[0].mesDoAno;
 
-  const totalMeses = (IDADE_MAXIMA_EXIBICAO - idadeAtual) * 12;
+  const totalMeses = projecaoCompleta[projecaoCompleta.length - 1]?.mes ?? (100 - idadeAtual) * 12;
   const xTicks = projecaoCompleta
     .filter((p) => p.mesDoAno === mesAniversario && Math.floor(Number(p.idade) || 0) % 5 === 0)
     .map((p) => p.mes);
