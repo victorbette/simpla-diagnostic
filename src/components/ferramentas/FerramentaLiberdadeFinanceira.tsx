@@ -137,11 +137,26 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
     objetivos,
   }), [params, objetivos, taxaRetornoReal, anoNascimento, mesNascimento]);
 
-  const result = useMemo(() => calcularProjecaoIF(projecaoParams), [projecaoParams]);
+  const result = useMemo(() => {
+    try {
+      return calcularProjecaoIF(projecaoParams);
+    } catch (err) {
+      console.error("[SimuladorIF] Erro no cálculo:", err);
+      return null;
+    }
+  }, [projecaoParams]);
 
   const mesIF = (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
+
+  if (!result) {
+    return (
+      <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
+        Preencha os parâmetros para ver a simulação.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

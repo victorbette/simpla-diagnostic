@@ -176,16 +176,28 @@ function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): n
 const TAXA_RETIRADA_ANUAL = 0.04;
 const TAXA_RETIRADA_MENSAL = Math.pow(1 + TAXA_RETIRADA_ANUAL, 1 / 12) - 1; // ≈ 0.3274% a.m.
 
+const EMPTY_RESULT: ProjecaoIFResult = {
+  projecao: [], patrimonioNaIF: 0, patrimonioNecessario: 0,
+  rendaSustentavel: 0, gapRenda: 0, ifAlcancada: false,
+  aporteNecessario: 0, aporteNecessarioSemObjetivos: 0,
+};
+
 export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
-  const {
-    idadeAtual, idadeMeta, idadeMaxima, patrimonioInicial, aporteMensal,
-    rendaMensalDesejada, taxaRetornoAnual, anoNascimento, mesNascimento,
-    objetivos = [],
-  } = params;
+  const idadeAtual      = Number(params.idadeAtual)      || 0;
+  const idadeMeta       = Number(params.idadeMeta)       || 60;
+  const idadeMaxima     = Number(params.idadeMaxima)     || 90;
+  const patrimonioInicial = Number(params.patrimonioInicial) || 0;
+  const aporteMensal    = Number(params.aporteMensal)    || 0;
+  const rendaMensalDesejada = Number(params.rendaMensalDesejada) || 0;
+  const taxaRetornoAnual = Number(params.taxaRetornoAnual) || 0;
+  const anoNascimento   = Number(params.anoNascimento)   || (new Date().getFullYear() - idadeAtual);
+  const mesNascimento   = Number(params.mesNascimento)   || 1;
+  const objetivos       = params.objetivos ?? [];
+
+  if (idadeMeta <= idadeAtual || idadeMaxima <= idadeMeta) return EMPTY_RESULT;
 
   const taxaMensalReal = Math.pow(1 + taxaRetornoAnual, 1 / 12) - 1;
 
-  // Build objectives map keyed by "ano-mes" → net effect on patrimônio
   const objByMesAno = new Map<string, number>();
   for (const obj of objetivos) {
     const sinal = OBJETIVO_META[obj.tipo].tipo === "aporte" ? 1 : -1;

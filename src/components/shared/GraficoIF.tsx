@@ -29,13 +29,19 @@ interface Props {
 }
 
 export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Props) {
-  if (projecao.length === 0) return null;
+  if (!projecao?.length) {
+    return (
+      <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF", fontSize: 13 }}>
+        Sem dados de projeção
+      </div>
+    );
+  }
 
-  const idadeAtual = Math.floor(projecao[0].idade);
+  const idadeAtual = Math.floor(Number(projecao[0].idade) || 0);
   const mesNascimentoDoAno = projecao[0].mesDoAno;
 
   // Y-axis: ceil max patrimônio to next 500k multiple
-  const maxPatrimonio = Math.max(...projecao.map((p) => p.patrimonio), 0);
+  const maxPatrimonio = Math.max(...projecao.map((p) => Number(p.patrimonio) || 0), 0);
   const STEP = 500_000;
   const yMax = Math.ceil(maxPatrimonio / STEP) * STEP || STEP;
   const yTicks: number[] = [];
@@ -44,7 +50,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   // X-axis: annual ticks at birth month, every 5 years, shown up to age 100
   const domainMax = (100 - idadeAtual) * 12;
   const xTicks = projecao
-    .filter((p) => p.mesDoAno === mesNascimentoDoAno && Math.floor(p.idade) % 5 === 0)
+    .filter((p) => p.mesDoAno === mesNascimentoDoAno && Math.floor(Number(p.idade) || 0) % 5 === 0)
     .map((p) => p.mes);
   if (!xTicks.includes(0)) xTicks.unshift(0);
 
@@ -72,9 +78,14 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
     payload?: { value: number; payload: PontoProjecao }[];
   }) => {
     if (!active || !payload?.length) return null;
-    const ponto = payload[0].payload;
-    const mesLabel = `${MESES_ABREV[ponto.mesDoAno - 1]}/${ponto.ano}`;
-    const objsDoPonto = objByMesAno.get(`${ponto.ano}-${ponto.mesDoAno}`) ?? [];
+    const ponto = payload[0]?.payload as PontoProjecao | undefined;
+    if (!ponto) return null;
+    const mesDoAno = Number(ponto.mesDoAno) || 1;
+    const ano = Number(ponto.ano) || 0;
+    const idade = Number(ponto.idade) || 0;
+    const patrimonio = Number(ponto.patrimonio) || 0;
+    const mesLabel = `${MESES_ABREV[mesDoAno - 1]}/${ano}`;
+    const objsDoPonto = objByMesAno.get(`${ano}-${mesDoAno}`) ?? [];
     return (
       <div style={{
         backgroundColor: "white",
@@ -87,9 +98,9 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
       }}>
         <p style={{ margin: "0 0 2px", color: "#6B7280" }}>
           {mesLabel}
-          <span style={{ marginLeft: 6, color: "#9CA3AF" }}>{ponto.idade.toFixed(1)} anos</span>
+          <span style={{ marginLeft: 6, color: "#9CA3AF" }}>{idade.toFixed(1)} anos</span>
         </p>
-        <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(ponto.patrimonio)}</p>
+        <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(patrimonio)}</p>
         {ifPonto && ponto.mes === ifPonto.mes && (
           <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
             <Sunset style={{ width: 12, height: 12 }} />
@@ -110,9 +121,10 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   };
 
   const renderDot = (dotProps: Record<string, unknown>) => {
-    const cx = dotProps.cx as number;
-    const cy = dotProps.cy as number;
-    const payload = dotProps.payload as PontoProjecao;
+    const cx = dotProps.cx as number | undefined;
+    const cy = dotProps.cy as number | undefined;
+    const payload = dotProps.payload as PontoProjecao | undefined;
+    if (!payload || cx === undefined || cy === undefined) return <g />;
     const objsDoPonto = objByMesIdx.get(payload.mes) ?? [];
     const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
 
@@ -175,7 +187,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
           tickFormatter={(v: number) => {
             const ponto = projecao[v];
             if (!ponto) return "";
-            return String(Math.floor(ponto.idade));
+            return String(Math.floor(Number(ponto.idade) || 0));
           }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
@@ -185,9 +197,10 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
           domain={[0, yMax]}
           ticks={yTicks}
           tickFormatter={(v: number) => {
-            if (v === 0) return "R$ 0";
-            if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-            return `${(v / 1_000).toFixed(0)}K`;
+            const val = Number(v) || 0;
+            if (val === 0) return "R$ 0";
+            if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+            return `${(val / 1_000).toFixed(0)}K`;
           }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
