@@ -1,6 +1,7 @@
 // macroAtual / macroMeta are keyed by CardId (resgate_rapido, resgate_longo, acoes, fiis, exterior, cripto)
 // and store percentages (0–100).
 import type { ObjetivoVida } from "@/types/objetivos";
+import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 
 export interface PlanoAcaoItem {
   id: string;
@@ -26,11 +27,7 @@ export interface ResultadoCarteira {
   savedAt: string;
 }
 
-export interface ProjecaoPoint {
-  idade: number;
-  patrimonio: number;
-  fase?: string;
-}
+export type { PontoProjecao };
 
 export interface ResultadoIF {
   patrimonioAposentadoria: number;
@@ -46,8 +43,10 @@ export interface ResultadoIF {
   rendaMensalDesejada: number;
   aporteAtual: number;
   taxaRetorno: number;
-  projecao: ProjecaoPoint[];
+  projecao: PontoProjecao[];
   objetivos?: ObjetivoVida[];
+  anoNascimento?: number;
+  mesNascimento?: number;
   dataCalculo: string;
   savedAt: string;
 }

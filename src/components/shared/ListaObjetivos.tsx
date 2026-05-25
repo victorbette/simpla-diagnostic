@@ -13,6 +13,12 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Baby, Shield, TrendingUp, MoreHorizontal,
 };
 
+const MESES_LABEL = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
 const TIPOS = Object.keys(OBJETIVO_META) as TipoObjetivo[];
 
 function generateId() {
@@ -22,34 +28,37 @@ function generateId() {
 interface Props {
   objetivos: ObjetivoVida[];
   onObjetivos: (v: ObjetivoVida[]) => void;
-  idadeAtual: number;
+  anoAtual: number;
+  anoMeta: number;
 }
 
-export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
+export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [tipoSel, setTipoSel] = useState<TipoObjetivo>("imovel");
-  const [nome, setNome] = useState(OBJETIVO_META["imovel"].label);
-  const [valor, setValor] = useState(0);
-  const [idade, setIdade] = useState(idadeAtual + 5);
+  const [label, setLabel] = useState(OBJETIVO_META["imovel"].label);
+  const [valorBRL, setValorBRL] = useState(0);
+  const [mes, setMes] = useState(1);
+  const [ano, setAno] = useState(anoAtual + 5);
 
   function selectTipo(t: TipoObjetivo) {
     setTipoSel(t);
-    setNome(OBJETIVO_META[t].label);
+    setLabel(OBJETIVO_META[t].label);
   }
 
   function openForm() {
     setTipoSel("imovel");
-    setNome(OBJETIVO_META["imovel"].label);
-    setValor(0);
-    setIdade(idadeAtual + 5);
+    setLabel(OBJETIVO_META["imovel"].label);
+    setValorBRL(0);
+    setMes(1);
+    setAno(anoAtual + 5);
     setShowForm(true);
   }
 
   function confirm() {
-    if (!nome.trim() || valor <= 0) return;
+    if (!label.trim() || valorBRL <= 0) return;
     onObjetivos([
       ...objetivos,
-      { id: generateId(), tipo: tipoSel, nome: nome.trim(), valor, idadeRealizacao: idade },
+      { id: generateId(), tipo: tipoSel, label: label.trim(), valorBRL, mes, ano },
     ]);
     setShowForm(false);
   }
@@ -119,14 +128,14 @@ export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
             </div>
           </div>
 
-          {/* Nome */}
+          {/* Label */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Nome
             </label>
             <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
               style={{
                 padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE",
                 fontSize: 13, color: "#000000", outline: "none",
@@ -135,24 +144,42 @@ export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
             />
           </div>
 
-          {/* Valor + Idade row */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {/* Valor + Mês + Ano row */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Valor
               </label>
-              <CurrencyInput value={valor} onChange={setValor} />
+              <CurrencyInput value={valorBRL} onChange={setValorBRL} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                Idade
+                Mês
+              </label>
+              <select
+                value={mes}
+                onChange={(e) => setMes(Number(e.target.value))}
+                style={{
+                  padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE",
+                  fontSize: 13, color: "#000000", outline: "none",
+                  backgroundColor: "white", boxSizing: "border-box", width: "100%",
+                }}
+              >
+                {MESES_LABEL.map((m, i) => (
+                  <option key={i + 1} value={i + 1}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Ano
               </label>
               <input
                 type="number"
-                min={idadeAtual}
-                max={110}
-                value={idade}
-                onChange={(e) => setIdade(Number(e.target.value))}
+                min={anoAtual}
+                max={anoMeta + 50}
+                value={ano}
+                onChange={(e) => setAno(Number(e.target.value))}
                 style={{
                   padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE",
                   fontSize: 13, color: "#000000", outline: "none",
@@ -166,12 +193,12 @@ export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={confirm}
-              disabled={!nome.trim() || valor <= 0}
+              disabled={!label.trim() || valorBRL <= 0}
               style={{
                 flex: 1, padding: "8px 0", borderRadius: 6,
-                backgroundColor: nome.trim() && valor > 0 ? "#1E3A8A" : "#E5E7EB",
-                color: nome.trim() && valor > 0 ? "white" : "#9CA3AF",
-                border: "none", cursor: nome.trim() && valor > 0 ? "pointer" : "default",
+                backgroundColor: label.trim() && valorBRL > 0 ? "#1E3A8A" : "#E5E7EB",
+                color: label.trim() && valorBRL > 0 ? "white" : "#9CA3AF",
+                border: "none", cursor: label.trim() && valorBRL > 0 ? "pointer" : "default",
                 fontSize: 13, fontWeight: 600,
               }}
             >
@@ -198,6 +225,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
       {objetivos.map((o) => {
         const meta = OBJETIVO_META[o.tipo];
         const Icon = ICON_MAP[meta.iconName];
+        const dataLabel = `${MESES_ABREV[o.mes - 1]}/${o.ano}`;
         return (
           <div
             key={o.id}
@@ -216,10 +244,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, idadeAtual }: Props) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: "0 0 1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {o.nome}
+                {o.label}
               </p>
               <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
-                Idade {o.idadeRealizacao} · {formatCurrency(o.valor)}
+                {dataLabel} · {formatCurrency(o.valorBRL)}
                 {meta.tipo === "aporte" && (
                   <span style={{ marginLeft: 4, color: "#15803D", fontWeight: 600 }}>· entrada</span>
                 )}

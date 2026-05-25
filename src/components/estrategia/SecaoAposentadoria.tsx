@@ -84,7 +84,7 @@ export function SecaoAposentadoria({
                   projecao={resultadoIF.projecao}
                   objetivos={resultadoIF.objetivos ?? []}
                   height={280}
-                  idadeMeta={resultadoIF.idadeMeta}
+                  mesIF={(resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
                 />
               </div>
             </>
@@ -162,6 +162,7 @@ export function SecaoAposentadoria({
         <FerramentaLiberdadeFinanceira
           clientId={plan.clientId}
           planejamentoIF={plan.planejamentoIF}
+          dataNascimento={plan.dadosCliente.dataNascimento}
           onSave={(params, objetivos, result) => {
             onResultadoIF({
               patrimonioAposentadoria: result.patrimonioNaIF,
@@ -179,6 +180,8 @@ export function SecaoAposentadoria({
               taxaRetorno: params.taxaRetornoAnual,
               projecao: result.projecao,
               objetivos,
+              anoNascimento: params.anoNascimento,
+              mesNascimento: params.mesNascimento,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });

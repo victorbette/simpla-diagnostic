@@ -35,7 +35,8 @@ export const OBJETIVO_META: Record<TipoObjetivo, ObjetivoMeta> = {
 export interface ObjetivoVida {
   id: string;
   tipo: TipoObjetivo;
-  nome: string;
-  valor: number;
-  idadeRealizacao: number;
+  label: string;    // nome customizado do objetivo
+  mes: number;      // 1-12
+  ano: number;      // ano calendário (ex: 2031)
+  valorBRL: number;
 }

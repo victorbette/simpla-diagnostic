@@ -17,9 +17,12 @@ import { OBJETIVO_META } from "@/types/objetivos";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 
+const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
 interface Props {
   clientId: string;
   planejamentoIF: PlanejamentoIF;
+  dataNascimento?: string;
   onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => void;
 }
 
@@ -51,7 +54,37 @@ const badgePctStyle: React.CSSProperties = {
 
 const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
 
-export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave }: Props) {
+/** Parse "YYYY-MM-DD" or "DD/MM/YYYY" → { ano, mes } */
+function parseDateNasc(s: string): { ano: number; mes: number } | null {
+  if (!s) return null;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return { ano: Number(iso[1]), mes: Number(iso[2]) };
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return { ano: Number(br[3]), mes: Number(br[2]) };
+  return null;
+}
+
+/** Step 7 — migrate objectives saved in old format ({ nome, valor, idadeRealizacao }) */
+function migrateObjetivo(
+  o: Record<string, unknown>,
+  anoNascimento: number,
+  mesNascimento: number,
+): ObjetivoVida {
+  if (typeof o.mes === "number" && typeof o.ano === "number" && typeof o.valorBRL === "number") {
+    return o as unknown as ObjetivoVida;
+  }
+  const idadeReal = Number(o.idadeRealizacao) || 0;
+  return {
+    id: String(o.id ?? Math.random().toString(36).substring(2, 9)),
+    tipo: o.tipo as ObjetivoVida["tipo"],
+    label: String(o.nome ?? o.label ?? "Objetivo"),
+    mes: mesNascimento,
+    ano: anoNascimento + Math.floor(idadeReal),
+    valorBRL: Number(o.valor ?? o.valorBRL ?? 0),
+  };
+}
+
+export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNascimento, onSave }: Props) {
   const initialParams: UIParams = {
     idadeAtual: planejamentoIF.idadeAtual,
     idadeAposentadoria: planejamentoIF.idadeMeta,
@@ -66,6 +99,11 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
   const [params, setParams] = useState<UIParams>(initialParams);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
 
+  // Derive birth year/month — fallback to current year minus idadeAtual when date unavailable
+  const parsed = parseDateNasc(dataNascimento ?? "");
+  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - params.idadeAtual);
+  const mesNascimento = parsed?.mes ?? 1;
+
   const CHAVE = `ferramenta_if_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
 
@@ -75,7 +113,10 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
     (v) => {
       if (v.params) setParams({ ...initialParams, ...v.params });
       if (v.objetivos) {
-        setObjetivos((v.objetivos as ObjetivoVida[]).filter((o) => VALID_TIPOS.has(o.tipo)));
+        const migrados = (v.objetivos as unknown as Record<string, unknown>[])
+          .map((o) => migrateObjetivo(o, anoNascimento, mesNascimento))
+          .filter((o) => VALID_TIPOS.has(o.tipo));
+        setObjetivos(migrados);
       }
     },
     { params: initialParams, objetivos: [] },
@@ -83,30 +124,26 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
 
-  // Real rate via Fisher equation; feed directly into calc engine
   const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
 
-  const projecaoParams: ProjecaoIFParams = useMemo(() => {
-    const mapped = objetivos.map((o) => ({
-      id: o.id,
-      nome: o.nome,
-      valor: Number(o.valor),
-      idadeRealizacao: Math.round(Number(o.idadeRealizacao)),
-      tipo: OBJETIVO_META[o.tipo].tipo,
-    }));
-    return {
-      idadeAtual: params.idadeAtual,
-      idadeMeta: params.idadeAposentadoria,
-      idadeMaxima: params.expectativaVida,
-      patrimonioInicial: params.patrimonioInicial,
-      aporteMensal: params.aporteMensal,
-      rendaMensalDesejada: params.rendaDesejada,
-      taxaRetornoAnual: taxaRetornoReal,
-      objetivos: mapped,
-    };
-  }, [params, objetivos, taxaRetornoReal]);
+  const projecaoParams: ProjecaoIFParams = useMemo(() => ({
+    idadeAtual: params.idadeAtual,
+    idadeMeta: params.idadeAposentadoria,
+    idadeMaxima: params.expectativaVida,
+    patrimonioInicial: params.patrimonioInicial,
+    aporteMensal: params.aporteMensal,
+    rendaMensalDesejada: params.rendaDesejada,
+    taxaRetornoAnual: taxaRetornoReal,
+    anoNascimento,
+    mesNascimento,
+    objetivos,
+  }), [params, objetivos, taxaRetornoReal, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => calcularProjecaoIF(projecaoParams), [projecaoParams]);
+
+  const mesIF = (params.idadeAposentadoria - params.idadeAtual) * 12;
+  const anoAtualCliente = anoNascimento + params.idadeAtual;
+  const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
 
   return (
     <div className="flex flex-col gap-6">
@@ -198,7 +235,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 </div>
               </div>
 
-              {/* Inflation slider — min 0% to allow pure real-rate testing */}
+              {/* Inflation slider */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -239,7 +276,8 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
               <ListaObjetivos
                 objetivos={objetivos}
                 onObjetivos={setObjetivos}
-                idadeAtual={params.idadeAtual}
+                anoAtual={anoAtualCliente}
+                anoMeta={anoMetaCliente}
               />
             </CardContent>
           </Card>
@@ -373,12 +411,14 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                 <div className="space-y-1.5">
                   {objetivos.map((o) => (
                     <div key={o.id} className="flex justify-between text-sm border-b pb-1.5 last:border-0">
-                      <span style={{ color: "#6B7280" }}>{o.nome} (idade {o.idadeRealizacao})</span>
+                      <span style={{ color: "#6B7280" }}>
+                        {o.label} ({MESES_ABREV[o.mes - 1]}/{o.ano})
+                      </span>
                       <span
                         className="tabular-nums font-medium"
                         style={{ color: OBJETIVO_META[o.tipo].tipo === "despesa" ? "#B91C1C" : "#15803D" }}
                       >
-                        {OBJETIVO_META[o.tipo].tipo === "despesa" ? "−" : "+"}{formatCurrency(o.valor)}
+                        {OBJETIVO_META[o.tipo].tipo === "despesa" ? "−" : "+"}{formatCurrency(o.valorBRL)}
                       </span>
                     </div>
                   ))}
@@ -410,7 +450,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
             projecao={result.projecao}
             objetivos={objetivos}
             height={300}
-            idadeMeta={params.idadeAposentadoria}
+            mesIF={mesIF}
           />
         </CardContent>
       </Card>

@@ -1,3 +1,6 @@
+import type { ObjetivoVida } from "@/types/objetivos";
+import { OBJETIVO_META } from "@/types/objetivos";
+
 export type LifeGoalTipo = "despesa" | "aporte";
 export interface LifeGoal {
   id: string; nome: string; valor: number; idadeRealizacao: number;
@@ -113,53 +116,55 @@ export function simularLiberdadeFinanceira(params: SimulationParams): Simulation
   };
 }
 
-// ─── Correct IF projection engine (annuity PV/PMT, compound monthly rate) ────
+// ─── Monthly IF projection engine ─────────────────────────────────────────────
 
-export interface ObjetivoIF {
-  id: string;
-  nome: string;
-  valor: number;
-  idadeRealizacao: number;
-  tipo: "despesa" | "aporte";
+/** One data point per month in the projection */
+export interface PontoProjecao {
+  mes: number;        // absolute month index from start (0-based)
+  ano: number;        // calendar year
+  mesDoAno: number;   // 1-12
+  patrimonio: number;
+  fase: "acumulacao" | "decumulacao";
 }
 
 export interface ProjecaoIFParams {
   idadeAtual: number;
   idadeMeta: number;
-  /** Life expectancy — projection ends here and determines PV/PMT horizon */
   idadeMaxima: number;
   patrimonioInicial: number;
   aporteMensal: number;
   rendaMensalDesejada: number;
   /** Real annual return rate as decimal — e.g. 0.06 for 6% a.a. real */
   taxaRetornoAnual: number;
-  objetivos?: ObjetivoIF[];
+  /** Birth year — used to assign calendar year/month to each data point */
+  anoNascimento: number;
+  /** Birth month 1-12 — projection starts on this month */
+  mesNascimento: number;
+  objetivos?: ObjetivoVida[];
 }
 
 export interface ProjecaoIFResult {
-  projecao: Array<{ idade: number; patrimonio: number; fase: "acumulacao" | "decumulacao" }>;
+  projecao: PontoProjecao[];
   patrimonioNaIF: number;
-  /** PV of annuity: rendaMensal for (idadeMaxima - idadeMeta) × 12 months at taxaMensalReal */
+  /** PV of annuity: rendaMensal for (idadeMaxima - idadeMeta) × 12 months at 4% a.a. real */
   patrimonioNecessario: number;
   /** PMT: monthly withdrawal that exhausts patrimonioNaIF over (idadeMaxima - idadeMeta) × 12 months */
   rendaSustentavel: number;
-  /** rendaMensalDesejada − rendaSustentavel  (positive = falta renda) */
+  /** rendaMensalDesejada − rendaSustentavel (positive = falta renda) */
   gapRenda: number;
   ifAlcancada: boolean;
-  /** Monthly contribution to reach patrimonioNecessario accounting for all objectives */
   aporteNecessario: number;
-  /** Monthly contribution to reach patrimonioNecessario ignoring objectives (PMT baseline) */
   aporteNecessarioSemObjetivos: number;
 }
 
-/** PV of annuity: how much patrimônio is needed to pay rendaMensal for n months at taxaMensalReal */
+/** PV of annuity */
 function pvAnuidade(rendaMensal: number, taxaMensalReal: number, meses: number): number {
   if (meses <= 0) return 0;
   if (Math.abs(taxaMensalReal) < 0.0001) return rendaMensal * meses;
   return rendaMensal * (1 - Math.pow(1 + taxaMensalReal, -meses)) / taxaMensalReal;
 }
 
-/** PMT: monthly withdrawal sustainable from patrimônio over n months at taxaMensalReal */
+/** PMT: monthly withdrawal sustainable from patrimônio over n months */
 function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): number {
   if (meses <= 0) return 0;
   if (Math.abs(taxaMensalReal) < 0.0001) return patrimonio / meses;
@@ -173,66 +178,72 @@ const TAXA_RETIRADA_MENSAL = Math.pow(1 + TAXA_RETIRADA_ANUAL, 1 / 12) - 1; // �
 export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const {
     idadeAtual, idadeMeta, idadeMaxima, patrimonioInicial, aporteMensal,
-    rendaMensalDesejada, taxaRetornoAnual, objetivos = [],
+    rendaMensalDesejada, taxaRetornoAnual, anoNascimento, mesNascimento,
+    objetivos = [],
   } = params;
 
-  // Accumulation phase rate — defined by the advisor
   const taxaMensalReal = Math.pow(1 + taxaRetornoAnual, 1 / 12) - 1;
-  // Withdrawal phase always uses TAXA_RETIRADA_MENSAL (4% a.a. real)
 
-  // Net effect per age: positive = extra inflow, negative = outflow
-  // Only objectives strictly after idadeAtual can be applied (loop starts at idadeAtual+1)
-  const objsByIdade = new Map<number, number>();
+  // Build objectives map keyed by "ano-mes" → net effect on patrimônio
+  const objByMesAno = new Map<string, number>();
   for (const obj of objetivos) {
-    const idade = Math.round(Number(obj.idadeRealizacao));
-    const valor = Number(obj.valor);
-    if (!isFinite(idade) || !isFinite(valor) || idade <= idadeAtual) continue;
-    const sinal = obj.tipo === "aporte" ? 1 : -1;
-    objsByIdade.set(
-      idade,
-      (objsByIdade.get(idade) ?? 0) + sinal * valor,
-    );
+    const sinal = OBJETIVO_META[obj.tipo].tipo === "aporte" ? 1 : -1;
+    const key = `${obj.ano}-${obj.mes}`;
+    objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
 
-  const projecao: ProjecaoIFResult["projecao"] = [];
+  const mesInicioRetirada = (idadeMeta - idadeAtual) * 12;
+  const totalMeses = (idadeMaxima - idadeAtual) * 12;
+
+  const projecao: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
 
-  projecao.push({ idade: idadeAtual, patrimonio: Math.round(patrimonio), fase: "acumulacao" });
+  // Track calendar month/year — starts at birth month of current age year
+  let anoAtual = anoNascimento + idadeAtual;
+  let mesAtual = mesNascimento;
 
-  for (let idade = idadeAtual + 1; idade <= idadeMaxima; idade++) {
-    const estaAcumulando = idade <= idadeMeta;
+  projecao.push({
+    mes: 0,
+    ano: anoAtual,
+    mesDoAno: mesAtual,
+    patrimonio: Math.round(patrimonio),
+    fase: "acumulacao",
+  });
 
-    // Simulate 12 months: accumulation uses advisor rate; withdrawal uses 4% a.a. real
-    for (let m = 0; m < 12; m++) {
-      if (estaAcumulando) {
-        patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
-      } else {
-        patrimonio = patrimonio * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
-      }
+  for (let m = 1; m <= totalMeses; m++) {
+    mesAtual++;
+    if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
+
+    const acumulando = m <= mesInicioRetirada;
+
+    if (acumulando) {
+      patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
+    } else {
+      patrimonio = patrimonio * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
     }
 
-    // Apply one-time objective at end of year → visible as sharp drop/rise in chart
-    const objEffect = objsByIdade.get(idade) ?? 0;
-    if (objEffect !== 0) patrimonio += objEffect;
+    const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
+    if (effect !== 0) patrimonio += effect;
     patrimonio = Math.max(0, patrimonio);
 
     projecao.push({
-      idade,
+      mes: m,
+      ano: anoAtual,
+      mesDoAno: mesAtual,
       patrimonio: Math.round(patrimonio),
-      fase: estaAcumulando ? "acumulacao" : "decumulacao",
+      fase: acumulando ? "acumulacao" : "decumulacao",
     });
   }
 
-  const patrimonioNaIF = projecao.find((p) => p.idade === idadeMeta)?.patrimonio ?? 0;
+  const patrimonioNaIF = projecao[mesInicioRetirada]?.patrimonio ?? 0;
   const mesesRetirada = (idadeMaxima - idadeMeta) * 12;
-  // Both use the fixed 4% withdrawal rate, not the accumulation rate
   const patrimonioNecessario = Math.round(pvAnuidade(rendaMensalDesejada, TAXA_RETIRADA_MENSAL, mesesRetirada));
   const rendaSustentavel = Math.round(pmtMensal(patrimonioNaIF, TAXA_RETIRADA_MENSAL, mesesRetirada) * 100) / 100;
-  const gapRenda = rendaMensalDesejada - rendaSustentavel; // positive = falta renda
+  const gapRenda = rendaMensalDesejada - rendaSustentavel;
   const ifAlcancada = rendaSustentavel >= rendaMensalDesejada;
 
-  // Closed-form PMT ignoring objectives (baseline)
-  const n = (idadeMeta - idadeAtual) * 12;
+  // Closed-form aporte without objectives (baseline)
+  const n = mesInicioRetirada;
   const r = taxaMensalReal;
   let aporteNecessarioSemObjetivos = 0;
   if (n > 0) {
@@ -247,31 +258,31 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     }
   }
 
-  // Binary search accounting for objectives — simulates the same accumulation path
-  function simularPatrimonioFinal(aporte: number): number {
+  // Lightweight simulation to IF date only — used by binary search
+  function simularNaIF(aporte: number): number {
     let p = patrimonioInicial;
-    for (let idade = idadeAtual + 1; idade <= idadeMeta; idade++) {
-      for (let m = 0; m < 12; m++) {
-        p = p * (1 + taxaMensalReal) + aporte;
-      }
-      const objEffect = objsByIdade.get(idade) ?? 0;
-      if (objEffect !== 0) p += objEffect;
+    let anoS = anoNascimento + idadeAtual;
+    let mesS = mesNascimento;
+    for (let m = 1; m <= mesInicioRetirada; m++) {
+      mesS++;
+      if (mesS > 12) { mesS = 1; anoS++; }
+      p = p * (1 + taxaMensalReal) + aporte;
+      const effect = objByMesAno.get(`${anoS}-${mesS}`) ?? 0;
+      if (effect !== 0) p += effect;
       p = Math.max(0, p);
     }
     return p;
   }
 
+  // Binary search for aporte with objectives
   let aporteNecessario = aporteNecessarioSemObjetivos;
   if (objetivos.length > 0 && n > 0) {
     let low = 0;
-    let high = patrimonioNecessario; // generous upper bound — always yields FV > target
+    let high = patrimonioNecessario;
     for (let i = 0; i < 60; i++) {
       const mid = (low + high) / 2;
-      if (simularPatrimonioFinal(mid) >= patrimonioNecessario) {
-        high = mid;
-      } else {
-        low = mid;
-      }
+      if (simularNaIF(mid) >= patrimonioNecessario) high = mid;
+      else low = mid;
     }
     aporteNecessario = Math.ceil(high);
   }

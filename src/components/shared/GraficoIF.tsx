@@ -1,12 +1,12 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
   Baby, Shield, TrendingUp, MoreHorizontal, Sunset,
 } from "lucide-react";
-import type { ProjecaoPoint } from "@/types/estrategiaResultados";
+import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
 import { formatCurrency } from "@/lib/format";
@@ -15,6 +15,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
   Baby, Shield, TrendingUp, MoreHorizontal,
 };
+
+const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 const COR_APOSENTADORIA = "#0891B2";
 
@@ -25,22 +27,60 @@ function formatAxis(v: number) {
 }
 
 interface Props {
-  projecao: ProjecaoPoint[];
+  projecao: PontoProjecao[];
   objetivos?: ObjetivoVida[];
   height?: number;
-  idadeMeta?: number;
+  /** Absolute month index (from projecao[0]) where accumulation ends */
+  mesIF?: number;
 }
 
-export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }: Props) {
-  const objsByIdade = new Map<number, ObjetivoVida[]>();
+export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Props) {
+  if (projecao.length === 0) return null;
+
+  // Build objectives lookup: "ano-mes" → list of objectives
+  const objByMesAno = new Map<string, ObjetivoVida[]>();
   for (const obj of objetivos) {
-    const list = objsByIdade.get(obj.idadeRealizacao) ?? [];
+    const key = `${obj.ano}-${obj.mes}`;
+    const list = objByMesAno.get(key) ?? [];
     list.push(obj);
-    objsByIdade.set(obj.idadeRealizacao, list);
+    objByMesAno.set(key, list);
   }
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: number }) => {
+  // Build objectives lookup by absolute mes index for renderDot
+  const objByMesIdx = new Map<number, ObjetivoVida[]>();
+  for (const p of projecao) {
+    const list = objByMesAno.get(`${p.ano}-${p.mesDoAno}`);
+    if (list?.length) objByMesIdx.set(p.mes, list);
+  }
+
+  // X-axis ticks: one per 5 calendar years, at January
+  const anoInicio = projecao[0].ano;
+  const xTicks: number[] = [];
+  for (const p of projecao) {
+    if (p.mesDoAno === 1 && (p.ano - anoInicio) % 5 === 0) {
+      xTicks.push(p.mes);
+    }
+  }
+  // Ensure first point is included
+  if (!xTicks.includes(0)) xTicks.unshift(0);
+
+  // Map mes-index → ano for tick labels
+  const mesParaAno = new Map<number, number>();
+  for (const p of projecao) mesParaAno.set(p.mes, p.ano);
+
+  // IF reference line
+  const ifPonto = mesIF !== undefined ? projecao[mesIF] : undefined;
+
+  const CustomTooltip = ({
+    active, payload,
+  }: {
+    active?: boolean;
+    payload?: { value: number; payload: PontoProjecao }[];
+  }) => {
     if (!active || !payload?.length) return null;
+    const ponto = payload[0].payload;
+    const mesLabel = `${MESES_ABREV[ponto.mesDoAno - 1]}/${ponto.ano}`;
+    const objsDoPonto = objByMesAno.get(`${ponto.ano}-${ponto.mesDoAno}`) ?? [];
     return (
       <div style={{
         backgroundColor: "white",
@@ -49,22 +89,25 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         padding: "8px 12px",
         fontSize: 12,
+        minWidth: 160,
       }}>
-        <p style={{ margin: "0 0 4px", color: "#6B7280" }}>Idade {label}</p>
-        <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(payload[0].value)}</p>
-        {label === idadeMeta && (
-          <div style={{
-            color: COR_APOSENTADORIA,
-            marginTop: 4,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            fontWeight: 500,
-          }}>
+        <p style={{ margin: "0 0 4px", color: "#6B7280" }}>{mesLabel}</p>
+        <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(ponto.patrimonio)}</p>
+        {ifPonto && ponto.mes === ifPonto.mes && (
+          <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
             <Sunset style={{ width: 12, height: 12 }} />
-            Aposentadoria / IF
+            Independência Financeira
           </div>
         )}
+        {objsDoPonto.map((obj) => {
+          const meta = OBJETIVO_META[obj.tipo];
+          const sinal = meta.tipo === "aporte" ? "+" : "−";
+          return (
+            <p key={obj.id} style={{ margin: "3px 0 0", color: meta.color, fontSize: 11 }}>
+              {sinal}{formatCurrency(obj.valorBRL)} · {obj.label}
+            </p>
+          );
+        })}
       </div>
     );
   };
@@ -72,40 +115,22 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
   const renderDot = (dotProps: Record<string, unknown>) => {
     const cx = dotProps.cx as number;
     const cy = dotProps.cy as number;
-    const payload = dotProps.payload as { idade: number };
-    const objsDaIdade = objsByIdade.get(payload.idade) ?? [];
-    const ehAposentadoria = idadeMeta !== undefined && payload.idade === idadeMeta;
+    const payload = dotProps.payload as PontoProjecao;
+    const objsDoPonto = objByMesIdx.get(payload.mes) ?? [];
+    const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
 
-    if (objsDaIdade.length === 0 && !ehAposentadoria) return <g />;
+    if (objsDoPonto.length === 0 && !ehIF) return <g />;
 
     const r = 18;
-    const ra = r + 2; // radius for aposentadoria circle (slightly larger)
+    const ra = r + 2;
 
     return (
       <g>
-        {ehAposentadoria && (
+        {ehIF && (
           <g>
-            <circle
-              cx={cx}
-              cy={cy - ra - 4}
-              r={ra}
-              fill="white"
-              stroke={COR_APOSENTADORIA}
-              strokeWidth={2}
-            />
-            <foreignObject
-              x={cx - ra}
-              y={cy - ra - 4 - ra}
-              width={ra * 2}
-              height={ra * 2}
-            >
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
-                height: "100%",
-              }}>
+            <circle cx={cx} cy={cy - ra - 4} r={ra} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
+            <foreignObject x={cx - ra} y={cy - ra - 4 - ra} width={ra * 2} height={ra * 2}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
                 <Sunset style={{ width: 16, height: 16, color: COR_APOSENTADORIA }} />
               </div>
             </foreignObject>
@@ -113,23 +138,17 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
           </g>
         )}
 
-        {objsDaIdade.map((obj, i) => {
+        {objsDoPonto.map((obj, i) => {
           const meta = OBJETIVO_META[obj.tipo];
           const Icon = ICON_MAP[meta.iconName];
-          const baseOffset = ehAposentadoria ? (ra * 2 + 8) : 0;
+          const baseOffset = ehIF ? (ra * 2 + 8) : 0;
           const offsetY = cy - r - 4 - baseOffset - i * (r * 2 + 4);
           const iconSize = (r - 2) * 2;
           return (
             <g key={obj.id}>
               <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={meta.color} strokeWidth={1.5} />
               <foreignObject x={cx - r + 2} y={offsetY - r + 2} width={iconSize} height={iconSize}>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                  height: "100%",
-                }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
                   <Icon style={{ width: 15, height: 15, color: meta.color }} />
                 </div>
               </foreignObject>
@@ -152,7 +171,9 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
         <XAxis
-          dataKey="idade"
+          dataKey="mes"
+          ticks={xTicks}
+          tickFormatter={(v) => String(mesParaAno.get(v) ?? "")}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
           tickLine={false}
@@ -164,6 +185,15 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, idadeMeta }:
           tickLine={false}
         />
         <Tooltip content={<CustomTooltip />} />
+
+        {ifPonto && (
+          <ReferenceLine
+            x={ifPonto.mes}
+            stroke={COR_APOSENTADORIA}
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+          />
+        )}
 
         <Area
           type="monotone"
