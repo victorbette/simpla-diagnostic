@@ -166,14 +166,19 @@ function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): n
   return patrimonio * taxaMensalReal / (1 - Math.pow(1 + taxaMensalReal, -meses));
 }
 
+/** Fixed 4% a.a. real for the withdrawal phase — conservative standard */
+const TAXA_RETIRADA_ANUAL = 0.04;
+const TAXA_RETIRADA_MENSAL = Math.pow(1 + TAXA_RETIRADA_ANUAL, 1 / 12) - 1; // ≈ 0.3274% a.m.
+
 export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const {
     idadeAtual, idadeMeta, idadeMaxima, patrimonioInicial, aporteMensal,
     rendaMensalDesejada, taxaRetornoAnual, objetivos = [],
   } = params;
 
-  // Compound monthly conversion — never divide annual rate by 12
+  // Accumulation phase rate — defined by the advisor
   const taxaMensalReal = Math.pow(1 + taxaRetornoAnual, 1 / 12) - 1;
+  // Withdrawal phase always uses TAXA_RETIRADA_MENSAL (4% a.a. real)
 
   // Net effect per age: positive = extra inflow, negative = outflow
   // Only objectives strictly after idadeAtual can be applied (loop starts at idadeAtual+1)
@@ -197,12 +202,12 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   for (let idade = idadeAtual + 1; idade <= idadeMaxima; idade++) {
     const estaAcumulando = idade <= idadeMeta;
 
-    // Simulate 12 months of compound growth + contribution or withdrawal
+    // Simulate 12 months: accumulation uses advisor rate; withdrawal uses 4% a.a. real
     for (let m = 0; m < 12; m++) {
       if (estaAcumulando) {
         patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
       } else {
-        patrimonio = patrimonio * (1 + taxaMensalReal) - rendaMensalDesejada;
+        patrimonio = patrimonio * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
       }
     }
 
@@ -220,8 +225,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   const patrimonioNaIF = projecao.find((p) => p.idade === idadeMeta)?.patrimonio ?? 0;
   const mesesRetirada = (idadeMaxima - idadeMeta) * 12;
-  const patrimonioNecessario = Math.round(pvAnuidade(rendaMensalDesejada, taxaMensalReal, mesesRetirada));
-  const rendaSustentavel = Math.round(pmtMensal(patrimonioNaIF, taxaMensalReal, mesesRetirada) * 100) / 100;
+  // Both use the fixed 4% withdrawal rate, not the accumulation rate
+  const patrimonioNecessario = Math.round(pvAnuidade(rendaMensalDesejada, TAXA_RETIRADA_MENSAL, mesesRetirada));
+  const rendaSustentavel = Math.round(pmtMensal(patrimonioNaIF, TAXA_RETIRADA_MENSAL, mesesRetirada) * 100) / 100;
   const gapRenda = rendaMensalDesejada - rendaSustentavel; // positive = falta renda
   const ifAlcancada = rendaSustentavel >= rendaMensalDesejada;
 

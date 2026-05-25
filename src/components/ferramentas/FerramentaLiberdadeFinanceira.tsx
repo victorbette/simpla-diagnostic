@@ -220,6 +220,17 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, onSave
                   <span>0%</span><span>10%</span>
                 </div>
               </div>
+
+              {/* Withdrawal rate note */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                fontSize: 12, color: "#2563EB",
+                backgroundColor: "#EFF6FF", borderRadius: 8,
+                border: "1px solid #BFDBFE", padding: "8px 12px",
+              }}>
+                <span style={{ fontSize: 16, lineHeight: 1 }}>ℹ</span>
+                <span>Na aposentadoria é adotada a taxa de <strong>4% a.a. real</strong> — padrão conservador para carteiras de retirada</span>
+              </div>
             </CardContent>
           </Card>
 
