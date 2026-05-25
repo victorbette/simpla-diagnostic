@@ -123,6 +123,7 @@ export interface PontoProjecao {
   mes: number;        // absolute month index from start (0-based)
   ano: number;        // calendar year
   mesDoAno: number;   // 1-12
+  idade: number;      // decimal age, e.g. 43.5
   patrimonio: number;
   fase: "acumulacao" | "decumulacao";
 }
@@ -206,6 +207,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     mes: 0,
     ano: anoAtual,
     mesDoAno: mesAtual,
+    idade: idadeAtual,
     patrimonio: Math.round(patrimonio),
     fase: "acumulacao",
   });
@@ -230,6 +232,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
+      idade: Math.round((idadeAtual + m / 12) * 10) / 10,
       patrimonio: Math.round(patrimonio),
       fase: acumulando ? "acumulacao" : "decumulacao",
     });

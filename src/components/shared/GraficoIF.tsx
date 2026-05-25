@@ -1,6 +1,6 @@
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
@@ -20,24 +20,38 @@ const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 const COR_APOSENTADORIA = "#0891B2";
 
-function formatAxis(v: number) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-  return String(v);
-}
-
 interface Props {
   projecao: PontoProjecao[];
   objetivos?: ObjetivoVida[];
   height?: number;
-  /** Absolute month index (from projecao[0]) where accumulation ends */
+  /** Absolute month index where accumulation ends — used for IF marker dot only */
   mesIF?: number;
 }
 
 export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Props) {
   if (projecao.length === 0) return null;
 
-  // Build objectives lookup: "ano-mes" → list of objectives
+  const idadeAtual = Math.floor(projecao[0].idade);
+  const mesNascimentoDoAno = projecao[0].mesDoAno;
+
+  // Y-axis: ceil max patrimônio to next 500k multiple
+  const maxPatrimonio = Math.max(...projecao.map((p) => p.patrimonio), 0);
+  const STEP = 500_000;
+  const yMax = Math.ceil(maxPatrimonio / STEP) * STEP || STEP;
+  const yTicks: number[] = [];
+  for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
+
+  // X-axis: annual ticks at birth month, every 5 years, shown up to age 100
+  const domainMax = (100 - idadeAtual) * 12;
+  const xTicks = projecao
+    .filter((p) => p.mesDoAno === mesNascimentoDoAno && Math.floor(p.idade) % 5 === 0)
+    .map((p) => p.mes);
+  if (!xTicks.includes(0)) xTicks.unshift(0);
+
+  // IF marker point
+  const ifPonto = mesIF !== undefined ? projecao[mesIF] : undefined;
+
+  // Build objectives lookups
   const objByMesAno = new Map<string, ObjetivoVida[]>();
   for (const obj of objetivos) {
     const key = `${obj.ano}-${obj.mes}`;
@@ -45,31 +59,11 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
     list.push(obj);
     objByMesAno.set(key, list);
   }
-
-  // Build objectives lookup by absolute mes index for renderDot
   const objByMesIdx = new Map<number, ObjetivoVida[]>();
   for (const p of projecao) {
     const list = objByMesAno.get(`${p.ano}-${p.mesDoAno}`);
     if (list?.length) objByMesIdx.set(p.mes, list);
   }
-
-  // X-axis ticks: one per 5 calendar years, at January
-  const anoInicio = projecao[0].ano;
-  const xTicks: number[] = [];
-  for (const p of projecao) {
-    if (p.mesDoAno === 1 && (p.ano - anoInicio) % 5 === 0) {
-      xTicks.push(p.mes);
-    }
-  }
-  // Ensure first point is included
-  if (!xTicks.includes(0)) xTicks.unshift(0);
-
-  // Map mes-index → ano for tick labels
-  const mesParaAno = new Map<number, number>();
-  for (const p of projecao) mesParaAno.set(p.mes, p.ano);
-
-  // IF reference line
-  const ifPonto = mesIF !== undefined ? projecao[mesIF] : undefined;
 
   const CustomTooltip = ({
     active, payload,
@@ -91,7 +85,10 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
         fontSize: 12,
         minWidth: 160,
       }}>
-        <p style={{ margin: "0 0 4px", color: "#6B7280" }}>{mesLabel}</p>
+        <p style={{ margin: "0 0 2px", color: "#6B7280" }}>
+          {mesLabel}
+          <span style={{ marginLeft: 6, color: "#9CA3AF" }}>{ponto.idade.toFixed(1)} anos</span>
+        </p>
         <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(ponto.patrimonio)}</p>
         {ifPonto && ponto.mes === ifPonto.mes && (
           <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
@@ -162,7 +159,7 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={projecao} margin={{ top: 60, right: 16, bottom: 0, left: 8 }}>
+      <AreaChart data={projecao} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
         <defs>
           <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
@@ -172,28 +169,32 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
         <XAxis
           dataKey="mes"
+          type="number"
+          domain={[0, domainMax]}
           ticks={xTicks}
-          tickFormatter={(v) => String(mesParaAno.get(v) ?? "")}
+          tickFormatter={(v: number) => {
+            const ponto = projecao[v];
+            if (!ponto) return "";
+            return String(Math.floor(ponto.idade));
+          }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tickFormatter={formatAxis}
+          domain={[0, yMax]}
+          ticks={yTicks}
+          tickFormatter={(v: number) => {
+            if (v === 0) return "R$ 0";
+            if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+            return `${(v / 1_000).toFixed(0)}K`;
+          }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
           tickLine={false}
+          width={52}
         />
         <Tooltip content={<CustomTooltip />} />
-
-        {ifPonto && (
-          <ReferenceLine
-            x={ifPonto.mes}
-            stroke={COR_APOSENTADORIA}
-            strokeDasharray="4 3"
-            strokeWidth={1.5}
-          />
-        )}
 
         <Area
           type="monotone"

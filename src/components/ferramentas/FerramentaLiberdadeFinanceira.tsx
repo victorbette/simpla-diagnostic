@@ -29,7 +29,6 @@ interface Props {
 interface UIParams {
   idadeAtual: number;
   idadeAposentadoria: number;
-  expectativaVida: number;
   patrimonioInicial: number;
   aporteMensal: number;
   rendaDesejada: number;
@@ -88,7 +87,6 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
   const initialParams: UIParams = {
     idadeAtual: planejamentoIF.idadeAtual,
     idadeAposentadoria: planejamentoIF.idadeMeta,
-    expectativaVida: 90,
     patrimonioInicial: planejamentoIF.patrimonioAtual,
     aporteMensal: planejamentoIF.aporteMensal,
     rendaDesejada: planejamentoIF.rendaMensalDesejada,
@@ -129,7 +127,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual: params.idadeAtual,
     idadeMeta: params.idadeAposentadoria,
-    idadeMaxima: params.expectativaVida,
+    idadeMaxima: 90,
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
@@ -180,7 +178,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
                 Parâmetros da simulação
               </p>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="lf-idade-atual" style={{ color: "#6B7280" }}>Idade atual</Label>
                   <Input id="lf-idade-atual" type="number" min={18} max={80}
@@ -193,13 +191,6 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
                     value={params.idadeAposentadoria}
                     onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-vida" style={{ color: "#6B7280" }}>Expectativa</Label>
-                  <Input id="lf-vida" type="number" min={params.idadeAposentadoria + 1} max={110}
-                    value={params.expectativaVida}
-                    onChange={(e) => setP({ expectativaVida: Number(e.target.value) })}
                     style={{ borderColor: "#BFDBFE", color: "#000000" }} />
                 </div>
               </div>
