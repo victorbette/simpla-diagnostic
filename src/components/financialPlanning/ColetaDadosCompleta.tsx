@@ -107,7 +107,7 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
   const fieldCls = "flex flex-col gap-1.5";
 
   return (
-    <div style={{ padding: "24px 32px", maxWidth: 960, margin: "0 auto" }}>
+    <div style={{ padding: "24px 32px", width: "100%", boxSizing: "border-box" }}>
 
       {/* ─── SEÇÃO 1: Dados Pessoais ─── */}
       <SecaoCard color="#2563EB" Icon={User} title="Dados Pessoais" subtitle="Informações básicas, localização e perfil do cliente">

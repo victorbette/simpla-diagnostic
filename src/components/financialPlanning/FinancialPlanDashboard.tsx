@@ -283,7 +283,7 @@ export function FinancialPlanDashboard({
     ? Math.min(100, (plan.fiscal.valorPGBLAnual / fiscalResult.tetoPGBL) * 100) : 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", padding: "24px 32px", boxSizing: "border-box" }}>
 
       {/* ── 1. Banner ─────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "#DCFCE7", border: "1px solid #15803D", borderRadius: 12, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>

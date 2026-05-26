@@ -374,18 +374,18 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
           style={{
             flex: 1,
             minHeight: 0,
+            minWidth: 0,
             backgroundColor: "#F0F7FF",
             overflowY: "auto",
+            width: "100%",
           }}
         >
           {aba === "coleta" && (
-            <div style={{ maxWidth: 860, margin: "0 auto", padding: "28px 24px" }}>
-              <ColetaDadosCompleta
-                plan={plan}
-                onChange={updatePlan}
-                onColetaComplete={handleColetaComplete}
-              />
-            </div>
+            <ColetaDadosCompleta
+              plan={plan}
+              onChange={updatePlan}
+              onColetaComplete={handleColetaComplete}
+            />
           )}
 
           {aba === "resultado" && (
