@@ -1,6 +1,6 @@
 import {
   Briefcase, User, Building2, BadgeCheck, Shield, TrendingUp, BarChart2, Zap,
-  DollarSign, PieChart, Sunset, FileText,
+  DollarSign, PieChart, Sunset, FileText, Plus, X,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,10 @@ import {
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { ALOCACAO_PADRAO } from "@/lib/carteira/calculos";
 import { AtivoForm } from "./AtivoForm";
-import { PlanejamentoIFForm } from "./PlanejamentoIFForm";
 import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 import { FiscalForm } from "./FiscalForm";
-import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
+import type { FinancialPlan, DadosCliente, PerfilRisco, PlanejamentoIF } from "@/types/financialPlanning";
+import { formatCurrency } from "@/lib/format";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -70,6 +70,8 @@ function SecaoCard({
       boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       marginBottom: 16,
       borderLeft: `3px solid ${color}`,
+      width: "100%",
+      boxSizing: "border-box",
     }}>
       <div style={{ padding: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -85,15 +87,58 @@ function SecaoCard({
   );
 }
 
+function AutoField({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", flex: 1, height: 40, alignItems: "center", padding: "0 12px", borderRadius: 8, border: "1px solid #BFDBFE", borderLeft: "3px solid #3B82F6", backgroundColor: "#EAF0F5", fontSize: 14, fontWeight: 600, color: "#1E40AF" }}>
+          {value || "—"}
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 700, color: "#1E40AF", backgroundColor: "#EAF0F5", border: "1px solid #A8C4D8", borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap" }}>
+          AUTO
+        </span>
+      </div>
+      {hint && <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{hint}</p>}
+    </div>
+  );
+}
+
 export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props) {
   const dados = plan.dadosCliente;
 
   const setDados = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
     onChange({ dadosCliente: { ...dados, [key]: val } });
 
+  const setIF = <K extends keyof PlanejamentoIF>(key: K, val: PlanejamentoIF[K]) =>
+    onChange({ planejamentoIF: { ...plan.planejamentoIF, [key]: val } });
+
+  const filhos = dados.filhos ?? [];
+
+  const updateFilhos = (newFilhos: Array<{ nome: string }>) =>
+    onChange({ dadosCliente: { ...dados, filhos: newFilhos, numeroFilhos: newFilhos.length } });
+
   const calculatedAge = dados.dataNascimento
     ? new Date().getFullYear() - new Date(dados.dataNascimento).getFullYear()
     : null;
+
+  // Previdência checkbox helpers
+  const isPGBL = dados.tipoPrevidencia === "pgbl" || dados.tipoPrevidencia === "ambos";
+  const isVGBL = dados.tipoPrevidencia === "vgbl" || dados.tipoPrevidencia === "ambos";
+
+  const togglePGBL = (checked: boolean) => {
+    if (checked && isVGBL) setDados("tipoPrevidencia", "ambos");
+    else if (checked) setDados("tipoPrevidencia", "pgbl");
+    else if (isVGBL) setDados("tipoPrevidencia", "vgbl");
+    else setDados("tipoPrevidencia", null);
+  };
+
+  const toggleVGBL = (checked: boolean) => {
+    if (checked && isPGBL) setDados("tipoPrevidencia", "ambos");
+    else if (checked) setDados("tipoPrevidencia", "vgbl");
+    else if (isPGBL) setDados("tipoPrevidencia", "pgbl");
+    else setDados("tipoPrevidencia", null);
+  };
 
   const selectedCard = dados.suitabilityPerfil
     ? PERFIL_CARDS.find((c) => c.perfil === dados.suitabilityPerfil)
@@ -102,9 +147,10 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
     ? ALOCACAO_PADRAO[dados.suitabilityPerfil]
     : null;
 
-  const clientPerfil = dados.suitabilityPerfil ?? null;
   const labelCls = "text-[13px] font-medium text-[#111827]";
   const fieldCls = "flex flex-col gap-1.5";
+
+  const anosRestantes = Math.max(0, plan.planejamentoIF.idadeMeta - (calculatedAge ?? plan.planejamentoIF.idadeAtual));
 
   return (
     <div style={{ padding: "24px 32px", width: "100%", boxSizing: "border-box" }}>
@@ -153,24 +199,53 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
 
           <div className={fieldCls} style={{ justifyContent: "center" }}>
             <Label className={labelCls}>Tem filhos?</Label>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, height: 40 }}>
+            <div style={{ display: "flex", alignItems: "center", height: 40 }}>
               <Switch checked={!!dados.temFilhos} onCheckedChange={(v) => setDados("temFilhos", v)} />
-              {dados.temFilhos && (
-                <Input
-                  type="number" min={1} max={20} placeholder="Qtd."
-                  value={dados.numeroFilhos || ""}
-                  onChange={(e) => setDados("numeroFilhos", parseInt(e.target.value, 10) || 0)}
-                  className="w-20 text-center"
-                />
-              )}
             </div>
           </div>
+        </div>
 
+        {/* Lista de filhos */}
+        {dados.temFilhos && (
+          <div style={{ marginTop: 16, padding: "16px 20px", backgroundColor: "#F8FAFF", borderRadius: 10, border: "1px solid #BFDBFE" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", margin: "0 0 12px" }}>
+              Filhos {filhos.length > 0 && <span style={{ fontWeight: 400, color: "#6B7280" }}>({filhos.length})</span>}
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filhos.map((filho, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <Input
+                    value={filho.nome}
+                    onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { nome: e.target.value } : f))}
+                    placeholder={`Nome do filho ${i + 1}`}
+                    className="border-[#BFDBFE]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => updateFilhos(filhos.filter((_, j) => j !== i))}
+                    style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 6, border: "1px solid #FECACA", backgroundColor: "#FEF2F2", color: "#B91C1C", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => updateFilhos([...filhos, { nome: "" }])}
+              style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#2563EB", background: "none", border: "1px dashed #BFDBFE", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontWeight: 500 }}
+            >
+              <Plus size={14} /> Adicionar filho
+            </button>
+          </div>
+        )}
+
+        {/* Cidade | Estado */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginTop: 20 }}>
           <div className={fieldCls}>
             <Label className={labelCls}>Cidade</Label>
             <Input value={dados.cidade} onChange={(e) => setDados("cidade", e.target.value)} placeholder="Ex: São Paulo" />
           </div>
-
           <div className={fieldCls}>
             <Label className={labelCls}>Estado (UF)</Label>
             <Select value={dados.estado} onValueChange={(v) => setDados("estado", v)}>
@@ -182,7 +257,82 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
           </div>
         </div>
 
-        {/* Viagens */}
+        {/* INSS */}
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.contribuiINSS ? "#2563EB" : "#BFDBFE"}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              checked={!!(dados.contribuiINSS ?? false)}
+              onCheckedChange={(v) => setDados("contribuiINSS", v)}
+            />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Contribui para o INSS?</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Contribuição previdenciária pública</p>
+            </div>
+          </div>
+          {dados.contribuiINSS && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE" }}>
+              <div className={fieldCls}>
+                <Label className={labelCls}>Valor estimado do benefício futuro</Label>
+                <CurrencyInput
+                  value={dados.valorINSS ?? 0}
+                  onChange={(v) => setDados("valorINSS", v)}
+                />
+                <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Estimativa do benefício futuro</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Vínculo profissional */}
+        <div style={{ marginTop: 20 }}>
+          <Label className={labelCls} style={{ display: "block", marginBottom: 10 }}>Vínculo profissional</Label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            {VINCULO_OPTIONS.map(({ key, label, Icon: VIcon }) => {
+              const selected = dados.tipoTrabalho === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDados("tipoTrabalho", key)}
+                  style={{ border: selected ? "2px solid #3B82F6" : "1.5px solid #BFDBFE", borderRadius: 10, padding: "14px 12px", backgroundColor: selected ? "#000000" : "white", color: selected ? "white" : "#111827", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", transition: "all 0.15s" }}
+                >
+                  {selected && (
+                    <span style={{ position: "absolute", top: 8, right: 8, backgroundColor: "#3B82F6", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#000000", fontWeight: 700 }}>✓</span>
+                  )}
+                  <VIcon size={22} />
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </SecaoCard>
+
+      {/* ─── SEÇÃO 2: Situação Financeira ─── */}
+      <SecaoCard color="#15803D" Icon={DollarSign} title="Situação Financeira" subtitle="Patrimônio, renda, fluxo mensal e hábitos financeiros">
+
+        {/* 6 currency fields */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          {([
+            { label: "Patrimônio total estimado", key: "patrimonioTotalEstimado", hint: "Inclui imóveis e bens" },
+            { label: "Patrimônio financeiro", key: "patrimonioFinanceiroEstimado", hint: "Apenas investimentos" },
+            { label: "Renda mensal", key: "rendaMensal" },
+            { label: "Custo de vida mensal", key: "custoDeVidaMensal" },
+            { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal" },
+            { label: "Gasto mensal no cartão (familiar)", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
+          ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
+            <div key={key} className={fieldCls}>
+              <Label className={labelCls}>{label}</Label>
+              <CurrencyInput
+                value={dados[key] as number}
+                onChange={(v) => setDados(key, v as DadosCliente[typeof key])}
+              />
+              {hint && <p className="text-[11px] text-[#9CA3AF] italic">{hint}</p>}
+            </div>
+          ))}
+        </div>
+
+        {/* Perfil de viagens */}
         <div style={{ marginTop: 20 }}>
           <Label className={labelCls} style={{ display: "block", marginBottom: 8 }}>Perfil de viagens</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -238,71 +388,219 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
           </div>
         </div>
 
-        {/* Vínculo profissional */}
-        <div style={{ marginTop: 20 }}>
-          <Label className={labelCls} style={{ display: "block", marginBottom: 10 }}>Vínculo profissional</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            {VINCULO_OPTIONS.map(({ key, label, Icon: VIcon }) => {
-              const selected = dados.tipoTrabalho === key;
+        {/* Imóvel renda */}
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.possuiImovelRenda ? "#15803D" : "#BFDBFE"}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              checked={!!(dados.possuiImovelRenda ?? false)}
+              onCheckedChange={(v) => setDados("possuiImovelRenda", v)}
+            />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui imóveis que geram renda?</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Imóveis para aluguel ou renda passiva</p>
+            </div>
+          </div>
+          {dados.possuiImovelRenda && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BBF7D0" }}>
+              <div className={fieldCls}>
+                <Label className={labelCls}>Renda mensal gerada pelos imóveis</Label>
+                <CurrencyInput
+                  value={dados.rendaImovelMensal ?? 0}
+                  onChange={(v) => setDados("rendaImovelMensal", v)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Previdência */}
+        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.possuiPrevidencia ? "#2563EB" : "#BFDBFE"}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              checked={!!(dados.possuiPrevidencia ?? false)}
+              onCheckedChange={(v) => setDados("possuiPrevidencia", v)}
+            />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui previdência privada (PGBL/VGBL)?</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Plano de previdência complementar</p>
+            </div>
+          </div>
+          {dados.possuiPrevidencia && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", margin: "0 0 8px" }}>Tipo de plano</p>
+                <div style={{ display: "flex", gap: 12 }}>
+                  {(["pgbl", "vgbl"] as const).map((tipo) => {
+                    const checked = tipo === "pgbl" ? isPGBL : isVGBL;
+                    const toggle = tipo === "pgbl" ? togglePGBL : toggleVGBL;
+                    return (
+                      <label key={tipo} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => toggle(e.target.checked)}
+                          style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#2563EB" }}
+                        />
+                        {tipo.toUpperCase()}
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className={fieldCls}>
+                <Label className={labelCls}>Saldo atual da previdência</Label>
+                <CurrencyInput
+                  value={dados.saldoPrevidencia ?? 0}
+                  onChange={(v) => setDados("saldoPrevidencia", v)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </SecaoCard>
+
+      {/* ─── SEÇÃO 3: Investimentos ─── */}
+      <SecaoCard color="#1E40AF" Icon={PieChart} title="Investimentos" subtitle="Carteira atual e perfil de risco do cliente">
+
+        <AtivoForm
+          value={plan.ativosAtuais}
+          suitabilityPerfil={dados.suitabilityPerfil}
+          onChange={(v) => onChange({ ativosAtuais: v })}
+          comecandoDoZero={dados.comecandoDoZero ?? false}
+          onComecandoDoZeroChange={(v) => setDados("comecandoDoZero", v)}
+        />
+
+        {/* Perfil de Risco */}
+        <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 24, paddingTop: 24 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Perfil de Risco do Cliente
+          </p>
+          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+            Selecione o perfil conforme análise do consultor
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {PERFIL_CARDS.map(({ perfil, label, alocacao, descricao, color, bgSelected, icon: PIcon }) => {
+              const selected = dados.suitabilityPerfil === perfil;
               return (
                 <button
-                  key={key}
+                  key={perfil}
                   type="button"
-                  onClick={() => setDados("tipoTrabalho", key)}
-                  style={{ border: selected ? "2px solid #3B82F6" : "1.5px solid #BFDBFE", borderRadius: 10, padding: "14px 12px", backgroundColor: selected ? "#000000" : "white", color: selected ? "white" : "#111827", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", transition: "all 0.15s" }}
+                  onClick={() => setDados("suitabilityPerfil", perfil)}
+                  style={{ border: selected ? `2px solid ${color}` : "1.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px", backgroundColor: selected ? bgSelected : "white", cursor: "pointer", textAlign: "left", position: "relative", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 8 }}
                 >
                   {selected && (
-                    <span style={{ position: "absolute", top: 8, right: 8, backgroundColor: "#3B82F6", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#000000", fontWeight: 700 }}>✓</span>
+                    <span style={{ position: "absolute", top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>✓</span>
                   )}
-                  <VIcon size={22} />
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <PIcon style={{ width: 20, height: 20, color }} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>{label}</span>
+                  </div>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
+                  <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
                 </button>
               );
             })}
           </div>
-        </div>
-      </SecaoCard>
 
-      {/* ─── SEÇÃO 2: Situação Financeira ─── */}
-      <SecaoCard color="#15803D" Icon={DollarSign} title="Situação Financeira" subtitle="Patrimônio, renda e fluxo mensal">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-          {([
-            { label: "Patrimônio total estimado", key: "patrimonioTotalEstimado", hint: "Inclui imóveis e bens" },
-            { label: "Patrimônio financeiro", key: "patrimonioFinanceiroEstimado", hint: "Apenas investimentos" },
-            { label: "Renda mensal", key: "rendaMensal" },
-            { label: "Custo de vida mensal", key: "custoDeVidaMensal" },
-            { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal" },
-            { label: "Gasto mensal no cartão", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
-          ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
-            <div key={key} className={fieldCls}>
-              <Label className={labelCls}>{label}</Label>
-              <CurrencyInput
-                value={dados[key] as number}
-                onChange={(v) => setDados(key, v as DadosCliente[typeof key])}
-              />
-              {hint && <p className="text-[11px] text-[#9CA3AF] italic">{hint}</p>}
+          {selectedCard && alocacaoSelecionada && (
+            <div style={{ marginTop: 16, border: `1.5px solid ${selectedCard.color}`, borderRadius: 10, padding: "16px 20px", backgroundColor: selectedCard.bgSelected, display: "flex", flexDirection: "column", gap: 14 }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: selectedCard.color, margin: 0 }}>
+                ✓ Perfil selecionado: {selectedCard.label}
+              </p>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
+                  Alocação recomendada (Padrão Simpla)
+                </p>
+                <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #BFDBFE" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F0F7FF", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" }}>
+                    <span>Classe</span><span>% Recomendado</span>
+                  </div>
+                  {Object.entries(alocacaoSelecionada)
+                    .filter(([, v]) => v > 0)
+                    .map(([key, pct], i, arr) => (
+                      <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", backgroundColor: "white", borderTop: i === 0 ? "1px solid #BFDBFE" : undefined, borderBottom: i < arr.length - 1 ? "1px solid #F0F7FF" : undefined, fontSize: 13 }}>
+                        <span style={{ color: "#111827" }}>{CARD_LABELS[key] ?? key}</span>
+                        <span style={{ fontWeight: 700, color: selectedCard.color }}>{pct}%</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onColetaComplete(dados)}
+                style={{ alignSelf: "flex-start", backgroundColor: selectedCard.color, color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+              >
+                Aplicar perfil e sincronizar dados →
+              </button>
             </div>
-          ))}
+          )}
         </div>
-      </SecaoCard>
-
-      {/* ─── SEÇÃO 3: Patrimônio Atual ─── */}
-      <SecaoCard color="#1E40AF" Icon={PieChart} title="Patrimônio Atual" subtitle="Carteira de investimentos detalhada por classe de ativo">
-        <AtivoForm
-          value={plan.ativosAtuais}
-          suitabilityPerfil={clientPerfil}
-          onChange={(v) => onChange({ ativosAtuais: v })}
-          dadosCliente={dados}
-        />
       </SecaoCard>
 
       {/* ─── SEÇÃO 4: Aposentadoria / IF ─── */}
-      <SecaoCard color="#059669" Icon={Sunset} title="Aposentadoria / IF" subtitle="Planejamento de independência financeira e aposentadoria">
-        <PlanejamentoIFForm
-          value={plan.planejamentoIF}
-          onChange={(v) => onChange({ planejamentoIF: v })}
-          dadosCliente={dados}
-        />
+      <SecaoCard color="#059669" Icon={Sunset} title="Aposentadoria / IF" subtitle="Parâmetros para planejamento de independência financeira">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+          {calculatedAge ? (
+            <AutoField label="Idade atual" value={`${calculatedAge} anos`} hint="Calculado da data de nascimento" />
+          ) : (
+            <div className={fieldCls}>
+              <Label className={labelCls}>Idade atual</Label>
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe a data de nascimento</p>
+            </div>
+          )}
+
+          <div className={fieldCls}>
+            <Label className={labelCls}>Idade meta de aposentadoria</Label>
+            <Input
+              type="number"
+              min={calculatedAge ? calculatedAge + 1 : 20}
+              max={100}
+              value={plan.planejamentoIF.idadeMeta}
+              onChange={(e) => setIF("idadeMeta", Number(e.target.value))}
+              className="border-[#BFDBFE]"
+            />
+            {anosRestantes > 0 && (
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{anosRestantes} anos restantes</p>
+            )}
+          </div>
+
+          {dados.rendaMensal > 0 ? (
+            <AutoField label="Renda mensal atual" value={formatCurrency(dados.rendaMensal)} hint="Da situação financeira" />
+          ) : (
+            <div className={fieldCls}>
+              <Label className={labelCls}>Renda mensal atual</Label>
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
+            </div>
+          )}
+
+          <div className={fieldCls}>
+            <Label className={labelCls}>Renda mensal desejada na IF</Label>
+            <CurrencyInput
+              value={plan.planejamentoIF.rendaMensalDesejada}
+              onChange={(v) => setIF("rendaMensalDesejada", v)}
+            />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Quanto o cliente quer receber/mês na IF</p>
+          </div>
+
+          {dados.patrimonioFinanceiroEstimado > 0 ? (
+            <AutoField label="Patrimônio financeiro atual" value={formatCurrency(dados.patrimonioFinanceiroEstimado)} hint="Da situação financeira" />
+          ) : (
+            <div className={fieldCls}>
+              <Label className={labelCls}>Patrimônio financeiro atual</Label>
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
+            </div>
+          )}
+
+          {dados.aportesMensalMedio > 0 ? (
+            <AutoField label="Aporte mensal médio" value={formatCurrency(dados.aportesMensalMedio)} hint="Da situação financeira" />
+          ) : (
+            <div className={fieldCls}>
+              <Label className={labelCls}>Aporte mensal médio</Label>
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
+            </div>
+          )}
+        </div>
       </SecaoCard>
 
       {/* ─── SEÇÃO 5: Proteção e Sucessório ─── */}
@@ -323,66 +621,6 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
           onChange={(v) => onChange({ fiscal: v })}
           dadosCliente={dados}
         />
-      </SecaoCard>
-
-      {/* ─── SEÇÃO 7: Perfil de Risco ─── */}
-      <SecaoCard color="#7C3AED" Icon={BarChart2} title="Perfil de Risco" subtitle="Selecione o perfil de risco do cliente conforme análise do consultor">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {PERFIL_CARDS.map(({ perfil, label, alocacao, descricao, color, bgSelected, icon: PIcon }) => {
-            const selected = dados.suitabilityPerfil === perfil;
-            return (
-              <button
-                key={perfil}
-                type="button"
-                onClick={() => setDados("suitabilityPerfil", perfil)}
-                style={{ border: selected ? `2px solid ${color}` : "1.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px", backgroundColor: selected ? bgSelected : "white", cursor: "pointer", textAlign: "left", position: "relative", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 8 }}
-              >
-                {selected && (
-                  <span style={{ position: "absolute", top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>✓</span>
-                )}
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <PIcon style={{ width: 20, height: 20, color }} />
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>{label}</span>
-                </div>
-                <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
-                <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
-              </button>
-            );
-          })}
-        </div>
-
-        {selectedCard && alocacaoSelecionada && (
-          <div style={{ marginTop: 16, border: `1.5px solid ${selectedCard.color}`, borderRadius: 10, padding: "16px 20px", backgroundColor: selectedCard.bgSelected, display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: selectedCard.color, margin: 0 }}>
-              ✓ Perfil selecionado: {selectedCard.label}
-            </p>
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
-                Alocação recomendada (Padrão Simpla)
-              </p>
-              <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #BFDBFE" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F0F7FF", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" }}>
-                  <span>Classe</span><span>% Recomendado</span>
-                </div>
-                {Object.entries(alocacaoSelecionada)
-                  .filter(([, v]) => v > 0)
-                  .map(([key, pct], i, arr) => (
-                    <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", backgroundColor: "white", borderTop: i === 0 ? "1px solid #BFDBFE" : undefined, borderBottom: i < arr.length - 1 ? "1px solid #F0F7FF" : undefined, fontSize: 13 }}>
-                      <span style={{ color: "#111827" }}>{CARD_LABELS[key] ?? key}</span>
-                      <span style={{ fontWeight: 700, color: selectedCard.color }}>{pct}%</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onColetaComplete(dados)}
-              style={{ alignSelf: "flex-start", backgroundColor: selectedCard.color, color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-            >
-              Aplicar perfil e sincronizar dados →
-            </button>
-          </div>
-        )}
       </SecaoCard>
 
     </div>
