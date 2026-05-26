@@ -146,7 +146,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
     }
   }, [projecaoParams]);
 
-  const mesIF = (params.idadeAposentadoria - params.idadeAtual) * 12;
+  const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
 
@@ -458,6 +458,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
             objetivos={objetivos}
             height={300}
             mesIF={mesIF}
+            mesNascimento={mesNascimento}
           />
         </CardContent>
       </Card>

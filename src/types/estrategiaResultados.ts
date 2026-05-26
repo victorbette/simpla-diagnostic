@@ -48,6 +48,7 @@ export interface ResultadoIF {
   objetivos?: ObjetivoVida[];
   anoNascimento?: number;
   mesNascimento?: number;
+  mesInicioRetirada?: number;
   dataCalculo: string;
   savedAt: string;
 }

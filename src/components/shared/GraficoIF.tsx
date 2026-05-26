@@ -28,9 +28,11 @@ interface Props {
   height?: number;
   /** Absolute month index where accumulation ends — used for IF marker dot only */
   mesIF?: number;
+  /** Birth month 1-12 — used for reliable birthday-aligned x-axis ticks */
+  mesNascimento?: number;
 }
 
-export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, mesIF }: Props) {
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, mesIF, mesNascimento }: Props) {
   // Projection already runs to age 100 — use it directly
   const projecaoCompleta = projecao ?? [];
 
@@ -63,12 +65,12 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  // X-axis: ticks at birthday month, every 5 years, domain extends to age 100
-  // Derive birth month from first point whose idade is a whole number
-  const firstBirthday = projecaoCompleta.find(
-    (p) => p.mes > 0 && Number(p.idade) === Math.floor(Number(p.idade)),
+  // X-axis: ticks every 5 years aligned to the client's birthday month
+  // Prefer the mesNascimento prop; fall back to detecting the first whole-number idade
+  const mesAniversario: number = mesNascimento ?? (
+    projecaoCompleta.find((p) => p.mes > 0 && Number(p.idade) === Math.floor(Number(p.idade)))
+      ?.mesDoAno ?? projecaoCompleta[0].mesDoAno
   );
-  const mesAniversario = firstBirthday?.mesDoAno ?? projecaoCompleta[0].mesDoAno;
 
   const totalMeses = projecaoCompleta[projecaoCompleta.length - 1]?.mes ?? (100 - idadeAtual) * 12;
   const xTicks = projecaoCompleta
@@ -213,9 +215,9 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
           domain={[0, totalMeses]}
           ticks={xTicks}
           tickFormatter={(mes: number) => {
-            const ponto = projecaoCompleta.find((p) => p.mes === mes);
-            if (!ponto) return "";
-            return String(Math.floor(Number(ponto.idade) || 0));
+            const ponto = projecaoCompleta[mes];
+            if (ponto) return String(Math.floor(Number(ponto.idade) || 0));
+            return String(Math.floor(idadeAtual + mes / 12));
           }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}

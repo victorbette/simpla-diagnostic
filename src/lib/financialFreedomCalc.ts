@@ -157,6 +157,8 @@ export interface ProjecaoIFResult {
   ifAlcancada: boolean;
   aporteNecessario: number;
   aporteNecessarioSemObjetivos: number;
+  /** Exact month index of the IF transition — aligned to the idadeMeta birthday */
+  mesInicioRetirada: number;
 }
 
 /** PV of annuity */
@@ -181,7 +183,7 @@ const IDADE_FIM_AMARELA = 90; // ideal curve and patrimonioNecessario horizon
 const EMPTY_RESULT: ProjecaoIFResult = {
   projecao: [], curvaIdeal: [], patrimonioNaIF: 0, patrimonioNecessario: 0,
   rendaSustentavel: 0, gapRenda: 0, ifAlcancada: false,
-  aporteNecessario: 0, aporteNecessarioSemObjetivos: 0,
+  aporteNecessario: 0, aporteNecessarioSemObjetivos: 0, mesInicioRetirada: 0,
 };
 
 export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
@@ -214,7 +216,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
 
-  const mesInicioRetirada = (idadeMeta - idadeAtual) * 12;
+  // Use exact decimal age so the transition lands on the idadeMeta birthday month
+  const mesInicioRetirada = Math.round((idadeMeta - idadeExataHoje) * 12);
   const totalMeses = (idadeMaxima - idadeAtual) * 12;
 
   const projecao: PontoProjecao[] = [];
@@ -317,7 +320,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   // Ideal curve: starts at patrimonioInicial, accumulates without objectives,
   // withdraws from patrimonioNecessario at 4% a.a., stops at IDADE_FIM_AMARELA
-  const totalMesesIdeal = Math.min((IDADE_FIM_AMARELA - idadeAtual) * 12, projecao.length - 1);
+  const totalMesesIdeal = Math.min(Math.round((IDADE_FIM_AMARELA - idadeExataHoje) * 12), projecao.length - 1);
   const curvaIdeal: (number | null)[] = [];
   let patIdeal = patrimonioInicial;
   curvaIdeal.push(Math.round(patIdeal)); // i=0: same starting point as blue line
@@ -350,5 +353,6 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     ifAlcancada,
     aporteNecessario,
     aporteNecessarioSemObjetivos,
+    mesInicioRetirada,
   };
 }

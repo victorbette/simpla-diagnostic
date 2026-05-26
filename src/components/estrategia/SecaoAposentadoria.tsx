@@ -85,7 +85,8 @@ export function SecaoAposentadoria({
                   curvaIdeal={resultadoIF.curvaIdeal}
                   objetivos={resultadoIF.objetivos ?? []}
                   height={320}
-                  mesIF={(resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
+                  mesIF={resultadoIF.mesInicioRetirada ?? (resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
+                  mesNascimento={resultadoIF.mesNascimento}
                 />
               </div>
             </>
@@ -184,6 +185,7 @@ export function SecaoAposentadoria({
               objetivos,
               anoNascimento: params.anoNascimento,
               mesNascimento: params.mesNascimento,
+              mesInicioRetirada: result.mesInicioRetirada,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });
