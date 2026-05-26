@@ -37,7 +37,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const dadosMesclados = useMemo(
     () => projecaoCompleta.map((ponto, i) => ({
       ...ponto,
-      patrimonioIdeal: curvaIdeal?.[i] ?? null,
+      // null beyond curvaIdeal.length → Recharts stops drawing the yellow line
+      patrimonioIdeal: i < (curvaIdeal?.length ?? 0) ? curvaIdeal![i] : null,
     })),
     [projecaoCompleta, curvaIdeal],
   );

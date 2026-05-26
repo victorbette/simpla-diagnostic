@@ -308,11 +308,12 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     aporteNecessario = Math.ceil(high);
   }
 
-  // Ideal curve: same start as real curve, uses aporteNecessarioSemObjetivos, no objectives
+  // Ideal curve: same start, uses aporteNecessarioSemObjetivos, stops at age 90
+  const totalMesesIdeal = Math.min((90 - idadeAtual) * 12, projecao.length - 1);
   const curvaIdeal: number[] = [];
   let patIdeal = patrimonioInicial;
   curvaIdeal.push(Math.round(patIdeal)); // index 0 = today, same as projecao[0]
-  for (let i = 1; i < projecao.length; i++) {
+  for (let i = 1; i <= totalMesesIdeal; i++) {
     const fase = projecao[i].fase;
     if (fase === "acumulacao") {
       patIdeal = patIdeal * (1 + taxaMensalReal) + aporteNecessarioSemObjetivos;
