@@ -202,12 +202,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
       <AreaChart data={dadosMesclados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
         <defs>
           <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.02} />
-          </linearGradient>
-          <linearGradient id="gradIdeal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#EAB308" stopOpacity={0.10} />
-            <stop offset="95%" stopColor="#EAB308" stopOpacity={0.01} />
+            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.35} />
+            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.10} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
@@ -241,30 +237,33 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         />
         <Tooltip content={<CustomTooltip />} />
 
+        {/* Azul — atrás */}
+        <Area
+          type="monotone"
+          dataKey="patrimonio"
+          stroke="none"
+          strokeWidth={0}
+          fill="url(#gradReal)"
+          dot={renderDot}
+          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
+          name="Projeção com objetivos"
+        />
+
+        {/* Amarela — frente, apenas linha sem fill */}
         {curvaIdeal && curvaIdeal.length > 0 && (
           <Area
             type="monotone"
             dataKey="patrimonioIdeal"
             stroke="#EAB308"
             strokeWidth={2}
-            fill="url(#gradIdeal)"
+            fill="none"
+            fillOpacity={0}
             dot={false}
             activeDot={false}
             connectNulls={false}
             name="Meta IF"
           />
         )}
-
-        <Area
-          type="monotone"
-          dataKey="patrimonio"
-          stroke="#2563EB"
-          strokeWidth={2}
-          fill="url(#gradReal)"
-          dot={renderDot}
-          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
-          name="Projeção com objetivos"
-        />
       </AreaChart>
     </ResponsiveContainer>
   );
