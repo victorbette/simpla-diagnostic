@@ -1,29 +1,17 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { LogOut } from "lucide-react";
 import { initialFinancialPlan } from "@/types/financialPlanning";
 import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
-import { FPLayout } from "./layout/FPLayout";
-import type { FPStep } from "./layout/FPSidebar";
-import { ColetaDadosForm } from "./ColetaDadosForm";
-import { AtivoForm } from "./AtivoForm";
-import { PlanejamentoIFForm } from "./PlanejamentoIFForm";
-import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
-import { FiscalForm } from "./FiscalForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { ColetaDadosCompleta } from "./ColetaDadosCompleta";
 import { FinancialPlanDashboard } from "./FinancialPlanDashboard";
 import { FinancialPlanPrintAdvisor, FinancialPlanPrintClient } from "./FinancialPlanPrint";
 import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
 
-const STEP_ORDER: FPStep[] = [
-  "coleta",
-  "ativos",
-  "aposentadoria",
-  "protecaoSucessorio",
-  "fiscal",
-  "resultado",
-];
-
-const FORM_STEPS: FPStep[] = STEP_ORDER.filter((s) => s !== "resultado");
+const DARK = "#000000";
+const GOLD = "#3B82F6";
 
 interface Props {
   clientId: string;
@@ -33,9 +21,9 @@ interface Props {
 
 export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) {
   const store = useFinancialPlanStore();
+  const { user, signOut } = useAuth();
   const [plan, setPlan] = useState<FinancialPlan>(() => initialFinancialPlan(clientId));
-  const [step, setStep] = useState<FPStep>("coleta");
-  const [completedSteps, setCompletedSteps] = useState<Set<FPStep>>(new Set());
+  const [aba, setAba] = useState<"coleta" | "resultado">("coleta");
   const [saving, setSaving] = useState(false);
   const [printMode, setPrintMode] = useState<"advisor" | "client" | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -43,14 +31,16 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const planInitialized = useRef(false);
 
-  // Load (or create) plan on mount — ensures plan.id always exists for saves
+  const userEmail = user?.email ?? "";
+  const userLabel = userEmail.split("@")[0] || "Consultor";
+  const userInitials = userLabel.slice(0, 2).toUpperCase();
+
+  // Load (or create) plan on mount
   useEffect(() => {
     const init = async () => {
       await store.carregarPlano(clientId);
 
-      // planRef is updated synchronously inside carregarPlano
       if (!store.planRef.current) {
-        // No plan yet — create a blank one so all subsequent saves are UPDATEs
         try {
           await store.criarPlano(clientId);
         } catch (err) {
@@ -58,7 +48,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         }
       }
 
-      // Sync to local state (only once)
       if (!planInitialized.current) {
         planInitialized.current = true;
         if (store.planRef.current) {
@@ -77,14 +66,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     setDirty(true);
   }, []);
 
-  function markComplete(s: FPStep) {
-    setCompletedSteps((prev) => {
-      const next = new Set(prev);
-      next.add(s);
-      return next;
-    });
-  }
-
   async function handleSave(status?: FinancialPlan["status"]) {
     setSaving(true);
     try {
@@ -102,45 +83,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     } finally {
       setSaving(false);
     }
-  }
-
-  async function handleNext() {
-    markComplete(step);
-    // Auto-save silently before advancing
-    try {
-      const saved = await store.savePlan(plan);
-      setPlan(saved);
-      setDirty(false);
-      setUltimoSalvo(new Date());
-    } catch {
-      // falha silenciosa — usuário pode salvar manualmente
-    }
-    const idx = STEP_ORDER.indexOf(step);
-    if (idx < STEP_ORDER.length - 1) setStep(STEP_ORDER[idx + 1]);
-  }
-
-  function handleBack() {
-    const idx = STEP_ORDER.indexOf(step);
-    if (idx > 0) setStep(STEP_ORDER[idx - 1]);
-  }
-
-  function handleStepClick(target: FPStep) {
-    const targetIdx = STEP_ORDER.indexOf(target);
-    const currentIdx = STEP_ORDER.indexOf(step);
-
-    if (target === "resultado") {
-      if (completedSteps.size < 5) {
-        toast.info("Complete as 5 etapas anteriores para ver o resultado.");
-        return;
-      }
-      setStep("resultado");
-      return;
-    }
-
-    if (targetIdx > currentIdx && !completedSteps.has(target)) {
-      toast.info("Complete as etapas anteriores primeiro.");
-    }
-    setStep(target);
   }
 
   async function handleBackToClients() {
@@ -230,8 +172,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     };
     setPlan(newPlan);
     setDirty(true);
-    markComplete("coleta");
-    setStep("ativos");
   }
 
   function handlePrint(type: "advisor" | "client") {
@@ -241,9 +181,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       setPrintMode(null);
     }, 300);
   }
-
-  const clientPerfil =
-    plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
 
   // ── Estratégia overlay ────────────────────────────────────────────────────
   if (mostrarEstrategia) {
@@ -264,83 +201,207 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     );
   }
 
-  const allFormsDone = FORM_STEPS.every((s) => completedSteps.has(s));
-  const isResultStep = step === "resultado";
-
   return (
     <>
-      <FPLayout
-        clientName={clientName}
-        clientPerfil={clientPerfil}
-        currentStep={step}
-        completedSteps={completedSteps}
-        onBackToClients={handleBackToClients}
-        onStepClick={handleStepClick}
-        onSave={() => handleSave()}
-        saving={saving}
-        dirty={dirty}
-        ultimoSalvo={ultimoSalvo}
-        onBack={handleBack}
-        onNext={handleNext}
-        onAvancarEstrategia={() => setMostrarEstrategia(true)}
-        showNextButton={step !== "coleta"}
-      >
-        {step === "coleta" && (
-          <ColetaDadosForm
-            value={plan.dadosCliente}
-            onChange={(v) => updatePlan({ dadosCliente: v })}
-            onComplete={handleColetaComplete}
-          />
-        )}
+      <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+        {/* ── Header ── */}
+        <header
+          style={{
+            backgroundColor: "#1E3A8A",
+            flexShrink: 0,
+            padding: "0 24px",
+            height: 56,
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            zIndex: 40,
+          }}
+        >
+          {/* Back + Logo */}
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
+            <button
+              onClick={handleBackToClients}
+              style={{
+                background: "none",
+                border: "1px solid rgba(255,255,255,0.25)",
+                color: "#93C5FD",
+                cursor: "pointer",
+                padding: "4px 10px",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+              }}
+            >
+              ← Clientes
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <img
+                src="/logo-si.svg"
+                alt="Simpla Invest"
+                style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+                <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+                  Simpla Invest
+                </span>
+                <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
+                  Financial Planning
+                </span>
+              </div>
+            </div>
+            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>
+              — {clientName}
+            </span>
+          </div>
 
-        {step === "ativos" && (
-          <AtivoForm
-            value={plan.ativosAtuais}
-            suitabilityPerfil={clientPerfil}
-            onChange={(v) => updatePlan({ ativosAtuais: v })}
-            dadosCliente={plan.dadosCliente}
-          />
-        )}
+          {/* User info */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>
+                {userLabel}
+              </p>
+              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
+                Consultor financeiro
+              </p>
+            </div>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                backgroundColor: GOLD,
+                color: DARK,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 13,
+                fontWeight: 700,
+                flexShrink: 0,
+                userSelect: "none",
+              }}
+            >
+              {userInitials}
+            </div>
+            <button
+              onClick={signOut}
+              title="Sair"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9CA3AF",
+                cursor: "pointer",
+                padding: 4,
+              }}
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </header>
 
-        {step === "aposentadoria" && (
-          <PlanejamentoIFForm
-            value={plan.planejamentoIF}
-            onChange={(v) => updatePlan({ planejamentoIF: v })}
-            dadosCliente={plan.dadosCliente}
-          />
-        )}
+        {/* ── Tab bar ── */}
+        <div
+          style={{
+            backgroundColor: "white",
+            borderBottom: "1px solid #E5E7EB",
+            padding: "0 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 0,
+            flexShrink: 0,
+            height: 44,
+          }}
+        >
+          {(["coleta", "resultado"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setAba(tab)}
+              style={{
+                background: "none",
+                border: "none",
+                borderBottom: aba === tab ? "2px solid #1E3A8A" : "2px solid transparent",
+                color: aba === tab ? "#1E3A8A" : "#6B7280",
+                fontWeight: aba === tab ? 700 : 500,
+                fontSize: 13,
+                padding: "0 18px",
+                height: "100%",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "color 0.15s",
+              }}
+            >
+              {tab === "coleta" ? "Coleta de Dados" : "Resultado"}
+            </button>
+          ))}
 
-        {step === "protecaoSucessorio" && (
-          <ProtecaoSucessorioForm
-            protecao={plan.protecao}
-            onProtecaoChange={(v) => updatePlan({ protecao: v })}
-            sucessorio={plan.sucessorio}
-            onSucessorioChange={(v) => updatePlan({ sucessorio: v })}
-            dadosCliente={plan.dadosCliente}
-          />
-        )}
+          {/* Spacer + save status + Salvar button */}
+          <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {dirty && !saving && (
+              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563EB" }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#2563EB", display: "inline-block" }} />
+                Não salvo
+              </span>
+            )}
+            {ultimoSalvo && !dirty && !saving && (
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+            <button
+              onClick={() => handleSave()}
+              disabled={saving}
+              style={{
+                border: "1.5px solid #1E3A8A",
+                backgroundColor: "white",
+                color: "#1E3A8A",
+                borderRadius: 6,
+                padding: "6px 16px",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: saving ? "not-allowed" : "pointer",
+                opacity: saving ? 0.6 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {saving ? "Salvando..." : "Salvar"}
+            </button>
+          </div>
+        </div>
 
-        {step === "fiscal" && (
-          <FiscalForm
-            value={plan.fiscal}
-            onChange={(v) => updatePlan({ fiscal: v })}
-            dadosCliente={plan.dadosCliente}
-          />
-        )}
+        {/* ── Content ── */}
+        <main
+          style={{
+            flex: 1,
+            minHeight: 0,
+            backgroundColor: "#F0F7FF",
+            overflowY: "auto",
+          }}
+        >
+          {aba === "coleta" && (
+            <div style={{ maxWidth: 860, margin: "0 auto", padding: "28px 24px" }}>
+              <ColetaDadosCompleta
+                plan={plan}
+                onChange={updatePlan}
+                onColetaComplete={handleColetaComplete}
+              />
+            </div>
+          )}
 
-        {isResultStep && (
-          <FinancialPlanDashboard
-            plan={plan}
-            clientName={clientName}
-            onEdit={() => setStep("coleta")}
-            onSave={async () => { await handleSave("completo"); }}
-            onPrint={handlePrint}
-            onAvancarEstrategia={() => setMostrarEstrategia(true)}
-            allStepsDone={allFormsDone}
-            ultimoSalvo={ultimoSalvo}
-          />
-        )}
-      </FPLayout>
+          {aba === "resultado" && (
+            <FinancialPlanDashboard
+              plan={plan}
+              clientName={clientName}
+              onEdit={() => setAba("coleta")}
+              onSave={async () => { await handleSave("completo"); }}
+              onPrint={handlePrint}
+              onAvancarEstrategia={() => setMostrarEstrategia(true)}
+              allStepsDone={true}
+              ultimoSalvo={ultimoSalvo}
+            />
+          )}
+        </main>
+      </div>
 
       {printMode === "advisor" && (
         <FinancialPlanPrintAdvisor plan={plan} clientName={clientName} />
