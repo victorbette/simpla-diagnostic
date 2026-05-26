@@ -146,6 +146,7 @@ export interface ProjecaoIFParams {
 
 export interface ProjecaoIFResult {
   projecao: PontoProjecao[];
+  projecaoIdeal: PontoProjecao[];
   patrimonioNaIF: number;
   /** PV of annuity: rendaMensal for (idadeMaxima - idadeMeta) × 12 months at 4% a.a. real */
   patrimonioNecessario: number;
@@ -177,7 +178,7 @@ const TAXA_RETIRADA_ANUAL = 0.04;
 const TAXA_RETIRADA_MENSAL = Math.pow(1 + TAXA_RETIRADA_ANUAL, 1 / 12) - 1; // ≈ 0.3274% a.m.
 
 const EMPTY_RESULT: ProjecaoIFResult = {
-  projecao: [], patrimonioNaIF: 0, patrimonioNecessario: 0,
+  projecao: [], projecaoIdeal: [], patrimonioNaIF: 0, patrimonioNecessario: 0,
   rendaSustentavel: 0, gapRenda: 0, ifAlcancada: false,
   aporteNecessario: 0, aporteNecessarioSemObjetivos: 0,
 };
@@ -216,7 +217,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const totalMeses = (idadeMaxima - idadeAtual) * 12;
 
   const projecao: PontoProjecao[] = [];
+  const projecaoIdeal: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
+  let patIdeal = patrimonioInicial;
   let anoAtual = anoInicio;
   let mesAtual = mesInicio;
 
@@ -228,6 +231,14 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     patrimonio: Math.round(patrimonio),
     fase: "acumulacao",
   });
+  projecaoIdeal.push({
+    mes: 0,
+    ano: anoAtual,
+    mesDoAno: mesAtual,
+    idade: Math.round(idadeExataHoje * 10) / 10,
+    patrimonio: Math.round(patIdeal),
+    fase: "acumulacao",
+  });
 
   for (let m = 1; m <= totalMeses; m++) {
     mesAtual++;
@@ -237,22 +248,26 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
     if (acumulando) {
       patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
+      patIdeal   = patIdeal   * (1 + taxaMensalReal) + aporteMensal;
     } else {
       patrimonio = patrimonio * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
+      patIdeal   = patIdeal   * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
     }
 
     const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
     if (effect !== 0) patrimonio += effect;
     patrimonio = Math.max(0, patrimonio);
+    patIdeal   = Math.max(0, patIdeal);
 
-    projecao.push({
+    const pontoBase = {
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
       idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
-      patrimonio: Math.round(patrimonio),
-      fase: acumulando ? "acumulacao" : "decumulacao",
-    });
+      fase: (acumulando ? "acumulacao" : "decumulacao") as "acumulacao" | "decumulacao",
+    };
+    projecao.push({ ...pontoBase, patrimonio: Math.round(patrimonio) });
+    projecaoIdeal.push({ ...pontoBase, patrimonio: Math.round(patIdeal) });
   }
 
   const patrimonioNaIF = projecao[mesInicioRetirada]?.patrimonio ?? 0;
@@ -309,6 +324,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   return {
     projecao,
+    projecaoIdeal,
     patrimonioNaIF,
     patrimonioNecessario,
     rendaSustentavel,

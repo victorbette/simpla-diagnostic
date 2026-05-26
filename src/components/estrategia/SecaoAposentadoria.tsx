@@ -82,6 +82,7 @@ export function SecaoAposentadoria({
               <div style={{ marginTop: 20 }}>
                 <GraficoIF
                   projecao={resultadoIF.projecao}
+                  projecaoIdeal={resultadoIF.projecaoIdeal}
                   objetivos={resultadoIF.objetivos ?? []}
                   height={320}
                   mesIF={(resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
@@ -179,6 +180,7 @@ export function SecaoAposentadoria({
               aporteAtual: params.aporteMensal,
               taxaRetorno: params.taxaRetornoAnual,
               projecao: result.projecao,
+              projecaoIdeal: result.projecaoIdeal,
               objetivos,
               anoNascimento: params.anoNascimento,
               mesNascimento: params.mesNascimento,

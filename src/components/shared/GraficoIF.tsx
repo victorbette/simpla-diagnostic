@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -22,15 +23,24 @@ const COR_APOSENTADORIA = "#0891B2";
 
 interface Props {
   projecao: PontoProjecao[];
+  projecaoIdeal?: PontoProjecao[];
   objetivos?: ObjetivoVida[];
   height?: number;
   /** Absolute month index where accumulation ends — used for IF marker dot only */
   mesIF?: number;
 }
 
-export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Props) {
+export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 280, mesIF }: Props) {
   // Projection already runs to age 100 — use it directly
   const projecaoCompleta = projecao ?? [];
+
+  const dadosMesclados = useMemo(
+    () => projecaoCompleta.map((ponto, i) => ({
+      ...ponto,
+      patrimonioIdeal: projecaoIdeal?.[i]?.patrimonio ?? null,
+    })),
+    [projecaoCompleta, projecaoIdeal],
+  );
 
   if (!projecaoCompleta.length) {
     return (
@@ -43,7 +53,11 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
   const idadeAtual = Math.floor(Number(projecaoCompleta[0].idade) || 0);
 
   // Y-axis: ceil max patrimônio to next 500k multiple
-  const maxPatrimonio = Math.max(...projecaoCompleta.map((p) => Number(p.patrimonio) || 0), 0);
+  const maxPatrimonio = Math.max(
+    ...projecaoCompleta.map((p) => Number(p.patrimonio) || 0),
+    ...(projecaoIdeal ?? []).map((p) => Number(p.patrimonio) || 0),
+    0,
+  );
   const STEP = 500_000;
   const yMax = Math.ceil(maxPatrimonio / STEP) * STEP || STEP;
   const yTicks: number[] = [];
@@ -83,15 +97,16 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
     active, payload,
   }: {
     active?: boolean;
-    payload?: { value: number; payload: PontoProjecao }[];
+    payload?: { value: number; payload: PontoProjecao & { patrimonioIdeal?: number | null } }[];
   }) => {
     if (!active || !payload?.length) return null;
-    const ponto = payload[0]?.payload as PontoProjecao | undefined;
+    const ponto = payload[0]?.payload as (PontoProjecao & { patrimonioIdeal?: number | null }) | undefined;
     if (!ponto) return null;
     const mesDoAno = Number(ponto.mesDoAno) || 1;
     const ano = Number(ponto.ano) || 0;
     const idade = Number(ponto.idade) || 0;
     const patrimonio = Number(ponto.patrimonio) || 0;
+    const patrimonioIdealVal = ponto.patrimonioIdeal != null ? Number(ponto.patrimonioIdeal) : null;
     const mesLabel = `${MESES_ABREV[mesDoAno - 1]}/${ano}`;
     const objsDoPonto = objByMesAno.get(`${ano}-${mesDoAno}`) ?? [];
     return (
@@ -107,7 +122,13 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
         <p style={{ margin: "0 0 2px", color: "#6B7280" }}>
           {mesLabel} · {idade.toFixed(1)} anos
         </p>
-        <p style={{ margin: 0, fontWeight: 600, color: "#111827" }}>{formatCurrency(patrimonio)}</p>
+        <p style={{ margin: 0, fontWeight: 600, color: "#2563EB" }}>{formatCurrency(patrimonio)}</p>
+        {patrimonioIdealVal !== null && patrimonioIdealVal !== patrimonio && (
+          <div style={{ color: "#CA8A04", fontSize: 11, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 12, height: 2, background: "#EAB308", display: "inline-block", borderRadius: 1 }} />
+            Ideal: {formatCurrency(patrimonioIdealVal)}
+          </div>
+        )}
         {ifPonto && ponto.mes === ifPonto.mes && (
           <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
             <Sunset style={{ width: 12, height: 12 }} />
@@ -178,11 +199,15 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={projecaoCompleta} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
+      <AreaChart data={dadosMesclados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
         <defs>
-          <linearGradient id="gradIF" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
+          <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.02} />
+          </linearGradient>
+          <linearGradient id="gradIdeal" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="#EAB308" stopOpacity={0.08} />
+            <stop offset="95%" stopColor="#EAB308" stopOpacity={0.01} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
@@ -216,14 +241,29 @@ export function GraficoIF({ projecao, objetivos = [], height = 280, mesIF }: Pro
         />
         <Tooltip content={<CustomTooltip />} />
 
+        {projecaoIdeal && projecaoIdeal.length > 0 && (
+          <Area
+            type="monotone"
+            dataKey="patrimonioIdeal"
+            stroke="#EAB308"
+            strokeWidth={1.5}
+            fill="url(#gradIdeal)"
+            dot={false}
+            activeDot={false}
+            connectNulls={false}
+            name="Aposentadoria ideal"
+          />
+        )}
+
         <Area
           type="monotone"
           dataKey="patrimonio"
           stroke="#2563EB"
           strokeWidth={2}
-          fill="url(#gradIF)"
+          fill="url(#gradReal)"
           dot={renderDot}
-          activeDot={{ r: 4 }}
+          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
+          name="Projeção com objetivos"
         />
       </AreaChart>
     </ResponsiveContainer>
