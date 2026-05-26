@@ -308,18 +308,20 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     aporteNecessario = Math.ceil(high);
   }
 
-  // Ideal curve: linear accumulation to patrimonioNecessario, then 4% annuity to zero at age 90
-  const curvaIdeal = projecao.map((ponto, i) => {
-    if (ponto.fase === "acumulacao") {
-      const progresso = mesInicioRetirada > 0 ? i / mesInicioRetirada : 1;
-      return Math.round(patrimonioNecessario * progresso);
+  // Ideal curve: same start as real curve, uses aporteNecessarioSemObjetivos, no objectives
+  const curvaIdeal: number[] = [];
+  let patIdeal = patrimonioInicial;
+  curvaIdeal.push(Math.round(patIdeal)); // index 0 = today, same as projecao[0]
+  for (let i = 1; i < projecao.length; i++) {
+    const fase = projecao[i].fase;
+    if (fase === "acumulacao") {
+      patIdeal = patIdeal * (1 + taxaMensalReal) + aporteNecessarioSemObjetivos;
+    } else {
+      patIdeal = patIdeal * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
     }
-    const mesesDesdeIF = i - mesInicioRetirada;
-    const fator = Math.pow(1 + TAXA_RETIRADA_MENSAL, mesesDesdeIF);
-    const saldo = patrimonioNecessario * fator
-      - rendaMensalDesejada * (fator - 1) / TAXA_RETIRADA_MENSAL;
-    return Math.max(0, Math.round(saldo));
-  });
+    patIdeal = Math.max(0, patIdeal);
+    curvaIdeal.push(Math.round(patIdeal));
+  }
 
   return {
     projecao,
