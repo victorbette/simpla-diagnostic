@@ -237,19 +237,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         />
         <Tooltip content={<CustomTooltip />} />
 
-        {/* Azul — atrás */}
-        <Area
-          type="monotone"
-          dataKey="patrimonio"
-          stroke="none"
-          strokeWidth={0}
-          fill="url(#gradReal)"
-          dot={renderDot}
-          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
-          name="Projeção com objetivos"
-        />
-
-        {/* Amarela — frente, apenas linha sem fill */}
+        {/* Amarela — renderizada primeiro, dots azuis ficam por cima */}
         {curvaIdeal && curvaIdeal.length > 0 && (
           <Area
             type="monotone"
@@ -264,6 +252,18 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
             name="Meta IF"
           />
         )}
+
+        {/* Azul — renderizada depois: fill + dots ficam sobre a linha amarela */}
+        <Area
+          type="monotone"
+          dataKey="patrimonio"
+          stroke="none"
+          strokeWidth={0}
+          fill="url(#gradReal)"
+          dot={renderDot}
+          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
+          name="Projeção com objetivos"
+        />
       </AreaChart>
     </ResponsiveContainer>
   );
