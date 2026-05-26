@@ -31,7 +31,11 @@ export function ProtecaoSucessorioForm({
     onSucessorioChange({ ...sucessorio, [key]: val });
 
   const filhosLength = dadosCliente?.filhos?.length ?? 0;
-  const rendaMensal = dadosCliente?.rendaMensal ?? protecao.rendaMensal;
+  const rendaMensal = (Number(dadosCliente?.rendaMensal) || 0) +
+    (dadosCliente?.possuiImovelRenda ? (Number(dadosCliente?.rendaImovelMensal) || 0) : 0);
+  const rendaMensalHint = dadosCliente?.possuiImovelRenda
+    ? `Renda mensal (${formatCurrency(Number(dadosCliente.rendaMensal) || 0)}) + Imóveis (${formatCurrency(Number(dadosCliente.rendaImovelMensal) || 0)})`
+    : "Renda mensal da Situação Financeira";
   const patrimonioTotal = dadosCliente?.patrimonioTotalEstimado ?? sucessorio.patrimonioTotal;
   const estado = dadosCliente?.estado ?? sucessorio.estadoResidencia;
 
@@ -80,6 +84,7 @@ export function ProtecaoSucessorioForm({
                 <span style={{ fontSize: 10, fontWeight: 700, color: "#1E40AF", backgroundColor: "#EAF0F5", border: "1px solid #A8C4D8", borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap" }}>AUTO</span>
               )}
             </div>
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{rendaMensalHint}</p>
           </div>
 
           {/* Dependentes editável */}

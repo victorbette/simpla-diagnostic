@@ -32,7 +32,11 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
   const set = <K extends keyof PlanejamentoFiscal>(key: K, val: PlanejamentoFiscal[K]) =>
     onChange({ ...value, [key]: val });
 
-  const rendaMensalFiscal = (dadosCliente?.rendaMensal ?? 0) + (dadosCliente?.rendaImovelMensal ?? 0);
+  const rendaMensalFiscal = (Number(dadosCliente?.rendaMensal) || 0) +
+    (dadosCliente?.possuiImovelRenda ? (Number(dadosCliente?.rendaImovelMensal) || 0) : 0);
+  const rendaMensalHint = dadosCliente?.possuiImovelRenda
+    ? `Renda mensal (${formatCurrency(Number(dadosCliente.rendaMensal) || 0)}) + Imóveis (${formatCurrency(Number(dadosCliente.rendaImovelMensal) || 0)})`
+    : "Renda mensal da Situação Financeira";
   const rendaAnualAuto = rendaMensalFiscal * 12;
   const ajustada = value.rendaAnualAjustada ?? false;
 
@@ -42,7 +46,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
       onChange({ ...value, rendaBrutaAnual: rendaAnualAuto });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rendaMensalFiscal, ajustada]);
+  }, [dadosCliente?.rendaMensal, dadosCliente?.rendaImovelMensal, dadosCliente?.possuiImovelRenda, ajustada]);
 
   // Rendimentos isentos helpers
   const tiposIsentos = value.tiposRendimentosIsentos ?? [];
@@ -96,7 +100,7 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
             </div>
             <span style={{ fontSize: 10, fontWeight: 700, color: "#1E40AF", backgroundColor: "#EAF0F5", border: "1px solid #A8C4D8", borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap" }}>AUTO</span>
           </div>
-          <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Renda mensal + Renda de imóveis</p>
+          <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{rendaMensalHint}</p>
         </div>
 
         {/* Renda anual — auto ou ajustável */}
