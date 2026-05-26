@@ -454,7 +454,7 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
           </p>
           <GraficoIF
             projecao={result.projecao}
-            projecaoIdeal={result.projecaoIdeal}
+            curvaIdeal={result.curvaIdeal}
             objetivos={objetivos}
             height={300}
             mesIF={mesIF}

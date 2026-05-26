@@ -23,23 +23,23 @@ const COR_APOSENTADORIA = "#0891B2";
 
 interface Props {
   projecao: PontoProjecao[];
-  projecaoIdeal?: PontoProjecao[];
+  curvaIdeal?: number[];
   objetivos?: ObjetivoVida[];
   height?: number;
   /** Absolute month index where accumulation ends — used for IF marker dot only */
   mesIF?: number;
 }
 
-export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 280, mesIF }: Props) {
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, mesIF }: Props) {
   // Projection already runs to age 100 — use it directly
   const projecaoCompleta = projecao ?? [];
 
   const dadosMesclados = useMemo(
     () => projecaoCompleta.map((ponto, i) => ({
       ...ponto,
-      patrimonioIdeal: projecaoIdeal?.[i]?.patrimonio ?? null,
+      patrimonioIdeal: curvaIdeal?.[i] ?? null,
     })),
-    [projecaoCompleta, projecaoIdeal],
+    [projecaoCompleta, curvaIdeal],
   );
 
   if (!projecaoCompleta.length) {
@@ -55,7 +55,7 @@ export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 28
   // Y-axis: ceil max patrimônio to next 500k multiple
   const maxPatrimonio = Math.max(
     ...projecaoCompleta.map((p) => Number(p.patrimonio) || 0),
-    ...(projecaoIdeal ?? []).map((p) => Number(p.patrimonio) || 0),
+    ...(curvaIdeal ?? []).map((v) => Number(v) || 0),
     0,
   );
   const STEP = 500_000;
@@ -123,10 +123,10 @@ export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 28
           {mesLabel} · {idade.toFixed(1)} anos
         </p>
         <p style={{ margin: 0, fontWeight: 600, color: "#2563EB" }}>{formatCurrency(patrimonio)}</p>
-        {patrimonioIdealVal !== null && patrimonioIdealVal !== patrimonio && (
-          <div style={{ color: "#CA8A04", fontSize: 11, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 12, height: 2, background: "#EAB308", display: "inline-block", borderRadius: 1 }} />
-            Ideal: {formatCurrency(patrimonioIdealVal)}
+        {patrimonioIdealVal != null && (
+          <div style={{ color: "#CA8A04", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 14, height: 2, background: "#EAB308", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
+            Meta IF: {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
         {ifPonto && ponto.mes === ifPonto.mes && (
@@ -206,7 +206,7 @@ export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 28
             <stop offset="95%" stopColor="#2563EB" stopOpacity={0.02} />
           </linearGradient>
           <linearGradient id="gradIdeal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#EAB308" stopOpacity={0.08} />
+            <stop offset="5%"  stopColor="#EAB308" stopOpacity={0.10} />
             <stop offset="95%" stopColor="#EAB308" stopOpacity={0.01} />
           </linearGradient>
         </defs>
@@ -241,17 +241,17 @@ export function GraficoIF({ projecao, projecaoIdeal, objetivos = [], height = 28
         />
         <Tooltip content={<CustomTooltip />} />
 
-        {projecaoIdeal && projecaoIdeal.length > 0 && (
+        {curvaIdeal && curvaIdeal.length > 0 && (
           <Area
             type="monotone"
             dataKey="patrimonioIdeal"
             stroke="#EAB308"
-            strokeWidth={1.5}
+            strokeWidth={2}
             fill="url(#gradIdeal)"
             dot={false}
             activeDot={false}
             connectNulls={false}
-            name="Aposentadoria ideal"
+            name="Meta IF"
           />
         )}
 

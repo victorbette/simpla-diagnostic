@@ -44,7 +44,7 @@ export interface ResultadoIF {
   aporteAtual: number;
   taxaRetorno: number;
   projecao: PontoProjecao[];
-  projecaoIdeal?: PontoProjecao[];
+  curvaIdeal?: number[];
   objetivos?: ObjetivoVida[];
   anoNascimento?: number;
   mesNascimento?: number;
