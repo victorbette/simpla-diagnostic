@@ -237,29 +237,45 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         />
         <Tooltip content={<CustomTooltip />} />
 
-        {/* Amarela — renderizada primeiro, dots azuis ficam por cima */}
-        {curvaIdeal && curvaIdeal.length > 0 && (
-          <Area
-            type="monotone"
-            dataKey="patrimonioIdeal"
-            stroke="#EAB308"
-            strokeWidth={2}
-            fill="none"
-            fillOpacity={0}
-            dot={false}
-            activeDot={false}
-            connectNulls={false}
-            name="Meta IF"
-          />
-        )}
-
-        {/* Azul — renderizada depois: fill + dots ficam sobre a linha amarela */}
+        {/* 1. ÁREA AZUL — fundo sólido, sem linha, sem dot */}
         <Area
           type="monotone"
           dataKey="patrimonio"
           stroke="none"
           strokeWidth={0}
           fill="url(#gradReal)"
+          fillOpacity={1}
+          dot={false}
+          activeDot={false}
+          isAnimationActive={false}
+        />
+
+        {/* 2. LINHA AMARELA — sobre a área azul, sem fill */}
+        {curvaIdeal && curvaIdeal.length > 0 && (
+          <Area
+            type="monotone"
+            dataKey="patrimonioIdeal"
+            stroke="#EAB308"
+            strokeWidth={2.5}
+            fill="none"
+            fillOpacity={0}
+            dot={false}
+            activeDot={false}
+            connectNulls={false}
+            isAnimationActive={false}
+            name="Meta IF"
+          />
+        )}
+
+        {/* 3. DOTS E ÍCONES — área invisível só para renderizar marcadores no topo */}
+        <Area
+          type="monotone"
+          dataKey="patrimonio"
+          stroke="none"
+          strokeWidth={0}
+          fill="none"
+          fillOpacity={0}
+          isAnimationActive={false}
           dot={renderDot}
           activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
           name="Projeção com objetivos"
