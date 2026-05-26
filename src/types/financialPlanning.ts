@@ -318,8 +318,11 @@ export interface ProtecaoSimplificada {
   possuiSeguroVida: boolean;
   capitalSeguradoVida: number;
   possuiSeguroInvalidez: boolean;
+  capitalSeguradoInvalidez: number;
   possuiPlanoSaude: boolean;
   dependentes: number;
+  temOutroSeguro: boolean;
+  descricaoOutroSeguro: string;
 }
 
 export const initialProtecaoSimplificada: ProtecaoSimplificada = {
@@ -327,8 +330,11 @@ export const initialProtecaoSimplificada: ProtecaoSimplificada = {
   possuiSeguroVida: false,
   capitalSeguradoVida: 0,
   possuiSeguroInvalidez: false,
+  capitalSeguradoInvalidez: 0,
   possuiPlanoSaude: false,
   dependentes: 0,
+  temOutroSeguro: false,
+  descricaoOutroSeguro: "",
 };
 
 export interface ResultadoProtecao {
@@ -365,30 +371,36 @@ export function calcularProtecao(p: ProtecaoSimplificada): ResultadoProtecao {
 
 export interface PlanejamentoFiscal {
   rendaBrutaAnual: number;
+  rendaAnualAjustada: boolean;
   tipoDeclaracao: "simplificada" | "completa" | "nao_sei";
   temPGBL: boolean;
   valorPGBLAnual: number;
   temVGBL: boolean;
   valorVGBLAnual: number;
   temEmpresa: boolean;
+  nomeEmpresa: string;
   recebeProlabore: boolean;
   recebeDividendos: boolean;
   temRendimentosIsentos: boolean;
   valorRendimentosIsentos: number;
+  tiposRendimentosIsentos: string[];
 }
 
 export const initialPlanejamentoFiscal: PlanejamentoFiscal = {
   rendaBrutaAnual: 0,
+  rendaAnualAjustada: false,
   tipoDeclaracao: "nao_sei",
   temPGBL: false,
   valorPGBLAnual: 0,
   temVGBL: false,
   valorVGBLAnual: 0,
   temEmpresa: false,
+  nomeEmpresa: "",
   recebeProlabore: false,
   recebeDividendos: false,
   temRendimentosIsentos: false,
   valorRendimentosIsentos: 0,
+  tiposRendimentosIsentos: [],
 };
 
 export interface ResultadoFiscal {
@@ -481,6 +493,9 @@ export interface PlanejamentoSucessorio {
   capitalSeguroVidaSucessao: number;
   numeroHerdeiros: number;
   estadoResidencia: string;
+  doacoesVida: boolean;
+  seguroComBeneficiario: boolean;
+  previdenciaComBeneficiario: boolean;
 }
 
 export const initialPlanejamentoSucessorio: PlanejamentoSucessorio = {
@@ -491,6 +506,9 @@ export const initialPlanejamentoSucessorio: PlanejamentoSucessorio = {
   capitalSeguroVidaSucessao: 0,
   numeroHerdeiros: 1,
   estadoResidencia: "",
+  doacoesVida: false,
+  seguroComBeneficiario: false,
+  previdenciaComBeneficiario: false,
 };
 
 export interface ResultadoSucessorio {
