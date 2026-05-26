@@ -202,8 +202,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
       <AreaChart data={dadosMesclados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
         <defs>
           <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.35} />
-            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.10} />
+            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.6} />
+            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.25} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
