@@ -23,7 +23,7 @@ const COR_APOSENTADORIA = "#0891B2";
 
 interface Props {
   projecao: PontoProjecao[];
-  curvaIdeal?: number[];
+  curvaIdeal?: (number | null)[];
   objetivos?: ObjetivoVida[];
   height?: number;
   /** Absolute month index where accumulation ends — used for IF marker dot only */
@@ -37,8 +37,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const dadosMesclados = useMemo(
     () => projecaoCompleta.map((ponto, i) => ({
       ...ponto,
-      // null beyond curvaIdeal.length → Recharts stops drawing the yellow line
-      patrimonioIdeal: i < (curvaIdeal?.length ?? 0) ? curvaIdeal![i] : null,
+      patrimonioIdeal: curvaIdeal?.[i] ?? null, // null after age 90 stops the yellow line
     })),
     [projecaoCompleta, curvaIdeal],
   );

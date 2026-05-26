@@ -146,7 +146,7 @@ export interface ProjecaoIFParams {
 
 export interface ProjecaoIFResult {
   projecao: PontoProjecao[];
-  curvaIdeal: number[];
+  curvaIdeal: (number | null)[];
   patrimonioNaIF: number;
   /** PV of annuity: rendaMensal for (idadeMaxima - idadeMeta) × 12 months at 4% a.a. real */
   patrimonioNecessario: number;
@@ -176,6 +176,7 @@ function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): n
 /** Fixed 4% a.a. real for the withdrawal phase — conservative standard */
 const TAXA_RETIRADA_ANUAL = 0.04;
 const TAXA_RETIRADA_MENSAL = Math.pow(1 + TAXA_RETIRADA_ANUAL, 1 / 12) - 1; // ≈ 0.3274% a.m.
+const IDADE_FIM_AMARELA = 90; // ideal curve and patrimonioNecessario horizon
 
 const EMPTY_RESULT: ProjecaoIFResult = {
   projecao: [], curvaIdeal: [], patrimonioNaIF: 0, patrimonioNecessario: 0,
@@ -237,14 +238,17 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     const acumulando = m <= mesInicioRetirada;
 
     if (acumulando) {
+      // Apply objectives BEFORE growth (spec requirement)
+      const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
+      if (effect !== 0) {
+        patrimonio += effect;
+        patrimonio = Math.max(0, patrimonio);
+      }
       patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
     } else {
       patrimonio = patrimonio * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
+      patrimonio = Math.max(0, patrimonio);
     }
-
-    const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
-    if (effect !== 0) patrimonio += effect;
-    patrimonio = Math.max(0, patrimonio);
 
     projecao.push({
       mes: m,
@@ -257,8 +261,11 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   }
 
   const patrimonioNaIF = projecao[mesInicioRetirada]?.patrimonio ?? 0;
-  const mesesRetirada = (idadeMaxima - idadeMeta) * 12;
-  const patrimonioNecessario = Math.round(pvAnuidade(rendaMensalDesejada, TAXA_RETIRADA_MENSAL, mesesRetirada));
+  // patrimonioNecessario calibrated for ideal 90-year horizon
+  const mesesRetirada = Math.max(0, (IDADE_FIM_AMARELA - idadeMeta) * 12);
+  const patrimonioNecessario = mesesRetirada > 0
+    ? Math.round(pvAnuidade(rendaMensalDesejada, TAXA_RETIRADA_MENSAL, mesesRetirada))
+    : 0;
   const rendaSustentavel = Math.round(pmtMensal(patrimonioNaIF, TAXA_RETIRADA_MENSAL, mesesRetirada) * 100) / 100;
   const gapRenda = rendaMensalDesejada - rendaSustentavel;
   const ifAlcancada = rendaSustentavel >= rendaMensalDesejada;
@@ -308,20 +315,29 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     aporteNecessario = Math.ceil(high);
   }
 
-  // Ideal curve: same start, uses aporteNecessarioSemObjetivos, stops at age 90
-  const totalMesesIdeal = Math.min((90 - idadeAtual) * 12, projecao.length - 1);
-  const curvaIdeal: number[] = [];
+  // Ideal curve: starts at patrimonioInicial, accumulates without objectives,
+  // withdraws from patrimonioNecessario at 4% a.a., stops at IDADE_FIM_AMARELA
+  const totalMesesIdeal = Math.min((IDADE_FIM_AMARELA - idadeAtual) * 12, projecao.length - 1);
+  const curvaIdeal: (number | null)[] = [];
   let patIdeal = patrimonioInicial;
-  curvaIdeal.push(Math.round(patIdeal)); // index 0 = today, same as projecao[0]
-  for (let i = 1; i <= totalMesesIdeal; i++) {
-    const fase = projecao[i].fase;
-    if (fase === "acumulacao") {
+  curvaIdeal.push(Math.round(patIdeal)); // i=0: same starting point as blue line
+  for (let i = 1; i < projecao.length; i++) {
+    if (i > totalMesesIdeal) {
+      curvaIdeal.push(null); // no data beyond age 90
+    } else if (i < mesInicioRetirada) {
+      // Accumulation: no objectives, use aporteNecessarioSemObjetivos
       patIdeal = patIdeal * (1 + taxaMensalReal) + aporteNecessarioSemObjetivos;
+      curvaIdeal.push(Math.round(patIdeal));
+    } else if (i === mesInicioRetirada) {
+      // IF transition point: pin to patrimonioNecessario for clean handoff
+      patIdeal = patrimonioNecessario;
+      curvaIdeal.push(patrimonioNecessario);
     } else {
+      // Withdrawal: 4% a.a., guaranteed to reach 0 at IDADE_FIM_AMARELA
       patIdeal = patIdeal * (1 + TAXA_RETIRADA_MENSAL) - rendaMensalDesejada;
+      patIdeal = Math.max(0, patIdeal);
+      curvaIdeal.push(Math.round(patIdeal));
     }
-    patIdeal = Math.max(0, patIdeal);
-    curvaIdeal.push(Math.round(patIdeal));
   }
 
   return {
