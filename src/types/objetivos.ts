@@ -33,6 +33,16 @@ export const OBJETIVO_META: Record<TipoObjetivo, ObjetivoMeta> = {
   aportes_financeiros: { label: 'Aportes',      icone: 'TrendingUp',     cor: COR_OBJETIVO },
 };
 
+
+
+export function getObjetivoMeta(tipo: string): ObjetivoMeta {
+  return OBJETIVO_META[tipo as TipoObjetivo] ?? {
+    label: 'Objetivo',
+    icone: 'Star',
+    cor: COR_OBJETIVO,
+  };
+}
+
 export interface ObjetivoVida {
   id: string;
   tipo: TipoObjetivo;

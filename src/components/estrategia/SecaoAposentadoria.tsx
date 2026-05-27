@@ -10,7 +10,7 @@ import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/Ferramen
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import { Switch } from "@/components/ui/switch";
-import { OBJETIVO_META } from "@/types/objetivos";
+import { getObjetivoMeta } from "@/types/objetivos";
 import { calcularProjecaoIF } from "@/lib/financialFreedomCalc";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -155,7 +155,7 @@ export function SecaoAposentadoria({
                   </div>
 
                   {resultadoIF.objetivos.map((obj) => {
-                    const meta = OBJETIVO_META[obj.tipo];
+                    const meta = getObjetivoMeta(obj.tipo);
                     const Icon = meta ? ICON_MAP[meta.icone] : undefined;
                     const habilitado = objetivosHabilitados[obj.id] !== false;
 

@@ -4,7 +4,7 @@ import {
   Monitor, Shield, TrendingUp, MoreHorizontal, Plus, Trash2,
 } from "lucide-react";
 import type { ObjetivoVida, TipoObjetivo } from "@/types/objetivos";
-import { OBJETIVO_META } from "@/types/objetivos";
+import { OBJETIVO_META, getObjetivoMeta } from "@/types/objetivos";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 
@@ -102,7 +102,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
               {TIPOS.map((t) => {
-                const meta = OBJETIVO_META[t];
+                const meta = getObjetivoMeta(t);
                 const Icon = ICON_MAP[meta.icone];
                 const selected = tipoSel === t;
                 return (
@@ -223,7 +223,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
       )}
 
       {objetivos.map((o) => {
-        const meta = OBJETIVO_META[o.tipo];
+        const meta = getObjetivoMeta(o.tipo);
         const Icon = meta ? ICON_MAP[meta.icone] : undefined;
         const dataLabel = `${MESES_ABREV[o.mes - 1]}/${o.ano}`;
         const cor = meta?.cor ?? "#2563EB";
