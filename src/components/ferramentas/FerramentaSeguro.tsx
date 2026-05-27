@@ -53,7 +53,7 @@ function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): I
       base.children = dadosCliente.filhos.map(f => ({
         id: generateId(),
         name: f.nome,
-        currentAge: 0,
+        currentAge: f.idade ?? 0,
         independenceAge: 25,
         monthlyCost: 0,
       }));
@@ -155,7 +155,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
       children: filhosColeta.map(f => ({
         id: generateId(),
         name: f.nome,
-        currentAge: 0,
+        currentAge: f.idade ?? 0,
         independenceAge: 25,
         monthlyCost: 0,
       })),

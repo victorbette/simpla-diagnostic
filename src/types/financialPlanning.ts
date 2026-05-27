@@ -573,7 +573,7 @@ export interface DadosCliente {
   valorApoliceInvalidez: number;
   tipoTrabalho: "clt" | "autonomo" | "empresario" | "concursado" | "";
   suitabilityPerfil: PerfilRisco | null;
-  filhos: Array<{ nome: string }>;
+  filhos: Array<{ nome: string; idade: number }>;
   contribuiINSS: boolean;
   valorINSS: number;
   possuiImovelRenda: boolean;

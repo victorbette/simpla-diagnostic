@@ -115,7 +115,7 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
 
   const filhos = dados.filhos ?? [];
 
-  const updateFilhos = (newFilhos: Array<{ nome: string }>) =>
+  const updateFilhos = (newFilhos: Array<{ nome: string; idade: number }>) =>
     onChange({ dadosCliente: { ...dados, filhos: newFilhos, numeroFilhos: newFilhos.length } });
 
   const calculatedAge = dados.dataNascimento
@@ -213,12 +213,21 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {filhos.map((filho, i) => (
-                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px auto", gap: 8, alignItems: "center" }}>
                   <Input
                     value={filho.nome}
-                    onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { nome: e.target.value } : f))}
+                    onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { ...f, nome: e.target.value } : f))}
                     placeholder={`Nome do filho ${i + 1}`}
                     className="border-[#BFDBFE]"
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    max={30}
+                    value={filho.idade || ""}
+                    onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { ...f, idade: Number(e.target.value) || 0 } : f))}
+                    placeholder="Idade"
+                    className="border-[#BFDBFE] text-center"
                   />
                   <button
                     type="button"
@@ -232,7 +241,7 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
             </div>
             <button
               type="button"
-              onClick={() => updateFilhos([...filhos, { nome: "" }])}
+              onClick={() => updateFilhos([...filhos, { nome: "", idade: 0 }])}
               style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#2563EB", background: "none", border: "1px dashed #BFDBFE", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontWeight: 500 }}
             >
               <Plus size={14} /> Adicionar filho
