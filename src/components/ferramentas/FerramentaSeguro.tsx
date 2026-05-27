@@ -25,7 +25,7 @@ import {
   type Policy,
   type LivingPolicy,
 } from "@/lib/insuranceCalc";
-import type { ProtecaoSimplificada } from "@/types/financialPlanning";
+import type { ProtecaoSimplificada, DadosCliente } from "@/types/financialPlanning";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 
 type Tab = "imediatas" | "continuas" | "vida" | "apolices";
@@ -34,9 +34,10 @@ interface Props {
   protecao: ProtecaoSimplificada;
   onSave: (data: InsuranceData, result: ReturnType<typeof calcularSeguro>) => void;
   clientId: string;
+  dadosCliente?: DadosCliente;
 }
 
-function prefill(protecao: ProtecaoSimplificada): InsuranceData {
+function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): InsuranceData {
   const base = { ...initialInsuranceData };
   base.familyExpenses = protecao.rendaMensal;
   if (protecao.possuiSeguroVida) {
@@ -44,6 +45,9 @@ function prefill(protecao: ProtecaoSimplificada): InsuranceData {
   }
   if (protecao.possuiSeguroInvalidez) {
     base.livingPolicies = [{ id: generateId(), name: "Invalidez atual", type: "disability", value: 0 }];
+  }
+  if (dadosCliente) {
+    base.temPrevidencia = dadosCliente.possuiPrevidencia ?? false;
   }
   return base;
 }
@@ -55,14 +59,14 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: "apolices", label: "Apólices atuais" },
 ];
 
-export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
-  const [data, setData] = useState<InsuranceData>(() => prefill(protecao));
+export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: Props) {
+  const [data, setData] = useState<InsuranceData>(() => prefill(protecao, dadosCliente));
   const [tab, setTab] = useState<Tab>("imediatas");
 
   const CHAVE = `ferramenta_seguro_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
 
-  const initialData = prefill(protecao);
+  const initialData = prefill(protecao, dadosCliente);
 
   const { limpar } = useFerramentaStorage(
     CHAVE,
@@ -262,6 +266,16 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
               <Label>Renda mensal do cônjuge</Label>
               <CurrencyInput value={data.spouseIncome} onChange={v => upd({ spouseIncome: v })} />
             </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={data.temPrevidencia} onCheckedChange={v => upd({ temPrevidencia: v })} id="previdencia-continua" />
+              <Label htmlFor="previdencia-continua" className="cursor-pointer">Possui Previdência (PGBL/VGBL)?</Label>
+            </div>
+            {data.temPrevidencia && (
+              <div className="ml-8 flex flex-col gap-1.5">
+                <Label>Renda mensal da previdência</Label>
+                <CurrencyInput value={data.rendaPrevidenciaMensal} onChange={v => upd({ rendaPrevidenciaMensal: v })} />
+              </div>
+            )}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="coverage">Anos de cobertura do estilo de vida</Label>
               <Input id="coverage" type="number" min={1} max={40} value={data.coveragePeriod}
@@ -310,17 +324,36 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
           <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
               <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo contínuo</p>
-              {[
-                { label: "Gap de renda mensal", value: Math.max(0, data.familyExpenses - data.spouseIncome) },
-                { label: "Cobertura de estilo de vida", value: resultado.lifestyleTotal },
-                { label: "Educação dos filhos", value: resultado.educationTotal },
-                { label: "Total contínuo", value: resultado.ongoingTotal, bold: true },
-              ].map(({ label, value, bold }) => (
-                <div key={label} className="flex justify-between text-sm">
-                  <span style={{ color: bold ? "#000000" : "#6B7280", fontWeight: bold ? 600 : undefined }}>{label}</span>
-                  <span className="tabular-nums" style={{ color: bold ? "#000000" : undefined, fontWeight: bold ? 600 : undefined }}>{formatCurrency(value)}</span>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "#6B7280" }}>Despesas mensais da família</span>
+                <span className="tabular-nums">{formatCurrency(data.familyExpenses)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "#6B7280" }}>− Renda do cônjuge</span>
+                <span className="tabular-nums">{formatCurrency(data.spouseIncome)}</span>
+              </div>
+              {data.temPrevidencia && resultado.rendaPrevidencia > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: "#15803D" }}>− Renda previdência/mês</span>
+                  <span className="tabular-nums" style={{ color: "#15803D" }}>{formatCurrency(resultado.rendaPrevidencia)}</span>
                 </div>
-              ))}
+              )}
+              <div className="flex justify-between text-sm border-t pt-1.5">
+                <span style={{ color: "#000000", fontWeight: 600 }}>Renda necessária líquida/mês</span>
+                <span className="tabular-nums" style={{ color: "#000000", fontWeight: 600 }}>{formatCurrency(resultado.lifestyleGap)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "#6B7280" }}>Cobertura de estilo de vida</span>
+                <span className="tabular-nums">{formatCurrency(resultado.lifestyleTotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "#6B7280" }}>Educação dos filhos</span>
+                <span className="tabular-nums">{formatCurrency(resultado.educationTotal)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t pt-1.5">
+                <span style={{ color: "#000000", fontWeight: 600 }}>Total contínuo</span>
+                <span className="tabular-nums" style={{ color: "#000000", fontWeight: 600 }}>{formatCurrency(resultado.ongoingTotal)}</span>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -330,17 +363,6 @@ export function FerramentaSeguro({ protecao, onSave, clientId }: Props) {
       {tab === "vida" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-5">
-            <div className="flex items-center gap-3">
-              <Switch checked={data.hasPrivatePension} onCheckedChange={v => upd({ hasPrivatePension: v })} id="pension" />
-              <Label htmlFor="pension" className="cursor-pointer">Tem previdência privada?</Label>
-            </div>
-            {data.hasPrivatePension && (
-              <div className="ml-8 flex flex-col gap-1.5">
-                <Label>Saldo acumulado na previdência</Label>
-                <CurrencyInput value={data.privatePensionBalance} onChange={v => upd({ privatePensionBalance: v })} />
-              </div>
-            )}
-
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label>Coberturas em vida (IPA/DG/MA)</Label>

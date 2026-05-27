@@ -27,6 +27,8 @@ export interface InsuranceData {
   livingBenefits: LivingBenefits;
   hasPrivatePension: boolean;
   privatePensionBalance: number;
+  temPrevidencia: boolean;
+  rendaPrevidenciaMensal: number;
 }
 export const initialLivingBenefits: LivingBenefits = {
   adaptationCost: 0, familyMonthlyCost: 0, extraTreatmentReserve: 0,
@@ -37,6 +39,7 @@ export const initialInsuranceData: InsuranceData = {
   debts: [], assets: [], children: [], familyExpenses: 0, spouseIncome: 0,
   coveragePeriod: 10, policies: [], livingPolicies: [],
   livingBenefits: { ...initialLivingBenefits }, hasPrivatePension: false, privatePensionBalance: 0,
+  temPrevidencia: false, rendaPrevidenciaMensal: 0,
 };
 export function generateId(): string { return Math.random().toString(36).substring(2, 9); }
 export function calcularSeguro(data: InsuranceData) {
@@ -48,7 +51,8 @@ export function calcularSeguro(data: InsuranceData) {
     const years = Math.max(0, c.independenceAge - c.currentAge);
     return sum + years * 12 * c.monthlyCost;
   }, 0);
-  const lifestyleGap = Math.max(0, data.familyExpenses - data.spouseIncome);
+  const rendaPrevidencia = data.temPrevidencia ? (Number(data.rendaPrevidenciaMensal) || 0) : 0;
+  const lifestyleGap = Math.max(0, data.familyExpenses - data.spouseIncome - rendaPrevidencia);
   const lifestyleTotal = lifestyleGap * 12 * data.coveragePeriod;
   const ongoingTotal = educationTotal + lifestyleTotal;
   const lb = data.livingBenefits;
@@ -66,6 +70,7 @@ export function calcularSeguro(data: InsuranceData) {
   return {
     totalAssets, totalDebts, inventoryCost, immediateTotal,
     educationTotal, lifestyleTotal, ongoingTotal, grossNeed, pensionOffset,
+    rendaPrevidencia, lifestyleGap,
     totalNeed, totalCoverage, gap,
     disabilityTotal, criticalIllnessTotal, accidentalDeathTotal: accidentalDeathExtra,
     disabilityCoverage, criticalIllnessCoverage, accidentalDeathCoverage,

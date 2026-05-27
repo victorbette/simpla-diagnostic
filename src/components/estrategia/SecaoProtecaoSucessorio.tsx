@@ -165,6 +165,7 @@ export function SecaoProtecaoSucessorio({
       <FerramentaSeguro
         clientId={plan.clientId}
         protecao={plan.protecao}
+        dadosCliente={plan.dadosCliente}
         onSave={(insuranceData, result) => {
           const score = result.totalNeed > 0
             ? Math.round(Math.min(100, (result.totalCoverage / result.totalNeed) * 100))
