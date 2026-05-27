@@ -12,6 +12,7 @@ import { GraficoIF } from "@/components/shared/GraficoIF";
 import { Switch } from "@/components/ui/switch";
 import { getObjetivoMeta } from "@/types/objetivos";
 import { calcularProjecaoIF } from "@/lib/financialFreedomCalc";
+import { CardGestaoMilhas } from "@/components/estrategia/CardGestaoMilhas";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
@@ -86,6 +87,9 @@ export function SecaoAposentadoria({
   }, [resultadoIF, objetivosFiltrados]);
 
   const p = plan.planejamentoIF;
+  const dc = plan?.dadosCliente ?? {} as typeof plan.dadosCliente;
+  const gastoCartao = Number(dc.gastoCartaoMensal) || 0;
+  const mostrarMilhas = gastoCartao >= 25000;
 
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
@@ -236,6 +240,17 @@ export function SecaoAposentadoria({
             </div>
           )}
         </div>
+
+        {/* Card Milhas */}
+        {mostrarMilhas && (
+          <CardGestaoMilhas
+            gastoCartaoMensal={gastoCartao}
+            fazViagensNacionais={dc.fazViagensNacionais ?? false}
+            viagensNacionaisQtdAnual={dc.viagensNacionaisQtdAnual ?? 0}
+            fazViagensInternacionais={dc.fazViagensInternacionais ?? false}
+            viagensInternacionaisQtdAnual={dc.viagensInternacionaisQtdAnual ?? 0}
+          />
+        )}
 
         {/* Card 2 — Comment */}
         <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
