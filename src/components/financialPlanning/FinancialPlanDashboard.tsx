@@ -1,7 +1,8 @@
-import { ClipboardCheck, Sunset, Shield, Receipt, GitBranch } from "lucide-react";
+import { ClipboardCheck, Sunset, Shield, Receipt, GitBranch, PieChart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
-import type { FinancialPlan } from "@/types/financialPlanning";
+import { ALOCACAO_PADRAO } from "@/lib/carteira/types";
+import type { FinancialPlan, AtivoAtual } from "@/types/financialPlanning";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,50 @@ function calcularAliquotaITCMD(estado: string): number {
     SP: 0.04, SE: 0.08, TO: 0.02,
   };
   return aliquotas[estado?.toUpperCase()] ?? 0.04;
+}
+
+// ─── AA helpers ────────────────────────────────────────────────────────────────
+
+// Grupos consolidados para comparar AtivoAtual (que usa rendaFixa/rvGlobal)
+// com ALOCACAO_PADRAO (que usa resgate_longo/resgate_rapido/exterior)
+type GruposAA = {
+  "Renda Fixa": number;
+  "Ações": number;
+  "FIIs": number;
+  "Internacional": number;
+  "Cripto": number;
+};
+
+const GRUPOS_AA_COLORS: Record<keyof GruposAA, string> = {
+  "Renda Fixa":    "#1E40AF",
+  "Ações":         "#15803D",
+  "FIIs":          "#059669",
+  "Internacional": "#B45309",
+  "Cripto":        "#1D4ED8",
+};
+
+function getMetaAA(perfil: string): GruposAA | null {
+  const m = ALOCACAO_PADRAO[perfil];
+  if (!m) return null;
+  return {
+    "Renda Fixa":    m.resgate_longo + m.resgate_rapido,
+    "Ações":         m.acoes,
+    "FIIs":          m.fiis,
+    "Internacional": m.exterior,
+    "Cripto":        m.cripto,
+  };
+}
+
+function getAtualAA(a: AtivoAtual): GruposAA | null {
+  const total = a.total || (a.rendaFixa + a.acoes + a.fiis + a.rvGlobal + a.rfGlobal + a.cripto);
+  if (!total) return null;
+  return {
+    "Renda Fixa":    (a.rendaFixa / total) * 100,
+    "Ações":         (a.acoes / total) * 100,
+    "FIIs":          (a.fiis / total) * 100,
+    "Internacional": ((a.rvGlobal + a.rfGlobal) / total) * 100,
+    "Cripto":        (a.cripto / total) * 100,
+  };
 }
 
 // ─── Gauge semicircular ────────────────────────────────────────────────────────
@@ -63,7 +108,7 @@ function GaugeCard({ score, color, semDados }: { score: number; color: string; s
   );
 }
 
-// ─── Score helpers ─────────────────────────────────────────────────────────────
+// ─── Score / level helpers ─────────────────────────────────────────────────────
 
 function nivelScore(s: number): { label: string; cor: string; bg: string } {
   if (s >= 70) return { label: "Adequado", cor: "#15803D", bg: "#DCFCE7" };
@@ -139,7 +184,10 @@ export function FinancialPlanDashboard({
   const suc      = plan.sucessorio;
   const fiscal   = plan.fiscal;
 
-  // ── Renda total ─────────────────────────────────────────────────────────────
+  // ── "—" helper — mostra traço em vez de R$ 0,00 ─────────────────────────────
+  const fmt0 = (v: number | undefined) => (v && v > 0 ? formatCurrency(v) : "—");
+
+  // ── Renda total ──────────────────────────────────────────────────────────────
   const rendaMensal      = Number(dc.rendaMensal) || 0;
   const rendaImovel      = dc.possuiImovelRenda ? (Number(dc.rendaImovelMensal) || 0) : 0;
   const rendaMensalTotal = rendaMensal + rendaImovel;
@@ -161,14 +209,14 @@ export function FinancialPlanDashboard({
   const idadeMeta     = Number(pif.idadeMeta) || 60;
   const rendaDesejada = Number(pif.rendaMensalDesejada) || 0;
 
-  const TAXA_RETIRADA_MENSAL = Math.pow(1.04, 1 / 12) - 1;
-  const mesesRetirada       = (90 - idadeMeta) * 12;
-  const patrimonioNecessario = rendaDesejada > 0
-    ? rendaDesejada * (1 - Math.pow(1 + TAXA_RETIRADA_MENSAL, -mesesRetirada)) / TAXA_RETIRADA_MENSAL
+  const TAXA_RET_MENSAL    = Math.pow(1.04, 1 / 12) - 1;
+  const mesesRet           = Math.max(0, (90 - idadeMeta) * 12);
+  const patrimonioNecessario = mesesRet > 0 && rendaDesejada > 0
+    ? rendaDesejada * (1 - Math.pow(1 + TAXA_RET_MENSAL, -mesesRet)) / TAXA_RET_MENSAL
     : 0;
 
   const taxaRealMensal  = Math.pow(1.067, 1 / 12) - 1;
-  const mesesAcumulacao = (idadeMeta - idadeAtual) * 12;
+  const mesesAcumulacao = Math.max(0, (idadeMeta - idadeAtual) * 12);
   const projecaoIF = mesesAcumulacao > 0
     ? patrimonioFinanceiro * Math.pow(1 + taxaRealMensal, mesesAcumulacao)
       + aporteMensal * (Math.pow(1 + taxaRealMensal, mesesAcumulacao) - 1) / taxaRealMensal
@@ -176,10 +224,12 @@ export function FinancialPlanDashboard({
   const gapIF = patrimonioNecessario - projecaoIF;
 
   // ── Proteção ─────────────────────────────────────────────────────────────────
+  const numeroDependentes   = Number(protecao.dependentes) || 0;
+  const anosDepend          = Math.max(1, numeroDependentes > 0 ? 15 : 10);
   const valorSeguroVida     = Number(protecao.capitalSeguradoVida) || 0;
   const valorSeguroInvalidez = Number(protecao.capitalSeguradoInvalidez) || 0;
   const capitalAtual        = valorSeguroVida + valorSeguroInvalidez;
-  const capitalNecessario   = rendaMensalTotal * 12 * 15;
+  const capitalNecessario   = rendaMensalTotal * 12 * anosDepend;
   const gapProtecao         = capitalNecessario - capitalAtual;
 
   // ── Fiscal ───────────────────────────────────────────────────────────────────
@@ -190,12 +240,38 @@ export function FinancialPlanDashboard({
   const espacoPGBL       = Math.max(0, tetoPGBL - pgblAtual);
 
   // ── Sucessório ───────────────────────────────────────────────────────────────
-  const estado       = dc.estado || "SP";
-  const aliquota     = calcularAliquotaITCMD(estado);
-  const itcmdEstimado  = patrimonioTotal * aliquota;
+  const estado          = dc.estado || "SP";
+  const aliquota        = calcularAliquotaITCMD(estado);
+  const itcmdEstimado   = patrimonioTotal * aliquota;
   const custoInventario = patrimonioTotal * 0.10;
 
+  // ── Asset Allocation ─────────────────────────────────────────────────────────
+  const totalCarteira = plan.ativosAtuais.total ||
+    (plan.ativosAtuais.rendaFixa + plan.ativosAtuais.acoes + plan.ativosAtuais.fiis +
+     plan.ativosAtuais.rvGlobal + plan.ativosAtuais.rfGlobal + plan.ativosAtuais.cripto);
+
+  const metaAA   = dc.suitabilityPerfil ? getMetaAA(dc.suitabilityPerfil) : null;
+  const atualAA  = totalCarteira > 0 ? getAtualAA(plan.ativosAtuais) : null;
+  const classesComValor = atualAA
+    ? (Object.values(atualAA) as number[]).filter((v) => v > 0).length
+    : 0;
+  const desvioMedio = metaAA && atualAA
+    ? (Object.keys(metaAA) as (keyof GruposAA)[]).reduce(
+        (s, k) => s + Math.abs((atualAA[k] ?? 0) - metaAA[k]), 0
+      ) / Object.keys(metaAA).length
+    : null;
+
   // ── Scores ───────────────────────────────────────────────────────────────────
+
+  const scoreAA = (() => {
+    if (dc.comecandoDoZero) return 50;
+    if (!dc.suitabilityPerfil) return 0;
+    if (!metaAA) return 30;
+    if (!atualAA) return 20;
+    const dev = desvioMedio ?? 100;
+    return Math.max(0, Math.min(100, Math.round(100 - dev * 3)));
+  })();
+
   const scoreIF = (() => {
     if (!rendaDesejada || patrimonioNecessario === 0) return 0;
     return Math.min(100, Math.round((projecaoIF / patrimonioNecessario) * 100));
@@ -223,7 +299,7 @@ export function FinancialPlanDashboard({
     return s;
   })();
 
-  const scoreGeral = Math.round((scoreIF + scoreProtecao + scoreFiscal + scoreSucessorio) / 4);
+  const scoreGeral = Math.round((scoreAA + scoreIF + scoreProtecao + scoreFiscal + scoreSucessorio) / 5);
   const nivelGeral = nivelScore(scoreGeral);
 
   // ── Perfil / data ────────────────────────────────────────────────────────────
@@ -231,9 +307,10 @@ export function FinancialPlanDashboard({
   const hoje   = new Date().toLocaleDateString("pt-BR");
 
   // ── "Sem dados" flags ────────────────────────────────────────────────────────
-  const semDadosIF        = rendaDesejada === 0;
-  const semDadosProtecao  = rendaMensalTotal === 0;
-  const semDadosFiscal    = rendaAnualFiscal === 0;
+  const semDadosAA         = !dc.comecandoDoZero && !dc.suitabilityPerfil;
+  const semDadosIF         = rendaDesejada === 0;
+  const semDadosProtecao   = rendaMensalTotal === 0;
+  const semDadosFiscal     = rendaAnualFiscal === 0;
   const semDadosSucessorio = patrimonioTotal === 0;
 
   return (
@@ -259,7 +336,6 @@ export function FinancialPlanDashboard({
       {/* ── BLOCO 2: Header com Score Geral ───────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-          {/* Esquerda */}
           <div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{clientName}</h2>
             <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 10px" }}>Diagnóstico · {hoje}</p>
@@ -269,7 +345,6 @@ export function FinancialPlanDashboard({
               </span>
             )}
           </div>
-          {/* Direita: score + gauge */}
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 2px" }}>Score Geral</p>
@@ -288,13 +363,14 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── BLOCO 3: 4 Cards de Score ─────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      {/* ── BLOCO 3: 5 Cards de Score ─────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
         {([
-          { Icon: Sunset,    label: "Aposentadoria / IF",       score: scoreIF,         color: "#059669", semDados: semDadosIF },
-          { Icon: Shield,    label: "Proteção",                 score: scoreProtecao,   color: "#B91C1C", semDados: semDadosProtecao },
-          { Icon: Receipt,   label: "Planejamento Fiscal",      score: scoreFiscal,     color: "#B45309", semDados: semDadosFiscal },
-          { Icon: GitBranch, label: "Planejamento Sucessório",  score: scoreSucessorio, color: "#7C3AED", semDados: semDadosSucessorio },
+          { Icon: PieChart,  label: "Asset Allocation",       score: scoreAA,         color: "#2563EB", semDados: semDadosAA },
+          { Icon: Sunset,    label: "Aposentadoria / IF",     score: scoreIF,         color: "#059669", semDados: semDadosIF },
+          { Icon: Shield,    label: "Proteção",               score: scoreProtecao,   color: "#B91C1C", semDados: semDadosProtecao },
+          { Icon: Receipt,   label: "Planejamento Fiscal",    score: scoreFiscal,     color: "#B45309", semDados: semDadosFiscal },
+          { Icon: GitBranch, label: "Planejamento Sucessório",score: scoreSucessorio, color: "#7C3AED", semDados: semDadosSucessorio },
         ] as const).map(({ Icon, label, score, color, semDados }) => {
           const nivel = nivelScore(score);
           return (
@@ -317,7 +393,72 @@ export function FinancialPlanDashboard({
         })}
       </div>
 
-      {/* ── BLOCO 4A: Card Aposentadoria / IF ─────────────────────────────────── */}
+      {/* ── BLOCO 4A: Card Asset Allocation ───────────────────────────────────── */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #2563EB" }}>
+        <CardHeader Icon={PieChart} title="Asset Allocation" score={scoreAA} color="#2563EB" />
+
+        {semDadosAA ? (
+          <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Defina o perfil de risco na Coleta de Dados para ver o diagnóstico de Asset Allocation</p>
+          </div>
+        ) : dc.comecandoDoZero ? (
+          <div style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "16px 20px" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF", marginBottom: 8, display: "inline-block" }}>Iniciante</span>
+            <p style={{ fontSize: 13, color: "#374151", margin: "8px 0 4px" }}>Cliente está iniciando a jornada de investimentos.</p>
+            <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
+              Perfil definido: <strong>{perfil ? PERFIL_LABELS[perfil] : "Não definido"}</strong>
+            </p>
+          </div>
+        ) : !atualAA || totalCarteira === 0 ? (
+          <div>
+            <MetricGrid cols={2}>
+              <Metric label="Patrimônio Financeiro" value={fmt0(patrimonioFinanceiro)} />
+              <Metric label="Perfil" value={perfil ? PERFIL_LABELS[perfil] : "—"} />
+            </MetricGrid>
+            <div style={{ textAlign: "center", padding: "20px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
+              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Carteira não montada ainda. Complete a seção Investimentos para ver o diagnóstico.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <MetricGrid cols={2}>
+              <Metric label="Patrimônio Financeiro" value={fmt0(patrimonioFinanceiro)} />
+              <Metric label="Perfil" value={perfil ? PERFIL_LABELS[perfil] : "—"} />
+              <Metric label="Classes na carteira" value={String(classesComValor)} />
+              <Metric label="Desvio da meta" value={desvioMedio !== null ? `${desvioMedio.toFixed(1)}%` : "—"} color={desvioMedio !== null && desvioMedio > 10 ? "#B91C1C" : "#15803D"} />
+            </MetricGrid>
+
+            {/* Tabela de alocação */}
+            <div style={{ border: "1px solid #E5E7EB", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "8px 14px", borderBottom: "1px solid #E5E7EB" }}>
+                {["Classe", "% Atual", "% Meta", "Dif."].map((h) => (
+                  <p key={h} style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", margin: 0 }}>{h}</p>
+                ))}
+              </div>
+              {(Object.keys(atualAA) as (keyof GruposAA)[]).map((grupo) => {
+                const a = atualAA[grupo] ?? 0;
+                const m = metaAA ? (metaAA[grupo] ?? 0) : 0;
+                const dif = a - m;
+                return (
+                  <div key={grupo} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", padding: "9px 14px", borderBottom: "1px solid #F3F4F6", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: GRUPOS_AA_COLORS[grupo], flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: "#111827" }}>{grupo}</span>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{a.toFixed(1)}%</span>
+                    <span style={{ fontSize: 13, color: "#6B7280" }}>{m.toFixed(1)}%</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: dif > 2 ? "#15803D" : dif < -2 ? "#B91C1C" : "#9CA3AF" }}>
+                      {dif >= 0 ? "+" : ""}{dif.toFixed(1)}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── BLOCO 4B: Card Aposentadoria / IF ─────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #059669" }}>
         <CardHeader Icon={Sunset} title="Aposentadoria / IF" score={scoreIF} color="#059669" />
         {semDadosIF ? (
@@ -327,10 +468,10 @@ export function FinancialPlanDashboard({
         ) : (
           <>
             <MetricGrid cols={2}>
-              <Metric label="Patrimônio Necessário" value={formatCurrency(patrimonioNecessario)} />
-              <Metric label="Projeção com Aportes" value={formatCurrency(projecaoIF)} />
-              <Metric label="Gap Patrimonial" value={formatCurrency(Math.abs(gapIF))} color={gapIF <= 0 ? "#15803D" : "#B91C1C"} />
-              <Metric label="Aporte Atual" value={`${formatCurrency(aporteMensal)}/mês`} />
+              <Metric label="Patrimônio Necessário" value={fmt0(patrimonioNecessario)} />
+              <Metric label="Projeção com Aportes"  value={fmt0(projecaoIF)} />
+              <Metric label="Gap Patrimonial"       value={formatCurrency(Math.abs(gapIF))} color={gapIF <= 0 ? "#15803D" : "#B91C1C"} />
+              <Metric label="Aporte Atual"          value={aporteMensal > 0 ? `${formatCurrency(aporteMensal)}/mês` : "—"} />
             </MetricGrid>
             <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
               Para se aposentar aos {idadeMeta} anos com renda de {formatCurrency(rendaDesejada)}/mês,
@@ -340,35 +481,43 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4B: Card Proteção ────────────────────────────────────────────── */}
+      {/* ── BLOCO 4C: Card Proteção ────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #B91C1C" }}>
         <CardHeader Icon={Shield} title="Proteção" score={scoreProtecao} color="#B91C1C" />
-        <MetricGrid cols={3}>
-          <Metric label="Capital Necessário"  value={formatCurrency(capitalNecessario)} />
-          <Metric label="Capital Atual"       value={formatCurrency(capitalAtual)} />
-          <Metric label="Gap de Cobertura"    value={formatCurrency(Math.abs(gapProtecao))} color={gapProtecao <= 0 ? "#15803D" : "#B91C1C"} />
-        </MetricGrid>
-        <div>
-          <CheckRow ok={protecao.possuiSeguroVida} label="Seguro de vida"
-            detail={protecao.possuiSeguroVida ? formatCurrency(valorSeguroVida) : "Não possui"} />
-          <CheckRow ok={protecao.possuiSeguroInvalidez} label="Seguro de invalidez"
-            detail={protecao.possuiSeguroInvalidez ? formatCurrency(valorSeguroInvalidez) : "Não possui"} />
-          <CheckRow ok={protecao.possuiPlanoSaude} label="Plano de saúde" />
-          <CheckRow ok={!!protecao.temOutroSeguro} label="Outro seguro"
-            detail={protecao.temOutroSeguro && protecao.descricaoOutroSeguro ? protecao.descricaoOutroSeguro : undefined} />
-        </div>
+        {semDadosProtecao ? (
+          <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Mensal para ver o diagnóstico de proteção</p>
+          </div>
+        ) : (
+          <>
+            <MetricGrid cols={3}>
+              <Metric label="Capital Necessário"  value={fmt0(capitalNecessario)} />
+              <Metric label="Capital Atual"       value={capitalAtual > 0 ? formatCurrency(capitalAtual) : "—"} />
+              <Metric label="Gap de Cobertura"    value={formatCurrency(Math.abs(gapProtecao))} color={gapProtecao <= 0 ? "#15803D" : "#B91C1C"} />
+            </MetricGrid>
+            <div>
+              <CheckRow ok={protecao.possuiSeguroVida} label="Seguro de vida"
+                detail={protecao.possuiSeguroVida ? formatCurrency(valorSeguroVida) : "Não possui"} />
+              <CheckRow ok={protecao.possuiSeguroInvalidez} label="Seguro de invalidez"
+                detail={protecao.possuiSeguroInvalidez ? formatCurrency(valorSeguroInvalidez) : "Não possui"} />
+              <CheckRow ok={protecao.possuiPlanoSaude} label="Plano de saúde" />
+              <CheckRow ok={!!protecao.temOutroSeguro} label="Outro seguro"
+                detail={protecao.temOutroSeguro && protecao.descricaoOutroSeguro ? protecao.descricaoOutroSeguro : undefined} />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* ── BLOCO 4C: Card Fiscal ──────────────────────────────────────────────── */}
+      {/* ── BLOCO 4D: Card Fiscal ──────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #B45309" }}>
         <CardHeader Icon={Receipt} title="Planejamento Fiscal" score={scoreFiscal} color="#B45309" />
         <MetricGrid cols={2}>
-          <Metric label="Renda Anual Bruta"       value={formatCurrency(rendaAnualFiscal)} />
-          <Metric label="Teto PGBL (12%)"         value={formatCurrency(tetoPGBL)} />
-          <Metric label="Espaço Disponível PGBL"  value={formatCurrency(espacoPGBL)} color={espacoPGBL > 0 ? "#B45309" : "#15803D"} />
+          <Metric label="Renda Anual Bruta"      value={fmt0(rendaAnualFiscal)} />
+          <Metric label="Teto PGBL (12%)"        value={fmt0(tetoPGBL)} />
+          <Metric label="Espaço Disponível PGBL" value={fmt0(espacoPGBL)} color={espacoPGBL > 0 ? "#B45309" : "#15803D"} />
           <Metric label="Tipo Declaração"
             value={
-              fiscal.tipoDeclaracao === "completa"    ? "Declaração completa"    :
+              fiscal.tipoDeclaracao === "completa"     ? "Declaração completa"     :
               fiscal.tipoDeclaracao === "simplificada" ? "Declaração simplificada" : "—"
             }
           />
@@ -379,7 +528,7 @@ export function FinancialPlanDashboard({
             ok={!!dc.possuiPrevidencia}
             label="Possui previdência privada"
             detail={dc.possuiPrevidencia
-              ? `${dc.tipoPrevidencia?.toUpperCase() ?? ""}${dc.tipoPrevidencia ? " · " : ""}Saldo: ${formatCurrency(saldoPrevidencia)}`
+              ? `${dc.tipoPrevidencia?.toUpperCase() ?? ""}${dc.tipoPrevidencia ? " · " : ""}Saldo: ${fmt0(saldoPrevidencia)}`
               : undefined
             }
           />
@@ -394,27 +543,34 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── BLOCO 4D: Card Sucessório ──────────────────────────────────────────── */}
+      {/* ── BLOCO 4E: Card Sucessório ──────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #7C3AED" }}>
         <CardHeader Icon={GitBranch} title="Planejamento Sucessório" score={scoreSucessorio} color="#7C3AED" />
-        <MetricGrid cols={2}>
-          <Metric label="Patrimônio Total"    value={formatCurrency(patrimonioTotal)} />
-          <Metric label="ITCMD Estimado"      value={formatCurrency(itcmdEstimado)}   color="#B91C1C" />
-          <Metric label="Custo do Inventário" value={formatCurrency(custoInventario)} color="#B91C1C" />
-          <Metric label="Estado"              value={dc.estado || "—"} />
-        </MetricGrid>
-        <div style={{ marginBottom: 16 }}>
-          <CheckRow ok={suc.possuiTestamento}            label="Testamento" />
-          <CheckRow ok={suc.possuiHolding}               label="Holding familiar" />
-          <CheckRow ok={suc.doacoesVida}                 label="Doações em vida" />
-          <CheckRow ok={suc.seguroComBeneficiario}       label="Seguro com beneficiário" />
-          <CheckRow ok={suc.previdenciaComBeneficiario}  label="Previdência com beneficiário" />
-        </div>
-        {patrimonioTotal > 0 && (
-          <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-            ITCMD estimado de {formatCurrency(itcmdEstimado)} mais custo de inventário de {formatCurrency(custoInventario)},
-            totalizando {formatCurrency(itcmdEstimado + custoInventario)} sobre o patrimônio em caso de falecimento.
-          </p>
+        {semDadosSucessorio ? (
+          <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe o Patrimônio Total na Situação Financeira para ver os cálculos sucessórios</p>
+          </div>
+        ) : (
+          <>
+            <MetricGrid cols={2}>
+              <Metric label="Patrimônio Total"    value={fmt0(patrimonioTotal)} />
+              <Metric label="ITCMD Estimado"      value={fmt0(itcmdEstimado)}   color="#B91C1C" />
+              <Metric label="Custo do Inventário" value={fmt0(custoInventario)} color="#B91C1C" />
+              <Metric label="Estado"              value={dc.estado || "—"} />
+            </MetricGrid>
+            <div style={{ marginBottom: 16 }}>
+              <CheckRow ok={suc.possuiTestamento}           label="Testamento" />
+              <CheckRow ok={suc.possuiHolding}              label="Holding familiar" />
+              <CheckRow ok={suc.doacoesVida}                label="Doações em vida" />
+              <CheckRow ok={suc.seguroComBeneficiario}      label="Seguro com beneficiário" />
+              <CheckRow ok={suc.previdenciaComBeneficiario} label="Previdência com beneficiário" />
+            </div>
+            <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
+              ITCMD estimado de {formatCurrency(itcmdEstimado)} mais custo de inventário
+              de {formatCurrency(custoInventario)}, totalizando{" "}
+              {formatCurrency(itcmdEstimado + custoInventario)} sobre o patrimônio em caso de falecimento.
+            </p>
+          </>
         )}
       </div>
     </div>
