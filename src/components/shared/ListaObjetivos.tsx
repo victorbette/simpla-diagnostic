@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal, Plus, Trash2,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal, Plus, Trash2,
 } from "lucide-react";
 import type { ObjetivoVida, TipoObjetivo } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
@@ -9,8 +9,8 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
 };
 
 const MESES_LABEL = [
@@ -34,8 +34,8 @@ interface Props {
 
 export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Props) {
   const [showForm, setShowForm] = useState(false);
-  const [tipoSel, setTipoSel] = useState<TipoObjetivo>("imovel");
-  const [label, setLabel] = useState(OBJETIVO_META["imovel"].label);
+  const [tipoSel, setTipoSel] = useState<TipoObjetivo>("viagem");
+  const [label, setLabel] = useState(OBJETIVO_META["viagem"].label);
   const [valorBRL, setValorBRL] = useState(0);
   const [mes, setMes] = useState(1);
   const [ano, setAno] = useState(anoAtual + 5);
@@ -46,8 +46,8 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   }
 
   function openForm() {
-    setTipoSel("imovel");
-    setLabel(OBJETIVO_META["imovel"].label);
+    setTipoSel("viagem");
+    setLabel(OBJETIVO_META["viagem"].label);
     setValorBRL(0);
     setMes(1);
     setAno(anoAtual + 5);
@@ -103,7 +103,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
               {TIPOS.map((t) => {
                 const meta = OBJETIVO_META[t];
-                const Icon = ICON_MAP[meta.iconName];
+                const Icon = ICON_MAP[meta.icone];
                 const selected = tipoSel === t;
                 return (
                   <button
@@ -113,13 +113,13 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                       display: "flex", flexDirection: "column", alignItems: "center",
                       justifyContent: "center", gap: 4,
                       padding: "8px 4px", borderRadius: 8, cursor: "pointer",
-                      border: selected ? `2px solid ${meta.color}` : "1px solid #BFDBFE",
-                      backgroundColor: selected ? `${meta.color}15` : "white",
+                      border: selected ? `2px solid ${meta.cor}` : "1px solid #BFDBFE",
+                      backgroundColor: selected ? `${meta.cor}15` : "white",
                       transition: "all 0.12s",
                     }}
                   >
-                    <Icon style={{ width: 16, height: 16, color: selected ? meta.color : "#6B7280" }} />
-                    <span style={{ fontSize: 10, color: selected ? meta.color : "#6B7280", fontWeight: selected ? 700 : 400, textAlign: "center", lineHeight: 1.2 }}>
+                    {Icon && <Icon style={{ width: 16, height: 16, color: selected ? meta.cor : "#6B7280" }} />}
+                    <span style={{ fontSize: 10, color: selected ? meta.cor : "#6B7280", fontWeight: selected ? 700 : 400, textAlign: "center", lineHeight: 1.2 }}>
                       {meta.label}
                     </span>
                   </button>
@@ -224,8 +224,9 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
 
       {objetivos.map((o) => {
         const meta = OBJETIVO_META[o.tipo];
-        const Icon = ICON_MAP[meta.iconName];
+        const Icon = meta ? ICON_MAP[meta.icone] : undefined;
         const dataLabel = `${MESES_ABREV[o.mes - 1]}/${o.ano}`;
+        const cor = meta?.cor ?? "#2563EB";
         return (
           <div
             key={o.id}
@@ -237,10 +238,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
           >
             <div style={{
               width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-              backgroundColor: `${meta.color}18`,
+              backgroundColor: `${cor}18`,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Icon style={{ width: 16, height: 16, color: meta.color }} />
+              {Icon && <Icon style={{ width: 16, height: 16, color: cor }} />}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: "0 0 1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -248,7 +249,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
               </p>
               <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
                 {dataLabel} · {formatCurrency(o.valorBRL)}
-                {meta.tipo === "aporte" && (
+                {o.tipo === "aportes_financeiros" && (
                   <span style={{ marginLeft: 4, color: "#15803D", fontWeight: 600 }}>· entrada</span>
                 )}
               </p>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
@@ -14,8 +14,8 @@ import { OBJETIVO_META } from "@/types/objetivos";
 import { calcularProjecaoIF } from "@/lib/financialFreedomCalc";
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
 };
 
 const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
@@ -156,7 +156,7 @@ export function SecaoAposentadoria({
 
                   {resultadoIF.objetivos.map((obj) => {
                     const meta = OBJETIVO_META[obj.tipo];
-                    const Icon = ICON_MAP[meta.iconName];
+                    const Icon = meta ? ICON_MAP[meta.icone] : undefined;
                     const habilitado = objetivosHabilitados[obj.id] !== false;
 
                     return (
@@ -174,12 +174,12 @@ export function SecaoAposentadoria({
                           <div style={{
                             width: 36, height: 36,
                             borderRadius: 8,
-                            background: habilitado ? `${meta.color}20` : "#F3F4F6",
-                            border: `1.5px solid ${habilitado ? meta.color : "#E5E7EB"}`,
+                            background: habilitado ? `${meta.cor}20` : "#F3F4F6",
+                            border: `1.5px solid ${habilitado ? meta.cor : "#E5E7EB"}`,
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            color: habilitado ? meta.color : "#9CA3AF",
+                            color: habilitado ? meta.cor : "#9CA3AF",
                             transition: "all 200ms",
                             flexShrink: 0,
                           }}>

@@ -4,8 +4,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal, Sunset,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal, Sunset,
 } from "lucide-react";
 import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 import type { ObjetivoVida } from "@/types/objetivos";
@@ -13,8 +13,8 @@ import { OBJETIVO_META } from "@/types/objetivos";
 import { formatCurrency } from "@/lib/format";
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
-  Baby, Shield, TrendingUp, MoreHorizontal,
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
 };
 
 const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -39,7 +39,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const dadosMesclados = useMemo(
     () => projecaoCompleta.map((ponto, i) => ({
       ...ponto,
-      patrimonioIdeal: curvaIdeal?.[i] ?? null, // null after age 90 stops the yellow line
+      patrimonioIdeal: curvaIdeal?.[i] ?? null,
     })),
     [projecaoCompleta, curvaIdeal],
   );
@@ -65,8 +65,6 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  // X-axis: ticks every 5 years aligned to the client's birthday month
-  // Prefer the mesNascimento prop; fall back to detecting the first whole-number idade
   const mesAniversario: number = mesNascimento ?? (
     projecaoCompleta.find((p) => p.mes > 0 && Number(p.idade) === Math.floor(Number(p.idade)))
       ?.mesDoAno ?? projecaoCompleta[0].mesDoAno
@@ -78,10 +76,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
     .map((p) => p.mes);
   if (!xTicks.includes(0)) xTicks.unshift(0);
 
-  // IF marker point (look up in the full array by mes index)
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
 
-  // Build objectives lookups (only original projecao range has objectives)
   const objByMesAno = new Map<string, ObjetivoVida[]>();
   for (const obj of objetivos) {
     const key = `${obj.ano}-${obj.mes}`;
@@ -139,9 +135,9 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         )}
         {objsDoPonto.map((obj) => {
           const meta = OBJETIVO_META[obj.tipo];
-          const sinal = meta.tipo === "aporte" ? "+" : "−";
+          const sinal = obj.tipo === "aportes_financeiros" ? "+" : "−";
           return (
-            <p key={obj.id} style={{ margin: "3px 0 0", color: meta.color, fontSize: 11 }}>
+            <p key={obj.id} style={{ margin: "3px 0 0", color: meta.cor, fontSize: 11 }}>
               {sinal}{formatCurrency(obj.valorBRL)} · {obj.label}
             </p>
           );
@@ -179,16 +175,16 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
 
         {objsDoPonto.map((obj, i) => {
           const meta = OBJETIVO_META[obj.tipo];
-          const Icon = ICON_MAP[meta.iconName];
+          const Icon = ICON_MAP[meta.icone];
           const baseOffset = ehIF ? (ra * 2 + 8) : 0;
           const offsetY = cy - r - 4 - baseOffset - i * (r * 2 + 4);
           const iconSize = (r - 2) * 2;
           return (
             <g key={obj.id}>
-              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={meta.color} strokeWidth={1.5} />
+              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={meta.cor} strokeWidth={1.5} />
               <foreignObject x={cx - r + 2} y={offsetY - r + 2} width={iconSize} height={iconSize}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-                  <Icon style={{ width: 15, height: 15, color: meta.color }} />
+                  {Icon && <Icon style={{ width: 15, height: 15, color: meta.cor }} />}
                 </div>
               </foreignObject>
               <circle cx={cx} cy={cy} r={5} fill="white" stroke="#374151" strokeWidth={1.5} />
@@ -252,7 +248,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
           isAnimationActive={false}
         />
 
-        {/* 2. LINHA AZUL ESCURO — sobre a área azul, sem fill */}
+        {/* 2. LINHA AZUL ESCURO — curvaIdeal, sem fill */}
         {curvaIdeal && curvaIdeal.length > 0 && (
           <Area
             type="monotone"

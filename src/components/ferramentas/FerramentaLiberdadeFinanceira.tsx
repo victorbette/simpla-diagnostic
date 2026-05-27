@@ -544,9 +544,9 @@ export function FerramentaLiberdadeFinanceira({
                       </span>
                       <span
                         className="tabular-nums font-medium"
-                        style={{ color: OBJETIVO_META[o.tipo].tipo === "despesa" ? "#B91C1C" : "#15803D" }}
+                        style={{ color: o.tipo !== "aportes_financeiros" ? "#B91C1C" : "#15803D" }}
                       >
-                        {OBJETIVO_META[o.tipo].tipo === "despesa" ? "−" : "+"}{formatCurrency(o.valorBRL)}
+                        {o.tipo !== "aportes_financeiros" ? "−" : "+"}{formatCurrency(o.valorBRL)}
                       </span>
                     </div>
                   ))}

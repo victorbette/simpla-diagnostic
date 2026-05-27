@@ -1,5 +1,4 @@
 import type { ObjetivoVida } from "@/types/objetivos";
-import { OBJETIVO_META } from "@/types/objetivos";
 
 export type LifeGoalTipo = "despesa" | "aporte";
 export interface LifeGoal {
@@ -211,7 +210,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   const objByMesAno = new Map<string, number>();
   for (const obj of objetivos) {
-    const sinal = OBJETIVO_META[obj.tipo].tipo === "aporte" ? 1 : -1;
+    const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
     const key = `${obj.ano}-${obj.mes}`;
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }

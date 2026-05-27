@@ -1,42 +1,43 @@
 export type TipoObjetivo =
-  | 'imovel'
-  | 'veiculo'
-  | 'educacao'
   | 'viagem'
-  | 'negocio'
-  | 'reforma'
-  | 'casamento'
-  | 'filhos'
-  | 'emergencia'
-  | 'outro_aporte'
-  | 'outro_despesa';
+  | 'veiculo'
+  | 'casa'
+  | 'familia'
+  | 'eletronico'
+  | 'educacao'
+  | 'hobby'
+  | 'profissional'
+  | 'saude'
+  | 'outro'
+  | 'aportes_financeiros';
 
 export interface ObjetivoMeta {
   label: string;
-  iconName: string;
-  color: string;
-  tipo: 'despesa' | 'aporte';
+  icone: string;   // lucide component name
+  cor: string;
 }
 
+export const COR_OBJETIVO = '#2563EB';
+
 export const OBJETIVO_META: Record<TipoObjetivo, ObjetivoMeta> = {
-  imovel:        { label: "Imóvel",       iconName: "Home",          color: "#1E40AF", tipo: "despesa" },
-  veiculo:       { label: "Veículo",      iconName: "Car",           color: "#7C3AED", tipo: "despesa" },
-  educacao:      { label: "Educação",     iconName: "BookOpen",      color: "#0369A1", tipo: "despesa" },
-  viagem:        { label: "Viagem",       iconName: "Plane",         color: "#0891B2", tipo: "despesa" },
-  negocio:       { label: "Negócio",      iconName: "Briefcase",     color: "#15803D", tipo: "despesa" },
-  reforma:       { label: "Reforma",      iconName: "Hammer",        color: "#B45309", tipo: "despesa" },
-  casamento:     { label: "Casamento",    iconName: "Heart",         color: "#DB2777", tipo: "despesa" },
-  filhos:        { label: "Filhos",       iconName: "Baby",          color: "#9D174D", tipo: "despesa" },
-  emergencia:    { label: "Reserva",      iconName: "Shield",        color: "#B91C1C", tipo: "despesa" },
-  outro_aporte:  { label: "Aporte extra", iconName: "TrendingUp",    color: "#15803D", tipo: "aporte"  },
-  outro_despesa: { label: "Outro",        iconName: "MoreHorizontal",color: "#6B7280", tipo: "despesa" },
+  viagem:              { label: 'Viagem',       icone: 'Plane',          cor: COR_OBJETIVO },
+  veiculo:             { label: 'Veículo',      icone: 'Car',            cor: COR_OBJETIVO },
+  casa:                { label: 'Casa',         icone: 'Home',           cor: COR_OBJETIVO },
+  familia:             { label: 'Família',      icone: 'Heart',          cor: COR_OBJETIVO },
+  eletronico:          { label: 'Eletrônico',   icone: 'Monitor',        cor: COR_OBJETIVO },
+  educacao:            { label: 'Educação',     icone: 'BookOpen',       cor: COR_OBJETIVO },
+  hobby:               { label: 'Hobby',        icone: 'Star',           cor: COR_OBJETIVO },
+  profissional:        { label: 'Profissional', icone: 'Briefcase',      cor: COR_OBJETIVO },
+  saude:               { label: 'Saúde',        icone: 'Shield',         cor: COR_OBJETIVO },
+  outro:               { label: 'Outro',        icone: 'MoreHorizontal', cor: COR_OBJETIVO },
+  aportes_financeiros: { label: 'Aportes',      icone: 'TrendingUp',     cor: COR_OBJETIVO },
 };
 
 export interface ObjetivoVida {
   id: string;
   tipo: TipoObjetivo;
-  label: string;    // nome customizado do objetivo
-  mes: number;      // 1-12
-  ano: number;      // ano calendário (ex: 2031)
+  label: string;
+  mes: number;    // 1-12
+  ano: number;    // calendar year
   valorBRL: number;
 }
