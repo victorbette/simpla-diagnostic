@@ -18,6 +18,7 @@ import {
   calcularSeguro,
   generateId,
   initialInsuranceData,
+  initialLivingBenefits,
   type InsuranceData,
   type Debt,
   type Asset,
@@ -49,6 +50,7 @@ function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): I
   if (dadosCliente) {
     base.temPrevidencia = dadosCliente.possuiPrevidencia ?? false;
     base.saldoPrevidencia = Number(dadosCliente.saldoPrevidencia) || 0;
+    base.livingBenefits = { ...initialLivingBenefits, familyMonthlyCost: Number(dadosCliente.custoDeVidaMensal) || 0 };
     if (dadosCliente.filhos?.length) {
       base.children = dadosCliente.filhos.map(f => ({
         id: generateId(),
@@ -143,6 +145,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
   const filhosColeta = dadosCliente?.filhos ?? [];
   const despesasEditadas = custoDeVidaColeta > 0 && data.familyExpenses !== custoDeVidaColeta;
   const saldoEditado = saldoPrevidenciaColeta > 0 && data.saldoPrevidencia !== saldoPrevidenciaColeta;
+  const custoVidaVidaEditado = custoDeVidaColeta > 0 && data.livingBenefits.familyMonthlyCost !== custoDeVidaColeta;
   const filhosNaoImportados = filhosColeta.filter(fc => !data.children.some(c => c.name === fc.nome));
 
   // Sync previdencia switch when coleta changes
@@ -496,7 +499,24 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
                   onChange={v => upd({ livingBenefits: { ...data.livingBenefits, adaptationCost: v } })} />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label className="text-sm">Custo mensal da família durante tratamento</Label>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Label className="text-sm">Custo mensal da família</Label>
+                    {custoDeVidaColeta > 0 && (
+                      <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "2px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600 }}>
+                        Da coleta
+                      </span>
+                    )}
+                  </div>
+                  {custoVidaVidaEditado && (
+                    <button
+                      onClick={() => upd({ livingBenefits: { ...data.livingBenefits, familyMonthlyCost: custoDeVidaColeta } })}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", fontSize: 11, fontWeight: 600, padding: 0 }}
+                    >
+                      ↺ Restaurar
+                    </button>
+                  )}
+                </div>
                 <CurrencyInput value={data.livingBenefits.familyMonthlyCost}
                   onChange={v => upd({ livingBenefits: { ...data.livingBenefits, familyMonthlyCost: v } })} />
               </div>
