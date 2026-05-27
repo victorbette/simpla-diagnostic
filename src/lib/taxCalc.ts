@@ -36,27 +36,42 @@ export function getAliquotaRegressiva(anos: number): number {
   return 10;
 }
 export function calcularBeneficioPGBL(params: {
-  rendaMensalBruta: number;
+  rendaBrutaAnual: number;
   aportePGBLMensal: number;
   numeroDependentes: number;
-  tipoDeclaracao: "completa" | "simplificada";
+  irrf: number;
+  despesas: number;
+  inss: number;
+  aliquotaMarginal: number;
 }) {
-  const { rendaMensalBruta, aportePGBLMensal, numeroDependentes, tipoDeclaracao } = params;
-  const rendaAnual = rendaMensalBruta * 12;
+  const { rendaBrutaAnual, aportePGBLMensal, numeroDependentes, irrf, despesas, inss } = params;
+  const rendaAnual = rendaBrutaAnual;
   const tetoPGBLAnual = rendaAnual * 0.12;
   const aporteAnual = aportePGBLMensal * 12;
   const aporteEfetivo = Math.min(aporteAnual, tetoPGBLAnual);
-  const deducaoDependentes = numeroDependentes * DEDUCAO_DEPENDENTE;
-  const baseComPGBL = Math.max(0, rendaAnual - aporteEfetivo - deducaoDependentes);
-  const baseSemPGBL = Math.max(0, rendaAnual - deducaoDependentes);
-  const irComPGBL = tipoDeclaracao === "completa" ? calcularIRAnual(baseComPGBL) : rendaAnual * 0.2;
-  const irSemPGBL = tipoDeclaracao === "completa" ? calcularIRAnual(baseSemPGBL) : rendaAnual * 0.2;
+  const deducaoDependentes = Math.max(0, numeroDependentes) * DEDUCAO_DEPENDENTE;
+
+  // Sem PGBL — spec: rendaBruta - despesas - deducaoDep - inss
+  const baseSemPGBL = Math.max(0, rendaAnual - despesas - deducaoDependentes - inss);
+  const irSemPGBL = calcularIRAnual(baseSemPGBL);
+  const resultadoSem = irSemPGBL - irrf;
+  const aliqEfetivaSem = rendaAnual > 0 ? (irSemPGBL / rendaAnual) * 100 : 0;
+
+  // Com PGBL — abate o aporte efetivo da base
+  const baseComPGBL = Math.max(0, baseSemPGBL - aporteEfetivo);
+  const irComPGBL = calcularIRAnual(baseComPGBL);
+  const resultadoCom = irComPGBL - irrf;
+  const aliqEfetivaCom = rendaAnual > 0 ? (irComPGBL / rendaAnual) * 100 : 0;
+
   const economiaAnual = Math.max(0, irSemPGBL - irComPGBL);
   const economiaMensal = economiaAnual / 12;
   const espacoDisponivelMensal = Math.max(0, (tetoPGBLAnual - aporteAnual) / 12);
+
   return {
     rendaAnual, tetoPGBLAnual, aporteEfetivo, aporteAnual,
-    irComPGBL, irSemPGBL, economiaAnual, economiaMensal,
+    baseSemPGBL, irSemPGBL, resultadoSem, aliqEfetivaSem,
+    baseComPGBL, irComPGBL, resultadoCom, aliqEfetivaCom,
+    economiaAnual, economiaMensal,
     espacoDisponivelMensal, deducaoDependentes,
     aproveitandoTeto: aporteAnual >= tetoPGBLAnual,
   };

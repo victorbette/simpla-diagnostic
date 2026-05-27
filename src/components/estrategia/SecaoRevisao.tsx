@@ -931,7 +931,7 @@ export function SecaoRevisao({
               )}
             </>
           ) : (
-            <Placeholder text="Calculadora PGBL não utilizada — execute o planejamento fiscal" />
+            <Placeholder text="Calculadora de Diferimento Fiscal não utilizada — execute o planejamento fiscal" />
           )}
 
           <CommentArea

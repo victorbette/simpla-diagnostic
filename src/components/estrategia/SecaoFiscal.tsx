@@ -465,7 +465,7 @@ export function SecaoFiscal({
       <FerramentaModal
         open={pgblModal}
         onClose={() => setPgblModal(false)}
-        title="Calculadora PGBL Completa"
+        title="Calculadora de Diferimento Fiscal"
       >
         <FerramentaPGBL
           clientId={plan.clientId}

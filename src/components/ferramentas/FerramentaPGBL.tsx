@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import { calcularBeneficioPGBL, getAliquotaRegressiva } from "@/lib/taxCalc";
+import { calcularBeneficioPGBL } from "@/lib/taxCalc";
 import type { PlanejamentoFiscal } from "@/types/financialPlanning";
 
 interface Props {
@@ -24,18 +24,24 @@ interface Props {
 }
 
 interface PGBLState {
-  rendaMensalBruta: number;
+  rendaBrutaAnual: number;
   aportePGBLMensal: number;
   numeroDependentes: number;
-  tipoDeclaracao: "completa" | "simplificada";
+  irrf: number;
+  despesas: number;
+  inss: number;
+  aliquotaMarginal: number;
 }
 
 export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
   const [state, setState] = useState<PGBLState>({
-    rendaMensalBruta: fiscal.rendaBrutaAnual / 12,
+    rendaBrutaAnual: fiscal.rendaBrutaAnual,
     aportePGBLMensal: fiscal.temPGBL ? fiscal.valorPGBLAnual / 12 : 0,
     numeroDependentes: 0,
-    tipoDeclaracao: fiscal.tipoDeclaracao === "nao_sei" ? "completa" : fiscal.tipoDeclaracao,
+    irrf: 0,
+    despesas: 0,
+    inss: 0,
+    aliquotaMarginal: 0.275,
   });
   const [aporteSimulado, setAporteSimulado] = useState(state.aportePGBLMensal);
 
@@ -43,24 +49,29 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
 
   const initialState: PGBLState = {
-    rendaMensalBruta: fiscal.rendaBrutaAnual / 12,
+    rendaBrutaAnual: fiscal.rendaBrutaAnual,
     aportePGBLMensal: fiscal.temPGBL ? fiscal.valorPGBLAnual / 12 : 0,
     numeroDependentes: 0,
-    tipoDeclaracao: fiscal.tipoDeclaracao === "nao_sei" ? "completa" : fiscal.tipoDeclaracao,
+    irrf: 0,
+    despesas: 0,
+    inss: 0,
+    aliquotaMarginal: 0.275,
   };
-
-  const estadoCompleto = { ...state, aporteSimulado };
 
   const { limpar } = useFerramentaStorage(
     CHAVE,
-    estadoCompleto,
+    { ...state, aporteSimulado },
     (v) => {
       setState(s => ({
         ...s,
-        rendaMensalBruta: v.rendaMensalBruta ?? s.rendaMensalBruta,
+        // backward-compat: old saves used rendaMensalBruta
+        rendaBrutaAnual: v.rendaBrutaAnual ?? ((v as any).rendaMensalBruta ? (v as any).rendaMensalBruta * 12 : s.rendaBrutaAnual),
         aportePGBLMensal: v.aportePGBLMensal ?? s.aportePGBLMensal,
         numeroDependentes: v.numeroDependentes ?? s.numeroDependentes,
-        tipoDeclaracao: (v.tipoDeclaracao as PGBLState["tipoDeclaracao"]) ?? s.tipoDeclaracao,
+        irrf: v.irrf ?? 0,
+        despesas: v.despesas ?? 0,
+        inss: v.inss ?? 0,
+        aliquotaMarginal: v.aliquotaMarginal ?? s.aliquotaMarginal,
       }));
       if (v.aporteSimulado !== undefined) setAporteSimulado(v.aporteSimulado);
     },
@@ -72,24 +83,19 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
   const result = useMemo(() => calcularBeneficioPGBL(state), [state]);
   const resultSimulado = useMemo(
     () => calcularBeneficioPGBL({ ...state, aportePGBLMensal: aporteSimulado }),
-    [state, aporteSimulado]
+    [state, aporteSimulado],
   );
 
   const pgblPct = result.tetoPGBLAnual > 0
     ? Math.min(100, (result.aporteAnual / result.tetoPGBLAnual) * 100)
     : 0;
-  const teto = result.tetoPGBLAnual / 12;
-
-  // Tabela regressiva PGBL
-  const tabelaRegressiva = [0, 2, 4, 6, 8, 10].map(anos => ({
-    anos,
-    aliquota: getAliquotaRegressiva(anos),
-  }));
+  const tetoMensal = result.tetoPGBLAnual / 12;
+  const beneficioMarginal = Math.max(0, result.aporteEfetivo * state.aliquotaMarginal);
 
   return (
     <div className="space-y-6">
-      {/* Persistence bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 8, border: "1px solid #BFDBFE", marginBottom: 8 }}>
+      {/* Barra de persistência */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 8, border: "1px solid #BFDBFE" }}>
         <span style={{ fontSize: 11, color: "#3B82F6", display: "flex", alignItems: "center", gap: 4 }}>
           {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
         </span>
@@ -102,56 +108,79 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
           </button>
         )}
       </div>
+
       {/* Inputs */}
       <Card style={{ borderTop: "3px solid #2563EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-        <CardContent className="pt-5">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <CardContent className="pt-5 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Renda Bruta */}
             <div className="flex flex-col gap-1.5">
-              <Label>Renda mensal bruta</Label>
-              <CurrencyInput value={state.rendaMensalBruta}
-                onChange={v => { set({ rendaMensalBruta: v }); setAporteSimulado(s => Math.min(s, v * 0.12)); }} />
+              <Label>Renda Bruta Tributável Anual (R$)</Label>
+              <CurrencyInput
+                value={state.rendaBrutaAnual}
+                onChange={v => { set({ rendaBrutaAnual: v }); setAporteSimulado(s => Math.min(s, v * 0.12 / 12)); }}
+              />
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Soma de salários, pró-labore, aluguéis</p>
             </div>
+            {/* IRRF */}
+            <div className="flex flex-col gap-1.5">
+              <Label>IRRF Retido na Fonte (R$)</Label>
+              <CurrencyInput value={state.irrf} onChange={v => set({ irrf: v })} />
+            </div>
+            {/* INSS */}
+            <div className="flex flex-col gap-1.5">
+              <Label>INSS Pago no Ano (R$)</Label>
+              <CurrencyInput value={state.inss} onChange={v => set({ inss: v })} />
+            </div>
+            {/* Despesas */}
+            <div className="flex flex-col gap-1.5">
+              <Label>Despesas Dedutíveis (R$)</Label>
+              <CurrencyInput value={state.despesas} onChange={v => set({ despesas: v })} />
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Educação, saúde, pensão alimentícia</p>
+            </div>
+            {/* Dependentes */}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="dep">Nº de Dependentes</Label>
+              <Input id="dep" type="number" min={0} max={10} value={state.numeroDependentes}
+                onChange={e => set({ numeroDependentes: Number(e.target.value) })} />
+            </div>
+            {/* Alíquota Marginal */}
+            <div className="flex flex-col gap-1.5">
+              <Label>Alíquota Marginal de IR (%)</Label>
+              <Select value={String(state.aliquotaMarginal)} onValueChange={v => set({ aliquotaMarginal: Number(v) })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0.275">27,5%</SelectItem>
+                  <SelectItem value="0.225">22,5%</SelectItem>
+                  <SelectItem value="0.15">15%</SelectItem>
+                  <SelectItem value="0.075">7,5%</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {/* Aporte */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label>Aporte PGBL mensal atual</Label>
               <CurrencyInput value={state.aportePGBLMensal}
                 onChange={v => { set({ aportePGBLMensal: v }); setAporteSimulado(v); }} />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="dep">Dependentes</Label>
-              <Input id="dep" type="number" min={0} max={10} value={state.numeroDependentes}
-                onChange={e => set({ numeroDependentes: Number(e.target.value) })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>Tipo de declaração</Label>
-              <Select value={state.tipoDeclaracao} onValueChange={v => set({ tipoDeclaracao: v as "completa" | "simplificada" })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="completa">Completa</SelectItem>
-                  <SelectItem value="simplificada">Simplificada</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Resultado em grid */}
+      {/* Métricas PGBL */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Renda anual bruta", value: result.rendaAnual, isEspaco: false },
-          { label: "Teto PGBL (12% da renda)", value: result.tetoPGBLAnual, isEspaco: false },
-          { label: "Aporte atual no PGBL", value: result.aporteAnual, isEspaco: false },
-          { label: "Espaço disponível", value: Math.max(0, result.tetoPGBLAnual - result.aporteAnual), isEspaco: true },
-        ].map(({ label, value, isEspaco }) => (
+          { label: "Renda anual bruta", value: result.rendaAnual, highlight: false },
+          { label: "Teto PGBL (12%)", value: result.tetoPGBLAnual, highlight: false },
+          { label: "Aporte PGBL anual", value: result.aporteAnual, highlight: false },
+          { label: "Espaço disponível", value: Math.max(0, result.tetoPGBLAnual - result.aporteAnual), highlight: true },
+        ].map(({ label, value, highlight }) => (
           <Card key={label} style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             <CardContent className="pt-4 pb-4">
               <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>{label}</p>
-              <p
-                className="tabular-nums"
-                style={isEspaco
-                  ? { color: "#2563EB", fontSize: 16, fontWeight: 700 }
-                  : { fontSize: 16, fontWeight: 700 }}
-              >
+              <p className="tabular-nums" style={{ fontSize: 16, fontWeight: 700, color: highlight ? "#2563EB" : undefined }}>
                 {formatCurrency(value)}
               </p>
             </CardContent>
@@ -159,31 +188,80 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-          <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>IR sem PGBL</p>
-            <p className="tabular-nums" style={{ color: "#B91C1C", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irSemPGBL)}/ano</p>
+      {/* Simulação IRPF — 2 colunas */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12 }}>
+          <CardContent className="pt-4 space-y-2">
+            <p className="text-sm font-semibold" style={{ color: "#B91C1C" }}>Sem PGBL</p>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>Base de cálculo</span>
+              <span className="tabular-nums font-semibold">{formatCurrency(result.baseSemPGBL)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>IR devido</span>
+              <span className="tabular-nums font-semibold" style={{ color: "#B91C1C" }}>{formatCurrency(result.irSemPGBL)}</span>
+            </div>
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span style={{ color: "#6B7280" }}>{result.resultadoSem >= 0 ? "IR a pagar" : "Restituição"}</span>
+              <span className="tabular-nums font-semibold" style={{ color: result.resultadoSem >= 0 ? "#B91C1C" : "#15803D" }}>
+                {formatCurrency(Math.abs(result.resultadoSem))}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>Alíq. efetiva</span>
+              <span className="tabular-nums font-semibold">{formatNumber(result.aliqEfetivaSem, 1)}%</span>
+            </div>
           </CardContent>
         </Card>
-        <Card style={{ borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-          <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>IR com PGBL</p>
-            <p className="tabular-nums" style={{ color: "#15803D", fontSize: 16, fontWeight: 700 }}>{formatCurrency(result.irComPGBL)}/ano</p>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2" style={{ borderTop: "3px solid #15803D", borderRadius: 10, backgroundColor: "#DCFCE7" }}>
-          <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>Economia tributária</p>
-            <div className="flex items-baseline gap-2">
-              <p className="tabular-nums" style={{ color: "#15803D", fontSize: 24, fontWeight: 700 }}>{formatCurrency(result.economiaAnual)}/ano</p>
-              <p className="text-sm" style={{ color: "#15803D" }}>{formatCurrency(result.economiaMensal)}/mês</p>
+
+        <Card style={{ borderTop: "3px solid #15803D", borderRadius: 12 }}>
+          <CardContent className="pt-4 space-y-2">
+            <p className="text-sm font-semibold" style={{ color: "#15803D" }}>Com PGBL</p>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>Base de cálculo</span>
+              <span className="tabular-nums font-semibold">{formatCurrency(result.baseComPGBL)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>IR devido</span>
+              <span className="tabular-nums font-semibold" style={{ color: "#15803D" }}>{formatCurrency(result.irComPGBL)}</span>
+            </div>
+            <div className="flex justify-between text-sm border-t pt-2">
+              <span style={{ color: "#6B7280" }}>{result.resultadoCom >= 0 ? "IR a pagar" : "Restituição"}</span>
+              <span className="tabular-nums font-semibold" style={{ color: result.resultadoCom >= 0 ? "#B91C1C" : "#15803D" }}>
+                {formatCurrency(Math.abs(result.resultadoCom))}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "#6B7280" }}>Alíq. efetiva</span>
+              <span className="tabular-nums font-semibold">{formatNumber(result.aliqEfetivaCom, 1)}%</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Barra PGBL */}
+      {/* Economia */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Card style={{ borderTop: "3px solid #15803D", borderRadius: 10, backgroundColor: "#DCFCE7" }}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>Economia tributária (tabela progressiva)</p>
+            <div className="flex items-baseline gap-2">
+              <p className="tabular-nums" style={{ color: "#15803D", fontSize: 22, fontWeight: 700 }}>{formatCurrency(result.economiaAnual)}/ano</p>
+              <p style={{ color: "#15803D", fontSize: 13 }}>{formatCurrency(result.economiaMensal)}/mês</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card style={{ borderRadius: 10 }}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF" }}>
+              Diferimento marginal ({formatNumber(state.aliquotaMarginal * 100, 1)}%)
+            </p>
+            <p className="tabular-nums" style={{ color: "#2563EB", fontSize: 18, fontWeight: 700 }}>{formatCurrency(beneficioMarginal)}/ano</p>
+            <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>aporte efetivo × alíquota marginal</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Barra PGBL utilizado */}
       <Card style={{ borderTop: "3px solid #2563EB" }}>
         <CardContent className="pt-5 space-y-2">
           <div className="flex justify-between text-sm">
@@ -193,9 +271,7 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
               {result.aproveitandoTeto ? (
                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">Teto atingido</Badge>
               ) : (
-                <Badge variant="secondary">
-                  Espaço: {formatCurrency(result.espacoDisponivelMensal)}/mês
-                </Badge>
+                <Badge variant="secondary">Espaço: {formatCurrency(result.espacoDisponivelMensal)}/mês</Badge>
               )}
             </div>
           </div>
@@ -218,7 +294,7 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
             <input
               type="range"
               min={0}
-              max={Math.max(teto, 1)}
+              max={Math.max(tetoMensal, 1)}
               step={100}
               value={aporteSimulado}
               onChange={e => setAporteSimulado(Number(e.target.value))}
@@ -227,10 +303,10 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>R$ 0</span>
-              <span>{formatCurrency(teto)}/mês (teto)</span>
+              <span>{formatCurrency(tetoMensal)}/mês (teto)</span>
             </div>
           </div>
-          <div style={{ border: "1px solid #60A5FA", backgroundColor: "#EFF6FF", color: "#92400E", borderRadius: 8, padding: 12, fontSize: 14 }}>
+          <div style={{ border: "1px solid #60A5FA", backgroundColor: "#EFF6FF", borderRadius: 8, padding: 12, fontSize: 14, color: "#1E40AF" }}>
             Aportando <strong>{formatCurrency(aporteSimulado)}/mês</strong>, você economiza{" "}
             <strong>{formatCurrency(resultSimulado.economiaAnual)}/ano</strong> no IR
             ({formatCurrency(resultSimulado.economiaMensal)}/mês)
@@ -238,41 +314,11 @@ export function FerramentaPGBL({ clientId, fiscal, onSave }: Props) {
         </CardContent>
       </Card>
 
-      {/* Tabela regressiva */}
-      {state.tipoDeclaracao === "completa" && (
-        <Card>
-          <CardContent className="pt-5 space-y-3">
-            <p className="text-sm font-semibold">Tabela regressiva do PGBL no resgate</p>
-            <p className="text-xs text-muted-foreground">
-              Quanto mais tempo o dinheiro fica investido, menor a alíquota no resgate. Para declaração completa, o PGBL é tributado na saída sobre o valor total (principal + rendimento).
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ backgroundColor: "#1E3A8A" }}>
-                    <th style={{ color: "white", padding: "10px 16px", textAlign: "left" }}>Tempo de acumulação</th>
-                    <th style={{ color: "white", padding: "10px 16px", textAlign: "right" }}>Alíquota no resgate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tabelaRegressiva.map(({ anos, aliquota }, idx) => (
-                    <tr key={anos} style={{ backgroundColor: idx % 2 === 0 ? "#F9FAFB" : undefined }}>
-                      <td className="py-2" style={{ padding: "8px 16px" }}>{anos === 0 ? "Até 2 anos" : anos < 10 ? `${anos}–${anos + 2} anos` : "Acima de 10 anos"}</td>
-                      <td className="py-2 text-right font-semibold tabular-nums" style={{ padding: "8px 16px" }}>{aliquota}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Diferença da progressiva: a tabela progressiva tributa só os rendimentos, enquanto a regressiva tributa o montante total mas com alíquotas decrescentes com o tempo.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      <button onClick={() => onSave(result)} style={{ width: "100%", backgroundColor: "#2563EB", color: "white", border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-        Salvar análise PGBL
+      <button
+        onClick={() => onSave(result)}
+        style={{ width: "100%", backgroundColor: "#2563EB", color: "white", border: "none", borderRadius: 8, padding: "12px 0", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+      >
+        Salvar análise
       </button>
     </div>
   );

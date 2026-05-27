@@ -144,7 +144,7 @@ export function EstrategiaPrint({ plan, clientName, data, resultados: resultados
             )}
             {resultados.fiscal && (
               <div style={{ padding: 14, backgroundColor: "#EFF6FF", borderRadius: 8, border: "1px solid #60A5FA" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", margin: "0 0 8px", textTransform: "uppercase" }}>Calculadora PGBL</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", margin: "0 0 8px", textTransform: "uppercase" }}>Diferimento Fiscal</p>
                 {row("IR sem PGBL", `${formatCurrency(resultados.fiscal.irSemPGBL)}/ano`)}
                 {row("IR com PGBL", `${formatCurrency(resultados.fiscal.irComPGBL)}/ano`)}
                 {row("Economia anual", formatCurrency(resultados.fiscal.economiaAnual))}
