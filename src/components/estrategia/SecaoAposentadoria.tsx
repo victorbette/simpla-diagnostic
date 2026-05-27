@@ -1,10 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
+  Baby, Shield, TrendingUp, MoreHorizontal,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import { GraficoIF } from "@/components/shared/GraficoIF";
+import { Switch } from "@/components/ui/switch";
+import { OBJETIVO_META } from "@/types/objetivos";
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
+  Baby, Shield, TrendingUp, MoreHorizontal,
+};
+
+const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
 interface Props {
   plan: FinancialPlan;
   comentario: string;
@@ -34,6 +48,19 @@ export function SecaoAposentadoria({
   onResultadoIF,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [objetivosHabilitados, setObjetivosHabilitados] = useState<Record<string, boolean>>({});
+
+  // Initialise all objectives as enabled whenever the simulator produces a new result
+  useEffect(() => {
+    if (resultadoIF?.objetivos?.length) {
+      const inicial: Record<string, boolean> = {};
+      resultadoIF.objetivos.forEach((o) => { inicial[o.id] = true; });
+      setObjetivosHabilitados(inicial);
+    }
+  }, [resultadoIF]);
+
+  const objetivosFiltrados = (resultadoIF?.objetivos ?? [])
+    .filter((o) => objetivosHabilitados[o.id] !== false);
 
   const p = plan.planejamentoIF;
 
@@ -52,7 +79,7 @@ export function SecaoAposentadoria({
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "#000000", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Simulação de IF / Aposentadoria
+                    Simulação de Liberdade Financeira
                   </span>
                   <span style={{ fontSize: 11, color: "#6B7280", backgroundColor: "#F0F7FF", borderRadius: 999, padding: "2px 8px", border: "1px solid #BFDBFE" }}>
                     Calculado em {new Date(resultadoIF.dataCalculo).toLocaleDateString("pt-BR")}
@@ -69,7 +96,7 @@ export function SecaoAposentadoria({
               {/* 2 metrics */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
                 <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio na IF</p>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio na LF</p>
                   <p style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF", margin: 0 }}>{formatCurrency(resultadoIF.patrimonioAposentadoria)}</p>
                 </div>
                 <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
@@ -83,18 +110,96 @@ export function SecaoAposentadoria({
                 <GraficoIF
                   projecao={resultadoIF.projecao}
                   curvaIdeal={resultadoIF.curvaIdeal}
-                  objetivos={resultadoIF.objetivos ?? []}
+                  objetivos={objetivosFiltrados}
                   height={320}
                   mesIF={resultadoIF.mesInicioRetirada ?? (resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
                   mesNascimento={resultadoIF.mesNascimento}
                 />
               </div>
+
+              {/* Objectives list */}
+              {resultadoIF.objetivos && resultadoIF.objetivos.length > 0 ? (
+                <div style={{ marginTop: 16 }}>
+                  <div style={{
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: "#6B7280",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: 10,
+                  }}>
+                    Objetivos de vida
+                  </div>
+
+                  {resultadoIF.objetivos.map((obj) => {
+                    const meta = OBJETIVO_META[obj.tipo];
+                    const Icon = ICON_MAP[meta.iconName];
+                    const habilitado = objetivosHabilitados[obj.id] !== false;
+
+                    return (
+                      <div key={obj.id} style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 0",
+                        borderBottom: "0.5px solid #F3F4F6",
+                        opacity: habilitado ? 1 : 0.45,
+                        transition: "opacity 200ms",
+                      }}>
+                        {/* Icon + info */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                          <div style={{
+                            width: 36, height: 36,
+                            borderRadius: 8,
+                            background: habilitado ? `${meta.color}20` : "#F3F4F6",
+                            border: `1.5px solid ${habilitado ? meta.color : "#E5E7EB"}`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: habilitado ? meta.color : "#9CA3AF",
+                            transition: "all 200ms",
+                            flexShrink: 0,
+                          }}>
+                            {Icon && <Icon style={{ width: 16, height: 16 }} />}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>
+                              {obj.label}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#6B7280", marginTop: 1 }}>
+                              {MESES_ABREV[(obj.mes ?? 1) - 1]}/{obj.ano}
+                              {" · "}
+                              {obj.valorBRL.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                maximumFractionDigits: 0,
+                              })}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Switch */}
+                        <Switch
+                          checked={habilitado}
+                          onCheckedChange={(checked) => {
+                            setObjetivosHabilitados((prev) => ({ ...prev, [obj.id]: checked }));
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 12 }}>
+                  Nenhum objetivo cadastrado no simulador.
+                </div>
+              )}
             </>
           ) : (
             /* Empty state */
             <div style={{ textAlign: "center", padding: "32px 24px", backgroundColor: "#F0F7FF", borderRadius: 8 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: "#6B7280", margin: "0 0 6px" }}>
-                Simulador de IF não executado
+                Simulador de Liberdade Financeira não executado
               </p>
               <p style={{ fontSize: 13, color: "#2563EB", margin: 0 }}>
                 {p.idadeAtual} → {p.idadeMeta} anos · {formatCurrency(p.patrimonioAtual)} atual
@@ -103,7 +208,7 @@ export function SecaoAposentadoria({
                 onClick={() => setModalOpen(true)}
                 style={{ marginTop: 12, fontSize: 13, padding: "8px 18px", borderRadius: 6, backgroundColor: "#15803D", color: "white", border: "none", cursor: "pointer", fontWeight: 600 }}
               >
-                Abrir simulador de IF →
+                Abrir simulador →
               </button>
             </div>
           )}
@@ -118,7 +223,7 @@ export function SecaoAposentadoria({
             <textarea
               value={comentario}
               onChange={(e) => onComentarioChange(e.target.value)}
-              placeholder="Ex: Para atingir a IF aos 60 anos, o cliente precisa aumentar o aporte mensal de R$ 3.000 para R$ 4.500..."
+              placeholder="Ex: Para atingir a liberdade financeira aos 60 anos, o cliente precisa aumentar o aporte mensal de R$ 3.000 para R$ 4.500..."
               style={{
                 width: "100%",
                 minHeight: 200,

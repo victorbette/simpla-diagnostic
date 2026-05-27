@@ -126,8 +126,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         </p>
         <p style={{ margin: 0, fontWeight: 600, color: "#2563EB" }}>{formatCurrency(patrimonio)}</p>
         {patrimonioIdealVal != null && (
-          <div style={{ color: "#CA8A04", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 14, height: 2, background: "#EAB308", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
+          <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 14, height: 2, background: "#1E3A8A", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
             Meta IF: {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
@@ -252,12 +252,12 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
           isAnimationActive={false}
         />
 
-        {/* 2. LINHA AMARELA — sobre a área azul, sem fill */}
+        {/* 2. LINHA AZUL ESCURO — sobre a área azul, sem fill */}
         {curvaIdeal && curvaIdeal.length > 0 && (
           <Area
             type="monotone"
             dataKey="patrimonioIdeal"
-            stroke="#EAB308"
+            stroke="#1E3A8A"
             strokeWidth={2.5}
             fill="none"
             fillOpacity={0}

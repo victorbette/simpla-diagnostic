@@ -77,7 +77,7 @@ interface SecaoConfig {
 
 const SECOES: SecaoConfig[] = [
   { id: "assetAllocation",    label: "Asset Allocation",        color: "#000000", Icon: PieChartIcon   },
-  { id: "aposentadoria",      label: "Aposentadoria / IF",      color: "#15803D", Icon: Flame          },
+  { id: "aposentadoria",      label: "Liberdade Financeira",    color: "#15803D", Icon: Flame          },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#B91C1C", Icon: Shield         },
   { id: "fiscal",             label: "Planejamento Fiscal",     color: "#2563EB", Icon: Receipt        },
   { id: "proximosPassos",     label: "Próximos Passos",         color: "#1E40AF", Icon: ListChecks     },
@@ -100,7 +100,7 @@ function gerarAcoesIniciais(plan: FinancialPlan): AcaoItem[] {
       id: `acao_${idx++}`,
       texto: "Revisar e aumentar aportes mensais para reduzir gap patrimonial",
       prioridade: "alta",
-      area: "Aposentadoria / IF",
+      area: "Liberdade Financeira",
       prazo: "",
     });
   }
