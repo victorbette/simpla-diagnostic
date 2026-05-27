@@ -9,7 +9,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { ALOCACAO_PADRAO } from "@/lib/carteira/calculos";
 import { AtivoForm } from "./AtivoForm";
 import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 import { FiscalForm } from "./FiscalForm";
@@ -43,10 +42,6 @@ const PERFIL_CARDS: {
   { perfil: "arrojado", label: "Arrojado", alocacao: "RF 52% · RV 29% · Internacional 17,5%", descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.", color: "#B91C1C", bgSelected: "#FEE2E2", icon: Zap },
 ];
 
-const CARD_LABELS: Record<string, string> = {
-  resgate_rapido: "Resgate Rápido", resgate_longo: "Resgate Longo",
-  acoes: "Ações", fiis: "FIIs", exterior: "Internacional", cripto: "Cripto",
-};
 
 interface Props {
   plan: FinancialPlan;
@@ -104,7 +99,7 @@ function AutoField({ label, value, hint }: { label: string; value: string; hint?
   );
 }
 
-export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props) {
+export function ColetaDadosCompleta({ plan, onChange }: Props) {
   const dados = plan.dadosCliente;
 
   const setDados = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
@@ -140,12 +135,6 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
     else setDados("tipoPrevidencia", null);
   };
 
-  const selectedCard = dados.suitabilityPerfil
-    ? PERFIL_CARDS.find((c) => c.perfil === dados.suitabilityPerfil)
-    : null;
-  const alocacaoSelecionada = dados.suitabilityPerfil
-    ? ALOCACAO_PADRAO[dados.suitabilityPerfil]
-    : null;
 
   const labelCls = "text-[13px] font-medium text-[#111827]";
   const fieldCls = "flex flex-col gap-1.5";
@@ -511,38 +500,6 @@ export function ColetaDadosCompleta({ plan, onChange, onColetaComplete }: Props)
             })}
           </div>
 
-          {selectedCard && alocacaoSelecionada && (
-            <div style={{ marginTop: 16, border: `1.5px solid ${selectedCard.color}`, borderRadius: 10, padding: "16px 20px", backgroundColor: selectedCard.bgSelected, display: "flex", flexDirection: "column", gap: 14 }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: selectedCard.color, margin: 0 }}>
-                ✓ Perfil selecionado: {selectedCard.label}
-              </p>
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 8px" }}>
-                  Alocação recomendada (Padrão Simpla)
-                </p>
-                <div style={{ borderRadius: 6, overflow: "hidden", border: "1px solid #BFDBFE" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", backgroundColor: "#F0F7FF", padding: "6px 12px", fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" }}>
-                    <span>Classe</span><span>% Recomendado</span>
-                  </div>
-                  {Object.entries(alocacaoSelecionada)
-                    .filter(([, v]) => v > 0)
-                    .map(([key, pct], i, arr) => (
-                      <div key={key} style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", backgroundColor: "white", borderTop: i === 0 ? "1px solid #BFDBFE" : undefined, borderBottom: i < arr.length - 1 ? "1px solid #F0F7FF" : undefined, fontSize: 13 }}>
-                        <span style={{ color: "#111827" }}>{CARD_LABELS[key] ?? key}</span>
-                        <span style={{ fontWeight: 700, color: selectedCard.color }}>{pct}%</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => onColetaComplete(dados)}
-                style={{ alignSelf: "flex-start", backgroundColor: selectedCard.color, color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-              >
-                Aplicar perfil e sincronizar dados →
-              </button>
-            </div>
-          )}
         </div>
       </SecaoCard>
 
