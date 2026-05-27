@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,7 +39,7 @@ interface Props {
 
 function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): InsuranceData {
   const base = { ...initialInsuranceData };
-  base.familyExpenses = protecao.rendaMensal;
+  base.familyExpenses = Number(dadosCliente?.custoDeVidaMensal) || protecao.rendaMensal;
   if (protecao.possuiSeguroVida) {
     base.policies = [{ id: generateId(), name: "Apólice atual", value: protecao.capitalSeguradoVida }];
   }
@@ -48,6 +48,15 @@ function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): I
   }
   if (dadosCliente) {
     base.temPrevidencia = dadosCliente.possuiPrevidencia ?? false;
+    if (dadosCliente.filhos?.length) {
+      base.children = dadosCliente.filhos.map(f => ({
+        id: generateId(),
+        name: f.nome,
+        currentAge: 0,
+        independenceAge: 25,
+        monthlyCost: 0,
+      }));
+    }
   }
   return base;
 }
@@ -125,6 +134,30 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
   }
 
   function handleSave() { onSave(data, resultado); }
+
+  // ── Coleta derivations ─────────────────────────────────────────────────────
+  const custoDeVidaColeta = Number(dadosCliente?.custoDeVidaMensal) || 0;
+  const possuiPrevidenciaColeta = dadosCliente?.possuiPrevidencia ?? false;
+  const filhosColeta = dadosCliente?.filhos ?? [];
+  const despesasEditadas = custoDeVidaColeta > 0 && data.familyExpenses !== custoDeVidaColeta;
+  const filhosNaoImportados = filhosColeta.filter(fc => !data.children.some(c => c.name === fc.nome));
+
+  // Sync previdencia switch when coleta changes
+  useEffect(() => {
+    setData(prev => ({ ...prev, temPrevidencia: possuiPrevidenciaColeta }));
+  }, [possuiPrevidenciaColeta]);
+
+  function importarFilhosDaColeta() {
+    upd({
+      children: filhosColeta.map(f => ({
+        id: generateId(),
+        name: f.nome,
+        currentAge: 0,
+        independenceAge: 25,
+        monthlyCost: 0,
+      })),
+    });
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -259,7 +292,24 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-5">
             <div className="flex flex-col gap-1.5">
-              <Label>Despesas mensais da família</Label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Label>Despesas mensais da família</Label>
+                  {custoDeVidaColeta > 0 && (
+                    <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "2px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600 }}>
+                      Da coleta
+                    </span>
+                  )}
+                </div>
+                {despesasEditadas && (
+                  <button
+                    onClick={() => upd({ familyExpenses: custoDeVidaColeta })}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", fontSize: 11, fontWeight: 600, padding: 0 }}
+                  >
+                    ↺ Restaurar
+                  </button>
+                )}
+              </div>
               <CurrencyInput value={data.familyExpenses} onChange={v => upd({ familyExpenses: v })} />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -268,7 +318,14 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={data.temPrevidencia} onCheckedChange={v => upd({ temPrevidencia: v })} id="previdencia-continua" />
-              <Label htmlFor="previdencia-continua" className="cursor-pointer">Possui Previdência (PGBL/VGBL)?</Label>
+              <Label htmlFor="previdencia-continua" className="cursor-pointer" style={{ display: "flex", alignItems: "center" }}>
+                Possui Previdência (PGBL/VGBL)?
+                {possuiPrevidenciaColeta && (
+                  <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "2px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600 }}>
+                    Da coleta
+                  </span>
+                )}
+              </Label>
             </div>
             {data.temPrevidencia && (
               <div className="ml-8 flex flex-col gap-1.5">
@@ -284,7 +341,14 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Filhos</Label>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Label>Filhos</Label>
+                  {filhosColeta.length > 0 && !temDadosSalvos && (
+                    <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "2px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600 }}>
+                      Da coleta
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={addChild}
                   style={{ border: "1px solid #000000", color: "#000000", backgroundColor: "transparent", borderRadius: 6, padding: "4px 12px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 13 }}
@@ -292,6 +356,18 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
                   <Plus className="h-3.5 w-3.5" />Adicionar
                 </button>
               </div>
+              {filhosNaoImportados.length > 0 && (
+                <div style={{ fontSize: 12, color: "#B45309", backgroundColor: "#FEF3C7", padding: "8px 12px", borderRadius: 8 }}>
+                  <strong>{filhosNaoImportados.length} filho(s)</strong> da coleta não importados:{" "}
+                  {filhosNaoImportados.map(f => f.nome).join(", ")}.
+                  <button
+                    onClick={importarFilhosDaColeta}
+                    style={{ marginLeft: 8, color: "#B45309", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 12 }}
+                  >
+                    Importar →
+                  </button>
+                </div>
+              )}
               {data.children.map(c => (
                 <Card key={c.id}>
                   <CardContent className="pt-3 pb-3 space-y-2">
