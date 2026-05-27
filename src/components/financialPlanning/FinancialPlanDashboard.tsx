@@ -1,4 +1,4 @@
-import { ClipboardCheck, Sunset, Shield, Receipt, GitBranch, PieChart } from "lucide-react";
+import { ClipboardCheck, Sunset, Shield, Receipt, PieChart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import { ALOCACAO_PADRAO } from "@/lib/carteira/types";
@@ -299,9 +299,6 @@ export function FinancialPlanDashboard({
     return s;
   })();
 
-  const scoreGeral = Math.round((scoreAA + scoreIF + scoreProtecao + scoreFiscal + scoreSucessorio) / 5);
-  const nivelGeral = nivelScore(scoreGeral);
-
   // ── Perfil / data ────────────────────────────────────────────────────────────
   const perfil = dc.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
   const hoje   = new Date().toLocaleDateString("pt-BR");
@@ -312,6 +309,12 @@ export function FinancialPlanDashboard({
   const semDadosProtecao   = rendaMensalTotal === 0;
   const semDadosFiscal     = rendaAnualFiscal === 0;
   const semDadosSucessorio = patrimonioTotal === 0;
+
+  const scoreProtecaoSucessorio = Math.round((scoreProtecao + scoreSucessorio) / 2);
+  const semDadosPS = semDadosProtecao && semDadosSucessorio;
+
+  const scoreGeral = Math.round((scoreAA + scoreIF + scoreProtecaoSucessorio + scoreFiscal) / 4);
+  const nivelGeral = nivelScore(scoreGeral);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", padding: "24px 32px", boxSizing: "border-box" }}>
@@ -363,14 +366,13 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── BLOCO 3: 5 Cards de Score ─────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+      {/* ── BLOCO 3: 4 Cards de Score ─────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {([
-          { Icon: PieChart,  label: "Asset Allocation",       score: scoreAA,         color: "#2563EB", semDados: semDadosAA },
-          { Icon: Sunset,    label: "Aposentadoria / IF",     score: scoreIF,         color: "#059669", semDados: semDadosIF },
-          { Icon: Shield,    label: "Proteção",               score: scoreProtecao,   color: "#B91C1C", semDados: semDadosProtecao },
-          { Icon: Receipt,   label: "Planejamento Fiscal",    score: scoreFiscal,     color: "#B45309", semDados: semDadosFiscal },
-          { Icon: GitBranch, label: "Planejamento Sucessório",score: scoreSucessorio, color: "#7C3AED", semDados: semDadosSucessorio },
+          { Icon: PieChart, label: "Asset Allocation",      score: scoreAA,                 color: "#2563EB", semDados: semDadosAA },
+          { Icon: Sunset,   label: "Aposentadoria / IF",    score: scoreIF,                 color: "#059669", semDados: semDadosIF },
+          { Icon: Shield,   label: "Proteção e Sucessório", score: scoreProtecaoSucessorio, color: "#B91C1C", semDados: semDadosPS },
+          { Icon: Receipt,  label: "Planejamento Fiscal",   score: scoreFiscal,             color: "#B45309", semDados: semDadosFiscal },
         ] as const).map(({ Icon, label, score, color, semDados }) => {
           const nivel = nivelScore(score);
           return (
@@ -481,29 +483,76 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4C: Card Proteção ────────────────────────────────────────────── */}
+      {/* ── BLOCO 4C: Card Proteção e Sucessório ──────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #B91C1C" }}>
-        <CardHeader Icon={Shield} title="Proteção" score={scoreProtecao} color="#B91C1C" />
-        {semDadosProtecao ? (
+        <CardHeader Icon={Shield} title="Proteção e Sucessório" score={scoreProtecaoSucessorio} color="#B91C1C" />
+
+        {semDadosPS ? (
           <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Mensal para ver o diagnóstico de proteção</p>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Mensal e o Patrimônio Total para ver o diagnóstico</p>
           </div>
         ) : (
           <>
-            <MetricGrid cols={3}>
-              <Metric label="Capital Necessário"  value={fmt0(capitalNecessario)} />
-              <Metric label="Capital Atual"       value={capitalAtual > 0 ? formatCurrency(capitalAtual) : "—"} />
-              <Metric label="Gap de Cobertura"    value={formatCurrency(Math.abs(gapProtecao))} color={gapProtecao <= 0 ? "#15803D" : "#B91C1C"} />
-            </MetricGrid>
-            <div>
-              <CheckRow ok={protecao.possuiSeguroVida} label="Seguro de vida"
-                detail={protecao.possuiSeguroVida ? formatCurrency(valorSeguroVida) : "Não possui"} />
-              <CheckRow ok={protecao.possuiSeguroInvalidez} label="Seguro de invalidez"
-                detail={protecao.possuiSeguroInvalidez ? formatCurrency(valorSeguroInvalidez) : "Não possui"} />
-              <CheckRow ok={protecao.possuiPlanoSaude} label="Plano de saúde" />
-              <CheckRow ok={!!protecao.temOutroSeguro} label="Outro seguro"
-                detail={protecao.temOutroSeguro && protecao.descricaoOutroSeguro ? protecao.descricaoOutroSeguro : undefined} />
+            {/* Sub-seção: Proteção */}
+            {semDadosProtecao ? (
+              <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#F8FAFF", borderRadius: 8, marginBottom: 12 }}>
+                <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Mensal para ver o diagnóstico de proteção</p>
+              </div>
+            ) : (
+              <>
+                <MetricGrid cols={3}>
+                  <Metric label="Capital Necessário" value={fmt0(capitalNecessario)} />
+                  <Metric label="Capital Atual"       value={capitalAtual > 0 ? formatCurrency(capitalAtual) : "—"} />
+                  <Metric label="Gap de Cobertura"    value={formatCurrency(Math.abs(gapProtecao))} color={gapProtecao <= 0 ? "#15803D" : "#B91C1C"} />
+                </MetricGrid>
+                <div style={{ marginBottom: 8 }}>
+                  <CheckRow ok={protecao.possuiSeguroVida} label="Seguro de vida"
+                    detail={protecao.possuiSeguroVida ? formatCurrency(valorSeguroVida) : "Não possui"} />
+                  <CheckRow ok={protecao.possuiSeguroInvalidez} label="Seguro de invalidez"
+                    detail={protecao.possuiSeguroInvalidez ? formatCurrency(valorSeguroInvalidez) : "Não possui"} />
+                  <CheckRow ok={protecao.possuiPlanoSaude} label="Plano de saúde" />
+                  <CheckRow ok={!!protecao.temOutroSeguro} label="Outro seguro"
+                    detail={protecao.temOutroSeguro && protecao.descricaoOutroSeguro ? protecao.descricaoOutroSeguro : undefined} />
+                </div>
+              </>
+            )}
+
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0" }}>
+              <div style={{ flex: 1, height: 1, backgroundColor: "#E5E7EB" }} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
+                Planejamento Sucessório
+              </span>
+              <div style={{ flex: 1, height: 1, backgroundColor: "#E5E7EB" }} />
             </div>
+
+            {/* Sub-seção: Sucessório */}
+            {semDadosSucessorio ? (
+              <div style={{ textAlign: "center", padding: "16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
+                <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe o Patrimônio Total para ver os cálculos sucessórios</p>
+              </div>
+            ) : (
+              <>
+                <MetricGrid cols={2}>
+                  <Metric label="Patrimônio Total"    value={fmt0(patrimonioTotal)} />
+                  <Metric label="ITCMD Estimado"      value={fmt0(itcmdEstimado)}   color="#B91C1C" />
+                  <Metric label="Custo do Inventário" value={fmt0(custoInventario)} color="#B91C1C" />
+                  <Metric label="Estado"              value={dc.estado || "—"} />
+                </MetricGrid>
+                <div style={{ marginBottom: 12 }}>
+                  <CheckRow ok={suc.possuiTestamento}           label="Testamento" />
+                  <CheckRow ok={suc.possuiHolding}              label="Holding familiar" />
+                  <CheckRow ok={suc.doacoesVida}                label="Doações em vida" />
+                  <CheckRow ok={suc.seguroComBeneficiario}      label="Seguro com beneficiário" />
+                  <CheckRow ok={suc.previdenciaComBeneficiario} label="Previdência com beneficiário" />
+                </div>
+                <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
+                  ITCMD estimado de {formatCurrency(itcmdEstimado)} mais custo de inventário
+                  de {formatCurrency(custoInventario)}, totalizando{" "}
+                  {formatCurrency(itcmdEstimado + custoInventario)} sobre o patrimônio em caso de falecimento.
+                </p>
+              </>
+            )}
           </>
         )}
       </div>
@@ -543,36 +592,6 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── BLOCO 4E: Card Sucessório ──────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #7C3AED" }}>
-        <CardHeader Icon={GitBranch} title="Planejamento Sucessório" score={scoreSucessorio} color="#7C3AED" />
-        {semDadosSucessorio ? (
-          <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe o Patrimônio Total na Situação Financeira para ver os cálculos sucessórios</p>
-          </div>
-        ) : (
-          <>
-            <MetricGrid cols={2}>
-              <Metric label="Patrimônio Total"    value={fmt0(patrimonioTotal)} />
-              <Metric label="ITCMD Estimado"      value={fmt0(itcmdEstimado)}   color="#B91C1C" />
-              <Metric label="Custo do Inventário" value={fmt0(custoInventario)} color="#B91C1C" />
-              <Metric label="Estado"              value={dc.estado || "—"} />
-            </MetricGrid>
-            <div style={{ marginBottom: 16 }}>
-              <CheckRow ok={suc.possuiTestamento}           label="Testamento" />
-              <CheckRow ok={suc.possuiHolding}              label="Holding familiar" />
-              <CheckRow ok={suc.doacoesVida}                label="Doações em vida" />
-              <CheckRow ok={suc.seguroComBeneficiario}      label="Seguro com beneficiário" />
-              <CheckRow ok={suc.previdenciaComBeneficiario} label="Previdência com beneficiário" />
-            </div>
-            <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>
-              ITCMD estimado de {formatCurrency(itcmdEstimado)} mais custo de inventário
-              de {formatCurrency(custoInventario)}, totalizando{" "}
-              {formatCurrency(itcmdEstimado + custoInventario)} sobre o patrimônio em caso de falecimento.
-            </p>
-          </>
-        )}
-      </div>
     </div>
   );
 }
