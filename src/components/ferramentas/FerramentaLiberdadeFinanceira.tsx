@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
   type ProjecaoIFParams,
   type ProjecaoIFResult,
 } from "@/lib/financialFreedomCalc";
-import type { PlanejamentoIF } from "@/types/financialPlanning";
+import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
 import { GraficoIF } from "@/components/shared/GraficoIF";
@@ -23,6 +23,7 @@ interface Props {
   clientId: string;
   planejamentoIF: PlanejamentoIF;
   dataNascimento?: string;
+  dadosCliente?: DadosCliente;
   onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => void;
 }
 
@@ -49,6 +50,16 @@ const badgePctStyle: React.CSSProperties = {
   padding: "2px 8px",
   fontSize: 12,
   fontWeight: 600,
+};
+
+const badgeColetaStyle: React.CSSProperties = {
+  backgroundColor: "#DBEAFE",
+  color: "#1E40AF",
+  borderRadius: 9999,
+  padding: "2px 6px",
+  fontSize: 10,
+  fontWeight: 600,
+  marginLeft: 6,
 };
 
 const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
@@ -83,24 +94,38 @@ function migrateObjetivo(
   };
 }
 
-export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNascimento, onSave }: Props) {
+export function FerramentaLiberdadeFinanceira({
+  clientId, planejamentoIF, dataNascimento, dadosCliente, onSave,
+}: Props) {
+  // ── Birth date → age + anoNascimento/mesNascimento ─────────────────────────
+  const parsed = parseDateNasc(dataNascimento ?? "");
+  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - planejamentoIF.idadeAtual);
+  const mesNascimento = parsed?.mes ?? 1;
+
+  const idadeAtualCalculada = parsed
+    ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
+    : (planejamentoIF.idadeAtual || 0);
+
+  // ── "Da coleta" reference values ───────────────────────────────────────────
+  const patrimonioColeta    = Number(dadosCliente?.patrimonioFinanceiroEstimado) || 0;
+  const aporteColeta        = Number(dadosCliente?.aportesMensalMedio)           || 0;
+  const rendaDesejadaColeta = Number(planejamentoIF.rendaMensalDesejada)         || 0;
+
   const initialParams: UIParams = {
-    idadeAtual: planejamentoIF.idadeAtual,
-    idadeAposentadoria: planejamentoIF.idadeMeta,
-    patrimonioInicial: planejamentoIF.patrimonioAtual,
-    aporteMensal: planejamentoIF.aporteMensal,
-    rendaDesejada: planejamentoIF.rendaMensalDesejada,
-    rentabilidadeAnual: planejamentoIF.taxaRetornoAnual / 100,
-    inflacaoAnual: planejamentoIF.inflacaoAnual / 100,
+    idadeAtual:          idadeAtualCalculada,
+    idadeAposentadoria:  planejamentoIF.idadeMeta,
+    patrimonioInicial:   patrimonioColeta || planejamentoIF.patrimonioAtual,
+    aporteMensal:        aporteColeta     || planejamentoIF.aporteMensal,
+    rendaDesejada:       rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
+    rentabilidadeAnual:  planejamentoIF.taxaRetornoAnual / 100,
+    inflacaoAnual:       planejamentoIF.inflacaoAnual / 100,
   };
 
   const [params, setParams] = useState<UIParams>(initialParams);
+  const [patrimonioEditado, setPatrimonioEditado] = useState(false);
+  const [aporteEditado,     setAporteEditado]     = useState(false);
+  const [rendaEditada,      setRendaEditada]       = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
-
-  // Derive birth year/month — fallback to current year minus idadeAtual when date unavailable
-  const parsed = parseDateNasc(dataNascimento ?? "");
-  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - params.idadeAtual);
-  const mesNascimento = parsed?.mes ?? 1;
 
   const CHAVE = `ferramenta_if_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
@@ -109,7 +134,8 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
     CHAVE,
     { params, objetivos },
     (v) => {
-      if (v.params) setParams({ ...initialParams, ...v.params });
+      // Always override idadeAtual with current calculated value (birth date may have changed)
+      if (v.params) setParams({ ...initialParams, ...v.params, idadeAtual: idadeAtualCalculada });
       if (v.objetivos) {
         const migrados = (v.objetivos as unknown as Record<string, unknown>[])
           .map((o) => migrateObjetivo(o, anoNascimento, mesNascimento))
@@ -121,6 +147,18 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
   );
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
+
+  // ── Sync coleta changes to un-edited fields ────────────────────────────────
+  useEffect(() => {
+    setParams((prev) => ({
+      ...prev,
+      idadeAtual:       idadeAtualCalculada,
+      patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
+      aporteMensal:      !aporteEditado     ? aporteColeta     : prev.aporteMensal,
+      rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
 
   const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
 
@@ -194,13 +232,32 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
               </p>
 
               <div className="grid grid-cols-2 gap-3">
+                {/* Idade Atual — readonly, calculated from birth date */}
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-idade-atual" style={{ color: "#6B7280" }}>Idade atual</Label>
-                  <Input id="lf-idade-atual" type="number" min={18} max={80}
-                    value={params.idadeAtual}
-                    onChange={(e) => setP({ idadeAtual: Number(e.target.value) })}
-                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
+                  <Label style={{ color: "#6B7280" }}>Idade atual</Label>
+                  <div style={{ position: "relative" }}>
+                    <Input
+                      type="number"
+                      value={params.idadeAtual}
+                      readOnly
+                      style={{
+                        borderColor: "#BFDBFE",
+                        borderLeft: "3px solid #2563EB",
+                        color: "#000000",
+                        backgroundColor: "#EFF6FF",
+                        cursor: "not-allowed",
+                      }}
+                    />
+                    <span style={{
+                      position: "absolute", top: 8, right: 8,
+                      fontSize: 10, color: "#2563EB", fontWeight: 600,
+                      pointerEvents: "none",
+                    }}>
+                      ✓ CALCULADO
+                    </span>
+                  </div>
                 </div>
+
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade IF</Label>
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
@@ -210,17 +267,82 @@ export function FerramentaLiberdadeFinanceira({ clientId, planejamentoIF, dataNa
                 </div>
               </div>
 
+              {/* Patrimônio Financeiro */}
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Patrimônio atual</Label>
-                <CurrencyInput value={params.patrimonioInicial} onChange={(v) => setP({ patrimonioInicial: v })} />
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Label style={{ color: "#6B7280" }}>Patrimônio Financeiro</Label>
+                  {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+                  {patrimonioEditado && (
+                    <button
+                      onClick={() => {
+                        setP({ patrimonioInicial: patrimonioColeta });
+                        setPatrimonioEditado(false);
+                      }}
+                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >
+                      ↺ Restaurar
+                    </button>
+                  )}
+                </div>
+                <CurrencyInput
+                  value={params.patrimonioInicial}
+                  onChange={(v) => {
+                    setP({ patrimonioInicial: v });
+                    setPatrimonioEditado(v !== patrimonioColeta);
+                  }}
+                />
               </div>
+
+              {/* Aporte Mensal */}
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
-                <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
+                  {aporteColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+                  {aporteEditado && (
+                    <button
+                      onClick={() => {
+                        setP({ aporteMensal: aporteColeta });
+                        setAporteEditado(false);
+                      }}
+                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >
+                      ↺ Restaurar
+                    </button>
+                  )}
+                </div>
+                <CurrencyInput
+                  value={params.aporteMensal}
+                  onChange={(v) => {
+                    setP({ aporteMensal: v });
+                    setAporteEditado(v !== aporteColeta);
+                  }}
+                />
               </div>
+
+              {/* Renda Mensal Desejada */}
               <div className="flex flex-col gap-1.5">
-                <Label style={{ color: "#6B7280" }}>Renda mensal desejada na IF</Label>
-                <CurrencyInput value={params.rendaDesejada} onChange={(v) => setP({ rendaDesejada: v })} />
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Label style={{ color: "#6B7280" }}>Renda mensal desejada na IF</Label>
+                  {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+                  {rendaEditada && (
+                    <button
+                      onClick={() => {
+                        setP({ rendaDesejada: rendaDesejadaColeta });
+                        setRendaEditada(false);
+                      }}
+                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >
+                      ↺ Restaurar
+                    </button>
+                  )}
+                </div>
+                <CurrencyInput
+                  value={params.rendaDesejada}
+                  onChange={(v) => {
+                    setP({ rendaDesejada: v });
+                    setRendaEditada(v !== rendaDesejadaColeta);
+                  }}
+                />
               </div>
 
               {/* Nominal return slider */}

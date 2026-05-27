@@ -293,6 +293,7 @@ export function SecaoAposentadoria({
           clientId={plan.clientId}
           planejamentoIF={plan.planejamentoIF}
           dataNascimento={plan.dadosCliente.dataNascimento}
+          dadosCliente={plan.dadosCliente}
           onSave={(params, objetivos, result) => {
             onResultadoIF({
               patrimonioAposentadoria: result.patrimonioNaIF,
