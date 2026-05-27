@@ -13,7 +13,7 @@ import { AtivoForm } from "./AtivoForm";
 import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 import { FiscalForm } from "./FiscalForm";
 import type { FinancialPlan, DadosCliente, PerfilRisco, PlanejamentoIF } from "@/types/financialPlanning";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, calcularIdade } from "@/lib/format";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -113,9 +113,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
   const updateFilhos = (newFilhos: Array<{ nome: string; idade: number }>) =>
     onChange({ dadosCliente: { ...dados, filhos: newFilhos, numeroFilhos: newFilhos.length } });
 
-  const calculatedAge = dados.dataNascimento
-    ? new Date().getFullYear() - new Date(dados.dataNascimento).getFullYear()
-    : null;
+  const calculatedAge = dados.dataNascimento ? calcularIdade(dados.dataNascimento) : null;
 
   // Previdência checkbox helpers
   const isPGBL = dados.tipoPrevidencia === "pgbl" || dados.tipoPrevidencia === "ambos";

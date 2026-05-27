@@ -13,7 +13,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { FPSectionHeader } from "./layout/FPSectionHeader";
 import { ALOCACAO_PADRAO } from "@/lib/carteira/calculos";
 import type { DadosCliente, PerfilRisco } from "@/types/financialPlanning";
-import { formatCurrency as _formatCurrency } from "@/lib/format";
+import { formatCurrency as _formatCurrency, calcularIdade } from "@/lib/format";
 
 const DARK = "#000000";
 const AMBER = "#2563EB";
@@ -97,9 +97,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
   const set = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
     onChange({ ...value, [key]: val });
 
-  const calculatedAge = value.dataNascimento
-    ? new Date().getFullYear() - new Date(value.dataNascimento).getFullYear()
-    : null;
+  const calculatedAge = value.dataNascimento ? calcularIdade(value.dataNascimento) : null;
 
   function selectPerfil(perfil: PerfilRisco) {
     onChange({ ...value, suitabilityPerfil: perfil });

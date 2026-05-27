@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { LogOut } from "lucide-react";
 import { initialFinancialPlan } from "@/types/financialPlanning";
+import { calcularIdade } from "@/lib/format";
 import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { useAuth } from "@/contexts/AuthContext";
@@ -119,8 +120,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
           ? {
               ...plan.planejamentoIF,
               idadeAtual: dadosCliente.dataNascimento
-                ? new Date().getFullYear() -
-                  new Date(dadosCliente.dataNascimento).getFullYear()
+                ? calcularIdade(dadosCliente.dataNascimento)
                 : plan.planejamentoIF.idadeAtual,
               rendaMensalDesejada:
                 dadosCliente.rendaMensal > 0

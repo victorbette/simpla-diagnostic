@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { FPSectionHeader } from "./layout/FPSectionHeader";
 import { FPAutoField } from "./layout/FPAutoField";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency, formatNumber, calcularIdade } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
 import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 
@@ -50,9 +50,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
     return (resultado.gap * taxaMensal) / (Math.pow(1 + taxaMensal, meses) - 1);
   })();
 
-  const calculatedAge = dadosCliente?.dataNascimento
-    ? new Date().getFullYear() - new Date(dadosCliente.dataNascimento).getFullYear()
-    : null;
+  const calculatedAge = dadosCliente?.dataNascimento ? calcularIdade(dadosCliente.dataNascimento) : null;
 
   const isAutoIdade = calculatedAge && value.idadeAtual === calculatedAge;
   const rendaMensalAtual = dadosCliente?.rendaMensal ?? 0;
