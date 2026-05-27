@@ -48,6 +48,7 @@ function prefill(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): I
   }
   if (dadosCliente) {
     base.temPrevidencia = dadosCliente.possuiPrevidencia ?? false;
+    base.saldoPrevidencia = Number(dadosCliente.saldoPrevidencia) || 0;
     if (dadosCliente.filhos?.length) {
       base.children = dadosCliente.filhos.map(f => ({
         id: generateId(),
@@ -138,8 +139,10 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
   // ── Coleta derivations ─────────────────────────────────────────────────────
   const custoDeVidaColeta = Number(dadosCliente?.custoDeVidaMensal) || 0;
   const possuiPrevidenciaColeta = dadosCliente?.possuiPrevidencia ?? false;
+  const saldoPrevidenciaColeta = Number(dadosCliente?.saldoPrevidencia) || 0;
   const filhosColeta = dadosCliente?.filhos ?? [];
   const despesasEditadas = custoDeVidaColeta > 0 && data.familyExpenses !== custoDeVidaColeta;
+  const saldoEditado = saldoPrevidenciaColeta > 0 && data.saldoPrevidencia !== saldoPrevidenciaColeta;
   const filhosNaoImportados = filhosColeta.filter(fc => !data.children.some(c => c.name === fc.nome));
 
   // Sync previdencia switch when coleta changes
@@ -329,8 +332,25 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
             </div>
             {data.temPrevidencia && (
               <div className="ml-8 flex flex-col gap-1.5">
-                <Label>Renda mensal da previdência</Label>
-                <CurrencyInput value={data.rendaPrevidenciaMensal} onChange={v => upd({ rendaPrevidenciaMensal: v })} />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Label>Saldo atual da previdência</Label>
+                    {saldoPrevidenciaColeta > 0 && (
+                      <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "2px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600 }}>
+                        Da coleta
+                      </span>
+                    )}
+                  </div>
+                  {saldoEditado && (
+                    <button
+                      onClick={() => upd({ saldoPrevidencia: saldoPrevidenciaColeta })}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", fontSize: 11, fontWeight: 600, padding: 0 }}
+                    >
+                      ↺ Restaurar
+                    </button>
+                  )}
+                </div>
+                <CurrencyInput value={data.saldoPrevidencia} onChange={v => upd({ saldoPrevidencia: v })} />
               </div>
             )}
             <div className="flex flex-col gap-1.5">
@@ -408,14 +428,8 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
                 <span style={{ color: "#6B7280" }}>− Renda do cônjuge</span>
                 <span className="tabular-nums">{formatCurrency(data.spouseIncome)}</span>
               </div>
-              {data.temPrevidencia && resultado.rendaPrevidencia > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span style={{ color: "#15803D" }}>− Renda previdência/mês</span>
-                  <span className="tabular-nums" style={{ color: "#15803D" }}>{formatCurrency(resultado.rendaPrevidencia)}</span>
-                </div>
-              )}
               <div className="flex justify-between text-sm border-t pt-1.5">
-                <span style={{ color: "#000000", fontWeight: 600 }}>Renda necessária líquida/mês</span>
+                <span style={{ color: "#000000", fontWeight: 600 }}>Gap de renda mensal</span>
                 <span className="tabular-nums" style={{ color: "#000000", fontWeight: 600 }}>{formatCurrency(resultado.lifestyleGap)}</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -430,6 +444,12 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
                 <span style={{ color: "#000000", fontWeight: 600 }}>Total contínuo</span>
                 <span className="tabular-nums" style={{ color: "#000000", fontWeight: 600 }}>{formatCurrency(resultado.ongoingTotal)}</span>
               </div>
+              {data.temPrevidencia && data.saldoPrevidencia > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: "#15803D" }}>− Saldo de previdência (abate no capital)</span>
+                  <span className="tabular-nums" style={{ color: "#15803D" }}>{formatCurrency(data.saldoPrevidencia)}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
