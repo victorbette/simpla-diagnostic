@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
   Baby, Shield, TrendingUp, MoreHorizontal,
@@ -11,6 +11,7 @@ import type { ResultadoIF } from "@/types/estrategiaResultados";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import { Switch } from "@/components/ui/switch";
 import { OBJETIVO_META } from "@/types/objetivos";
+import { calcularProjecaoIF } from "@/lib/financialFreedomCalc";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Home, Car, BookOpen, Plane, Briefcase, Hammer, Heart,
@@ -59,8 +60,30 @@ export function SecaoAposentadoria({
     }
   }, [resultadoIF]);
 
-  const objetivosFiltrados = (resultadoIF?.objetivos ?? [])
-    .filter((o) => objetivosHabilitados[o.id] !== false);
+  // Stable filtered list — only recomputes when resultadoIF or toggle state changes
+  const objetivosFiltrados = useMemo(
+    () => (resultadoIF?.objetivos ?? []).filter((o) => objetivosHabilitados[o.id] !== false),
+    [resultadoIF, objetivosHabilitados],
+  );
+
+  // Área azul: recalculate projection using only active objectives.
+  // curvaIdeal is NEVER recalculated here — it always comes from resultadoIF.curvaIdeal.
+  const projecaoAtiva = useMemo(() => {
+    if (!resultadoIF) return [];
+    const r = calcularProjecaoIF({
+      idadeAtual:          resultadoIF.idadeAtual,
+      idadeMeta:           resultadoIF.idadeMeta,
+      idadeMaxima:         100,
+      patrimonioInicial:   resultadoIF.patrimonioAtual,
+      aporteMensal:        resultadoIF.aporteAtual,
+      rendaMensalDesejada: resultadoIF.rendaMensalDesejada,
+      taxaRetornoAnual:    resultadoIF.taxaRetorno,
+      anoNascimento:       resultadoIF.anoNascimento ?? (new Date().getFullYear() - resultadoIF.idadeAtual),
+      mesNascimento:       resultadoIF.mesNascimento ?? 1,
+      objetivos:           objetivosFiltrados,
+    });
+    return r.projecao;
+  }, [resultadoIF, objetivosFiltrados]);
 
   const p = plan.planejamentoIF;
 
@@ -108,7 +131,7 @@ export function SecaoAposentadoria({
               {/* Area chart */}
               <div style={{ marginTop: 20 }}>
                 <GraficoIF
-                  projecao={resultadoIF.projecao}
+                  projecao={projecaoAtiva}
                   curvaIdeal={resultadoIF.curvaIdeal}
                   objetivos={objetivosFiltrados}
                   height={320}
