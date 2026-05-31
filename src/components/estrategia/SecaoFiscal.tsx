@@ -470,6 +470,8 @@ export function SecaoFiscal({
         <FerramentaPGBL
           clientId={plan.clientId}
           fiscal={plan.fiscal}
+          dadosCliente={plan.dadosCliente}
+          idadeMeta={plan.planejamentoIF.idadeMeta}
           onSave={(result) => {
             onResultadoFiscal({
               rendaAnual: result.rendaAnual,
