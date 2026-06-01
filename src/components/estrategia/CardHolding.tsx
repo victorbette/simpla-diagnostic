@@ -1,8 +1,6 @@
-import { Building2, FileX, PiggyBank, Info } from "lucide-react";
-import { formatCurrency } from "@/lib/format";
+import { Building2, Info } from "lucide-react";
 
 interface Props {
-  patrimonioTotal: number;
   temEmpresa: boolean;
   maisDeUmaEmpresa: boolean;
   possuiSocios: boolean;
@@ -10,8 +8,6 @@ interface Props {
   quantidadeImoveis: number;
   score: number;
   motivos: string[];
-  observacoes: string;
-  onObservacoesChange: (v: string) => void;
 }
 
 const DIV = (
@@ -27,7 +23,6 @@ function SubLabel({ text }: { text: string }) {
 }
 
 export function CardHolding({
-  patrimonioTotal,
   temEmpresa,
   maisDeUmaEmpresa,
   possuiSocios,
@@ -35,14 +30,7 @@ export function CardHolding({
   quantidadeImoveis,
   score,
   motivos,
-  observacoes,
-  onObservacoesChange,
 }: Props) {
-  const custoInventarioMin = patrimonioTotal * 0.08;
-  const custoInventarioMax = patrimonioTotal * 0.20;
-  const custoHolding = 50_000;
-  const economiaMin = Math.max(0, custoInventarioMin - custoHolding);
-  const economiaMax = Math.max(0, custoInventarioMax - custoHolding);
   const barColor = score > 70 ? "#15803D" : "#F59E0B";
 
   // Build profile badges from available data for context
@@ -126,142 +114,7 @@ export function CardHolding({
 
       {DIV}
 
-      {/* BLOCO 3 — HOLDING × INVENTÁRIO */}
-      <SubLabel text="Holding × Inventário" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 4 }}>
-        {/* Inventário */}
-        <div style={{ backgroundColor: "#FFF5F5", border: "1px solid #FEE2E2", borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <FileX size={15} style={{ color: "#B91C1C", flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>Inventário</span>
-          </div>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              "Duração: 2 a 10 anos",
-              "Custo: 8% a 20% do patrimônio",
-              "Risco de litígios familiares",
-              "Bloqueio de bens durante o processo",
-              "Perda de valor patrimonial",
-              "Necessário para cada falecimento",
-            ].map((item) => (
-              <li key={item} style={{ fontSize: 12, color: "#B91C1C", display: "flex", gap: 6 }}>
-                <span style={{ flexShrink: 0 }}>✗</span><span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Holding */}
-        <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #DCFCE7", borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <Building2 size={15} style={{ color: "#15803D", flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>Holding</span>
-          </div>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              "Constituída uma única vez",
-              "Sucessão sem inventário",
-              "Bens protegidos e governança estruturada",
-              "Regras definidas em vida",
-              "Abarca múltiplas gerações de herdeiros",
-              "Transmissão via cotas societárias",
-            ].map((item) => (
-              <li key={item} style={{ fontSize: 12, color: "#15803D", display: "flex", gap: 6 }}>
-                <span style={{ flexShrink: 0 }}>✓</span><span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {DIV}
-
-      {/* BLOCO 4 — SIMULAÇÃO */}
-      <SubLabel text="Simulação com Seu Patrimônio" />
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
-        <div style={{ backgroundColor: "#F8FAFF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
-          <p style={{ fontSize: 11, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
-            Seu Patrimônio
-          </p>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: 0 }}>
-            {formatCurrency(patrimonioTotal)}
-          </p>
-          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Base de cálculo</p>
-        </div>
-
-        <div style={{ backgroundColor: "#FFF5F5", border: "1px solid #FEE2E2", borderRadius: 8, padding: "12px 14px" }}>
-          <p style={{ fontSize: 11, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
-            Custo do Inventário
-          </p>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "#B91C1C", margin: 0 }}>
-            {formatCurrency(custoInventarioMin)} a {formatCurrency(custoInventarioMax)}
-          </p>
-          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Entre 8% e 20% do patrimônio</p>
-        </div>
-
-        <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #DCFCE7", borderRadius: 8, padding: "12px 14px" }}>
-          <p style={{ fontSize: 11, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
-            Custo da Holding
-          </p>
-          <p style={{ fontSize: 16, fontWeight: 700, color: "#15803D", margin: 0 }}>
-            ~ {formatCurrency(custoHolding)}
-          </p>
-          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Investimento inicial estimado</p>
-        </div>
-      </div>
-
-      {/* Texto imóveis personalizado */}
-      {quantidadeImoveis >= 2 && (
-        <div
-          style={{
-            fontSize: 12,
-            color: "#6B7280",
-            backgroundColor: "#F5F3FF",
-            border: "0.5px solid #DDD6FE",
-            borderRadius: 8,
-            padding: "10px 14px",
-            marginTop: 12,
-            lineHeight: 1.6,
-          }}
-        >
-          🏠 Com <strong>{quantidadeImoveis} imóveis</strong>, a holding patrimonial permite
-          transferir os bens via cotas societárias, evitando{" "}
-          <strong>{quantidadeImoveis} inventários</strong> separados e reduzindo
-          significativamente os custos e o tempo do processo sucessório.
-        </div>
-      )}
-
-      {/* Economia em destaque */}
-      <div
-        style={{
-          backgroundColor: "#DCFCE7",
-          border: "1px solid #BBF7D0",
-          borderRadius: 12,
-          padding: 16,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 16,
-          marginBottom: 4,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <PiggyBank size={24} style={{ color: "#15803D", flexShrink: 0 }} />
-          <span style={{ fontSize: 13, color: "#15803D", fontWeight: 600 }}>
-            Economia estimada com a Holding
-          </span>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0 }}>
-            {formatCurrency(economiaMin)} a {formatCurrency(economiaMax)}
-          </p>
-          <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>vs. custo do inventário</p>
-        </div>
-      </div>
-
-      {DIV}
-
-      {/* BLOCO 5 — CONCLUSÃO */}
+      {/* BLOCO 3 — CONCLUSÃO */}
       <div
         style={{
           backgroundColor: "#F5F3FF",
@@ -282,37 +135,6 @@ export function CardHolding({
         </p>
       </div>
 
-      {DIV}
-
-      {/* BLOCO 6 — CAMPO DO CONSULTOR */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-          Observações do consultor
-        </label>
-        <div style={{ position: "relative" }}>
-          <textarea
-            value={observacoes}
-            onChange={(e) => onObservacoesChange(e.target.value)}
-            placeholder="Adicione recomendações específicas sobre a constituição da holding para este cliente..."
-            style={{
-              width: "100%",
-              minHeight: 120,
-              padding: "10px 12px",
-              borderRadius: 6,
-              border: "1px solid #DDD6FE",
-              fontSize: 13,
-              color: "#111827",
-              resize: "vertical",
-              outline: "none",
-              boxSizing: "border-box",
-              fontFamily: "inherit",
-            }}
-          />
-          <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>
-            {observacoes.length} caracteres
-          </span>
-        </div>
-      </div>
     </div>
   );
 }

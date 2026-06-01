@@ -17,8 +17,6 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoSeguro: ResultadoSeguro | null;
   onResultadoSeguro: (r: ResultadoSeguro) => void;
-  resultadoHolding?: { observacoes: string };
-  onResultadoHolding: (h: { observacoes: string }) => void;
 }
 
 const AVAILABLE_TAGS = ["Seguro de Vida", "Invalidez", "Holding", "ITCMD", "Testamento"];
@@ -92,8 +90,6 @@ export function SecaoProtecaoSucessorio({
   onTagsChange,
   resultadoSeguro,
   onResultadoSeguro,
-  resultadoHolding,
-  onResultadoHolding,
 }: Props) {
   const [seguroModal, setSeguroModal] = useState(false);
 
@@ -252,7 +248,6 @@ export function SecaoProtecaoSucessorio({
           </div>
           {holdingPerfil.recomendada && (
             <CardHolding
-              patrimonioTotal={plan.dadosCliente.patrimonioTotalEstimado}
               temEmpresa={plan.fiscal.temEmpresa}
               maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
               possuiSocios={plan.sucessorio.possuiSocios ?? false}
@@ -260,8 +255,6 @@ export function SecaoProtecaoSucessorio({
               quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
               score={holdingPerfil.score}
               motivos={holdingPerfil.motivos}
-              observacoes={resultadoHolding?.observacoes ?? ""}
-              onObservacoesChange={(v) => onResultadoHolding({ observacoes: v })}
             />
           )}
           {commentCard}
@@ -571,7 +564,6 @@ export function SecaoProtecaoSucessorio({
         {/* Holding — rendered when profile recommends it */}
         {holdingPerfil.recomendada && (
           <CardHolding
-            patrimonioTotal={plan.dadosCliente.patrimonioTotalEstimado}
             temEmpresa={plan.fiscal.temEmpresa}
             maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
             possuiSocios={plan.sucessorio.possuiSocios ?? false}
@@ -579,8 +571,6 @@ export function SecaoProtecaoSucessorio({
             quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
             score={holdingPerfil.score}
             motivos={holdingPerfil.motivos}
-            observacoes={resultadoHolding?.observacoes ?? ""}
-            onObservacoesChange={(v) => onResultadoHolding({ observacoes: v })}
           />
         )}
 

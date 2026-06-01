@@ -350,8 +350,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onTagsChange={onTagsChange}
             resultadoSeguro={resultados.seguro}
             onResultadoSeguro={(r) => setResultados((prev) => ({ ...prev, seguro: r }))}
-            resultadoHolding={resultados.holding}
-            onResultadoHolding={(h) => setResultados((prev) => ({ ...prev, holding: h }))}
           />
         );
       case "fiscal":
