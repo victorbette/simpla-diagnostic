@@ -7,6 +7,7 @@ interface Props {
   maisDeUmaEmpresa: boolean;
   possuiSocios: boolean;
   filhos: Array<{ nome: string; idade?: number }>;
+  quantidadeImoveis: number;
   score: number;
   motivos: string[];
   observacoes: string;
@@ -31,6 +32,7 @@ export function CardHolding({
   maisDeUmaEmpresa,
   possuiSocios,
   filhos,
+  quantidadeImoveis,
   score,
   motivos,
   observacoes,
@@ -49,6 +51,9 @@ export function CardHolding({
   if (maisDeUmaEmpresa && !perfis.some(m => m.includes("uma empresa"))) perfis.push("Mais de uma empresa");
   if (possuiSocios && !perfis.some(m => m.includes("sócios"))) perfis.push("Possui sócios");
   if (filhos.length > 0 && !perfis.some(m => m.includes("herdeiros"))) perfis.push("Tem herdeiros");
+  if (quantidadeImoveis >= 2 && !perfis.some(m => m.includes("imóveis"))) {
+    perfis.push(`${quantidadeImoveis} imóveis próprios`);
+  }
 
   return (
     <div
@@ -204,6 +209,27 @@ export function CardHolding({
           <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Investimento inicial estimado</p>
         </div>
       </div>
+
+      {/* Texto imóveis personalizado */}
+      {quantidadeImoveis >= 2 && (
+        <div
+          style={{
+            fontSize: 12,
+            color: "#6B7280",
+            backgroundColor: "#F5F3FF",
+            border: "0.5px solid #DDD6FE",
+            borderRadius: 8,
+            padding: "10px 14px",
+            marginTop: 12,
+            lineHeight: 1.6,
+          }}
+        >
+          🏠 Com <strong>{quantidadeImoveis} imóveis</strong>, a holding patrimonial permite
+          transferir os bens via cotas societárias, evitando{" "}
+          <strong>{quantidadeImoveis} inventários</strong> separados e reduzindo
+          significativamente os custos e o tempo do processo sucessório.
+        </div>
+      )}
 
       {/* Economia em destaque */}
       <div

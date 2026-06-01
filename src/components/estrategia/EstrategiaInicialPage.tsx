@@ -276,7 +276,10 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   }, [onSaveCloud]);
 
   const holdingPerfil = calcularPerfilHolding(
-    { ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa },
+    {
+      ...plan.dadosCliente,
+      temEmpresa: plan.fiscal.temEmpresa,
+    },
     plan.sucessorio,
   );
   const secoesAtivas: SecaoConfig[] = holdingPerfil.recomendada
@@ -376,6 +379,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
             possuiSocios={plan.sucessorio.possuiSocios ?? false}
             filhos={plan.dadosCliente.filhos}
+            quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
             score={holdingPerfil.score}
             motivos={holdingPerfil.motivos}
             observacoes={resultados.holding?.observacoes ?? ""}

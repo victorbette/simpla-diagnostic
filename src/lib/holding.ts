@@ -9,7 +9,12 @@ export interface PerfilHolding {
 
 type DadosHolding = Pick<
   DadosCliente,
-  "patrimonioTotalEstimado" | "tipoTrabalho" | "possuiImovelRenda" | "filhos"
+  | "patrimonioTotalEstimado"
+  | "tipoTrabalho"
+  | "possuiImovelRenda"
+  | "possuiImoveis"
+  | "quantidadeImoveis"
+  | "filhos"
 > & { temEmpresa?: boolean };
 
 type SucessorioHolding = Pick<
@@ -67,6 +72,20 @@ export function calcularPerfilHolding(
     motivos.push("Imóveis geradores de renda para proteger");
   }
 
+  if (dc.possuiImoveis) {
+    const qtd = Number(dc.quantidadeImoveis) || 0;
+    if (qtd >= 3) {
+      pontos += 20;
+      motivos.push(`${qtd} imóveis próprios — holding patrimonial altamente recomendada`);
+    } else if (qtd === 2) {
+      pontos += 15;
+      motivos.push("2 imóveis próprios — proteção e sucessão via holding");
+    } else if (qtd === 1) {
+      pontos += 5;
+      alertas.push("1 imóvel — holding pode ser avaliada se patrimônio crescer");
+    }
+  }
+
   if ((dc.filhos ?? []).length > 0) {
     pontos += 10;
     motivos.push("Tem herdeiros — planejamento sucessório relevante");
@@ -80,7 +99,7 @@ export function calcularPerfilHolding(
   const score = Math.min(100, pontos);
   const recomendada = score >= 40;
 
-  if (!dc.temEmpresa && !dc.possuiImovelRenda) {
+  if (!dc.temEmpresa && !dc.possuiImovelRenda && !dc.possuiImoveis) {
     alertas.push("Sem empresa ou imóveis — holding pode não ser necessária agora");
   }
   if (patrimonioTotal < 500_000) {

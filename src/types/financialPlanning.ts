@@ -582,6 +582,8 @@ export interface DadosCliente {
   valorINSS: number;
   possuiImovelRenda: boolean;
   rendaImovelMensal: number;
+  possuiImoveis: boolean;
+  quantidadeImoveis: number;
   possuiPrevidencia: boolean;
   tipoPrevidencia: "pgbl" | "vgbl" | "ambos" | null;
   saldoPrevidencia: number;
@@ -618,6 +620,8 @@ export const initialDadosCliente: DadosCliente = {
   valorINSS: 0,
   possuiImovelRenda: false,
   rendaImovelMensal: 0,
+  possuiImoveis: false,
+  quantidadeImoveis: 0,
   possuiPrevidencia: false,
   tipoPrevidencia: null,
   saldoPrevidencia: 0,
