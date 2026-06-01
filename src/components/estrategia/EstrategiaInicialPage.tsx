@@ -7,7 +7,6 @@ import {
   Receipt,
   ListChecks,
   ClipboardCheck,
-  Building2,
   type LucideIcon,
 } from "lucide-react";
 import type { FinancialPlan } from "@/types/financialPlanning";
@@ -20,11 +19,9 @@ import {
 } from "@/types/financialPlanning";
 import type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
-import { calcularPerfilHolding } from "@/lib/holding";
 import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
 import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
-import { CardHolding } from "./CardHolding";
 import { SecaoFiscal } from "./SecaoFiscal";
 import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
@@ -44,7 +41,6 @@ export type SecaoId =
   | "assetAllocation"
   | "aposentadoria"
   | "protecaoSucessorio"
-  | "holding"
   | "fiscal"
   | "proximosPassos"
   | "revisao";
@@ -275,32 +271,17 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     }
   }, [onSaveCloud]);
 
-  const holdingPerfil = calcularPerfilHolding(
-    {
-      ...plan.dadosCliente,
-      temEmpresa: plan.fiscal.temEmpresa,
-    },
-    plan.sucessorio,
-  );
-  const secoesAtivas: SecaoConfig[] = holdingPerfil.recomendada
-    ? [
-        SECOES[0], SECOES[1], SECOES[2],
-        { id: "holding" as const, label: "Holding", color: "#7C3AED", Icon: Building2 },
-        SECOES[3], SECOES[4], SECOES[5],
-      ]
-    : SECOES;
-
-  const secaoAtual = secoesAtivas.find((s) => s.id === secaoAtiva) ?? secoesAtivas[0];
-  const secaoIndex = secoesAtivas.findIndex((s) => s.id === secaoAtiva);
+  const secaoAtual = SECOES.find((s) => s.id === secaoAtiva) ?? SECOES[0];
+  const secaoIndex = SECOES.findIndex((s) => s.id === secaoAtiva);
 
   const irParaSecao = (id: SecaoId) => setSecaoAtiva(id);
 
   const irAnterior = () => {
-    if (secaoIndex > 0) setSecaoAtiva(secoesAtivas[secaoIndex - 1].id);
+    if (secaoIndex > 0) setSecaoAtiva(SECOES[secaoIndex - 1].id);
   };
 
   const irProxima = () => {
-    if (secaoIndex < secoesAtivas.length - 1) setSecaoAtiva(secoesAtivas[secaoIndex + 1].id);
+    if (secaoIndex < SECOES.length - 1) setSecaoAtiva(SECOES[secaoIndex + 1].id);
   };
 
   // Avatar
@@ -369,23 +350,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onTagsChange={onTagsChange}
             resultadoSeguro={resultados.seguro}
             onResultadoSeguro={(r) => setResultados((prev) => ({ ...prev, seguro: r }))}
-          />
-        );
-      case "holding":
-        return (
-          <CardHolding
-            patrimonioTotal={plan.dadosCliente.patrimonioTotalEstimado}
-            temEmpresa={plan.fiscal.temEmpresa}
-            maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
-            possuiSocios={plan.sucessorio.possuiSocios ?? false}
-            filhos={plan.dadosCliente.filhos}
-            quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
-            score={holdingPerfil.score}
-            motivos={holdingPerfil.motivos}
-            observacoes={resultados.holding?.observacoes ?? ""}
-            onObservacoesChange={(v) =>
-              setResultados((prev) => ({ ...prev, holding: { observacoes: v } }))
-            }
+            resultadoHolding={resultados.holding}
+            onResultadoHolding={(h) => setResultados((prev) => ({ ...prev, holding: h }))}
           />
         );
       case "fiscal":
@@ -527,7 +493,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
 
           {/* Nav list */}
           <nav style={{ flex: 1 }}>
-            {secoesAtivas.map((secao) => {
+            {SECOES.map((secao) => {
               const isActive = secao.id === secaoAtiva;
               return (
                 <button
@@ -612,12 +578,12 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                 cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
               }}
             >
-              {secaoIndex > 0 ? `← Seção anterior: ${secoesAtivas[secaoIndex - 1].label}` : "← Início"}
+              {secaoIndex > 0 ? `← Seção anterior: ${SECOES[secaoIndex - 1].label}` : "← Início"}
             </button>
 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                {secoesAtivas.map((s, i) => (
+                {SECOES.map((s, i) => (
                   <button
                     key={s.id}
                     onClick={() => irParaSecao(s.id)}
@@ -634,24 +600,24 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
                   />
                 ))}
               </div>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {secoesAtivas.length}</span>
+              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
             </div>
 
             <button
               onClick={irProxima}
-              disabled={secaoIndex === secoesAtivas.length - 1}
+              disabled={secaoIndex === SECOES.length - 1}
               style={{
                 padding: "8px 16px",
                 borderRadius: 6,
                 border: "none",
-                backgroundColor: secaoIndex === secoesAtivas.length - 1 ? "#BFDBFE" : "#2563EB",
-                color: secaoIndex === secoesAtivas.length - 1 ? "#9CA3AF" : "white",
+                backgroundColor: secaoIndex === SECOES.length - 1 ? "#BFDBFE" : "#2563EB",
+                color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
                 fontSize: 13,
-                cursor: secaoIndex === secoesAtivas.length - 1 ? "not-allowed" : "pointer",
+                cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
                 fontWeight: 500,
               }}
             >
-              {secaoIndex < secoesAtivas.length - 1 ? `Próxima seção: ${secoesAtivas[secaoIndex + 1].label} →` : "Fim →"}
+              {secaoIndex < SECOES.length - 1 ? `Próxima seção: ${SECOES[secaoIndex + 1].label} →` : "Fim →"}
             </button>
           </div>
         </div>

@@ -6,6 +6,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaModal } from "@/components/ferramentas/FerramentaModal";
 import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
 import type { ResultadoSeguro } from "@/types/estrategiaResultados";
+import { calcularPerfilHolding } from "@/lib/holding";
+import { CardHolding } from "./CardHolding";
 
 interface Props {
   plan: FinancialPlan;
@@ -15,6 +17,8 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoSeguro: ResultadoSeguro | null;
   onResultadoSeguro: (r: ResultadoSeguro) => void;
+  resultadoHolding?: { observacoes: string };
+  onResultadoHolding: (h: { observacoes: string }) => void;
 }
 
 const AVAILABLE_TAGS = ["Seguro de Vida", "Invalidez", "Holding", "ITCMD", "Testamento"];
@@ -88,8 +92,15 @@ export function SecaoProtecaoSucessorio({
   onTagsChange,
   resultadoSeguro,
   onResultadoSeguro,
+  resultadoHolding,
+  onResultadoHolding,
 }: Props) {
   const [seguroModal, setSeguroModal] = useState(false);
+
+  const holdingPerfil = calcularPerfilHolding(
+    { ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa },
+    plan.sucessorio,
+  );
 
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
@@ -239,6 +250,20 @@ export function SecaoProtecaoSucessorio({
               </button>
             </div>
           </div>
+          {holdingPerfil.recomendada && (
+            <CardHolding
+              patrimonioTotal={plan.dadosCliente.patrimonioTotalEstimado}
+              temEmpresa={plan.fiscal.temEmpresa}
+              maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
+              possuiSocios={plan.sucessorio.possuiSocios ?? false}
+              filhos={plan.dadosCliente.filhos}
+              quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
+              score={holdingPerfil.score}
+              motivos={holdingPerfil.motivos}
+              observacoes={resultadoHolding?.observacoes ?? ""}
+              onObservacoesChange={(v) => onResultadoHolding({ observacoes: v })}
+            />
+          )}
           {commentCard}
         </div>
         {modal}
@@ -541,6 +566,22 @@ export function SecaoProtecaoSucessorio({
               )}
             </div>
           </div>
+        )}
+
+        {/* Holding — rendered when profile recommends it */}
+        {holdingPerfil.recomendada && (
+          <CardHolding
+            patrimonioTotal={plan.dadosCliente.patrimonioTotalEstimado}
+            temEmpresa={plan.fiscal.temEmpresa}
+            maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
+            possuiSocios={plan.sucessorio.possuiSocios ?? false}
+            filhos={plan.dadosCliente.filhos}
+            quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
+            score={holdingPerfil.score}
+            motivos={holdingPerfil.motivos}
+            observacoes={resultadoHolding?.observacoes ?? ""}
+            onObservacoesChange={(v) => onResultadoHolding({ observacoes: v })}
+          />
         )}
 
         {/* Card 4 — Comment */}
