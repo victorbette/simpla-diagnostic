@@ -496,6 +496,8 @@ export interface PlanejamentoSucessorio {
   doacoesVida: boolean;
   seguroComBeneficiario: boolean;
   previdenciaComBeneficiario: boolean;
+  maisDeUmaEmpresa: boolean;
+  possuiSocios: boolean;
 }
 
 export const initialPlanejamentoSucessorio: PlanejamentoSucessorio = {
@@ -509,6 +511,8 @@ export const initialPlanejamentoSucessorio: PlanejamentoSucessorio = {
   doacoesVida: false,
   seguroComBeneficiario: false,
   previdenciaComBeneficiario: false,
+  maisDeUmaEmpresa: false,
+  possuiSocios: false,
 };
 
 export interface ResultadoSucessorio {

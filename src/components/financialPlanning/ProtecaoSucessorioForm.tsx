@@ -218,6 +218,8 @@ export function ProtecaoSucessorioForm({
             { id: "ps-doacoes", label: "Doações em vida com usufruto?", key: "doacoesVida" as const },
             { id: "ps-segbene", label: "Seguro com beneficiário definido?", key: "seguroComBeneficiario" as const },
             { id: "ps-prevbene", label: "Previdência com beneficiário?", key: "previdenciaComBeneficiario" as const },
+            { id: "ps-maisempresa", label: "Possui mais de uma empresa?", key: "maisDeUmaEmpresa" as const },
+            { id: "ps-socios", label: "Possui sócios nas empresas?", key: "possuiSocios" as const },
           ].map(({ id, label, key }) => (
             <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Switch

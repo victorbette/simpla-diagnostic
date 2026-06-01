@@ -93,6 +93,7 @@ export interface ResultadosEstrategia {
   if: ResultadoIF | null;
   seguro: ResultadoSeguro | null;
   fiscal: ResultadoFiscal | null;
+  holding?: { observacoes: string };
 }
 
 export const defaultResultados: ResultadosEstrategia = {
