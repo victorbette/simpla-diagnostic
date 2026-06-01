@@ -1,4 +1,4 @@
-import { Building2, Info } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 interface Props {
   temEmpresa: boolean;
@@ -112,28 +112,6 @@ export function CardHolding({
         ))}
       </div>
 
-      {DIV}
-
-      {/* BLOCO 3 — CONCLUSÃO */}
-      <div
-        style={{
-          backgroundColor: "#F5F3FF",
-          border: "1px solid #DDD6FE",
-          borderRadius: 8,
-          padding: 14,
-          display: "flex",
-          gap: 10,
-          alignItems: "flex-start",
-          marginBottom: 4,
-        }}
-      >
-        <Info size={16} style={{ color: "#7C3AED", flexShrink: 0, marginTop: 2 }} />
-        <p style={{ fontSize: 13, color: "#6B7280", margin: 0, lineHeight: 1.6 }}>
-          A holding não só barateia a sucessão como evita disputas familiares, bloqueio de bens
-          e anos de processos judiciais. Uma solução constituída uma única vez que protege o
-          patrimônio por gerações.
-        </p>
-      </div>
 
     </div>
   );
