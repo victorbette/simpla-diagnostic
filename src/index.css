@@ -189,6 +189,39 @@
     page-break-before: avoid;
     break-before: avoid;
   }
+
+  /* ── Estratégia Final — documento cliente ─────────────────── */
+  .doc-nav-header { display: none !important; }
+  .doc-screen-only { display: none !important; }
+
+  /* Show all pages in print */
+  .doc-pages-container > div { display: block !important; }
+
+  /* Page break after each page wrapper, except the last */
+  .doc-pages-container > div:not(:last-child) .doc-page {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* A4 page sizing */
+  .doc-page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm 22mm;
+    box-sizing: border-box;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 
 @keyframes spin {

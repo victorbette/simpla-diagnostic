@@ -27,6 +27,7 @@ import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
 import { EstrategiaFinalPage } from "./EstrategiaFinalPage";
 import { EstrategiaPrint } from "./EstrategiaPrint";
+import { EstrategiaFinal } from "./EstrategiaFinal";
 
 function hexOpacity(hex: string, opacity: number): string {
   const alpha = Math.round(opacity * 255).toString(16).padStart(2, "0");
@@ -208,6 +209,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const [mostrarFinal, setMostrarFinal] = useState(false);
+  const [mostrarEstrategiaFinal, setMostrarEstrategiaFinal] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -454,7 +456,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             Gerar PDF Consultor
           </button>
           <button
-            onClick={() => setPrintMode("cliente")}
+            onClick={() => setMostrarEstrategiaFinal(true)}
             style={{ padding: "6px 14px", borderRadius: 6, border: "none", backgroundColor: "#3B82F6", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
           >
             Gerar PDF Cliente
@@ -621,6 +623,18 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           </div>
         </div>
       </div>
+
+      {/* Estratégia Final — documento cliente fullscreen */}
+      {mostrarEstrategiaFinal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#F0F7FF", overflow: "auto" }}>
+          <EstrategiaFinal
+            plan={plan}
+            resultados={resultados}
+            clientName={clientName}
+            onFechar={() => setMostrarEstrategiaFinal(false)}
+          />
+        </div>
+      )}
 
       {/* Print overlay */}
       {printMode && (

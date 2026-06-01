@@ -88,6 +88,15 @@ export interface ResultadoFiscal {
   savedAt: string;
 }
 
+export interface EstrategiaFinalComentarios {
+  aa: string;
+  lf: string;
+  ps: string;
+  fiscal: string;
+  comentariosFinais: string;
+  dataGeracao: string;
+}
+
 export interface ResultadosEstrategia {
   carteira: ResultadoCarteira | null;
   if: ResultadoIF | null;
@@ -95,6 +104,7 @@ export interface ResultadosEstrategia {
   fiscal: ResultadoFiscal | null;
   holding?: { observacoes: string };
   proximosPassos?: Record<string, boolean>;
+  estrategiaFinal?: EstrategiaFinalComentarios;
 }
 
 export const defaultResultados: ResultadosEstrategia = {
