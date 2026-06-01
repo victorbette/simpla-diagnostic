@@ -1,14 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { formatCurrency, formatNumber } from "@/lib/format";
-import { calcularProtecao, calcularSucessorio } from "@/types/financialPlanning";
+import { formatCurrency } from "@/lib/format";
 import type { ProtecaoSimplificada, PlanejamentoSucessorio, DadosCliente } from "@/types/financialPlanning";
 
-const RED = "#B91C1C";
-const BLUE = "#1E40AF";
 
 interface Props {
   protecao: ProtecaoSimplificada;
@@ -36,9 +33,6 @@ export function ProtecaoSucessorioForm({
   const rendaMensalHint = dadosCliente?.possuiImovelRenda
     ? `Renda mensal (${formatCurrency(Number(dadosCliente.rendaMensal) || 0)}) + Imóveis (${formatCurrency(Number(dadosCliente.rendaImovelMensal) || 0)})`
     : "Renda mensal da Situação Financeira";
-  const patrimonioTotal = dadosCliente?.patrimonioTotalEstimado ?? sucessorio.patrimonioTotal;
-  const estado = dadosCliente?.estado ?? sucessorio.estadoResidencia;
-
   // Pre-populate dependentes from filhos on mount/change
   useEffect(() => {
     if (filhosLength > 0 && protecao.dependentes === 0) {
@@ -46,17 +40,6 @@ export function ProtecaoSucessorioForm({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filhosLength]);
-
-  const resultProtecao = useMemo(
-    () => calcularProtecao({ ...protecao, rendaMensal }),
-    [protecao, rendaMensal],
-  );
-  const resultSucessorio = useMemo(
-    () => calcularSucessorio({ ...sucessorio, patrimonioTotal, estadoResidencia: estado }),
-    [sucessorio, patrimonioTotal, estado],
-  );
-
-  const scoreProtecao = Math.round(resultProtecao.percentualCoberto);
 
   const subLabel = (text: string) => (
     <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 14px" }}>
@@ -188,21 +171,6 @@ export function ProtecaoSucessorioForm({
           </div>
         </div>
 
-        {/* Mini resultado proteção */}
-        {(rendaMensal > 0 || resultProtecao.capitalAtual > 0) && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            {[
-              { label: "Capital necessário", value: formatCurrency(resultProtecao.capitalNecessario), color: "#6B7280" },
-              { label: "Capital segurado", value: formatCurrency(resultProtecao.capitalAtual), color: "#15803D" },
-              { label: "Cobertura atual", value: `${formatNumber(scoreProtecao, 0)}%`, color: scoreProtecao >= 80 ? "#15803D" : scoreProtecao >= 50 ? "#2563EB" : RED },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ backgroundColor: "#F8FAFF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "10px 14px" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", margin: "0 0 4px" }}>{label}</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color, margin: 0, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       <div style={{ borderTop: "1px solid #E5E7EB" }} />
@@ -232,27 +200,6 @@ export function ProtecaoSucessorioForm({
           ))}
         </div>
 
-        {/* Resultado sucessório — 4 cards */}
-        {patrimonioTotal > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            {[
-              { label: "ITCMD estimado", value: formatCurrency(resultSucessorio.itcmdEstimado), color: RED },
-              { label: "Custo inventário", value: formatCurrency(resultSucessorio.custoInventarioEstimado), color: RED },
-              { label: "% do patrimônio", value: `${resultSucessorio.percentualCusto.toFixed(1)}%`, color: "#92400E" },
-              { label: "Patrimônio líquido", value: formatCurrency(resultSucessorio.patrimonioLiquidoHerdeiros), color: "#15803D" },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ backgroundColor: "#EAF0F5", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ fontSize: 11, fontWeight: 600, color: BLUE, textTransform: "uppercase", letterSpacing: "0.03em", margin: "0 0 6px" }}>{label}</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color, margin: 0, fontVariantNumeric: "tabular-nums" }}>{value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-        {patrimonioTotal === 0 && (
-          <div style={{ backgroundColor: "#F8FAFF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#9CA3AF" }}>
-            Informe o Patrimônio Total na Situação Financeira para ver os cálculos sucessórios.
-          </div>
-        )}
       </section>
     </div>
   );
