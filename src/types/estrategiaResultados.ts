@@ -94,6 +94,7 @@ export interface ResultadosEstrategia {
   seguro: ResultadoSeguro | null;
   fiscal: ResultadoFiscal | null;
   holding?: { observacoes: string };
+  proximosPassos?: Record<string, boolean>;
 }
 
 export const defaultResultados: ResultadosEstrategia = {

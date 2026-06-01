@@ -368,8 +368,9 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         return (
           <SecaoProximosPassos
             plan={plan}
-            acoes={data.acoes}
-            onAcoesChange={(v) => setData((prev) => ({ ...prev, acoes: v }))}
+            resultados={resultados}
+            concluidos={resultados.proximosPassos ?? {}}
+            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, proximosPassos: v }))}
             consideracoesFinais={data.consideracoesFinais}
             onConsideracoesChange={(v) => setData((prev) => ({ ...prev, consideracoesFinais: v }))}
           />

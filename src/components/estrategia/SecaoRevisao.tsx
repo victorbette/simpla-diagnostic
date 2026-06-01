@@ -8,7 +8,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, calcularIdade } from "@/lib/format";
 import {
   calcularIF,
   calcularSucessorio,
@@ -16,9 +16,19 @@ import {
   ALOCACAO_ALVO,
   PERFIL_LABELS,
 } from "@/types/financialPlanning";
+import { calcularPerfilHolding } from "@/lib/holding";
+import { gerarAcoes } from "@/lib/estrategiaAcoes";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { SecaoId, EstrategiaData } from "./EstrategiaInicialPage";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
+
+const ESTADO_CIVIL_LABELS: Record<string, string> = {
+  solteiro: "Solteiro(a)",
+  casado: "Casado(a)",
+  divorciado: "Divorciado(a)",
+  viuvo: "Viúvo(a)",
+  uniao_estavel: "União estável",
+};
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -375,6 +385,19 @@ export function SecaoRevisao({
   onFinalizar,
   onComentarioGeralChange,
 }: Props): React.ReactElement {
+  // ── Holding ──
+  const holdingPerfil = calcularPerfilHolding(
+    { ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa },
+    plan.sucessorio,
+  );
+  const holdingRecomendada = holdingPerfil.recomendada && !plan.sucessorio.possuiHolding;
+
+  // ── Priority actions ──
+  const todasAcoes = gerarAcoes(plan, resultados);
+  const acoesPrioritarias = todasAcoes
+    .filter((a) => a.prioridade === "alta" && !resultados.proximosPassos?.[a.id])
+    .slice(0, 5);
+
   // ── Asset Allocation data ──
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const alocAtualRaw = calcularAlocacaoAtual(plan.ativosAtuais);
@@ -418,6 +441,35 @@ export function SecaoRevisao({
         gap: 24,
       }}
     >
+      {/* ── BLOCO 0: Dados do Cliente ── */}
+      {(() => {
+        const dc = plan.dadosCliente;
+        const idade = dc.dataNascimento ? calcularIdade(dc.dataNascimento) : plan.planejamentoIF.idadeAtual;
+        const nFilhos = (dc.filhos ?? []).length;
+        return (
+          <div style={{ backgroundColor: "white", borderRadius: 12, borderLeft: "4px solid #1E40AF", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
+              Dados do Cliente
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px 24px" }}>
+              {[
+                { label: "Idade", value: idade ? `${idade} anos` : "—" },
+                { label: "Perfil", value: perfil ? PERFIL_LABELS[perfil] : "Não definido" },
+                { label: "Estado civil", value: ESTADO_CIVIL_LABELS[dc.estadoCivil ?? ""] ?? "—" },
+                { label: "Filhos", value: nFilhos > 0 ? `${nFilhos} filho${nFilhos > 1 ? "s" : ""}` : "Sem filhos" },
+                { label: "Cidade / UF", value: [dc.cidade, dc.estado].filter(Boolean).join(" / ") || "—" },
+                { label: "Patrimônio total", value: formatCurrency(dc.patrimonioTotalEstimado ?? 0) },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", margin: "0 0 2px" }}>{label}</p>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── BLOCO 1: Cards por área ── */}
 
       {/* Card 1: Asset Allocation */}
@@ -682,12 +734,17 @@ export function SecaoRevisao({
       {/* Card 3: Proteção e Sucessório */}
       <AreaCard borderColor="#B91C1C">
         <CardHeader>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Shield style={{ width: 20, height: 20, color: "#B91C1C" }} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
               Proteção e Sucessório
             </span>
             {statusBadge("protecaoSucessorio", estrategia)}
+            {holdingRecomendada && (
+              <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3E8FF", color: "#7C3AED", border: "1px solid #DDD6FE" }}>
+                Holding recomendada
+              </span>
+            )}
           </div>
         </CardHeader>
         <CardBody>
@@ -942,6 +999,25 @@ export function SecaoRevisao({
         </CardBody>
       </AreaCard>
 
+      {/* ── BLOCO 2.5: Ações Prioritárias ── */}
+      {acoesPrioritarias.length > 0 && (
+        <div style={{ backgroundColor: "white", borderRadius: 12, borderLeft: "4px solid #B91C1C", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
+            Ações Prioritárias
+          </p>
+          <ol style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 8 }}>
+            {acoesPrioritarias.map((acao) => (
+              <li key={acao.id} style={{ fontSize: 13, color: "#111827", lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 500 }}>{acao.texto}</span>
+                <span style={{ fontSize: 11, color: acao.areaColor, marginLeft: 6, fontWeight: 600 }}>
+                  · {acao.area}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
       {/* ── BLOCO 3: Comentário Geral ── */}
       <div
         style={{
@@ -1024,6 +1100,16 @@ export function SecaoRevisao({
           Finalizar e ver Estratégia Inicial
           <ArrowRight style={{ width: 18, height: 18 }} />
         </button>
+      </div>
+
+      {/* ── BLOCO 5: Rodapé ── */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", backgroundColor: "white", borderRadius: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+        <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+          Estratégia elaborada por <strong style={{ color: "#1E3A8A" }}>Simpla Invest</strong>
+        </span>
+        <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+          {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+        </span>
       </div>
     </div>
   );

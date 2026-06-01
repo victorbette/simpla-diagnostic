@@ -1,130 +1,118 @@
-import type { AcaoItem } from "./EstrategiaInicialPage";
+import { gerarAcoes } from "@/lib/estrategiaAcoes";
+import type { PrioridadeAcao } from "@/lib/estrategiaAcoes";
 import type { FinancialPlan } from "@/types/financialPlanning";
+import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
 interface Props {
   plan: FinancialPlan;
-  acoes: AcaoItem[];
-  onAcoesChange: (v: AcaoItem[]) => void;
+  resultados: ResultadosEstrategia;
+  concluidos: Record<string, boolean>;
+  onConcluidosChange: (v: Record<string, boolean>) => void;
   consideracoesFinais: string;
   onConsideracoesChange: (v: string) => void;
 }
 
 const CARD: React.CSSProperties = {
-  backgroundColor: "white", borderRadius: 12, padding: 24,
+  backgroundColor: "white",
+  borderRadius: 12,
+  padding: 24,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const PRIORIDADE_STYLE: Record<AcaoItem["prioridade"], { bg: string; border: string; badge: string; badgeText: string; label: string }> = {
-  alta:  { bg: "#FEE2E2", border: "#B91C1C", badge: "#FEE2E2", badgeText: "#B91C1C", label: "ALTA" },
-  media: { bg: "#EFF6FF", border: "#2563EB", badge: "#FEF3C7", badgeText: "#2563EB", label: "MÉDIA" },
-  baixa: { bg: "#F9FAFB", border: "#9CA3AF", badge: "#F0F7FF", badgeText: "#6B7280", label: "BAIXA" },
+const PRIORIDADE: Record<PrioridadeAcao, { border: string; badge: string; badgeText: string; label: string }> = {
+  alta:  { border: "#B91C1C", badge: "#FEE2E2", badgeText: "#B91C1C", label: "Alta"  },
+  media: { border: "#B45309", badge: "#FEF3C7", badgeText: "#B45309", label: "Média" },
+  baixa: { border: "#6B7280", badge: "#F3F4F6", badgeText: "#6B7280", label: "Baixa" },
 };
 
 export function SecaoProximosPassos({
-  plan: _plan,
-  acoes,
-  onAcoesChange,
+  plan,
+  resultados,
+  concluidos,
+  onConcluidosChange,
   consideracoesFinais,
   onConsideracoesChange,
 }: Props) {
-  function updateAcao(id: string, patch: Partial<AcaoItem>) {
-    onAcoesChange(acoes.map((a) => (a.id === id ? { ...a, ...patch } : a)));
-  }
+  const acoes = gerarAcoes(plan, resultados);
 
-  function removeAcao(id: string) {
-    onAcoesChange(acoes.filter((a) => a.id !== id));
-  }
-
-  function addAcao() {
-    const novo: AcaoItem = {
-      id: `acao_${Date.now()}`,
-      texto: "Nova ação",
-      prioridade: "media",
-      area: "Geral",
-      prazo: "",
-    };
-    onAcoesChange([...acoes, novo]);
+  function toggle(id: string) {
+    onConcluidosChange({ ...concluidos, [id]: !concluidos[id] });
   }
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Ações prioritárias */}
+
+      {/* Ações geradas automaticamente */}
       <div style={{ ...CARD, borderTop: "3px solid #1E40AF" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          Plano de ação para o cliente
+          Próximos Passos
         </p>
         <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 20px" }}>
-          Gerado automaticamente dos gaps identificados. Edite, reordene e adicione ações.
+          Ações recomendadas com base no diagnóstico
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {acoes.map((acao) => {
-            const style = PRIORIDADE_STYLE[acao.prioridade];
-            return (
-              <div
-                key={acao.id}
-                style={{
-                  backgroundColor: style.bg,
-                  borderLeft: `4px solid ${style.border}`,
-                  borderRadius: 8,
-                  padding: "12px 14px",
-                  display: "flex",
-                  gap: 12,
-                  alignItems: "flex-start",
-                }}
-              >
-                <span style={{ fontSize: 16, color: "#9CA3AF", cursor: "grab", flexShrink: 0, lineHeight: 1.5 }}>⠿</span>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: style.badge, color: style.badgeText }}>
-                      {style.label}
-                    </span>
-                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F0F7FF", color: "#111827" }}>
-                      {acao.area}
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={acao.texto}
-                    onChange={(e) => updateAcao(acao.id, { texto: e.target.value })}
-                    style={{ fontSize: 13, color: "#000000", border: "none", background: "transparent", outline: "none", width: "100%", fontFamily: "inherit" }}
-                  />
-                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                    <label style={{ fontSize: 11, color: "#6B7280" }}>Prazo:</label>
-                    <input
-                      type="date"
-                      value={acao.prazo}
-                      onChange={(e) => updateAcao(acao.id, { prazo: e.target.value })}
-                      style={{ fontSize: 12, border: "1px solid #BFDBFE", borderRadius: 4, padding: "2px 6px", color: "#111827" }}
-                    />
-                    <select
-                      value={acao.prioridade}
-                      onChange={(e) => updateAcao(acao.id, { prioridade: e.target.value as AcaoItem["prioridade"] })}
-                      style={{ fontSize: 11, border: "1px solid #BFDBFE", borderRadius: 4, padding: "2px 6px", color: "#111827" }}
-                    >
-                      <option value="alta">Alta</option>
-                      <option value="media">Média</option>
-                      <option value="baixa">Baixa</option>
-                    </select>
-                  </div>
-                </div>
-                <button
-                  onClick={() => removeAcao(acao.id)}
-                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 16, lineHeight: 1 }}
+        {acoes.length === 0 ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 20px", backgroundColor: "#F0FDF4", borderRadius: 8, border: "1px solid #DCFCE7" }}>
+            <span style={{ fontSize: 22, color: "#15803D" }}>✓</span>
+            <p style={{ fontSize: 13, color: "#15803D", fontWeight: 600, margin: 0 }}>
+              Parabéns! Não identificamos ações urgentes no momento.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {acoes.map((acao) => {
+              const p = PRIORIDADE[acao.prioridade];
+              const concluido = !!concluidos[acao.id];
+              return (
+                <div
+                  key={acao.id}
+                  style={{
+                    backgroundColor: "white",
+                    borderLeft: `3px solid ${concluido ? "#D1D5DB" : p.border}`,
+                    borderRadius: 8,
+                    padding: "14px 16px",
+                    display: "flex",
+                    gap: 12,
+                    alignItems: "flex-start",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                    opacity: concluido ? 0.55 : 1,
+                    transition: "opacity 0.2s",
+                  }}
                 >
-                  ✕
-                </button>
-              </div>
-            );
-          })}
-        </div>
-
-        <button
-          onClick={addAcao}
-          style={{ marginTop: 14, width: "100%", padding: "10px 0", border: "2px dashed #BFDBFE", borderRadius: 8, backgroundColor: "transparent", color: "#6B7280", fontSize: 13, cursor: "pointer" }}
-        >
-          + Adicionar ação
-        </button>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: p.badge, color: p.badgeText }}>
+                        {p.label}
+                      </span>
+                      <span style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F0F7FF", color: acao.areaColor, fontWeight: 600 }}>
+                        {acao.area}
+                      </span>
+                    </div>
+                    <p style={{
+                      fontSize: 13,
+                      color: concluido ? "#9CA3AF" : "#111827",
+                      fontWeight: 500,
+                      margin: 0,
+                      lineHeight: 1.5,
+                      textDecoration: concluido ? "line-through" : "none",
+                    }}>
+                      {acao.texto}
+                    </p>
+                  </div>
+                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", flexShrink: 0, marginTop: 2 }}>
+                    <input
+                      type="checkbox"
+                      checked={concluido}
+                      onChange={() => toggle(acao.id)}
+                      style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#15803D" }}
+                    />
+                    <span style={{ fontSize: 9, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>Feito</span>
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Considerações finais */}
@@ -136,7 +124,19 @@ export function SecaoProximosPassos({
           value={consideracoesFinais}
           onChange={(e) => onConsideracoesChange(e.target.value)}
           placeholder="Mensagem final personalizada para o cliente..."
-          style={{ width: "100%", minHeight: 140, padding: "10px 12px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
+          style={{
+            width: "100%",
+            minHeight: 140,
+            padding: "10px 12px",
+            borderRadius: 6,
+            border: "1px solid #BFDBFE",
+            fontSize: 13,
+            color: "#000000",
+            resize: "vertical",
+            outline: "none",
+            boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
         />
       </div>
     </div>
