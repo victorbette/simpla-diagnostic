@@ -16,7 +16,10 @@ interface Props {
 function Checklist({ ok, label, sub }: { ok: boolean; label: string; sub?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 0", borderBottom: "1px solid #F3F4F6" }}>
-      <span style={{ color: ok ? "#15803D" : "#B91C1C", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>{ok ? "✓" : "✗"}</span>
+      <i
+        className={ok ? "ti ti-check" : "ti ti-x"}
+        style={{ color: ok ? "#15803D" : "#B91C1C", fontSize: 14, flexShrink: 0, marginTop: 2 }}
+      />
       <div>
         <p style={{ margin: 0, fontSize: 13, color: ok ? "#111827" : "#6B7280", fontWeight: 500 }}>{label}</p>
         {sub && <p style={{ margin: "2px 0 0", fontSize: 11, color: "#9CA3AF" }}>{sub}</p>}
@@ -53,7 +56,9 @@ export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onC
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: "#B91C1C", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🛡</div>
+          <div style={{ width: 44, height: 44, background: "#B91C1C", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+            <i className="ti ti-shield" style={{ fontSize: 22 }} />
+          </div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Proteção e Sucessório</h2>
         </div>
         <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: nv.bg, color: nv.color }}>{score}/100 · {nv.label}</span>
@@ -121,7 +126,7 @@ export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onC
           {holdingRecomendada && (
             <div style={{ background: "#F5F3FF", border: "1px solid #DDD6FE", borderRadius: 8, padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 18 }}>🏦</span>
+                <i className="ti ti-building-bank" style={{ fontSize: 18, color: "#7C3AED" }} />
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#7C3AED" }}>Holding Patrimonial Recomendada</p>
               </div>
               <p style={{ margin: "0 0 8px", fontSize: 12, color: "#4C1D95", lineHeight: 1.5 }}>
@@ -131,8 +136,8 @@ export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onC
               </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {holdingPerfil.motivos.slice(0, 3).map((m) => (
-                  <span key={m} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#DCFCE7", color: "#15803D", fontWeight: 500 }}>
-                    ✓ {m}
+                  <span key={m} style={{ fontSize: 10, padding: "2px 8px", borderRadius: 999, background: "#DCFCE7", color: "#15803D", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <i className="ti ti-check" style={{ fontSize: 10 }} /> {m}
                   </span>
                 ))}
               </div>

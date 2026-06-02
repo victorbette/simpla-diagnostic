@@ -15,7 +15,8 @@ interface Props {
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
   clientName: string;
-  onFechar: () => void;
+  onFechar?: () => void;
+  onResultadosChange?: (r: ResultadosEstrategia) => void;
 }
 
 type PaginaId = "capa" | "sumario" | "aa" | "lf" | "ps" | "fiscal" | "proximos";
@@ -23,17 +24,17 @@ type PaginaId = "capa" | "sumario" | "aa" | "lf" | "ps" | "fiscal" | "proximos";
 interface PaginaConfig {
   id: PaginaId;
   label: string;
-  emoji: string;
+  icon: string;
 }
 
 const PAGINAS: PaginaConfig[] = [
-  { id: "capa",     label: "Capa",                 emoji: "🏠" },
-  { id: "sumario",  label: "Sumário",              emoji: "📋" },
-  { id: "aa",       label: "Asset Allocation",     emoji: "🥧" },
-  { id: "lf",       label: "Lib. Financeira",      emoji: "🏖" },
-  { id: "ps",       label: "Proteção",             emoji: "🛡" },
-  { id: "fiscal",   label: "Fiscal",               emoji: "🧾" },
-  { id: "proximos", label: "Próximos Passos",      emoji: "✅" },
+  { id: "capa",     label: "Capa",           icon: "ti ti-file-text"       },
+  { id: "sumario",  label: "Sumário",        icon: "ti ti-clipboard-list"  },
+  { id: "aa",       label: "Asset Alloc.",   icon: "ti ti-chart-pie"       },
+  { id: "lf",       label: "Lib. Financeira",icon: "ti ti-beach"           },
+  { id: "ps",       label: "Proteção",       icon: "ti ti-shield"          },
+  { id: "fiscal",   label: "Fiscal",         icon: "ti ti-receipt"         },
+  { id: "proximos", label: "Próx. Passos",   icon: "ti ti-list-checks"     },
 ];
 
 interface ComentariosDoc {
@@ -41,7 +42,6 @@ interface ComentariosDoc {
   lf: string;
   ps: string;
   fiscal: string;
-  comentariosFinais: string;
 }
 
 function defaultComentarios(resultados: ResultadosEstrategia): ComentariosDoc {
@@ -51,11 +51,10 @@ function defaultComentarios(resultados: ResultadosEstrategia): ComentariosDoc {
     lf: ef?.lf ?? "",
     ps: ef?.ps ?? "",
     fiscal: ef?.fiscal ?? "",
-    comentariosFinais: ef?.comentariosFinais ?? "",
   };
 }
 
-export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Props) {
+export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChange }: Props) {
   const storageKey = `estrategia_final_${plan.clientId}`;
 
   const [paginaAtual, setPaginaAtual] = useState<PaginaId>("capa");
@@ -82,6 +81,10 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
   const scores = useMemo(() => calcularScores(plan, resultados), [plan, resultados]);
   const paginaIdx = PAGINAS.findIndex((p) => p.id === paginaAtual);
 
+  const handleResultadosChange = useCallback((r: ResultadosEstrategia) => {
+    onResultadosChange?.(r);
+  }, [onResultadosChange]);
+
   // Render each doc page component (always mounted for print)
   const pages = useMemo(() => [
     { id: "capa" as PaginaId, node: <DocCapa plan={plan} resultados={resultados} clientName={clientName} scores={scores} /> },
@@ -90,12 +93,12 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
     { id: "lf" as PaginaId, node: <DocLiberdadeFinanceira plan={plan} resultados={resultados} clientName={clientName} score={scores.lfScore} comentario={comentarios.lf} onComentarioChange={(v) => updateComentario("lf", v)} /> },
     { id: "ps" as PaginaId, node: <DocProtecaoSucessorio plan={plan} resultados={resultados} score={scores.psScore} comentario={comentarios.ps} onComentarioChange={(v) => updateComentario("ps", v)} /> },
     { id: "fiscal" as PaginaId, node: <DocPlanejamentoFiscal plan={plan} resultados={resultados} score={scores.fiscalScore} comentario={comentarios.fiscal} onComentarioChange={(v) => updateComentario("fiscal", v)} /> },
-    { id: "proximos" as PaginaId, node: <DocProximosPassos plan={plan} resultados={resultados} clientName={clientName} comentariosFinais={comentarios.comentariosFinais} onComentariosFinaisChange={(v) => updateComentario("comentariosFinais", v)} /> },
+    { id: "proximos" as PaginaId, node: <DocProximosPassos plan={plan} resultados={resultados} onResultadosChange={handleResultadosChange} /> },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [plan, resultados, scores, comentarios.aa, comentarios.lf, comentarios.ps, comentarios.fiscal, comentarios.comentariosFinais]);
+  ], [plan, resultados, scores, comentarios.aa, comentarios.lf, comentarios.ps, comentarios.fiscal, handleResultadosChange]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
 
       {/* Navigation header — hidden on print via CSS .doc-nav-header */}
       <div
@@ -118,8 +121,8 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
           </span>
         </div>
 
-        {/* Center: page pills */}
-        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center", overflowX: "auto" }}>
+        {/* Center: page pills (scrollable) */}
+        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center", overflowX: "auto", scrollbarWidth: "none" }}>
           {PAGINAS.map((p) => {
             const isActive = p.id === paginaAtual;
             return (
@@ -137,10 +140,14 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                   transition: "all 0.15s",
                 }}
               >
-                {p.emoji} {p.label}
+                <i className={p.icon} style={{ fontSize: 12 }} />
+                {p.label}
               </button>
             );
           })}
@@ -148,12 +155,6 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
 
         {/* Right: buttons */}
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={onFechar}
-            style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.5)", backgroundColor: "transparent", color: "white", fontSize: 12, cursor: "pointer" }}
-          >
-            ← Voltar
-          </button>
           <button
             onClick={() => gerarPDF(clientName)}
             style={{ padding: "5px 14px", borderRadius: 6, border: "none", backgroundColor: "white", color: "#1E3A8A", fontSize: 12, fontWeight: 700, cursor: "pointer" }}

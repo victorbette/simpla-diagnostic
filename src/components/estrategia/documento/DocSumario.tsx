@@ -37,16 +37,16 @@ function CircleGauge({ score, size = 72 }: { score: number; size?: number }) {
 }
 
 const AREAS = [
-  { id: "aa",     label: "Asset Alloc.",    scoreKey: "aaScore" as const },
-  { id: "lf",     label: "Lib. Financeira", scoreKey: "lfScore" as const },
-  { id: "ps",     label: "Proteção",        scoreKey: "psScore" as const },
-  { id: "fiscal", label: "Fiscal",          scoreKey: "fiscalScore" as const },
+  { id: "aa",     label: "Asset Alloc.",    scoreKey: "aaScore" as const,    icon: "ti ti-chart-pie"     },
+  { id: "lf",     label: "Lib. Financeira", scoreKey: "lfScore" as const,    icon: "ti ti-beach"         },
+  { id: "ps",     label: "Proteção",        scoreKey: "psScore" as const,    icon: "ti ti-shield"        },
+  { id: "fiscal", label: "Fiscal",          scoreKey: "fiscalScore" as const, icon: "ti ti-receipt"      },
 ];
 
 function buildPanorama(plan: FinancialPlan, resultados: ResultadosEstrategia) {
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const pi = plan.planejamentoIF;
-  const items: { icon: string; area: string; color: string; resumo: string; recomendacao: string; score: number }[] = [];
+  const items: { icon: string; area: string; color: string; resumo: string; recomendacao: string }[] = [];
 
   // AA
   let aaResumo = "Carteira não mapeada";
@@ -55,7 +55,7 @@ function buildPanorama(plan: FinancialPlan, resultados: ResultadosEstrategia) {
     aaResumo = `Patrimônio de ${formatCurrency(resultados.carteira.patrimonio)}`;
     aaRec = perfil ? `Perfil ${PERFIL_LABELS[perfil]}` : "Revisar alocação";
   }
-  items.push({ icon: "🥧", area: "Asset Allocation", color: "#1E40AF", resumo: aaResumo, recomendacao: aaRec, score: 0 });
+  items.push({ icon: "ti ti-chart-pie", area: "Asset Allocation", color: "#1E40AF", resumo: aaResumo, recomendacao: aaRec });
 
   // LF
   let lfResumo = "Simulação não executada";
@@ -71,7 +71,7 @@ function buildPanorama(plan: FinancialPlan, resultados: ResultadosEstrategia) {
     lfResumo = `Meta: ${formatCurrency(pi.rendaMensalDesejada)}/mês aos ${pi.idadeMeta} anos`;
     lfRec = simples.gap > 0 ? "Aumentar aportes mensais" : "Meta atingível com aportes atuais";
   }
-  items.push({ icon: "🏖", area: "Liberdade Financeira", color: "#15803D", resumo: lfResumo, recomendacao: lfRec, score: 0 });
+  items.push({ icon: "ti ti-beach", area: "Liberdade Financeira", color: "#15803D", resumo: lfResumo, recomendacao: lfRec });
 
   // Proteção
   let psResumo = "Proteção não calculada";
@@ -89,7 +89,7 @@ function buildPanorama(plan: FinancialPlan, resultados: ResultadosEstrategia) {
     psResumo = `${ok} de 3 coberturas contratadas`;
     psRec = ok < 3 ? "Contratar coberturas faltantes" : "Coberturas básicas presentes";
   }
-  items.push({ icon: "🛡", area: "Proteção e Sucessório", color: "#B91C1C", resumo: psResumo, recomendacao: psRec, score: 0 });
+  items.push({ icon: "ti ti-shield", area: "Proteção e Sucessório", color: "#B91C1C", resumo: psResumo, recomendacao: psRec });
 
   // Fiscal
   let fiscalResumo = "Planejamento fiscal não executado";
@@ -102,7 +102,7 @@ function buildPanorama(plan: FinancialPlan, resultados: ResultadosEstrategia) {
       ? "Manter aportes no PGBL"
       : `Economia potencial de ${formatCurrency(resultados.fiscal.economiaAnual)}/ano`;
   }
-  items.push({ icon: "🧾", area: "Planejamento Fiscal", color: "#2563EB", resumo: fiscalResumo, recomendacao: fiscalRec, score: 0 });
+  items.push({ icon: "ti ti-receipt", area: "Planejamento Fiscal", color: "#2563EB", resumo: fiscalResumo, recomendacao: fiscalRec });
 
   return items;
 }
@@ -115,8 +115,8 @@ export function DocSumario({ plan, resultados, clientName, scores }: Props) {
     <div className="doc-page" style={{ background: "white", minHeight: "297mm" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
-        <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, color: "white", flexShrink: 0 }}>
-          📋
+        <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
+          <i className="ti ti-clipboard-list" style={{ fontSize: 22 }} />
         </div>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Sumário Executivo</h2>
@@ -154,13 +154,15 @@ export function DocSumario({ plan, resultados, clientName, scores }: Props) {
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {panorama.map((item) => (
-          <div key={item.area} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: "#F8FAFF", borderRadius: 8, border: "0.5px solid #BFDBFE" }}>
-            <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
-            <div style={{ flex: 1 }}>
+          <div key={item.area} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 16px", background: "#F8FAFF", borderRadius: 8, border: "0.5px solid #BFDBFE", boxSizing: "border-box", width: "100%" }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <i className={item.icon} style={{ fontSize: 16, color: "white" }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: item.color }}>{item.area}</p>
               <p style={{ margin: "2px 0 0", fontSize: 12, color: "#374151" }}>{item.resumo}</p>
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: "#6B7280", maxWidth: 200, textAlign: "right", fontStyle: "italic" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "#6B7280", flexShrink: 0, maxWidth: 180, textAlign: "right", fontStyle: "italic" }}>
               {item.recomendacao}
             </p>
           </div>

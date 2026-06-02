@@ -44,7 +44,8 @@ export type SecaoId =
   | "protecaoSucessorio"
   | "fiscal"
   | "proximosPassos"
-  | "revisao";
+  | "revisao"
+  | "estrategia_pronta";
 
 export interface AcaoItem {
   id: string;
@@ -209,7 +210,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const [mostrarFinal, setMostrarFinal] = useState(false);
-  const [mostrarEstrategiaFinal, setMostrarEstrategiaFinal] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -371,8 +371,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           <SecaoProximosPassos
             plan={plan}
             resultados={resultados}
-            concluidos={resultados.proximosPassos ?? {}}
-            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, proximosPassos: v }))}
+            concluidos={resultados.acoesConcluidas ?? {}}
+            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, acoesConcluidas: v }))}
             consideracoesFinais={data.consideracoesFinais}
             onConsideracoesChange={(v) => setData((prev) => ({ ...prev, consideracoesFinais: v }))}
           />
@@ -456,7 +456,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             Gerar PDF Consultor
           </button>
           <button
-            onClick={() => setMostrarEstrategiaFinal(true)}
+            onClick={() => setSecaoAtiva("estrategia_pronta")}
             style={{ padding: "6px 14px", borderRadius: 6, border: "none", backgroundColor: "#3B82F6", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
           >
             Gerar PDF Cliente
@@ -541,100 +541,125 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             })}
           </nav>
 
+          {/* Estratégia Pronta — special highlighted item */}
+          <div style={{ padding: "12px 16px 16px" }}>
+            <button
+              onClick={() => setSecaoAtiva("estrategia_pronta")}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 14px",
+                borderRadius: 8,
+                border: "none",
+                backgroundColor: secaoAtiva === "estrategia_pronta" ? "#2563EB" : "#1E3A8A",
+                color: "white",
+                cursor: "pointer",
+                textAlign: "left",
+                fontWeight: 600,
+                fontSize: 13,
+                transition: "background-color 0.15s",
+              }}
+            >
+              <span style={{ fontSize: 16 }}>📄</span>
+              Estratégia Pronta
+            </button>
+          </div>
+
         </div>
 
         {/* Main content */}
         <div style={{ flex: 1, minWidth: 0, backgroundColor: "#F0F7FF", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {/* Scrollable area */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
-            {/* Breadcrumb */}
-            <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>
-              Estratégia Inicial › {secaoAtual.label}
-            </div>
+          {secaoAtiva === "estrategia_pronta" ? (
+            <EstrategiaFinal
+              plan={plan}
+              resultados={resultados}
+              clientName={clientName}
+              onResultadosChange={(r) => setResultados(r)}
+            />
+          ) : (
+            <>
+              {/* Scrollable area */}
+              <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
+                {/* Breadcrumb */}
+                <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>
+                  Estratégia Inicial › {secaoAtual.label}
+                </div>
 
-            {/* Title row */}
-            <div style={{ marginBottom: 24 }}>
-              <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000000", margin: 0 }}>
-                {secaoAtual.label}
-              </h1>
-            </div>
+                {/* Title row */}
+                <div style={{ marginBottom: 24 }}>
+                  <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000000", margin: 0 }}>
+                    {secaoAtual.label}
+                  </h1>
+                </div>
 
-            {/* Section content */}
-            {renderContent()}
-          </div>
-
-          {/* Bottom nav */}
-          <div style={{ backgroundColor: "white", borderTop: "1px solid #BFDBFE", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <button
-              onClick={irAnterior}
-              disabled={secaoIndex === 0}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 6,
-                border: "1px solid #000000",
-                backgroundColor: "transparent",
-                color: secaoIndex === 0 ? "#9CA3AF" : "#000000",
-                borderColor: secaoIndex === 0 ? "#BFDBFE" : "#000000",
-                fontSize: 13,
-                cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
-              }}
-            >
-              {secaoIndex > 0 ? `← Seção anterior: ${SECOES[secaoIndex - 1].label}` : "← Início"}
-            </button>
-
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                {SECOES.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => irParaSecao(s.id)}
-                    style={{
-                      height: 8,
-                      width: i === secaoIndex ? 22 : 8,
-                      borderRadius: 9999,
-                      backgroundColor: i === secaoIndex ? "#2563EB" : "#BFDBFE",
-                      border: "none",
-                      cursor: "pointer",
-                      transition: "width 0.2s",
-                      padding: 0,
-                    }}
-                  />
-                ))}
+                {/* Section content */}
+                {renderContent()}
               </div>
-              <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
-            </div>
 
-            <button
-              onClick={irProxima}
-              disabled={secaoIndex === SECOES.length - 1}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 6,
-                border: "none",
-                backgroundColor: secaoIndex === SECOES.length - 1 ? "#BFDBFE" : "#2563EB",
-                color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
-                fontSize: 13,
-                cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
-                fontWeight: 500,
-              }}
-            >
-              {secaoIndex < SECOES.length - 1 ? `Próxima seção: ${SECOES[secaoIndex + 1].label} →` : "Fim →"}
-            </button>
-          </div>
+              {/* Bottom nav */}
+              <div style={{ backgroundColor: "white", borderTop: "1px solid #BFDBFE", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                <button
+                  onClick={irAnterior}
+                  disabled={secaoIndex === 0}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "1px solid #000000",
+                    backgroundColor: "transparent",
+                    color: secaoIndex === 0 ? "#9CA3AF" : "#000000",
+                    borderColor: secaoIndex === 0 ? "#BFDBFE" : "#000000",
+                    fontSize: 13,
+                    cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {secaoIndex > 0 ? `← Seção anterior: ${SECOES[secaoIndex - 1].label}` : "← Início"}
+                </button>
+
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    {SECOES.map((s, i) => (
+                      <button
+                        key={s.id}
+                        onClick={() => irParaSecao(s.id)}
+                        style={{
+                          height: 8,
+                          width: i === secaoIndex ? 22 : 8,
+                          borderRadius: 9999,
+                          backgroundColor: i === secaoIndex ? "#2563EB" : "#BFDBFE",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "width 0.2s",
+                          padding: 0,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
+                </div>
+
+                <button
+                  onClick={irProxima}
+                  disabled={secaoIndex === SECOES.length - 1}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "none",
+                    backgroundColor: secaoIndex === SECOES.length - 1 ? "#BFDBFE" : "#2563EB",
+                    color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
+                    fontSize: 13,
+                    cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
+                    fontWeight: 500,
+                  }}
+                >
+                  {secaoIndex < SECOES.length - 1 ? `Próxima seção: ${SECOES[secaoIndex + 1].label} →` : "Fim →"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      {/* Estratégia Final — documento cliente fullscreen */}
-      {mostrarEstrategiaFinal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#F0F7FF", overflow: "auto" }}>
-          <EstrategiaFinal
-            plan={plan}
-            resultados={resultados}
-            clientName={clientName}
-            onFechar={() => setMostrarEstrategiaFinal(false)}
-          />
-        </div>
-      )}
 
       {/* Print overlay */}
       {printMode && (
