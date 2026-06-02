@@ -15,7 +15,7 @@ interface Props {
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
   clientName: string;
-  onFechar: () => void;
+  onFechar?: () => void;
 }
 
 type PaginaId = "capa" | "sumario" | "aa" | "lf" | "ps" | "fiscal" | "proximos";
@@ -55,7 +55,7 @@ function defaultComentarios(resultados: ResultadosEstrategia): ComentariosDoc {
   };
 }
 
-export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Props) {
+export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
   const storageKey = `estrategia_final_${plan.clientId}`;
 
   const [paginaAtual, setPaginaAtual] = useState<PaginaId>("capa");
@@ -95,7 +95,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
   ], [plan, resultados, scores, comentarios.aa, comentarios.lf, comentarios.ps, comentarios.fiscal, comentarios.comentariosFinais]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
 
       {/* Navigation header — hidden on print via CSS .doc-nav-header */}
       <div
@@ -148,12 +148,6 @@ export function EstrategiaFinal({ plan, resultados, clientName, onFechar }: Prop
 
         {/* Right: buttons */}
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={onFechar}
-            style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.5)", backgroundColor: "transparent", color: "white", fontSize: 12, cursor: "pointer" }}
-          >
-            ← Voltar
-          </button>
           <button
             onClick={() => gerarPDF(clientName)}
             style={{ padding: "5px 14px", borderRadius: 6, border: "none", backgroundColor: "white", color: "#1E3A8A", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
