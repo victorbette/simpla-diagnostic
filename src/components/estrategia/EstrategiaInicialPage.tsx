@@ -5,7 +5,6 @@ import {
   Flame,
   Shield,
   Receipt,
-  ListChecks,
   ClipboardCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -23,7 +22,6 @@ import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
 import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
 import { SecaoFiscal } from "./SecaoFiscal";
-import { SecaoProximosPassos } from "./SecaoProximosPassos";
 import { SecaoRevisao } from "./SecaoRevisao";
 import { EstrategiaFinalPage } from "./EstrategiaFinalPage";
 import { EstrategiaPrint } from "./EstrategiaPrint";
@@ -43,7 +41,6 @@ export type SecaoId =
   | "aposentadoria"
   | "protecaoSucessorio"
   | "fiscal"
-  | "proximosPassos"
   | "revisao"
   | "estrategia_pronta";
 
@@ -82,7 +79,6 @@ const SECOES: SecaoConfig[] = [
   { id: "aposentadoria",      label: "Liberdade Financeira",    color: "#15803D", Icon: Flame          },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#B91C1C", Icon: Shield         },
   { id: "fiscal",             label: "Planejamento Fiscal",     color: "#2563EB", Icon: Receipt        },
-  { id: "proximosPassos",     label: "Próximos Passos",         color: "#1E40AF", Icon: ListChecks     },
   { id: "revisao",            label: "Revisão Final",           color: "#000000", Icon: ClipboardCheck },
 ];
 
@@ -364,17 +360,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onTagsChange={onTagsChange}
             resultadoFiscal={resultados.fiscal}
             onResultadoFiscal={(r) => setResultados((prev) => ({ ...prev, fiscal: r }))}
-          />
-        );
-      case "proximosPassos":
-        return (
-          <SecaoProximosPassos
-            plan={plan}
-            resultados={resultados}
-            concluidos={resultados.acoesConcluidas ?? {}}
-            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, acoesConcluidas: v }))}
-            consideracoesFinais={data.consideracoesFinais}
-            onConsideracoesChange={(v) => setData((prev) => ({ ...prev, consideracoesFinais: v }))}
           />
         );
       case "revisao":
