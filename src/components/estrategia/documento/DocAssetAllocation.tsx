@@ -50,7 +50,9 @@ export function DocAssetAllocation({ plan, resultados, score, comentario, onCome
       {/* Section header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🥧</div>
+          <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+            <i className="ti ti-chart-pie" style={{ fontSize: 22 }} />
+          </div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Asset Allocation</h2>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -69,8 +71,9 @@ export function DocAssetAllocation({ plan, resultados, score, comentario, onCome
       {/* Actual vs Target table */}
       {plan.dadosCliente.comecandoDoZero ? (
         <div style={{ background: "#F0FDF4", border: "1px solid #DCFCE7", borderRadius: 8, padding: "16px 20px", marginBottom: 24 }}>
-          <p style={{ margin: 0, fontWeight: 600, color: "#15803D" }}>
-            ✓ Iniciando a jornada de investimentos — carteira a ser construída com perfil {perfilLabel}.
+          <p style={{ margin: 0, fontWeight: 600, color: "#15803D", display: "flex", alignItems: "center", gap: 8 }}>
+            <i className="ti ti-check" style={{ fontSize: 16 }} />
+            Iniciando a jornada de investimentos — carteira a ser construída com perfil {perfilLabel}.
           </p>
         </div>
       ) : (

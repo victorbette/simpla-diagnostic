@@ -44,7 +44,9 @@ export function DocLiberdadeFinanceira({ plan, resultados, clientName, score, co
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: "#15803D", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🏖</div>
+          <div style={{ width: 44, height: 44, background: "#15803D", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+            <i className="ti ti-beach" style={{ fontSize: 22 }} />
+          </div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Liberdade Financeira</h2>
         </div>
         <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: nv.bg, color: nv.color }}>{score}/100 · {nv.label}</span>
@@ -85,20 +87,23 @@ export function DocLiberdadeFinanceira({ plan, resultados, clientName, score, co
             fontSize: 14,
             fontWeight: 700,
           }}>
-            {ifAlcancada
-              ? "✓ Meta de liberdade financeira atingível com aportes atuais"
-              : "⚠ Ajuste necessário no aporte mensal para atingir a meta"}
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <i className={ifAlcancada ? "ti ti-check" : "ti ti-alert-triangle"} style={{ fontSize: 16 }} />
+              {ifAlcancada
+                ? "Meta de liberdade financeira atingível com aportes atuais"
+                : "Ajuste necessário no aporte mensal para atingir a meta"}
+            </span>
           </div>
         </div>
       )}
 
       {/* Projection chart */}
-      {rif && rif.projecao && rif.projecao.length > 0 && (
+      {rif && rif.projecao && rif.projecao.length > 0 ? (
         <div style={{ marginBottom: 24 }}>
           <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Projeção Patrimonial
           </p>
-          <div style={{ background: "#F8FAFF", borderRadius: 8, padding: "8px", border: "0.5px solid #BFDBFE" }}>
+          <div style={{ background: "#F8FAFF", borderRadius: 8, padding: "8px", border: "0.5px solid #BFDBFE", width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
             <GraficoIF
               projecao={rif.projecao}
               curvaIdeal={rif.curvaIdeal}
@@ -107,6 +112,13 @@ export function DocLiberdadeFinanceira({ plan, resultados, clientName, score, co
               mesNascimento={rif.mesNascimento}
             />
           </div>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 24, padding: "24px", background: "#F0F7FF", borderRadius: 8, border: "1px solid #BFDBFE", textAlign: "center" }}>
+          <i className="ti ti-chart-line" style={{ fontSize: 32, color: "#93C5FD", display: "block", marginBottom: 8 }} />
+          <p style={{ margin: 0, color: "#6B7280", fontSize: 13 }}>
+            Execute o simulador de Liberdade Financeira para ver o gráfico de projeção.
+          </p>
         </div>
       )}
 

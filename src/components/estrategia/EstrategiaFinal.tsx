@@ -23,17 +23,17 @@ type PaginaId = "capa" | "sumario" | "aa" | "lf" | "ps" | "fiscal" | "proximos";
 interface PaginaConfig {
   id: PaginaId;
   label: string;
-  emoji: string;
+  icon: string;
 }
 
 const PAGINAS: PaginaConfig[] = [
-  { id: "capa",     label: "Capa",                 emoji: "🏠" },
-  { id: "sumario",  label: "Sumário",              emoji: "📋" },
-  { id: "aa",       label: "Asset Allocation",     emoji: "🥧" },
-  { id: "lf",       label: "Lib. Financeira",      emoji: "🏖" },
-  { id: "ps",       label: "Proteção",             emoji: "🛡" },
-  { id: "fiscal",   label: "Fiscal",               emoji: "🧾" },
-  { id: "proximos", label: "Próximos Passos",      emoji: "✅" },
+  { id: "capa",     label: "Capa",           icon: "ti ti-file-text"       },
+  { id: "sumario",  label: "Sumário",        icon: "ti ti-clipboard-list"  },
+  { id: "aa",       label: "Asset Alloc.",   icon: "ti ti-chart-pie"       },
+  { id: "lf",       label: "Lib. Financeira",icon: "ti ti-beach"           },
+  { id: "ps",       label: "Proteção",       icon: "ti ti-shield"          },
+  { id: "fiscal",   label: "Fiscal",         icon: "ti ti-receipt"         },
+  { id: "proximos", label: "Próx. Passos",   icon: "ti ti-checks"          },
 ];
 
 interface ComentariosDoc {
@@ -118,8 +118,8 @@ export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
           </span>
         </div>
 
-        {/* Center: page pills */}
-        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center", overflowX: "auto" }}>
+        {/* Center: page pills (scrollable) */}
+        <div style={{ display: "flex", gap: 3, flex: 1, justifyContent: "center", overflowX: "auto", scrollbarWidth: "none" }}>
           {PAGINAS.map((p) => {
             const isActive = p.id === paginaAtual;
             return (
@@ -137,10 +137,14 @@ export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
                   transition: "all 0.15s",
                 }}
               >
-                {p.emoji} {p.label}
+                <i className={p.icon} style={{ fontSize: 12 }} />
+                {p.label}
               </button>
             );
           })}

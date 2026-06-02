@@ -50,7 +50,9 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: "#2563EB", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🧾</div>
+          <div style={{ width: 44, height: 44, background: "#2563EB", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+            <i className="ti ti-receipt" style={{ fontSize: 22 }} />
+          </div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Planejamento Fiscal</h2>
         </div>
         <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: nv.bg, color: nv.color }}>{score}/100 · {nv.label}</span>
@@ -81,7 +83,7 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
       {espacoMensal > 0 && pf.tipoDeclaracao === "completa" && (
         <div style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 10, padding: "20px 24px", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: 24 }}>🐷</span>
+            <i className="ti ti-piggy-bank" style={{ fontSize: 24, color: "#2563EB" }} />
             <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#2563EB" }}>Oportunidade de Diferimento Fiscal</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 12 }}>
@@ -103,7 +105,7 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
 
       {aproveitandoTeto && (
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 999, background: "#DCFCE7", border: "1px solid #86EFAC", marginBottom: 20 }}>
-          <span style={{ fontSize: 15 }}>✓</span>
+          <i className="ti ti-check" style={{ fontSize: 15, color: "#15803D" }} />
           <span style={{ fontSize: 13, fontWeight: 600, color: "#15803D" }}>PGBL maximizado — aproveitando 100% do benefício fiscal</span>
         </div>
       )}
@@ -116,8 +118,8 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
           </p>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {pf.tiposRendimentosIsentos.map((tipo) => (
-              <span key={tipo} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "#DCFCE7", color: "#15803D", fontWeight: 600 }}>
-                ✓ {tipo}
+              <span key={tipo} style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "#DCFCE7", color: "#15803D", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                <i className="ti ti-check" style={{ fontSize: 11 }} /> {tipo}
               </span>
             ))}
           </div>
