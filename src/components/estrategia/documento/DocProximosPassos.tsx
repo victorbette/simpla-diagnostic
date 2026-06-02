@@ -53,9 +53,7 @@ export function DocProximosPassos({ plan, resultados, clientName, comentariosFin
     <div className="doc-page" style={{ background: "white", minHeight: "297mm" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28, gap: 12 }}>
-        <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
-          <i className="ti ti-checks" style={{ fontSize: 22 }} />
-        </div>
+        <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>✅</div>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1E3A8A" }}>Próximos Passos</h2>
       </div>
 
