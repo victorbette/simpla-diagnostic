@@ -97,13 +97,22 @@ export interface EstrategiaFinalComentarios {
   dataGeracao: string;
 }
 
+export interface ProximoPasso {
+  id: string;
+  descricao: string;
+  prioridade: "alta" | "media" | "baixa";
+  dataPrevisao: string;
+  area: string;
+}
+
 export interface ResultadosEstrategia {
   carteira: ResultadoCarteira | null;
   if: ResultadoIF | null;
   seguro: ResultadoSeguro | null;
   fiscal: ResultadoFiscal | null;
   holding?: { observacoes: string };
-  proximosPassos?: Record<string, boolean>;
+  acoesConcluidas?: Record<string, boolean>;
+  proximosPassos?: ProximoPasso[];
   estrategiaFinal?: EstrategiaFinalComentarios;
 }
 

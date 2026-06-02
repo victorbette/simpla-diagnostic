@@ -16,6 +16,7 @@ interface Props {
   resultados: ResultadosEstrategia;
   clientName: string;
   onFechar?: () => void;
+  onResultadosChange?: (r: ResultadosEstrategia) => void;
 }
 
 type PaginaId = "capa" | "sumario" | "aa" | "lf" | "ps" | "fiscal" | "proximos";
@@ -33,7 +34,7 @@ const PAGINAS: PaginaConfig[] = [
   { id: "lf",       label: "Lib. Financeira",icon: "ti ti-beach"           },
   { id: "ps",       label: "Proteção",       icon: "ti ti-shield"          },
   { id: "fiscal",   label: "Fiscal",         icon: "ti ti-receipt"         },
-  { id: "proximos", label: "Próx. Passos",   icon: "ti ti-checks"          },
+  { id: "proximos", label: "Próx. Passos",   icon: "ti ti-list-checks"     },
 ];
 
 interface ComentariosDoc {
@@ -41,7 +42,6 @@ interface ComentariosDoc {
   lf: string;
   ps: string;
   fiscal: string;
-  comentariosFinais: string;
 }
 
 function defaultComentarios(resultados: ResultadosEstrategia): ComentariosDoc {
@@ -51,11 +51,10 @@ function defaultComentarios(resultados: ResultadosEstrategia): ComentariosDoc {
     lf: ef?.lf ?? "",
     ps: ef?.ps ?? "",
     fiscal: ef?.fiscal ?? "",
-    comentariosFinais: ef?.comentariosFinais ?? "",
   };
 }
 
-export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
+export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChange }: Props) {
   const storageKey = `estrategia_final_${plan.clientId}`;
 
   const [paginaAtual, setPaginaAtual] = useState<PaginaId>("capa");
@@ -82,6 +81,10 @@ export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
   const scores = useMemo(() => calcularScores(plan, resultados), [plan, resultados]);
   const paginaIdx = PAGINAS.findIndex((p) => p.id === paginaAtual);
 
+  const handleResultadosChange = useCallback((r: ResultadosEstrategia) => {
+    onResultadosChange?.(r);
+  }, [onResultadosChange]);
+
   // Render each doc page component (always mounted for print)
   const pages = useMemo(() => [
     { id: "capa" as PaginaId, node: <DocCapa plan={plan} resultados={resultados} clientName={clientName} scores={scores} /> },
@@ -90,9 +93,9 @@ export function EstrategiaFinal({ plan, resultados, clientName }: Props) {
     { id: "lf" as PaginaId, node: <DocLiberdadeFinanceira plan={plan} resultados={resultados} clientName={clientName} score={scores.lfScore} comentario={comentarios.lf} onComentarioChange={(v) => updateComentario("lf", v)} /> },
     { id: "ps" as PaginaId, node: <DocProtecaoSucessorio plan={plan} resultados={resultados} score={scores.psScore} comentario={comentarios.ps} onComentarioChange={(v) => updateComentario("ps", v)} /> },
     { id: "fiscal" as PaginaId, node: <DocPlanejamentoFiscal plan={plan} resultados={resultados} score={scores.fiscalScore} comentario={comentarios.fiscal} onComentarioChange={(v) => updateComentario("fiscal", v)} /> },
-    { id: "proximos" as PaginaId, node: <DocProximosPassos plan={plan} resultados={resultados} clientName={clientName} comentariosFinais={comentarios.comentariosFinais} onComentariosFinaisChange={(v) => updateComentario("comentariosFinais", v)} /> },
+    { id: "proximos" as PaginaId, node: <DocProximosPassos plan={plan} resultados={resultados} onResultadosChange={handleResultadosChange} /> },
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [plan, resultados, scores, comentarios.aa, comentarios.lf, comentarios.ps, comentarios.fiscal, comentarios.comentariosFinais]);
+  ], [plan, resultados, scores, comentarios.aa, comentarios.lf, comentarios.ps, comentarios.fiscal, handleResultadosChange]);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>

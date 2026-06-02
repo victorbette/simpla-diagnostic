@@ -371,8 +371,8 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
           <SecaoProximosPassos
             plan={plan}
             resultados={resultados}
-            concluidos={resultados.proximosPassos ?? {}}
-            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, proximosPassos: v }))}
+            concluidos={resultados.acoesConcluidas ?? {}}
+            onConcluidosChange={(v) => setResultados((prev) => ({ ...prev, acoesConcluidas: v }))}
             consideracoesFinais={data.consideracoesFinais}
             onConsideracoesChange={(v) => setData((prev) => ({ ...prev, consideracoesFinais: v }))}
           />
@@ -576,6 +576,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               plan={plan}
               resultados={resultados}
               clientName={clientName}
+              onResultadosChange={(r) => setResultados(r)}
             />
           ) : (
             <>

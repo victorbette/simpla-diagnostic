@@ -395,7 +395,7 @@ export function SecaoRevisao({
   // ── Priority actions ──
   const todasAcoes = gerarAcoes(plan, resultados);
   const acoesPrioritarias = todasAcoes
-    .filter((a) => a.prioridade === "alta" && !resultados.proximosPassos?.[a.id])
+    .filter((a) => a.prioridade === "alta" && !resultados.acoesConcluidas?.[a.id])
     .slice(0, 5);
 
   // ── Asset Allocation data ──
