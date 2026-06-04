@@ -325,7 +325,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
       {/* Header */}
-      <div style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
+      <div className="app-main-header" style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img
             src="/logo-si.svg"
@@ -365,7 +365,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       </div>
 
       {/* Tab bar */}
-      <div style={{
+      <div className="estrategia-abas-topo" style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",

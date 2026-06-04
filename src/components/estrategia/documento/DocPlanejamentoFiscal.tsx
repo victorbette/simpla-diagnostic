@@ -46,7 +46,7 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
     : 0;
 
   return (
-    <div className="doc-page" style={{ background: "white", minHeight: "297mm" }}>
+    <div className="doc-page page-break-before" style={{ background: "white" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

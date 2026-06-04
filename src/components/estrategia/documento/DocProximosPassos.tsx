@@ -292,7 +292,7 @@ export function DocProximosPassos({ plan, resultados, onResultadosChange }: Prop
   };
 
   return (
-    <div className="doc-page" style={{ background: "white", minHeight: "297mm" }}>
+    <div className="doc-page page-break-before" style={{ background: "white" }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 16, borderBottom: "2px solid #1E3A8A", marginBottom: 28 }}>
         <div style={{ width: 44, height: 44, background: "#1E3A8A", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>

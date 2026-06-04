@@ -67,7 +67,6 @@ export function DocCapa({ plan, resultados: _resultados, clientName, scores }: P
         background: "white",
         borderRadius: 0,
         boxShadow: "none",
-        minHeight: "297mm",
       }}
     >
       {/* Top band */}

@@ -130,57 +130,34 @@
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
-  body > * { display: none !important; }
-  .print\:block { display: block !important; }
-
-  @page {
-    margin: 2cm;
-    size: A4;
-  }
-
-  body {
-    font-size: 11pt;
-    color: #000;
-    background: #fff;
-  }
-
-  section { break-inside: avoid; }
-  h1, h2, h3 { break-after: avoid; }
-  table { break-inside: avoid; }
-
-  * {
-    box-shadow: none !important;
-    text-shadow: none !important;
-  }
-
-  .print-advisor .confidencial::after {
-    content: "CONFIDENCIAL — USO RESTRITO AO CONSULTOR";
-    display: block;
-    text-align: center;
-    font-size: 8pt;
-    color: #999;
-    margin-top: 2cm;
-    border-top: 0.5px solid #ccc;
-    padding-top: 8px;
-  }
-
-  /* Estratégia Final — versão consultor */
-  .print-consultor .dados-tecnicos { display: block !important; }
-  .print-consultor .disclaimer { display: block !important; }
-
-  /* Estratégia Final — versão cliente */
-  .print-cliente .dados-tecnicos { display: none !important; }
-  .print-cliente .disclaimer { display: block !important; }
-
-  /* Ambas as versões */
+  /* Ocultar interface — mostrar apenas o documento */
+  .no-print { display: none !important; }
+  .app-main-header { display: none !important; }
+  .estrategia-abas-topo { display: none !important; }
+  .doc-nav-header { display: none !important; }
+  .doc-screen-only { display: none !important; }
   header, .sidebar, .btn-imprimir { display: none !important; }
-  .estrategia-final-content {
+
+  /* Quebra de página entre seções */
+  .page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  /* Evitar quebra dentro de cards */
+  .no-page-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Documento ocupa a página toda */
+  .documento-print {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* Quebra de página entre seções da estratégia */
+  /* Quebra de página entre seções da estratégia (legado) */
   .secao-area {
     page-break-before: always;
     break-before: page;
@@ -190,14 +167,8 @@
     break-before: avoid;
   }
 
-  /* ── Estratégia Final — documento cliente ─────────────────── */
-  .doc-nav-header { display: none !important; }
-  .doc-screen-only { display: none !important; }
-
-  /* Show all pages in print */
+  /* Show all pages in print (legado — paginação por abas) */
   .doc-pages-container > div { display: block !important; }
-
-  /* Page break after each page wrapper, except the last */
   .doc-pages-container > div:not(:last-child) .doc-page {
     page-break-after: always;
     break-after: page;
