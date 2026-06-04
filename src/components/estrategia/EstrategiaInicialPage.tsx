@@ -1,20 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import {
-  PieChart as PieChartIcon,
-  Flame,
-  Shield,
-  Receipt,
-  ClipboardCheck,
-  type LucideIcon,
-} from "lucide-react";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import {
   calcularIF,
   calcularProtecao,
   calcularFiscal,
   calcularSucessorio,
-  PERFIL_LABELS,
 } from "@/types/financialPlanning";
 import type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
@@ -22,15 +13,8 @@ import { SecaoAssetAllocation } from "./SecaoAssetAllocation";
 import { SecaoAposentadoria } from "./SecaoAposentadoria";
 import { SecaoProtecaoSucessorio } from "./SecaoProtecaoSucessorio";
 import { SecaoFiscal } from "./SecaoFiscal";
-import { SecaoRevisao } from "./SecaoRevisao";
-import { EstrategiaFinalPage } from "./EstrategiaFinalPage";
 import { EstrategiaPrint } from "./EstrategiaPrint";
 import { EstrategiaFinal } from "./EstrategiaFinal";
-
-function hexOpacity(hex: string, opacity: number): string {
-  const alpha = Math.round(opacity * 255).toString(16).padStart(2, "0");
-  return `${hex}${alpha}`;
-}
 
 // ─── Exported Types ────────────────────────────────────────────────────────────
 
@@ -41,7 +25,6 @@ export type SecaoId =
   | "aposentadoria"
   | "protecaoSucessorio"
   | "fiscal"
-  | "revisao"
   | "estrategia_pronta";
 
 export interface AcaoItem {
@@ -70,20 +53,15 @@ export type { ResultadoIF, ResultadoSeguro, ResultadoFiscal, ResultadosEstrategi
 interface SecaoConfig {
   id: SecaoId;
   label: string;
-  color: string;
-  Icon: LucideIcon;
+  icone: string;
 }
 
 const SECOES: SecaoConfig[] = [
-  { id: "assetAllocation",    label: "Asset Allocation",        color: "#000000", Icon: PieChartIcon   },
-  { id: "aposentadoria",      label: "Liberdade Financeira",    color: "#15803D", Icon: Flame          },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório",   color: "#B91C1C", Icon: Shield         },
-  { id: "fiscal",             label: "Planejamento Fiscal",     color: "#2563EB", Icon: Receipt        },
-  { id: "revisao",            label: "Revisão Final",           color: "#000000", Icon: ClipboardCheck },
-];
-
-const AVATAR_COLORS = [
-  "#3B82F6", "#000000", "#15803D", "#B91C1C", "#1E40AF", "#2563EB",
+  { id: "assetAllocation",    label: "Asset Allocation",       icone: "ti-chart-pie"     },
+  { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
+  { id: "fiscal",             label: "Planejamento Fiscal",    icone: "ti-receipt"       },
+  { id: "estrategia_pronta",  label: "Estratégia Pronta",      icone: "ti-file-download" },
 ];
 
 // ─── Helper: generate initial actions ─────────────────────────────────────────
@@ -118,7 +96,7 @@ function gerarAcoesIniciais(plan: FinancialPlan): AcaoItem[] {
   if (resultadoFiscal.espacoPGBL > 0) {
     acoes.push({
       id: `acao_${idx++}`,
-      texto: `Aproveitar espaço PGBL disponível para economia fiscal potencial`,
+      texto: "Aproveitar espaço PGBL disponível para economia fiscal potencial",
       prioridade: "media",
       area: "Fiscal",
       prazo: "",
@@ -205,7 +183,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   const [printMode, setPrintMode] = useState<"consultor" | "cliente" | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
-  const [mostrarFinal, setMostrarFinal] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -268,29 +245,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       setSalvando(false);
     }
   }, [onSaveCloud]);
-
-  const secaoAtual = SECOES.find((s) => s.id === secaoAtiva) ?? SECOES[0];
-  const secaoIndex = SECOES.findIndex((s) => s.id === secaoAtiva);
-
-  const irParaSecao = (id: SecaoId) => setSecaoAtiva(id);
-
-  const irAnterior = () => {
-    if (secaoIndex > 0) setSecaoAtiva(SECOES[secaoIndex - 1].id);
-  };
-
-  const irProxima = () => {
-    if (secaoIndex < SECOES.length - 1) setSecaoAtiva(SECOES[secaoIndex + 1].id);
-  };
-
-  // Avatar
-  const firstChar = clientName.trim().charAt(0).toUpperCase();
-  const charCode = firstChar.charCodeAt(0);
-  const avatarColor = AVATAR_COLORS[charCode % 6];
-  const initials = clientName.trim().split(" ").slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
-
-  const perfil = plan.dadosCliente.suitabilityPerfil;
-  const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "Não definido";
-
 
   function renderContent() {
     const comentario = data.comentarios[secaoAtiva] ?? "";
@@ -362,62 +316,38 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onResultadoFiscal={(r) => setResultados((prev) => ({ ...prev, fiscal: r }))}
           />
         );
-      case "revisao":
-        return (
-          <SecaoRevisao
-            estrategia={data}
-            resultados={resultados}
-            plan={plan}
-            clientName={clientName}
-            onNavigate={irParaSecao}
-            onFinalizar={() => setMostrarFinal(true)}
-            onComentarioGeralChange={(v) =>
-              setData((prev) => ({ ...prev, comentarioGeral: v }))
-            }
-          />
-        );
       default:
         return null;
     }
   }
 
-
-  if (mostrarFinal) {
-    return (
-      <EstrategiaFinalPage
-        estrategia={data}
-        resultados={resultados}
-        plan={plan}
-        clientName={clientName}
-        clientProfile={plan.dadosCliente.suitabilityPerfil ?? null}
-        onVoltar={() => setMostrarFinal(false)}
-        onSaveCloud={onSaveCloud ? (d: EstrategiaData) => handleSalvarCloud(d) : undefined}
-      />
-    );
-  }
-
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+
       {/* Header */}
       <div style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <img
-              src="/logo-si.svg"
-              alt="Simpla Invest"
-              style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                Simpla Invest
-              </span>
-              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
-                Financial Planning
-              </span>
-            </div>
+          <img
+            src="/logo-si.svg"
+            alt="Simpla Invest"
+            style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+            <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+              Simpla Invest
+            </span>
+            <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
+              Financial Planning
+            </span>
           </div>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
           <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>
+          <button
+            onClick={onClose}
+            style={{ color: "#93C5FD", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: "2px 8px", marginLeft: 4 }}
+          >
+            ← Voltar
+          </button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {ultimoSalvo && (
@@ -425,225 +355,82 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
-          {onSaveCloud && (
-            <button
-              onClick={() => handleSalvarCloud(data)}
-              disabled={salvando}
-              style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#2563EB" : "#3B82F6", color: "#000000", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
-            >
-              {salvando ? "Salvando..." : "Salvar estratégia"}
-            </button>
-          )}
           <button
             onClick={() => setPrintMode("consultor")}
-            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid white", backgroundColor: "transparent", color: "white", fontSize: 13, cursor: "pointer" }}
+            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.5)", backgroundColor: "transparent", color: "white", fontSize: 13, cursor: "pointer" }}
           >
             Gerar PDF Consultor
-          </button>
-          <button
-            onClick={() => setSecaoAtiva("estrategia_pronta")}
-            style={{ padding: "6px 14px", borderRadius: 6, border: "none", backgroundColor: "#3B82F6", color: "white", fontSize: 13, cursor: "pointer", fontWeight: 600 }}
-          >
-            Gerar PDF Cliente
           </button>
         </div>
       </div>
 
-      {/* Body */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Sidebar */}
-        <div style={{ width: 280, backgroundColor: "white", borderRight: "1px solid #F0F7FF", display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
-          {/* Top block */}
-          <div style={{ padding: "16px 20px", borderBottom: "1px solid #F0F7FF" }}>
-            <button
-              onClick={onClose}
-              style={{ color: "#3B82F6", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 4 }}
-            >
-              ← Voltar ao Diagnóstico
-            </button>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", backgroundColor: avatarColor, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
-                {initials || firstChar}
-              </div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "#000000" }}>{clientName}</div>
-                <span style={{ fontSize: 11, padding: "2px 6px", borderRadius: 9999, backgroundColor: "#DBEAFE", color: "#000000" }}>{perfilLabel}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section label */}
-          <div style={{ padding: "16px 20px 8px", fontSize: 10, fontWeight: 700, color: "#3B82F6", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-            Estratégia Inicial
-          </div>
-
-          {/* Nav list */}
-          <nav style={{ flex: 1 }}>
-            {SECOES.map((secao) => {
-              const isActive = secao.id === secaoAtiva;
-              return (
-                <button
-                  key={secao.id}
-                  onClick={() => irParaSecao(secao.id)}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 20px",
-                    background: isActive ? "#F0F7FF" : "transparent",
-                    borderLeft: isActive ? `3px solid ${secao.color}` : "3px solid transparent",
-                    border: "none",
-                    borderLeftWidth: 3,
-                    borderLeftStyle: "solid",
-                    borderLeftColor: isActive ? secao.color : "transparent",
-                    cursor: "pointer",
-                    textAlign: "left",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      backgroundColor: hexOpacity(secao.color, isActive ? 0.15 : 0.10),
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}>
-                      <secao.Icon
-                        size={16}
-                        style={{ color: isActive ? secao.color : hexOpacity(secao.color, 0.60) }}
-                      />
-                    </div>
-                    <span style={{ fontSize: 13, color: isActive ? "#000000" : "#111827", fontWeight: isActive ? 600 : 400 }}>
-                      {secao.label}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Estratégia Pronta — special highlighted item */}
-          <div style={{ padding: "12px 16px 16px" }}>
-            <button
-              onClick={() => setSecaoAtiva("estrategia_pronta")}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 14px",
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: secaoAtiva === "estrategia_pronta" ? "#2563EB" : "#1E3A8A",
-                color: "white",
-                cursor: "pointer",
-                textAlign: "left",
-                fontWeight: 600,
-                fontSize: 13,
-                transition: "background-color 0.15s",
-              }}
-            >
-              <span style={{ fontSize: 16 }}>📄</span>
-              Estratégia Pronta
-            </button>
-          </div>
-
+      {/* Tab bar */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 32px",
+        borderBottom: "1px solid #BFDBFE",
+        background: "white",
+        flexShrink: 0,
+        overflowX: "auto",
+      }}>
+        <div style={{ display: "flex", gap: 0 }}>
+          {SECOES.map((s) => {
+            const isActive = secaoAtiva === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => setSecaoAtiva(s.id)}
+                style={{
+                  padding: "14px 20px",
+                  border: "none",
+                  borderBottom: isActive ? "2px solid #2563EB" : "2px solid transparent",
+                  background: "none",
+                  color: isActive ? "#2563EB" : "#6B7280",
+                  fontWeight: isActive ? 600 : 400,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontFamily: "inherit",
+                }}
+              >
+                <i className={`ti ${s.icone}`} style={{ fontSize: 15 }} aria-hidden="true" />
+                {s.label}
+              </button>
+            );
+          })}
         </div>
-
-        {/* Main content */}
-        <div style={{ flex: 1, minWidth: 0, backgroundColor: "#F0F7FF", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          {secaoAtiva === "estrategia_pronta" ? (
-            <EstrategiaFinal
-              plan={plan}
-              resultados={resultados}
-              clientName={clientName}
-              onResultadosChange={(r) => setResultados(r)}
-            />
-          ) : (
-            <>
-              {/* Scrollable area */}
-              <div style={{ flex: 1, overflowY: "auto", padding: 32, paddingBottom: 100 }}>
-                {/* Breadcrumb */}
-                <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 8 }}>
-                  Estratégia Inicial › {secaoAtual.label}
-                </div>
-
-                {/* Title row */}
-                <div style={{ marginBottom: 24 }}>
-                  <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000000", margin: 0 }}>
-                    {secaoAtual.label}
-                  </h1>
-                </div>
-
-                {/* Section content */}
-                {renderContent()}
-              </div>
-
-              {/* Bottom nav */}
-              <div style={{ backgroundColor: "white", borderTop: "1px solid #BFDBFE", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-                <button
-                  onClick={irAnterior}
-                  disabled={secaoIndex === 0}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid #000000",
-                    backgroundColor: "transparent",
-                    color: secaoIndex === 0 ? "#9CA3AF" : "#000000",
-                    borderColor: secaoIndex === 0 ? "#BFDBFE" : "#000000",
-                    fontSize: 13,
-                    cursor: secaoIndex === 0 ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {secaoIndex > 0 ? `← Seção anterior: ${SECOES[secaoIndex - 1].label}` : "← Início"}
-                </button>
-
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    {SECOES.map((s, i) => (
-                      <button
-                        key={s.id}
-                        onClick={() => irParaSecao(s.id)}
-                        style={{
-                          height: 8,
-                          width: i === secaoIndex ? 22 : 8,
-                          borderRadius: 9999,
-                          backgroundColor: i === secaoIndex ? "#2563EB" : "#BFDBFE",
-                          border: "none",
-                          cursor: "pointer",
-                          transition: "width 0.2s",
-                          padding: 0,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>{secaoIndex + 1} de {SECOES.length}</span>
-                </div>
-
-                <button
-                  onClick={irProxima}
-                  disabled={secaoIndex === SECOES.length - 1}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "none",
-                    backgroundColor: secaoIndex === SECOES.length - 1 ? "#BFDBFE" : "#2563EB",
-                    color: secaoIndex === SECOES.length - 1 ? "#9CA3AF" : "white",
-                    fontSize: 13,
-                    cursor: secaoIndex === SECOES.length - 1 ? "not-allowed" : "pointer",
-                    fontWeight: 500,
-                  }}
-                >
-                  {secaoIndex < SECOES.length - 1 ? `Próxima seção: ${SECOES[secaoIndex + 1].label} →` : "Fim →"}
-                </button>
-              </div>
-            </>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 16, flexShrink: 0 }}>
+          {onSaveCloud && (
+            <button
+              onClick={() => handleSalvarCloud(data)}
+              disabled={salvando}
+              style={{ padding: "6px 16px", borderRadius: 6, border: "none", backgroundColor: salvando ? "#2563EB" : "#3B82F6", color: "white", fontSize: 13, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer", opacity: salvando ? 0.85 : 1 }}
+            >
+              {salvando ? "Salvando..." : "Salvar estratégia"}
+            </button>
           )}
         </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {secaoAtiva === "estrategia_pronta" ? (
+          <EstrategiaFinal
+            plan={plan}
+            resultados={resultados}
+            clientName={clientName}
+            onResultadosChange={(r) => setResultados(r)}
+          />
+        ) : (
+          <div style={{ flex: 1, overflowY: "auto", background: "#F0F7FF", padding: "28px 32px" }}>
+            {renderContent()}
+          </div>
+        )}
       </div>
 
       {/* Print overlay */}
