@@ -576,6 +576,7 @@ export interface DadosCliente {
   temSeguroInvalidez: boolean;
   valorApoliceInvalidez: number;
   tipoTrabalho: "clt" | "autonomo" | "empresario" | "concursado" | "";
+  profissao: string;
   suitabilityPerfil: PerfilRisco | null;
   filhos: Array<{ nome: string; idade: number }>;
   contribuiINSS: boolean;
@@ -614,6 +615,7 @@ export const initialDadosCliente: DadosCliente = {
   temSeguroInvalidez: false,
   valorApoliceInvalidez: 0,
   tipoTrabalho: "",
+  profissao: "",
   suitabilityPerfil: null,
   filhos: [],
   contribuiINSS: false,

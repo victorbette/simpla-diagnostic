@@ -8,6 +8,8 @@ import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
 import type { ResultadoSeguro } from "@/types/estrategiaResultados";
 import { calcularPerfilHolding } from "@/lib/holding";
 import { CardHolding } from "./CardHolding";
+import { detectarSeguroRC } from "@/lib/seguroRC";
+import { CardSeguroRC } from "./CardSeguroRC";
 
 interface Props {
   plan: FinancialPlan;
@@ -560,6 +562,12 @@ export function SecaoProtecaoSucessorio({
             </div>
           </div>
         )}
+
+        {/* RC — rendered when profession is mapped */}
+        {(() => {
+          const infoRC = detectarSeguroRC(plan?.dadosCliente?.profissao ?? "");
+          return infoRC.recomendado ? <CardSeguroRC info={infoRC} /> : null;
+        })()}
 
         {/* Holding — rendered when profile recommends it */}
         {holdingPerfil.recomendada && (

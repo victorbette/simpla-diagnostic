@@ -302,6 +302,19 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
             })}
           </div>
         </div>
+
+        {/* Profissão */}
+        <div style={{ marginTop: 20 }}>
+          <Label className={labelCls} style={{ display: "block", marginBottom: 6 }}>Profissão</Label>
+          <input
+            type="text"
+            value={dados.profissao ?? ""}
+            onChange={(e) => setDados("profissao", e.target.value)}
+            placeholder="Ex: Médico, Advogado, Engenheiro..."
+            style={{ width: "100%", border: "1.5px solid #BFDBFE", borderRadius: 8, padding: "10px 14px", fontSize: 14, color: "#111827", outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+          />
+          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Informe a profissão do cliente</p>
+        </div>
       </SecaoCard>
 
       {/* ─── SEÇÃO 2: Situação Financeira ─── */}
