@@ -37,10 +37,10 @@ function CircleGauge({ score, color, size = 64 }: { score: number; color: string
 }
 
 const AREAS = [
-  { id: "aa",     label: "Asset Allocation",     color: "#1E40AF" },
-  { id: "lf",     label: "Liberdade Financeira",  color: "#15803D" },
-  { id: "ps",     label: "Proteção",              color: "#B91C1C" },
-  { id: "fiscal", label: "Fiscal",                color: "#2563EB" },
+  { id: "aa",     label: "Asset Allocation",    color: "#1E40AF" },
+  { id: "lf",     label: "Liberdade Financeira", color: "#15803D" },
+  { id: "ps",     label: "Proteção",             color: "#B91C1C" },
+  { id: "fiscal", label: "Fiscal",               color: "#2563EB" },
 ] as const;
 
 export function DocCapa({ plan, resultados: _resultados, clientName, scores }: Props) {
@@ -64,12 +64,9 @@ export function DocCapa({ plan, resultados: _resultados, clientName, scores }: P
         display: "flex",
         flexDirection: "column",
         padding: 0,
-        background: "white",
-        borderRadius: 0,
-        boxShadow: "none",
       }}
     >
-      {/* Top band */}
+      {/* Top band — full-bleed blue */}
       <div style={{ background: "#1E3A8A", padding: "40px 56px 36px" }}>
         <img src="/logo-si.svg" alt="Simpla Invest" style={{ height: 56, width: 56, objectFit: "contain" }} />
         <p style={{ margin: "12px 0 0", fontSize: 13, color: "#93C5FD", letterSpacing: "0.2em", textTransform: "uppercase" }}>
@@ -110,7 +107,10 @@ export function DocCapa({ plan, resultados: _resultados, clientName, scores }: P
             const s = areaScores[area.id];
             const nv = nivelScore(s);
             return (
-              <div key={area.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 8px", background: "#F8FAFF", borderRadius: 10, border: "0.5px solid #BFDBFE" }}>
+              <div
+                key={area.id}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 8px", background: "#F8FAFF", borderRadius: 10, border: "0.5px solid #BFDBFE" }}
+              >
                 <CircleGauge score={s} color={area.color} />
                 <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: "#111827", textAlign: "center" }}>{area.label}</p>
                 <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: nv.bg, color: nv.color }}>
@@ -122,12 +122,12 @@ export function DocCapa({ plan, resultados: _resultados, clientName, scores }: P
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer band */}
       <div style={{ background: "#F0F7FF", padding: "18px 56px" }}>
         <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>
           Documento confidencial elaborado exclusivamente para{" "}
           <strong style={{ color: "#1E3A8A" }}>{clientName}</strong>.
-          Válido por 12 meses a partir de {data}.
+          {" "}Válido por 12 meses a partir de {data}.
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { calcularPerfilHolding } from "@/lib/holding";
 import { nivelScore } from "@/lib/estrategiaScores";
+import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   plan: FinancialPlan;
@@ -11,6 +12,7 @@ interface Props {
   score: number;
   comentario: string;
   onComentarioChange: (v: string) => void;
+  clientName?: string;
 }
 
 function Checklist({ ok, label, sub }: { ok: boolean; label: string; sub?: string }) {
@@ -37,7 +39,7 @@ function MetricaProtecao({ label, value, color }: { label: string; value: string
   );
 }
 
-export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onComentarioChange }: Props) {
+export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onComentarioChange, clientName }: Props) {
   const pp = plan.protecao;
   const ps = plan.sucessorio;
   const nv = nivelScore(score);
@@ -148,6 +150,8 @@ export function DocProtecaoSucessorio({ plan, resultados, score, comentario, onC
 
       {/* Consultant comment */}
       <ConsultorBox label="Comentários do Consultor — Proteção e Sucessório" value={comentario} onChange={onComentarioChange} />
+
+      <RodapePagina pagina={6} clientName={clientName} />
     </div>
   );
 }

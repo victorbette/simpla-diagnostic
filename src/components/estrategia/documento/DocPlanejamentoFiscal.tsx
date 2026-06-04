@@ -3,6 +3,7 @@ import { calcularFiscal } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { nivelScore } from "@/lib/estrategiaScores";
+import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   plan: FinancialPlan;
@@ -10,6 +11,7 @@ interface Props {
   score: number;
   comentario: string;
   onComentarioChange: (v: string) => void;
+  clientName?: string;
 }
 
 const TIPO_DECLARACAO_LABELS: Record<string, string> = {
@@ -28,7 +30,7 @@ function Metrica({ label, value, color, sub }: { label: string; value: string; c
   );
 }
 
-export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onComentarioChange }: Props) {
+export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onComentarioChange, clientName }: Props) {
   const pf = plan.fiscal;
   const nv = nivelScore(score);
   const rf = resultados.fiscal;
@@ -153,6 +155,8 @@ export function DocPlanejamentoFiscal({ plan, resultados, score, comentario, onC
 
       {/* Consultant comment */}
       <ConsultorBox label="Comentários do Consultor — Planejamento Fiscal" value={comentario} onChange={onComentarioChange} />
+
+      <RodapePagina pagina={7} clientName={clientName} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { nivelScore } from "@/lib/estrategiaScores";
 import { GraficoIF } from "@/components/shared/GraficoIF";
+import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   plan: FinancialPlan;
@@ -142,6 +143,8 @@ export function DocLiberdadeFinanceira({ plan, resultados, clientName, score, co
 
       {/* Consultant comment */}
       <ConsultorBox label="Comentários do Consultor — Liberdade Financeira" value={comentario} onChange={onComentarioChange} />
+
+      <RodapePagina pagina={4} clientName={clientName} />
     </div>
   );
 }

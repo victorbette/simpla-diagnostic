@@ -7,11 +7,13 @@ import {
 import { calcularPerfilHolding } from "@/lib/holding";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia, ProximoPasso } from "@/types/estrategiaResultados";
+import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
   onResultadosChange: (r: ResultadosEstrategia) => void;
+  clientName?: string;
 }
 
 const PRIO_BADGE = {
@@ -260,7 +262,7 @@ function PassoCard({
   );
 }
 
-export function DocProximosPassos({ plan, resultados, onResultadosChange }: Props) {
+export function DocProximosPassos({ plan, resultados, onResultadosChange, clientName }: Props) {
   const [passos, setPassos] = useState<ProximoPasso[]>(() => {
     const saved = resultados.proximosPassos;
     if (saved && saved.length > 0) return saved;
@@ -323,6 +325,8 @@ export function DocProximosPassos({ plan, resultados, onResultadosChange }: Prop
 
       {/* Add button */}
       <AddButton onClick={handleAdd} />
+
+      <RodapePagina pagina={8} clientName={clientName} />
     </div>
   );
 }

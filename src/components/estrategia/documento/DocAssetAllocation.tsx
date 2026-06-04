@@ -7,6 +7,7 @@ import {
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { nivelScore } from "@/lib/estrategiaScores";
+import { RodapePagina } from "./RodapePagina";
 
 const CLASSE_LABELS: Record<string, string> = {
   rendaFixa: "Renda Fixa",
@@ -32,11 +33,12 @@ interface Props {
   score: number;
   comentario: string;
   onComentarioChange: (v: string) => void;
+  clientName?: string;
 }
 
 const CHAVES = ["rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal", "cripto"] as const;
 
-export function DocAssetAllocation({ plan, resultados, score, comentario, onComentarioChange }: Props) {
+export function DocAssetAllocation({ plan, resultados, score, comentario, onComentarioChange, clientName }: Props) {
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "Não definido";
   const nv = nivelScore(score);
@@ -176,6 +178,8 @@ export function DocAssetAllocation({ plan, resultados, score, comentario, onCome
 
       {/* Consultant comment */}
       <ConsultorBox label="Comentários do Consultor — Asset Allocation" value={comentario} onChange={onComentarioChange} />
+
+      <RodapePagina pagina={5} clientName={clientName} />
     </div>
   );
 }
