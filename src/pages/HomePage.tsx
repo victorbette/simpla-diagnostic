@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
+import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
 import { ClientCardSkeleton } from "@/components/ui/ClientCardSkeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
@@ -140,6 +141,7 @@ export function HomePage() {
   const clientStore = useClientStore();
 
   const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
+  const [clienteAcompanhamento, setClienteAcompanhamento] = useState<Client | null>(null);
   const [search, setSearch] = useState("");
   const [modalAberto, setModalAberto] = useState(false);
   const [clienteEditando, setClienteEditando] = useState<Client | null>(null);
@@ -170,6 +172,16 @@ export function HomePage() {
         clientId={clienteSelecionado.id}
         clientName={clienteSelecionado.nome}
         onClose={() => setClienteSelecionado(null)}
+      />
+    );
+  }
+
+  if (clienteAcompanhamento) {
+    return (
+      <AcompanhamentoPage
+        clienteId={clienteAcompanhamento.id}
+        clienteNome={clienteAcompanhamento.nome}
+        onVoltar={() => setClienteAcompanhamento(null)}
       />
     );
   }
@@ -557,49 +569,69 @@ export function HomePage() {
                         </div>
                       </div>
 
-                      {/* Row 4: CTA button */}
-                      {fpStatus === "concluido" ? (
+                      {/* Row 4: CTA buttons */}
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {fpStatus === "concluido" ? (
+                          <button
+                            onClick={() => setClienteSelecionado(c)}
+                            className="font-medium rounded-lg transition hover:opacity-80"
+                            style={{
+                              flex: 1,
+                              border: `1.5px solid ${DARK}`,
+                              color: DARK,
+                              backgroundColor: "transparent",
+                              padding: "9px 0",
+                              fontSize: 13,
+                            }}
+                          >
+                            Ver plano →
+                          </button>
+                        ) : fpStatus === "em_andamento" ? (
+                          <button
+                            onClick={() => setClienteSelecionado(c)}
+                            className="font-medium rounded-lg text-white transition hover:opacity-90"
+                            style={{
+                              flex: 1,
+                              backgroundColor: DARK,
+                              padding: "9px 0",
+                              fontSize: 13,
+                            }}
+                          >
+                            Continuar FP →
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setClienteSelecionado(c)}
+                            className="font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-1"
+                            style={{
+                              flex: 1,
+                              border: `1.5px solid ${DARK}`,
+                              color: DARK,
+                              backgroundColor: "transparent",
+                              padding: "9px 0",
+                              fontSize: 13,
+                            }}
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Iniciar FP
+                          </button>
+                        )}
                         <button
-                          onClick={() => setClienteSelecionado(c)}
-                          className="w-full font-medium rounded-lg transition hover:opacity-80"
+                          onClick={() => setClienteAcompanhamento(c)}
+                          className="font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-1"
                           style={{
-                            border: `1.5px solid ${DARK}`,
-                            color: DARK,
+                            flex: 1,
+                            border: "1.5px solid #1E3A8A",
+                            color: "#1E3A8A",
                             backgroundColor: "transparent",
-                            padding: "10px 0",
-                            fontSize: 14,
+                            padding: "9px 0",
+                            fontSize: 13,
                           }}
                         >
-                          Ver plano →
+                          <i className="ti ti-chart-bar" style={{ fontSize: 14 }} />
+                          Acompanhamento
                         </button>
-                      ) : fpStatus === "em_andamento" ? (
-                        <button
-                          onClick={() => setClienteSelecionado(c)}
-                          className="w-full font-medium rounded-lg text-white transition hover:opacity-90"
-                          style={{
-                            backgroundColor: DARK,
-                            padding: "10px 0",
-                            fontSize: 14,
-                          }}
-                        >
-                          Continuar Financial Planning →
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setClienteSelecionado(c)}
-                          className="w-full font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-2"
-                          style={{
-                            border: `1.5px solid ${DARK}`,
-                            color: DARK,
-                            backgroundColor: "transparent",
-                            padding: "10px 0",
-                            fontSize: 14,
-                          }}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Iniciar Financial Planning
-                        </button>
-                      )}
+                      </div>
                     </div>
                   );
                 })}
