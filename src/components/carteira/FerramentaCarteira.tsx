@@ -358,6 +358,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             alocacaoMeta={alocacaoMeta}
             planoAcao={planoAcao}
             patrimonio={patrimonio}
+            aporteDisponivel={aporteDisponivel}
             onSave={handleSave}
           />
         )}

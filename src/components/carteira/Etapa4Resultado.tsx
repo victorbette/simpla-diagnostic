@@ -11,6 +11,7 @@ interface Props {
   alocacaoMeta: Record<CardId, number>;
   planoAcao: PlanoAcaoItem[];
   patrimonio: number;
+  aporteDisponivel?: number;
   onSave: () => void;
 }
 
@@ -81,7 +82,9 @@ function PieSection({
   );
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, onSave }: Props) {
+export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
+  const patrimonioMeta = patrimonio + aporteDisponivel;
+
   const grupoAtual = useMemo(
     () => GRUPOS.map((g) => {
       const valor = totalByCards(ativosAtuais, g.cards);
@@ -91,14 +94,14 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
     [ativosAtuais, patrimonio]
   );
 
-  // grupoMeta: use alocacaoMeta slider values (same patrimônio base as atual)
+  // grupoMeta: use alocacaoMeta slider values × (patrimônio + aporte)
   const grupoMeta = useMemo(
     () => GRUPOS.map((g) => {
       const pct = g.cards.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
-      const valor = (pct / 100) * patrimonio;
+      const valor = (pct / 100) * patrimonioMeta;
       return { nome: g.nome, valor, pct: Math.round(pct * 10) / 10, cor: g.cor };
     }),
-    [alocacaoMeta, patrimonio]
+    [alocacaoMeta, patrimonioMeta]
   );
 
   const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
@@ -108,15 +111,15 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
   const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
-  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × patrimônio
+  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × (patrimônio + aporte)
   const cardTotais = useMemo(
     () => CARD_ORDER.map((cardId) => {
       const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
       const pctMeta = alocacaoMeta[cardId] ?? 0;
-      const meta = (pctMeta / 100) * patrimonio;
+      const meta = (pctMeta / 100) * patrimonioMeta;
       return { cardId, atual, meta, dif: meta - atual };
     }),
-    [ativosAtuais, alocacaoMeta, patrimonio]
+    [ativosAtuais, alocacaoMeta, patrimonioMeta]
   );
 
   const cardStyle = (accent: string): React.CSSProperties => ({
@@ -134,7 +137,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[
-            { label: "Patrimônio Total", value: formatBRL(patrimonio), color: "#1E3A8A" },
+            { label: "Patrimônio Total", value: formatBRL(patrimonioMeta), color: "#1E3A8A" },
             { label: "Total Aportes",    value: formatBRL(totalAportes), color: "#15803D" },
             { label: "Total Resgates",   value: formatBRL(totalResgates), color: "#B91C1C" },
           ].map(({ label, value, color }, i) => (

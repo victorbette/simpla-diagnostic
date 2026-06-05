@@ -249,6 +249,7 @@ export function SecaoAssetAllocation({
   // ── State B — carteira defined ────────────────────────────────────────────
   const rc = resultadoCarteira;
   const patrimonio = rc.patrimonio;
+  const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   // PieChart data — value is % (0–100), brl derived from patrimonio
   const dadosAtual = CARD_ORDER
@@ -261,7 +262,7 @@ export function SecaoAssetAllocation({
   const dadosMeta = CARD_ORDER
     .map((cardId) => {
       const value = Number(rc.macroMeta[cardId]) || 0;
-      return { key: cardId, name: CARD_META[cardId].label, value, color: CARD_META[cardId].cor, brl: (value / 100) * patrimonio };
+      return { key: cardId, name: CARD_META[cardId].label, value, color: CARD_META[cardId].cor, brl: (value / 100) * patrimonioMeta };
     })
     .filter((d) => d.value > 0.1);
 
@@ -275,7 +276,7 @@ export function SecaoAssetAllocation({
       const pctAtual = Number(rc.macroAtual[cardId]) || 0;
       const pctMeta = Number(rc.macroMeta[cardId]) || 0;
       const brlAtual = (pctAtual / 100) * patrimonio;
-      const brlMeta = (pctMeta / 100) * patrimonio;
+      const brlMeta = (pctMeta / 100) * patrimonioMeta;
       const difBRL = brlMeta - brlAtual;
 
       return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctAtual, brlAtual, pctMeta, brlMeta, difBRL };
@@ -359,7 +360,7 @@ export function SecaoAssetAllocation({
             </div>
             <div>
               <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
-                Proposta — {formatCurrency(patrimonio)}
+                Proposta — {formatCurrency(patrimonioMeta)}
               </p>
               <DonutChart data={dadosMeta} centerLabel="Proposta" />
             </div>
@@ -406,8 +407,8 @@ export function SecaoAssetAllocation({
               <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>
                 {formatPct(dadosTabela.reduce((s, d) => s + d.pctMeta, 0))}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonio)}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>R$ 0,00</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonioMeta)}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>—</span>
             </div>
           )}
         </div>
