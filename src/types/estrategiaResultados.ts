@@ -7,12 +7,15 @@ export interface PlanoAcaoItem {
   id: string;
   card?: string;
   nomeAtivo: string;
-  segmento: string;
-  tipo: string;
+  segmento?: string;
+  acao: string;
+  tipo?: string;           // alias de acao, mantido por compatibilidade com dados legados
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
-  prioridade: string;
+  valorAporteBRL?: number;
+  prioridade?: string;
+  observacao?: string;
 }
 
 export interface ResultadoCarteira {

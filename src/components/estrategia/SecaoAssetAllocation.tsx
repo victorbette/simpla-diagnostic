@@ -138,11 +138,11 @@ export function SecaoAssetAllocation({
     // macroMeta: directly from slider (already %)
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
-    // totalAportes/totalResgates from planoAcao (exclude manter)
+    // totalAportes: valorAporteBRL (consultor) quando definido, senão movimentacaoBRL
     const semManter = (r.planoAcao ?? []).filter((i) => i.acao !== "manter");
     const totalAportes = semManter
       .filter((i) => i.movimentacaoBRL > 0)
-      .reduce((s, i) => s + i.movimentacaoBRL, 0);
+      .reduce((s, i) => s + (Number(i.valorAporteBRL) || Number(i.movimentacaoBRL) || 0), 0);
     const totalResgates = semManter
       .filter((i) => i.movimentacaoBRL < 0)
       .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
@@ -159,11 +159,14 @@ export function SecaoAssetAllocation({
         card: i.card,
         nomeAtivo: i.nomeAtivo,
         segmento: i.segmento,
+        acao: i.acao,
         tipo: i.acao,
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
+        valorAporteBRL: i.valorAporteBRL,
         prioridade: i.prioridade,
+        observacao: i.observacao,
       })),
       dataCalculo: new Date().toISOString(),
       savedAt: new Date().toISOString(),
@@ -281,8 +284,8 @@ export function SecaoAssetAllocation({
     .filter((d) => d.pctAtual > 0 || d.pctMeta > 0);
 
   // Action plan (exclude manter)
-  const actionItems = rc.planoAcao.filter((i) => i.tipo !== "manter").slice(0, 10);
-  const totalVisivel = rc.planoAcao.filter((i) => i.tipo !== "manter").length;
+  const actionItems = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").slice(0, 10);
+  const totalVisivel = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").length;
 
   const groupedByCard: Record<string, typeof actionItems> = {};
   for (const item of actionItems) {
@@ -439,24 +442,37 @@ export function SecaoAssetAllocation({
                   {cardLabel}
                 </p>
                 {items.map((item) => {
+                  const acaoEfetiva = item.acao || item.tipo || "";
                   const isAportar = item.movimentacaoBRL > 0;
                   const movColor = isAportar ? "#15803D" : "#B91C1C";
                   const movPrefix = isAportar ? "+" : "−";
                   const tipoBg = isAportar ? "#DCFCE7" : "#FEE2E2";
                   const tipoColor = isAportar ? "#15803D" : "#B91C1C";
                   const tipoLabel =
-                    item.tipo === "novo" ? "Novo"
-                    : item.tipo === "aportar" ? "Aportar"
-                    : item.tipo === "resgatar_total" ? "Resgatar total"
+                    acaoEfetiva === "novo" ? "Novo"
+                    : acaoEfetiva === "aportar" ? "Aportar"
+                    : acaoEfetiva === "resgatar_total" ? "Resgatar total"
                     : "Resgatar parcial";
+                  const valorExibido = isAportar
+                    ? (item.valorAporteBRL != null && item.valorAporteBRL > 0
+                        ? item.valorAporteBRL
+                        : item.movimentacaoBRL)
+                    : Math.abs(item.movimentacaoBRL);
+                  const foiAjustado = isAportar &&
+                    item.valorAporteBRL != null &&
+                    item.valorAporteBRL > 0 &&
+                    item.valorAporteBRL !== item.movimentacaoBRL;
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: 13, color: "#000000", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nomeAtivo}</span>
                         <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: tipoBg, color: tipoColor }}>{tipoLabel}</span>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
-                        {movPrefix}{formatCurrency(Math.abs(item.movimentacaoBRL))}
+                      <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
+                        {movPrefix}{formatCurrency(Math.abs(valorExibido))}
+                        {foiAjustado && (
+                          <span style={{ fontSize: 10, color: "#2563EB", fontWeight: 500 }}>(ajustado)</span>
+                        )}
                       </span>
                     </div>
                   );
