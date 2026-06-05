@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, CardId, CarteiraResultado, PlanoAcaoItem } from "@/lib/carteira/types";
 import { CARD_ORDER, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { gerarPlanoAcao, formatBRL, calcularPatrimonio } from "@/lib/carteira/calculos";
-import { useCotacoesIA } from "@/hooks/useCotacoesIA";
 import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
 import { Etapa2CarteiraRecomendada } from "./Etapa2CarteiraRecomendada";
 import { Etapa3PlanoAcao } from "./Etapa3PlanoAcao";
@@ -103,21 +102,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
-  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscar } = useCotacoesIA();
-
-  const atualizarCotacoes = useCallback(async () => {
-    const RV: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
-    const todos = [...ativosAtuais, ...ativosRecomendados];
-    const tickers = todos
-      .filter((a) => RV.includes(a.card) && a.nome.trim())
-      .map((a) => ({
-        ticker: a.nome.trim().toUpperCase(),
-        tipo: a.card as "acoes" | "fiis" | "exterior" | "cripto",
-      }));
-    const unique = [...new Map(tickers.map((t) => [t.ticker, t])).values()];
-    await buscar(unique);
-  }, [ativosAtuais, ativosRecomendados, buscar]);
-
   // Load from localStorage once
   useEffect(() => {
     try {
@@ -156,9 +140,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const usdBrlInitial = useRef(true);
   useEffect(() => {
     if (usdBrlInitial.current) { usdBrlInitial.current = false; return; }
-    const USD_CARDS: CardId[] = ["exterior", "cripto"];
+    const USD: CardId[] = ["exterior", "cripto"];
     const recalc = (list: Ativo[]) => list.map((a) => {
-      if (!USD_CARDS.includes(a.card)) return a;
+      if (!USD.includes(a.card)) return a;
       if (!((a.quantidade ?? 0) > 0 && (a.cotacaoAtual ?? 0) > 0)) return a;
       return { ...a, valorBRL: (a.quantidade ?? 0) * (a.cotacaoAtual ?? 0) * usdBrl };
     });
@@ -269,31 +253,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
         <span style={{ color: "#93C5FD", fontSize: 11, flexShrink: 0 }}>● Dados salvos automaticamente</span>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-          <button
-            onClick={atualizarCotacoes}
-            disabled={carregandoCotacoes}
-            style={{
-              display: "flex", alignItems: "center", gap: 5,
-              border: "1px solid rgba(255,255,255,0.25)", color: "white",
-              backgroundColor: carregandoCotacoes ? "rgba(255,255,255,0.05)" : "rgba(99,179,237,0.15)",
-              fontSize: 11, padding: "4px 10px", borderRadius: 6,
-              cursor: carregandoCotacoes ? "not-allowed" : "pointer", flexShrink: 0,
-            }}
-          >
-            <i
-              className={`ti ${carregandoCotacoes ? "ti-loader-2" : "ti-sparkles"}`}
-              style={{ fontSize: 12, animation: carregandoCotacoes ? "spin 1s linear infinite" : undefined }}
-            />
-            {carregandoCotacoes ? "Buscando..." : "Buscar cotações"}
-          </button>
-          {erroCotacoes && (
-            <span style={{ fontSize: 10, color: "#FCA5A5", maxWidth: 180, textAlign: "right" }}>
-              {erroCotacoes.slice(0, 60)}
-            </span>
-          )}
-        </div>
-
         <button
           onClick={handleLimpar}
           style={{
@@ -362,10 +321,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             ativos={ativosAtuais}
             onAtivos={setAtivosAtuais}
             patrimonio={patrimonio}
-            cotacoes={cotacoes}
             usdBrl={usdBrl}
             onUsdBrlChange={setUsdBrl}
-            onBuscarCotacao={buscar}
           />
         )}
         {etapa === 2 && (
@@ -380,10 +337,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             aporteDisponivel={aporteDisponivel}
             onAporteChange={setAporteDisponivel}
             onAlocacaoChange={setAlocacaoCompleta}
-            cotacoes={cotacoes}
             usdBrl={usdBrl}
             onUsdBrlChange={setUsdBrl}
-            onBuscarCotacao={buscar}
           />
         )}
         {etapa === 3 && (

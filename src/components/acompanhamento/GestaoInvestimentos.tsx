@@ -1,11 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import type { ResultadoCarteira, PlanoAcaoItem } from "@/types/estrategiaResultados";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import type { CardId } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { Rebalanceamento } from "./Rebalanceamento";
-import { useCotacoesIA } from "@/hooks/useCotacoesIA";
-import type { CotacaoAtivo } from "@/lib/cotacoesIA";
 
 interface Props {
   carteira: ResultadoCarteira | null;
@@ -21,23 +19,8 @@ const ACAO_CONFIG: Record<string, { bg: string; color: string; label: string }> 
   novo:             { bg: "#DBEAFE", color: "#1E40AF", label: "✦ Novo" },
 };
 
-const RV_CARDS: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
-
 export function GestaoInvestimentos({ carteira }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("atual");
-  const { cotacoes, carregando: carregandoCotacoes, erro: erroCotacoes, buscar } = useCotacoesIA();
-
-  const atualizarCotacoes = useCallback(async () => {
-    if (!carteira) return;
-    const tickers = carteira.planoAcao
-      .filter((p) => p.card && RV_CARDS.includes(p.card as CardId) && p.nomeAtivo.trim())
-      .map((p) => ({
-        ticker: p.nomeAtivo.trim().toUpperCase(),
-        tipo: p.card as "acoes" | "fiis" | "exterior" | "cripto",
-      }));
-    const unique = [...new Map(tickers.map((t) => [t.ticker, t])).values()];
-    await buscar(unique);
-  }, [carteira, buscar]);
 
   if (!carteira) {
     return (
@@ -56,7 +39,7 @@ export function GestaoInvestimentos({ carteira }: Props) {
 
       {/* Sub-tab bar */}
       <div style={{ display: "flex", alignItems: "center", borderBottom: "2px solid #BFDBFE" }}>
-        <div style={{ display: "flex", gap: 0, flex: 1 }}>
+        <div style={{ display: "flex", gap: 0 }}>
           {([
             ["atual", "Carteira Atual"],
             ["rebalanceamento", "Rebalanceamento"],
@@ -78,38 +61,15 @@ export function GestaoInvestimentos({ carteira }: Props) {
             </button>
           ))}
         </div>
-
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, paddingBottom: 4 }}>
-          <button
-            onClick={atualizarCotacoes}
-            disabled={carregandoCotacoes}
-            style={{
-              display: "flex", alignItems: "center", gap: 5,
-              border: "1px solid #BFDBFE", color: "#1E3A8A",
-              backgroundColor: carregandoCotacoes ? "#F3F4F6" : "#EFF6FF",
-              fontSize: 12, padding: "5px 12px", borderRadius: 6,
-              cursor: carregandoCotacoes ? "not-allowed" : "pointer",
-            }}
-          >
-            <i
-              className={`ti ${carregandoCotacoes ? "ti-loader-2" : "ti-sparkles"}`}
-              style={{ fontSize: 13, animation: carregandoCotacoes ? "spin 1s linear infinite" : undefined }}
-            />
-            {carregandoCotacoes ? "Buscando..." : "Atualizar Cotações com IA"}
-          </button>
-          {erroCotacoes && (
-            <span style={{ fontSize: 11, color: "#B91C1C" }}>{erroCotacoes.slice(0, 60)}</span>
-          )}
-        </div>
       </div>
 
-      {subTab === "atual" && <CarteiraAtual carteira={carteira} savedAt={savedAt} cotacoes={cotacoes} />}
+      {subTab === "atual" && <CarteiraAtual carteira={carteira} savedAt={savedAt} />}
       {subTab === "rebalanceamento" && <Rebalanceamento carteira={carteira} />}
     </div>
   );
 }
 
-function CarteiraAtual({ carteira, savedAt, cotacoes }: { carteira: ResultadoCarteira; savedAt: string; cotacoes: Record<string, CotacaoAtivo> }) {
+function CarteiraAtual({ carteira, savedAt }: { carteira: ResultadoCarteira; savedAt: string }) {
   const planoFiltrado = carteira.planoAcao.filter(
     (i) => (i.acao || i.tipo) !== "manter"
   );
@@ -126,10 +86,10 @@ function CarteiraAtual({ carteira, savedAt, cotacoes }: { carteira: ResultadoCar
       {/* Summary */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {[
-          { label: "Patrimônio",     value: formatBRL(carteira.patrimonio),  color: "#1E3A8A", top: "#1E3A8A" },
+          { label: "Patrimônio",     value: formatBRL(carteira.patrimonio),   color: "#1E3A8A", top: "#1E3A8A" },
           { label: "Total Aportes",  value: formatBRL(carteira.totalAportes), color: "#15803D", top: "#15803D" },
           { label: "Total Resgates", value: formatBRL(carteira.totalResgates), color: "#B91C1C", top: "#B91C1C" },
-          { label: "Movimentações",  value: String(planoFiltrado.length),     color: "#111827", top: "#6B7280" },
+          { label: "Movimentações",  value: String(planoFiltrado.length),      color: "#111827", top: "#6B7280" },
         ].map(({ label, value, color, top }) => (
           <div key={label} style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderTop: `3px solid ${top}`, borderRadius: 10, padding: "12px 16px" }}>
             <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px" }}>{label}</p>
@@ -183,7 +143,7 @@ function CarteiraAtual({ carteira, savedAt, cotacoes }: { carteira: ResultadoCar
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Plano de Ação Salvo</span>
 
-          {cardsComItens.map((cardId) => {
+          {cardsComItens.map((cardId: CardId) => {
             const meta = CARD_META[cardId];
             const items: PlanoAcaoItem[] = carteira.planoAcao.filter((p) => p.card === cardId);
             const groupTotal = items.reduce((s, p) => s + p.movimentacaoBRL, 0);
@@ -216,9 +176,6 @@ function CarteiraAtual({ carteira, savedAt, cotacoes }: { carteira: ResultadoCar
                 {items.map((item) => {
                   const acaoEfetiva = item.acao || item.tipo || "manter";
                   const cfg = ACAO_CONFIG[acaoEfetiva] ?? ACAO_CONFIG["manter"];
-                  const cotacao = RV_CARDS.includes(cardId)
-                    ? cotacoes[item.nomeAtivo.trim().toUpperCase()]
-                    : undefined;
                   return (
                     <div
                       key={item.id}
@@ -229,19 +186,6 @@ function CarteiraAtual({ carteira, savedAt, cotacoes }: { carteira: ResultadoCar
                       <div>
                         <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
                         {item.segmento && <span style={{ display: "block", fontSize: 11, color: "#9CA3AF" }}>{item.segmento}</span>}
-                        {cotacao && !cotacao.erro && (() => {
-                          const pos = cotacao.variacao >= 0;
-                          return (
-                            <span style={{
-                              display: "inline-block", marginTop: 2,
-                              fontSize: 10, padding: "1px 5px", borderRadius: 3, fontWeight: 600,
-                              backgroundColor: pos ? "#DCFCE7" : "#FEE2E2",
-                              color: pos ? "#15803D" : "#B91C1C",
-                            }}>
-                              {cotacao.moeda === "BRL" ? "R$" : "US$"} {cotacao.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({pos ? "+" : ""}{cotacao.variacao.toFixed(2)}%)
-                            </span>
-                          );
-                        })()}
                       </div>
                       <span style={{
                         backgroundColor: cfg.bg, color: cfg.color,

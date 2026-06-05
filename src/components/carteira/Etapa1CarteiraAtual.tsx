@@ -2,21 +2,16 @@ import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER } from "@/lib/carteira/types";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
 import { ImportarIA } from "./ImportarIA";
-import type { CotacaoAtivo } from "@/lib/cotacoesIA";
-
-type RVTipo = "acoes" | "fiis" | "exterior" | "cripto";
 
 interface Props {
   ativos: Ativo[];
   onAtivos: (ativos: Ativo[]) => void;
   patrimonio: number;
-  cotacoes?: Record<string, CotacaoAtivo>;
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
-  onBuscarCotacao?: (tickers: Array<{ ticker: string; tipo: RVTipo }>) => void;
 }
 
-export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes, usdBrl, onUsdBrlChange, onBuscarCotacao }: Props) {
+export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, usdBrl, onUsdBrlChange }: Props) {
   function handleAdd(cardId: CardId) {
     onAtivos([...ativos, makeNovoAtivo(cardId)]);
   }
@@ -44,10 +39,8 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes, us
           ativos={ativos.filter((a) => a.card === cardId)}
           modo="atual"
           patrimonio={patrimonio}
-          cotacoes={cotacoes}
           usdBrl={usdBrl}
           onUsdBrlChange={onUsdBrlChange}
-          onBuscarCotacao={onBuscarCotacao}
           onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}

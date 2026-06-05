@@ -4,9 +4,6 @@ import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
 import { ImportarIA } from "./ImportarIA";
-import type { CotacaoAtivo } from "@/lib/cotacoesIA";
-
-type RVTipo = "acoes" | "fiis" | "exterior" | "cripto";
 
 interface Props {
   ativos: Ativo[];
@@ -19,10 +16,8 @@ interface Props {
   aporteDisponivel: number;
   onAporteChange: (v: number) => void;
   onAlocacaoChange?: (completa: boolean) => void;
-  cotacoes?: Record<string, CotacaoAtivo>;
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
-  onBuscarCotacao?: (tickers: Array<{ ticker: string; tipo: RVTipo }>) => void;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -41,7 +36,7 @@ function parseBRL(raw: string): number {
 export function Etapa2CarteiraRecomendada({
   ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta,
   patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
-  cotacoes, usdBrl, onUsdBrlChange, onBuscarCotacao,
+  usdBrl, onUsdBrlChange,
 }: Props) {
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
@@ -295,10 +290,8 @@ export function Etapa2CarteiraRecomendada({
           patrimonio={patrimonioMeta}
           metaPct={alocacaoMeta[cardId] ?? 0}
           ativosAtuaisRef={ativosAtuais}
-          cotacoes={cotacoes}
           usdBrl={usdBrl}
           onUsdBrlChange={onUsdBrlChange}
-          onBuscarCotacao={onBuscarCotacao}
           onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}

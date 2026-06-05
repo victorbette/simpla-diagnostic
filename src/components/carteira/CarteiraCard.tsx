@@ -3,7 +3,6 @@ import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
-import type { CotacaoAtivo } from "@/lib/cotacoesIA";
 
 const SEG_COLORS: Record<string, { bg: string; color: string }> = {
   "Pós-fixado":     { bg: "#DBEAFE", color: "#1E40AF" },
@@ -152,8 +151,6 @@ const RF_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
 const RV_CARDS: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
 const USD_CARDS: CardId[] = ["exterior", "cripto"];
 
-type RVTipo = "acoes" | "fiis" | "exterior" | "cripto";
-
 interface Props {
   cardId: CardId;
   ativos: Ativo[];
@@ -161,10 +158,8 @@ interface Props {
   patrimonio: number;
   metaPct?: number;
   ativosAtuaisRef?: Ativo[];
-  cotacoes?: Record<string, CotacaoAtivo>;
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
-  onBuscarCotacao?: (tickers: Array<{ ticker: string; tipo: RVTipo }>) => void;
   onAdd: () => void;
   onRemove: (id: string) => void;
   onChange: (id: string, partial: Partial<Ativo>) => void;
@@ -172,7 +167,7 @@ interface Props {
 
 export function CarteiraCard({
   cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef: _ativosAtuaisRef,
-  cotacoes, usdBrl = 5.0, onUsdBrlChange, onBuscarCotacao,
+  usdBrl = 5.0, onUsdBrlChange,
   onAdd, onRemove, onChange,
 }: Props) {
   const meta = CARD_META[cardId];
@@ -212,22 +207,6 @@ export function CarteiraCard({
     // acoes, fiis, cripto
     gridTemplate = "2fr 65px 115px 85px 28px";
     headers = ["Nome", "Qtd", "Cotação", "R$ Atual", ""];
-  }
-
-  function handleNomeBlur(ativo: Ativo) {
-    if (isRVCard && ativo.nome.trim() && onBuscarCotacao) {
-      onBuscarCotacao([{ ticker: ativo.nome.trim().toUpperCase(), tipo: cardId as RVTipo }]);
-    }
-  }
-
-  function aplicarCotacaoIA(ativoId: string, cotacao: CotacaoAtivo) {
-    const ativo = ativos.find(a => a.id === ativoId);
-    if (!ativo) return;
-    const novaCotacao = cotacao.preco; // native: USD for exterior/cripto, BRL for acoes/fiis
-    const novoValorBRL = (ativo.quantidade ?? 0) > 0
-      ? (ativo.quantidade ?? 0) * novaCotacao * (isUSDCard ? usdBrl : 1)
-      : ativo.valorBRL;
-    onChange(ativoId, { cotacaoAtual: novaCotacao, valorBRL: novoValorBRL });
   }
 
   return (
@@ -327,9 +306,6 @@ export function CarteiraCard({
         const segCor = SEG_COLORS[ativo.segmento];
         const isHover = hoverRow === ativo.id;
         const isEditSeg = editingSegId === ativo.id;
-        const ticker = ativo.nome.trim().toUpperCase();
-        const cotacaoIA = ticker && cotacoes ? cotacoes[ticker] : undefined;
-        const temCotacaoIA = !!(cotacaoIA && !cotacaoIA.erro);
         const isCalc = (ativo.quantidade ?? 0) > 0 && (ativo.cotacaoAtual ?? 0) > 0;
 
         return (
@@ -346,31 +322,15 @@ export function CarteiraCard({
             onMouseLeave={() => setHoverRow(null)}
           >
             {/* Nome */}
-            <div>
-              <input
-                value={ativo.nome}
-                onChange={(e) => onChange(ativo.id, { nome: e.target.value })}
-                onBlur={() => handleNomeBlur(ativo)}
-                placeholder="Nome do ativo..."
-                style={{
-                  border: "none", background: "transparent", outline: "none",
-                  fontSize: 12, color: "#111827", width: "100%", padding: 0,
-                }}
-              />
-              {temCotacaoIA && (() => {
-                const pos = cotacaoIA!.variacao >= 0;
-                return (
-                  <span style={{
-                    fontSize: 10, padding: "1px 5px", borderRadius: 3, fontWeight: 600,
-                    backgroundColor: pos ? "#DCFCE7" : "#FEE2E2",
-                    color: pos ? "#15803D" : "#B91C1C",
-                    display: "inline-block", marginTop: 2,
-                  }}>
-                    {pos ? "+" : ""}{cotacaoIA!.variacao.toFixed(2)}%
-                  </span>
-                );
-              })()}
-            </div>
+            <input
+              value={ativo.nome}
+              onChange={(e) => onChange(ativo.id, { nome: e.target.value })}
+              placeholder="Nome do ativo..."
+              style={{
+                border: "none", background: "transparent", outline: "none",
+                fontSize: 12, color: "#111827", width: "100%", padding: 0,
+              }}
+            />
 
             {/* Segmento — RF cards and exterior */}
             {(isRFCard || cardId === "exterior") && (
@@ -432,32 +392,15 @@ export function CarteiraCard({
 
             {/* Cotação — RV only */}
             {isRVCard && (
-              <div style={{ position: "relative" }}>
-                <div style={{ paddingRight: temCotacaoIA ? 18 : 0 }}>
-                  <CotacaoInput
-                    value={ativo.cotacaoAtual}
-                    onChange={(novaCotacao) => {
-                      const novoValor = (ativo.quantidade ?? 0) > 0 && novaCotacao > 0
-                        ? (ativo.quantidade ?? 0) * novaCotacao * (isUSDCard ? usdBrl : 1)
-                        : ativo.valorBRL;
-                      onChange(ativo.id, { cotacaoAtual: novaCotacao, valorBRL: novoValor });
-                    }}
-                  />
-                </div>
-                {temCotacaoIA && (
-                  <button
-                    onClick={() => aplicarCotacaoIA(ativo.id, cotacaoIA!)}
-                    title={`Cotação IA: ${cotacaoIA!.moeda === "USD" ? "US$" : "R$"} ${cotacaoIA!.preco.toFixed(2)}`}
-                    style={{
-                      position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)",
-                      border: "none", background: "none", cursor: "pointer", padding: 0,
-                      display: "flex", alignItems: "center", color: "#2563EB",
-                    }}
-                  >
-                    <i className="ti ti-sparkles" style={{ fontSize: 12 }} />
-                  </button>
-                )}
-              </div>
+              <CotacaoInput
+                value={ativo.cotacaoAtual}
+                onChange={(novaCotacao) => {
+                  const novoValor = (ativo.quantidade ?? 0) > 0 && novaCotacao > 0
+                    ? (ativo.quantidade ?? 0) * novaCotacao * (isUSDCard ? usdBrl : 1)
+                    : ativo.valorBRL;
+                  onChange(ativo.id, { cotacaoAtual: novaCotacao, valorBRL: novoValor });
+                }}
+              />
             )}
 
             {/* R$ / Valor */}
