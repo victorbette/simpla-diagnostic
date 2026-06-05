@@ -166,7 +166,7 @@ interface Props {
 }
 
 export function CarteiraCard({
-  cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef: _ativosAtuaisRef,
+  cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef,
   usdBrl = 5.0, onUsdBrlChange,
   onAdd, onRemove, onChange,
 }: Props) {
@@ -255,15 +255,36 @@ export function CarteiraCard({
             )}
           </div>
 
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatBRL(total)}</div>
-            <div style={{ fontSize: 11, color: "#6B7280" }}>
-              {formatPct(pctCarteira)}
-              {modo === "recomendada" && metaPct !== undefined && (
-                <span style={{ color: "#9CA3AF" }}> / meta {formatPct(metaPct)}</span>
-              )}
+          {modo === "recomendada" && metaPct !== undefined ? (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: meta.cor }}>
+                {formatBRL((metaPct / 100) * patrimonio)}
+              </div>
+              <div style={{ fontSize: 11, color: meta.cor, fontWeight: 600 }}>
+                Meta {metaPct.toFixed(1)}%
+              </div>
+              {(() => {
+                const brlAtual = (ativosAtuaisRef ?? [])
+                  .filter((a) => a.card === cardId)
+                  .reduce((s, a) => s + a.valorBRL, 0);
+                const brlMeta = (metaPct / 100) * patrimonio;
+                const dif = brlMeta - brlAtual;
+                if (Math.abs(dif) < 1) return (
+                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>Alinhado</div>
+                );
+                return (
+                  <div style={{ fontSize: 11, fontWeight: 600, color: dif > 0 ? "#15803D" : "#B91C1C" }}>
+                    {dif > 0 ? "+" : ""}{formatBRL(dif)}
+                  </div>
+                );
+              })()}
             </div>
-          </div>
+          ) : (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatBRL(total)}</div>
+              <div style={{ fontSize: 11, color: "#6B7280" }}>{formatPct(pctCarteira)}</div>
+            </div>
+          )}
         </div>
 
         {/* Composition bar */}

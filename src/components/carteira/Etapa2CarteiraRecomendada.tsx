@@ -27,10 +27,21 @@ const PERFIL_LABELS: Record<string, string> = {
   arrojado: "Arrojado",
 };
 
+const GRUPOS = [
+  { label: "Renda Fixa",     cor: "#1E40AF", cards: ["resgate_longo", "resgate_rapido"] as CardId[] },
+  { label: "Renda Variável", cor: "#15803D", cards: ["acoes", "fiis"] as CardId[] },
+  { label: "Internacional",  cor: "#B45309", cards: ["exterior"] as CardId[] },
+  { label: "Cripto",         cor: "#1D4ED8", cards: ["cripto"] as CardId[] },
+];
+
 function parseBRL(raw: string): number {
   const clean = raw.replace(/[R$\s.]/g, "").replace(",", ".");
   const v = parseFloat(clean);
   return isNaN(v) || v < 0 ? 0 : v;
+}
+
+function totalCard(ativos: Ativo[], cardId: CardId): number {
+  return ativos.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
 }
 
 export function Etapa2CarteiraRecomendada({
@@ -64,9 +75,12 @@ export function Etapa2CarteiraRecomendada({
     if (padrao) onAlocacaoMeta({ ...padrao });
   }
 
-  function resetar() {
-    const vazio = CARD_ORDER.reduce((acc, c) => ({ ...acc, [c]: 0 }), {} as Record<CardId, number>);
-    onAlocacaoMeta(vazio);
+  function copiarAtual() {
+    const novoMeta = CARD_ORDER.reduce((acc, cardId) => ({
+      ...acc,
+      [cardId]: patrimonio > 0 ? (totalCard(ativosAtuais, cardId) / patrimonio) * 100 : 0,
+    }), {} as Record<CardId, number>);
+    onAlocacaoMeta(novoMeta);
   }
 
   function handleAdd(cardId: CardId) {
@@ -90,6 +104,8 @@ export function Etapa2CarteiraRecomendada({
 
       {/* ── CARD ALOCAÇÃO META ── */}
       <div style={{ backgroundColor: "white", border: "0.5px solid #BFDBFE", borderRadius: 12, padding: 20, marginBottom: 4 }}>
+
+        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Alocação Recomendada</span>
           {clientProfile && (
@@ -97,58 +113,113 @@ export function Etapa2CarteiraRecomendada({
               {PERFIL_LABELS[clientProfile] ?? clientProfile}
             </span>
           )}
-          <div style={{ flex: 1 }} />
+        </div>
+
+        {/* Grouped sliders */}
+        {GRUPOS.map((grupo) => {
+          const grupoPct = grupo.cards.reduce((s, id) => s + (alocacaoMeta[id] ?? 0), 0);
+          const grupoBRL = (grupoPct / 100) * patrimonioMeta;
+          return (
+            <div key={grupo.label} style={{ marginBottom: 14 }}>
+              {/* Group header */}
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                paddingBottom: 6, borderBottom: `1px solid ${grupo.cor}25`, marginBottom: 8,
+              }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: grupo.cor,
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                }}>
+                  {grupo.label}
+                </span>
+                <span style={{ fontSize: 12, color: "#6B7280" }}>
+                  {grupoPct.toFixed(1)}% · {formatBRL(grupoBRL)}
+                </span>
+              </div>
+
+              {/* Card sliders */}
+              {grupo.cards.map((cardId) => {
+                const meta = CARD_META[cardId];
+                const pct = alocacaoMeta[cardId] ?? 0;
+                const brl = (pct / 100) * patrimonioMeta;
+                return (
+                  <div key={cardId} style={{
+                    display: "grid",
+                    gridTemplateColumns: "140px 1fr 62px 90px",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingLeft: 12,
+                    marginBottom: 8,
+                  }}>
+                    {/* Label */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#374151" }}>
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: meta.cor, flexShrink: 0 }} />
+                      {meta.label}
+                    </div>
+
+                    {/* Slider */}
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={0.5}
+                      value={pct}
+                      onChange={(e) => setPct(cardId, parseFloat(e.target.value))}
+                      style={{ width: "100%", accentColor: grupo.cor, height: 4 }}
+                    />
+
+                    {/* % input */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.5}
+                        value={pct}
+                        onChange={(e) => setPct(cardId, parseFloat(e.target.value) || 0)}
+                        style={{
+                          width: 44, textAlign: "right", fontSize: 12, fontWeight: 600,
+                          border: "1px solid #BFDBFE", borderRadius: 4, padding: "2px 4px",
+                          color: grupo.cor, outline: "none",
+                        }}
+                      />
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>%</span>
+                    </div>
+
+                    {/* R$ meta */}
+                    <div style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
+                      {formatBRL(brl)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 8, marginTop: 4, paddingTop: 12, borderTop: "0.5px solid #F3F4F6" }}>
           <button
             onClick={carregarPadrao}
             disabled={!clientProfile}
-            style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #BFDBFE", backgroundColor: "transparent", cursor: clientProfile ? "pointer" : "default", color: "#374151", opacity: clientProfile ? 1 : 0.4 }}
+            style={{
+              fontSize: 12, color: "#2563EB", background: "#EFF6FF",
+              border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "6px 12px",
+              cursor: clientProfile ? "pointer" : "default", opacity: clientProfile ? 1 : 0.4,
+            }}
           >
-            Padrão Simpla
+            ↺ Padrão Simpla{clientProfile ? ` (${PERFIL_LABELS[clientProfile] ?? clientProfile})` : ""}
           </button>
           <button
-            onClick={resetar}
-            style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #BFDBFE", backgroundColor: "transparent", cursor: "pointer", color: "#374151" }}
+            onClick={copiarAtual}
+            style={{
+              fontSize: 12, color: "#6B7280", background: "#F3F4F6",
+              border: "0.5px solid #E5E7EB", borderRadius: 6, padding: "6px 12px",
+              cursor: "pointer",
+            }}
           >
-            Resetar
+            Copiar carteira atual
           </button>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
-          {CARD_ORDER.map((cardId) => {
-            const meta = CARD_META[cardId];
-            const pct = alocacaoMeta[cardId] ?? 0;
-            const valorR = (pct / 100) * patrimonioMeta;
-            return (
-              <div key={cardId}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: meta.cor, flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: "#374151", flex: 1 }}>{meta.label}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.5}
-                    value={pct}
-                    onChange={(e) => setPct(cardId, parseFloat(e.target.value) || 0)}
-                    style={{ width: 52, textAlign: "right", fontSize: 12, border: "1px solid #BFDBFE", borderRadius: 4, padding: "2px 4px" }}
-                  />
-                  <span style={{ fontSize: 11, color: "#6B7280" }}>%</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={0.5}
-                  value={pct}
-                  onChange={(e) => setPct(cardId, parseFloat(e.target.value))}
-                  style={{ width: "100%", accentColor: meta.cor, height: 4 }}
-                />
-                <div style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right", marginTop: 2 }}>
-                  {formatBRL(valorR)}
-                </div>
-              </div>
-            );
-          })}
         </div>
 
         {/* Barra de progresso de alocação */}
