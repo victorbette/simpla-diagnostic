@@ -1,34 +1,30 @@
 interface Props {
-  pagina: number;
-  total?: number;
-  clientName?: string;
+  nomeCliente: string;
+  numPagina: number;
+  totalPaginas: number;
 }
 
-export function RodapePagina({ pagina, total = 9, clientName }: Props) {
+export function RodapePagina({ nomeCliente, numPagina, totalPaginas }: Props) {
   return (
     <div
       style={{
-        marginTop: 40,
-        paddingTop: 16,
-        borderTop: "1px solid #E5E7EB",
+        position: "absolute",
+        bottom: 32,
+        left: 72,
+        right: 72,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        fontSize: 11,
-        color: "#9CA3AF",
+        borderTop: "0.5px solid #E5E7EB",
+        paddingTop: 12,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <img src="/logo-si.svg" alt="" style={{ height: 14, width: 14, objectFit: "contain", opacity: 0.35 }} />
-        <span>Simpla Invest · Financial Planning</span>
-      </div>
-      {clientName ? (
-        <span style={{ color: "#6B7280" }}>{clientName}</span>
-      ) : (
-        <span />
-      )}
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>
-        {pagina}&thinsp;/&thinsp;{total}
+      <span style={{ fontSize: 10, color: "#9CA3AF" }}>
+        Estratégia Inicial · {nomeCliente}
+      </span>
+      <img src="/logo-si.svg" height={16} alt="Simpla Invest" style={{ opacity: 0.35, objectFit: "contain" }} />
+      <span style={{ fontSize: 10, color: "#9CA3AF", fontVariantNumeric: "tabular-nums" }}>
+        {numPagina}&thinsp;/&thinsp;{totalPaginas}
       </span>
     </div>
   );

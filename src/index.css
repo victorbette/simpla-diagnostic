@@ -144,6 +144,7 @@
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
   /* Ocultar interface — mostrar apenas o documento */
+  body { background: white !important; }
   .no-print { display: none !important; }
   .app-main-header { display: none !important; }
   .estrategia-abas-topo { display: none !important; }
@@ -151,7 +152,20 @@
   .doc-screen-only { display: none !important; }
   header, .sidebar, .btn-imprimir { display: none !important; }
 
-  /* Quebra de página entre seções */
+  /* Cada página em folha separada — usa inline style pageBreakAfter:always */
+  .doc-pagina {
+    page-break-after: always !important;
+    break-after: page !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .doc-pagina:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Legado — quebras manuais */
   .page-break-before {
     page-break-before: always !important;
     break-before: page !important;
@@ -163,31 +177,7 @@
     break-inside: avoid !important;
   }
 
-  /* Documento ocupa a página toda */
-  .documento-print {
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Quebra de página entre seções da estratégia (legado) */
-  .secao-area {
-    page-break-before: always;
-    break-before: page;
-  }
-  .secao-area:first-of-type {
-    page-break-before: avoid;
-    break-before: avoid;
-  }
-
-  /* Show all pages in print (legado — paginação por abas) */
-  .doc-pages-container > div { display: block !important; }
-  .doc-pages-container > div:not(:last-child) .doc-page {
-    page-break-after: always;
-    break-after: page;
-  }
-
-  /* A4 page sizing */
+  /* Legado — doc-page */
   .doc-page {
     width: 210mm !important;
     min-height: 297mm !important;
@@ -198,6 +188,15 @@
     border-radius: 0 !important;
     margin: 0 !important;
     max-width: none !important;
+  }
+
+  /* Textarea — mostrar texto na impressão */
+  textarea {
+    border: none !important;
+    resize: none !important;
+    overflow: visible !important;
+    background: transparent !important;
+    padding: 0 !important;
   }
 
   @page {
