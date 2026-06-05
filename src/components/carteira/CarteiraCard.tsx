@@ -3,6 +3,7 @@ import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
+import type { CotacaoAtivo } from "@/lib/cotacoesIA";
 
 const SEG_COLORS: Record<string, { bg: string; color: string }> = {
   "Pós-fixado":     { bg: "#DBEAFE", color: "#1E40AF" },
@@ -79,6 +80,8 @@ function ValueInput({ value, onChange }: ValueInputProps) {
   );
 }
 
+const RV_CARDS: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
+
 interface Props {
   cardId: CardId;
   ativos: Ativo[];
@@ -86,13 +89,15 @@ interface Props {
   patrimonio: number;
   metaPct?: number;
   ativosAtuaisRef?: Ativo[];
+  cotacoes?: Record<string, CotacaoAtivo>;
   onAdd: () => void;
   onRemove: (id: string) => void;
   onChange: (id: string, campo: keyof Ativo, valor: string | number) => void;
 }
 
-export function CarteiraCard({ cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef: _ativosAtuaisRef, onAdd, onRemove, onChange }: Props) {
+export function CarteiraCard({ cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef: _ativosAtuaisRef, cotacoes, onAdd, onRemove, onChange }: Props) {
   const meta = CARD_META[cardId];
+  const isRVCard = RV_CARDS.includes(cardId);
   const total = ativos.reduce((s, a) => s + a.valorBRL, 0);
   const pctCarteira = patrimonio > 0 ? (total / patrimonio) * 100 : 0;
   const temSegs = meta.segmentos.length > 0;
@@ -203,15 +208,46 @@ export function CarteiraCard({ cardId, ativos, modo, patrimonio, metaPct, ativos
             onMouseLeave={() => setHoverRow(null)}
           >
             {/* Nome */}
-            <input
-              value={ativo.nome}
-              onChange={(e) => onChange(ativo.id, "nome", e.target.value)}
-              placeholder="Nome do ativo..."
-              style={{
-                border: "none", background: "transparent", outline: "none",
-                fontSize: 12, color: "#111827", width: "100%", padding: 0,
-              }}
-            />
+            <div>
+              <input
+                value={ativo.nome}
+                onChange={(e) => onChange(ativo.id, "nome", e.target.value)}
+                placeholder="Nome do ativo..."
+                style={{
+                  border: "none", background: "transparent", outline: "none",
+                  fontSize: 12, color: "#111827", width: "100%", padding: 0,
+                }}
+              />
+              {(() => {
+                if (!isRVCard || !cotacoes) return null;
+                const ticker = ativo.nome.trim().toUpperCase();
+                const c = ticker ? cotacoes[ticker] : undefined;
+                if (!c || c.erro) return null;
+                const pos = c.variacao >= 0;
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                    <span style={{
+                      fontSize: 10, padding: "1px 5px", borderRadius: 3, fontWeight: 600,
+                      backgroundColor: pos ? "#DCFCE7" : "#FEE2E2",
+                      color: pos ? "#15803D" : "#B91C1C",
+                    }}>
+                      {pos ? "+" : ""}{c.variacao.toFixed(2)}%
+                    </span>
+                    <button
+                      onClick={() => onChange(ativo.id, "valorBRL", c.preco)}
+                      title="Preencher com cotação atual"
+                      style={{
+                        fontSize: 10, padding: "1px 6px", borderRadius: 3,
+                        border: "1px solid #BFDBFE", background: "#EFF6FF",
+                        color: "#1E3A8A", cursor: "pointer",
+                      }}
+                    >
+                      ↓ {c.moeda === "BRL" ? "R$" : "US$"} {c.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
 
             {/* Segmento */}
             {temSegs && (
