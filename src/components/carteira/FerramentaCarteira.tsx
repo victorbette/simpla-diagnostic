@@ -95,6 +95,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [planoAcao, setPlanoAcao] = useState<PlanoAcaoItem[]>([]);
   const [notasConsultor, setNotasConsultor] = useState("");
   const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
+  const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   // Load from localStorage once
@@ -314,6 +315,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             clientProfile={clientProfile}
             aporteDisponivel={aporteDisponivel}
             onAporteChange={setAporteDisponivel}
+            onAlocacaoChange={setAlocacaoCompleta}
           />
         )}
         {etapa === 3 && (
@@ -356,21 +358,46 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
         <span style={{ fontSize: 12, color: "#6B7280" }}>Etapa {etapa} de 4</span>
 
-        {etapa < 4 ? (
-          <button
-            onClick={handleNext}
-            style={{
-              display: "flex", alignItems: "center", gap: 4,
-              backgroundColor: "#2563EB", color: "white",
-              border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1D4ED8")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
-          >
-            {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
-            <ChevronRight style={{ width: 14, height: 14 }} />
-          </button>
-        ) : (
+        {etapa < 4 ? (() => {
+          const patrimonioMeta = patrimonio + aporteDisponivel;
+          const totalAlocadoPct = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
+          const totalAlocadoBRL = (totalAlocadoPct / 100) * patrimonioMeta;
+          const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
+          const alocacaoFaltando = totalAlocadoPct < 99.9;
+          const podeAvancar = etapa !== 2 || alocacaoCompleta;
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+              <button
+                onClick={() => { if (podeAvancar) handleNext(); }}
+                disabled={!podeAvancar}
+                title={!podeAvancar ? "Aloque 100% do patrimônio antes de avançar" : ""}
+                style={{
+                  display: "flex", alignItems: "center", gap: 4,
+                  backgroundColor: podeAvancar ? "#2563EB" : "#9CA3AF",
+                  color: "white", border: "none", borderRadius: 6,
+                  padding: "6px 14px", fontSize: 13, fontWeight: 500,
+                  cursor: podeAvancar ? "pointer" : "not-allowed",
+                  opacity: podeAvancar ? 1 : 0.7,
+                  transition: "all 200ms",
+                }}
+                onMouseEnter={(e) => { if (podeAvancar) e.currentTarget.style.backgroundColor = "#1D4ED8"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = podeAvancar ? "#2563EB" : "#9CA3AF"; }}
+              >
+                {etapa === 3 ? "Ver resultado" : "Próxima etapa"}
+                <ChevronRight style={{ width: 14, height: 14 }} />
+              </button>
+              {etapa === 2 && !podeAvancar && (
+                <div style={{ fontSize: 11, color: "#B45309", textAlign: "right" }}>
+                  {alocacaoFaltando
+                    ? `Aloque mais ${formatBRL(Math.abs(diferencaBRL))} para continuar`
+                    : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
+                  }
+                </div>
+              )}
+            </div>
+          );
+        })() : (
           <button
             onClick={handleSave}
             style={{

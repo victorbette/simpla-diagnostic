@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
-import { formatBRL, formatPct } from "@/lib/carteira/calculos";
+import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
 import { ImportarIA } from "./ImportarIA";
 
@@ -15,6 +15,7 @@ interface Props {
   clientProfile: string | null;
   aporteDisponivel: number;
   onAporteChange: (v: number) => void;
+  onAlocacaoChange?: (completa: boolean) => void;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -32,15 +33,24 @@ function parseBRL(raw: string): number {
 
 export function Etapa2CarteiraRecomendada({
   ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta,
-  patrimonio, clientProfile, aporteDisponivel, onAporteChange,
+  patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
 }: Props) {
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
   );
 
   const patrimonioMeta = patrimonio + aporteDisponivel;
-  const totalPct = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
-  const totalOk = Math.abs(totalPct - 100) < 0.5;
+  const totalAlocado = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
+  const totalAlocadoBRL = (totalAlocado / 100) * patrimonioMeta;
+  const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
+  const diferencaPct = 100 - totalAlocado;
+  const alocacaoCompleta = Math.abs(diferencaPct) < 0.1;
+  const alocacaoExcede   = totalAlocado > 100.1;
+  const alocacaoFalta    = totalAlocado < 99.9;
+
+  useEffect(() => {
+    onAlocacaoChange?.(alocacaoCompleta);
+  }, [alocacaoCompleta, onAlocacaoChange]);
 
   function setPct(cardId: CardId, val: number) {
     onAlocacaoMeta({ ...alocacaoMeta, [cardId]: Math.max(0, Math.min(100, val)) });
@@ -138,14 +148,60 @@ export function Etapa2CarteiraRecomendada({
           })}
         </div>
 
-        {/* Total indicator */}
-        <div style={{ marginTop: 16, padding: "8px 12px", borderRadius: 8, backgroundColor: totalOk ? "#DCFCE7" : "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: totalOk ? "#15803D" : "#B45309" }}>
-            {totalOk ? "✓ Alocação completa" : "Ajuste necessário"}
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: totalOk ? "#15803D" : "#B45309" }}>
-            {formatPct(totalPct, 1)}
-          </span>
+        {/* Barra de progresso de alocação */}
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 12, color: "#6B7280" }}>Total alocado</span>
+            <span style={{
+              fontSize: 13, fontWeight: 600,
+              color: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#B45309",
+            }}>
+              {totalAlocado.toFixed(1)}%
+            </span>
+          </div>
+          <div style={{ height: 8, background: "#F3F4F6", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{
+              height: "100%",
+              width: `${Math.min(totalAlocado, 100)}%`,
+              background: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#F59E0B",
+              borderRadius: 99,
+              transition: "width 300ms ease, background 300ms ease",
+            }} />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            {alocacaoCompleta && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#15803D" }}>
+                <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+                100% alocado — carteira recomendada completa
+              </div>
+            )}
+            {alocacaoFalta && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "#FEF3C7", border: "0.5px solid #FCD34D",
+                borderRadius: 8, padding: "8px 12px",
+                fontSize: 12, color: "#B45309",
+              }}>
+                <i className="ti ti-alert-triangle" style={{ fontSize: 14, flexShrink: 0 }} />
+                <span>
+                  Faltam <strong>{formatBRL(Math.abs(diferencaBRL))}</strong> para alocar ({Math.abs(diferencaPct).toFixed(1)}% restante). Distribua entre os cards acima.
+                </span>
+              </div>
+            )}
+            {alocacaoExcede && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "#FEE2E2", border: "0.5px solid #FCA5A5",
+                borderRadius: 8, padding: "8px 12px",
+                fontSize: 12, color: "#B91C1C",
+              }}>
+                <i className="ti ti-alert-circle" style={{ fontSize: 14, flexShrink: 0 }} />
+                <span>
+                  Alocação excede em <strong>{formatBRL(Math.abs(diferencaBRL))}</strong> ({(totalAlocado - 100).toFixed(1)}% acima de 100%). Reduza algum card.
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
