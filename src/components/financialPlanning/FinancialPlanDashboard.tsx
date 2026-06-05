@@ -111,10 +111,11 @@ function GaugeCard({ score, color, semDados }: { score: number; color: string; s
 
 // ─── Score / level helpers ─────────────────────────────────────────────────────
 
-function nivelScore(s: number): { label: string; cor: string; bg: string } {
-  if (s >= 70) return { label: "Adequado", cor: "#15803D", bg: "#DCFCE7" };
-  if (s >= 40) return { label: "Atenção",  cor: "#B45309", bg: "#FEF3C7" };
-  return            { label: "Risco",    cor: "#B91C1C", bg: "#FEE2E2" };
+function nivelScore(s: number, temDados = true): { label: string; cor: string; bg: string } {
+  if (!temDados) return { label: "Sem dados", cor: "#6B7280", bg: "#F3F4F6" };
+  if (s >= 75) return { label: "Adequado", cor: "#15803D", bg: "#DCFCE7" };
+  if (s >= 50) return { label: "Atenção",  cor: "#B45309", bg: "#FEF3C7" };
+  return             { label: "Risco",    cor: "#B91C1C", bg: "#FEE2E2" };
 }
 
 // ─── UI helpers ────────────────────────────────────────────────────────────────
@@ -238,7 +239,10 @@ export function FinancialPlanDashboard({
   const tetoPGBL         = rendaAnualFiscal * 0.12;
   const saldoPrevidencia = Number(dc.saldoPrevidencia) || 0;
   const pgblAtual        = dc.possuiPrevidencia ? saldoPrevidencia : 0;
-  const espacoPGBL       = Math.max(0, tetoPGBL - pgblAtual);
+  const espacoPGBL           = Math.max(0, tetoPGBL - pgblAtual);
+  const possuiPGBL           = dc.possuiPrevidencia && (dc.tipoPrevidencia === "pgbl" || dc.tipoPrevidencia === "ambos");
+  const possuiVGBL           = dc.possuiPrevidencia && (dc.tipoPrevidencia === "vgbl" || dc.tipoPrevidencia === "ambos");
+  const temDependentesProtecao = numeroDependentes > 0;
 
   // ── Sucessório ───────────────────────────────────────────────────────────────
   const estado          = dc.estado || "SP";
@@ -270,33 +274,47 @@ export function FinancialPlanDashboard({
     if (!metaAA) return 30;
     if (!atualAA) return 20;
     const dev = desvioMedio ?? 100;
-    return Math.max(0, Math.min(100, Math.round(100 - dev * 3)));
+    return Math.max(0, Math.min(100, Math.round(100 - dev * 5)));
   })();
 
   const scoreIF = (() => {
-    if (!rendaDesejada || patrimonioNecessario === 0) return 0;
+    if (!rendaDesejada || !Number(pif.idadeMeta) || patrimonioNecessario === 0) return 0;
     return Math.min(100, Math.round((projecaoIF / patrimonioNecessario) * 100));
   })();
 
   const scoreProtecao = (() => {
+    if (!temDependentesProtecao) return 50;
     if (capitalNecessario === 0) return 50;
     if (capitalAtual === 0) return 0;
-    return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
+    return Math.min(50, Math.round((capitalAtual / capitalNecessario) * 50));
   })();
 
   const scoreFiscal = (() => {
     let s = 0;
-    if (fiscal.tipoDeclaracao && fiscal.tipoDeclaracao !== "nao_sei") s += 30;
-    if (dc.possuiPrevidencia) s += 40;
-    if (tetoPGBL > 0 && espacoPGBL < tetoPGBL * 0.3) s += 30;
+    const decl = fiscal.tipoDeclaracao;
+    // Critério 1: declaração definida (10 pts)
+    if (decl && decl !== "nao_sei") s += 10;
+    // Critério 2: declaração correta ao perfil (20 pts)
+    if (
+      (possuiPGBL && decl === "completa") ||
+      (possuiVGBL && decl === "simplificada") ||
+      (!dc.possuiPrevidencia && decl === "simplificada")
+    ) s += 20;
+    // Critério 3: previdência adequada (40 pts) — VGBL+completa = 0
+    if (possuiPGBL && decl === "completa") s += 40;
+    else if (possuiVGBL && decl === "simplificada") s += 40;
+    else if (dc.possuiPrevidencia && !(possuiVGBL && decl === "completa")) s += 20;
+    // Critério 4: aproveitamento do teto PGBL (30 pts)
+    if (possuiPGBL && decl === "completa" && tetoPGBL > 0 && espacoPGBL < tetoPGBL * 0.3) s += 30;
     return s;
   })();
 
   const scoreSucessorio = (() => {
     let s = 0;
-    if (suc.possuiTestamento) s += 35;
-    if (suc.possuiHolding) s += 35;
-    if (suc.seguroComBeneficiario || suc.previdenciaComBeneficiario) s += 30;
+    if (suc.possuiTestamento)           s += 15;
+    if (suc.possuiHolding)              s += 15;
+    if (suc.seguroComBeneficiario)      s += 10;
+    if (suc.previdenciaComBeneficiario) s += 10;
     return s;
   })();
 
@@ -311,11 +329,20 @@ export function FinancialPlanDashboard({
   const semDadosFiscal     = rendaAnualFiscal === 0;
   const semDadosSucessorio = patrimonioTotal === 0;
 
-  const scoreProtecaoSucessorio = Math.round((scoreProtecao + scoreSucessorio) / 2);
+  const scoreProtecaoSucessorio = scoreProtecao + scoreSucessorio;
   const semDadosPS = semDadosProtecao && semDadosSucessorio;
 
-  const scoreGeral = Math.round((scoreAA + scoreIF + scoreProtecaoSucessorio + scoreFiscal) / 4);
-  const nivelGeral = nivelScore(scoreGeral);
+  const scoreGeral = (() => {
+    const scores: number[] = [];
+    if (!semDadosAA) scores.push(scoreAA);
+    if (!semDadosIF) scores.push(scoreIF);
+    if (!semDadosPS) scores.push(scoreProtecaoSucessorio);
+    if (!semDadosFiscal) scores.push(scoreFiscal);
+    if (scores.length === 0) return null;
+    return Math.round(scores.reduce((a, v) => a + v, 0) / scores.length);
+  })();
+  const semDadosGeral = scoreGeral === null;
+  const nivelGeral = nivelScore(scoreGeral ?? 0, !semDadosGeral);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", padding: "24px 32px", boxSizing: "border-box" }}>
@@ -353,8 +380,8 @@ export function FinancialPlanDashboard({
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 2px" }}>Score Geral</p>
               <div style={{ display: "flex", alignItems: "baseline", gap: 2, justifyContent: "center" }}>
-                <span style={{ fontSize: 48, fontWeight: 700, color: "#111827", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{scoreGeral}</span>
-                <span style={{ fontSize: 16, color: "#9CA3AF" }}>/100</span>
+                <span style={{ fontSize: 48, fontWeight: 700, color: "#111827", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{semDadosGeral ? "—" : scoreGeral}</span>
+                {!semDadosGeral && <span style={{ fontSize: 16, color: "#9CA3AF" }}>/100</span>}
               </div>
               <div style={{ marginTop: 6, display: "flex", justifyContent: "center" }}>
                 <span style={{ fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 999, backgroundColor: nivelGeral.bg, color: nivelGeral.cor }}>
@@ -362,7 +389,7 @@ export function FinancialPlanDashboard({
                 </span>
               </div>
             </div>
-            <GaugeHeader score={scoreGeral} color={nivelGeral.cor} />
+            <GaugeHeader score={scoreGeral ?? 0} color={nivelGeral.cor} />
           </div>
         </div>
       </div>
@@ -650,6 +677,44 @@ export function FinancialPlanDashboard({
             }
           />
         </div>
+
+        {/* Alertas fiscais */}
+        {possuiVGBL && fiscal.tipoDeclaracao === "completa" && (
+          <div style={{ marginTop: 12, backgroundColor: "#FEE2E2", border: "1px solid #FECACA", borderRadius: 8, padding: "12px 14px", display: "flex", gap: 10 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🚨</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#B91C1C", margin: "0 0 2px" }}>VGBL com declaração completa</p>
+              <p style={{ fontSize: 12, color: "#7F1D1D", margin: 0 }}>VGBL não permite dedução de IR. Com declaração completa, você paga IR sem aproveitar o benefício. Considere migrar para PGBL ou trocar para declaração simplificada.</p>
+            </div>
+          </div>
+        )}
+        {possuiPGBL && fiscal.tipoDeclaracao === "simplificada" && (
+          <div style={{ marginTop: 12, backgroundColor: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 8, padding: "12px 14px", display: "flex", gap: 10 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#92400E", margin: "0 0 2px" }}>PGBL com declaração simplificada</p>
+              <p style={{ fontSize: 12, color: "#78350F", margin: 0 }}>PGBL só gera dedução na declaração completa. Com simplificada, o benefício do PGBL não é aproveitado. Avalie trocar para VGBL ou migrar para declaração completa.</p>
+            </div>
+          </div>
+        )}
+        {!dc.possuiPrevidencia && fiscal.tipoDeclaracao === "completa" && (
+          <div style={{ marginTop: 12, backgroundColor: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 8, padding: "12px 14px", display: "flex", gap: 10 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#92400E", margin: "0 0 2px" }}>Declaração completa sem PGBL</p>
+              <p style={{ fontSize: 12, color: "#78350F", margin: 0 }}>Você usa declaração completa mas não aproveita o limite de 12% de dedução via previdência privada. Considere abrir um PGBL para otimizar o IR.</p>
+            </div>
+          </div>
+        )}
+        {(!fiscal.tipoDeclaracao || fiscal.tipoDeclaracao === "nao_sei") && (
+          <div style={{ marginTop: 12, backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px", display: "flex", gap: 10 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF", margin: "0 0 2px" }}>Tipo de declaração não informado</p>
+              <p style={{ fontSize: 12, color: "#1E3A8A", margin: 0 }}>Informe se utiliza declaração simplificada ou completa para otimizarmos o planejamento fiscal.</p>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>
