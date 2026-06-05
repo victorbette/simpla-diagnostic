@@ -80,6 +80,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
+    valorAporteBRL: p.valorAporteBRL != null ? Number(p.valorAporteBRL) : undefined,
   };
 }
 

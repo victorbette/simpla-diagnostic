@@ -26,6 +26,7 @@ export interface PlanoAcaoItem {
   movimentacaoBRL: number;
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
+  valorAporteBRL?: number; // valor do aporte definido manualmente pelo consultor
 }
 
 export interface CarteiraResultado {
