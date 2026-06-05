@@ -13,6 +13,8 @@ export interface Ativo {
   segmento: string;
   vencimento?: string;
   valorBRL: number;
+  quantidade?: number;    // cotas/ações (RV only)
+  cotacaoAtual?: number;  // preço unitário — BRL para BR, USD para exterior/cripto
 }
 
 export interface PlanoAcaoItem {

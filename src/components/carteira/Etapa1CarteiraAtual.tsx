@@ -4,14 +4,19 @@ import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
 import { ImportarIA } from "./ImportarIA";
 import type { CotacaoAtivo } from "@/lib/cotacoesIA";
 
+type RVTipo = "acoes" | "fiis" | "exterior" | "cripto";
+
 interface Props {
   ativos: Ativo[];
   onAtivos: (ativos: Ativo[]) => void;
   patrimonio: number;
   cotacoes?: Record<string, CotacaoAtivo>;
+  usdBrl?: number;
+  onUsdBrlChange?: (v: number) => void;
+  onBuscarCotacao?: (tickers: Array<{ ticker: string; tipo: RVTipo }>) => void;
 }
 
-export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes }: Props) {
+export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes, usdBrl, onUsdBrlChange, onBuscarCotacao }: Props) {
   function handleAdd(cardId: CardId) {
     onAtivos([...ativos, makeNovoAtivo(cardId)]);
   }
@@ -20,8 +25,8 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes }: 
     onAtivos(ativos.filter((a) => a.id !== id));
   }
 
-  function handleChange(id: string, campo: keyof Ativo, valor: string | number) {
-    onAtivos(ativos.map((a) => (a.id === id ? { ...a, [campo]: valor } : a)));
+  function handleChange(id: string, partial: Partial<Ativo>) {
+    onAtivos(ativos.map((a) => (a.id === id ? { ...a, ...partial } : a)));
   }
 
   function handleIA(novos: Ativo[]) {
@@ -40,6 +45,9 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, cotacoes }: 
           modo="atual"
           patrimonio={patrimonio}
           cotacoes={cotacoes}
+          usdBrl={usdBrl}
+          onUsdBrlChange={onUsdBrlChange}
+          onBuscarCotacao={onBuscarCotacao}
           onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}

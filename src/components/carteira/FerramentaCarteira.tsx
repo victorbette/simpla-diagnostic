@@ -47,6 +47,7 @@ interface SavedState {
   planoAcao: PlanoAcaoItem[];
   notasConsultor: string;
   aporteDisponivel: number;
+  usdBrl?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,6 +61,8 @@ function migrateAtivo(a: any): Ativo {
     segmento: String(a.segmento ?? ""),
     vencimento: a.vencimento ? String(a.vencimento) : undefined,
     valorBRL: Number(a.valorBRL) || 0,
+    quantidade: a.quantidade != null ? Number(a.quantidade) : undefined,
+    cotacaoAtual: a.cotacaoAtual != null ? Number(a.cotacaoAtual) : undefined,
   };
 }
 
@@ -96,6 +99,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [planoAcao, setPlanoAcao] = useState<PlanoAcaoItem[]>([]);
   const [notasConsultor, setNotasConsultor] = useState("");
   const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
+  const [usdBrl, setUsdBrl] = useState<number>(5.0);
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
@@ -103,7 +107,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
   const atualizarCotacoes = useCallback(async () => {
     const RV: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
-    const tickers = ativosAtuais
+    const todos = [...ativosAtuais, ...ativosRecomendados];
+    const tickers = todos
       .filter((a) => RV.includes(a.card) && a.nome.trim())
       .map((a) => ({
         ticker: a.nome.trim().toUpperCase(),
@@ -111,7 +116,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       }));
     const unique = [...new Map(tickers.map((t) => [t.ticker, t])).values()];
     await buscar(unique);
-  }, [ativosAtuais, buscar]);
+  }, [ativosAtuais, ativosRecomendados, buscar]);
 
   // Load from localStorage once
   useEffect(() => {
@@ -126,6 +131,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
         if (Array.isArray(parsed.planoAcao)) setPlanoAcao(parsed.planoAcao.map(migrateItemPlano));
         if (typeof parsed.notasConsultor === "string") setNotasConsultor(parsed.notasConsultor);
         if (typeof parsed.aporteDisponivel === "number") setAporteDisponivel(parsed.aporteDisponivel);
+        if (typeof parsed.usdBrl === "number" && parsed.usdBrl > 0) setUsdBrl(parsed.usdBrl);
       }
     } catch { /* ignore */ }
     setLoaded(true);
@@ -139,12 +145,26 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (debRef.current) clearTimeout(debRef.current);
     debRef.current = setTimeout(() => {
       try {
-        const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel };
+        const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl };
         localStorage.setItem(storageKey, JSON.stringify(s));
       } catch { /* ignore */ }
     }, 800);
     return () => { if (debRef.current) clearTimeout(debRef.current); };
-  }, [ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, storageKey, loaded]);
+  }, [ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl, storageKey, loaded]);
+
+  // Recalculate USD assets when exchange rate changes
+  const usdBrlInitial = useRef(true);
+  useEffect(() => {
+    if (usdBrlInitial.current) { usdBrlInitial.current = false; return; }
+    const USD_CARDS: CardId[] = ["exterior", "cripto"];
+    const recalc = (list: Ativo[]) => list.map((a) => {
+      if (!USD_CARDS.includes(a.card)) return a;
+      if (!((a.quantidade ?? 0) > 0 && (a.cotacaoAtual ?? 0) > 0)) return a;
+      return { ...a, valorBRL: (a.quantidade ?? 0) * (a.cotacaoAtual ?? 0) * usdBrl };
+    });
+    setAtivosAtuais((prev) => recalc(prev));
+    setAtivosRecomendados((prev) => recalc(prev));
+  }, [usdBrl]);
 
   // Lock body scroll
   useEffect(() => {
@@ -343,6 +363,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             onAtivos={setAtivosAtuais}
             patrimonio={patrimonio}
             cotacoes={cotacoes}
+            usdBrl={usdBrl}
+            onUsdBrlChange={setUsdBrl}
+            onBuscarCotacao={buscar}
           />
         )}
         {etapa === 2 && (
@@ -357,6 +380,10 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             aporteDisponivel={aporteDisponivel}
             onAporteChange={setAporteDisponivel}
             onAlocacaoChange={setAlocacaoCompleta}
+            cotacoes={cotacoes}
+            usdBrl={usdBrl}
+            onUsdBrlChange={setUsdBrl}
+            onBuscarCotacao={buscar}
           />
         )}
         {etapa === 3 && (
