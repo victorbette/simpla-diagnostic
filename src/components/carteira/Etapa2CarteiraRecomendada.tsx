@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { formatBRL, formatPct } from "@/lib/carteira/calculos";
@@ -12,6 +13,8 @@ interface Props {
   onAlocacaoMeta: (m: Record<CardId, number>) => void;
   patrimonio: number;
   clientProfile: string | null;
+  aporteDisponivel: number;
+  onAporteChange: (v: number) => void;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -21,7 +24,21 @@ const PERFIL_LABELS: Record<string, string> = {
   arrojado: "Arrojado",
 };
 
-export function Etapa2CarteiraRecomendada({ ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta, patrimonio, clientProfile }: Props) {
+function parseBRL(raw: string): number {
+  const clean = raw.replace(/[R$\s.]/g, "").replace(",", ".");
+  const v = parseFloat(clean);
+  return isNaN(v) || v < 0 ? 0 : v;
+}
+
+export function Etapa2CarteiraRecomendada({
+  ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta,
+  patrimonio, clientProfile, aporteDisponivel, onAporteChange,
+}: Props) {
+  const [aporteText, setAporteText] = useState(
+    aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
+  );
+
+  const patrimonioMeta = patrimonio + aporteDisponivel;
   const totalPct = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
   const totalOk = Math.abs(totalPct - 100) < 0.5;
 
@@ -87,7 +104,7 @@ export function Etapa2CarteiraRecomendada({ ativos, onAtivos, ativosAtuais, aloc
           {CARD_ORDER.map((cardId) => {
             const meta = CARD_META[cardId];
             const pct = alocacaoMeta[cardId] ?? 0;
-            const valorR = (pct / 100) * patrimonio;
+            const valorR = (pct / 100) * patrimonioMeta;
             return (
               <div key={cardId}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -135,6 +152,75 @@ export function Etapa2CarteiraRecomendada({ ativos, onAtivos, ativosAtuais, aloc
       {/* ── IA IMPORT ── */}
       <ImportarIA onConfirmar={handleIA} modo="recomendada" />
 
+      {/* ── CARD APORTE DISPONÍVEL ── */}
+      <div style={{
+        backgroundColor: "white",
+        border: "0.5px solid #BFDBFE",
+        borderLeft: "4px solid #15803D",
+        borderRadius: 12,
+        padding: "16px 20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 16,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 36, height: 36, flexShrink: 0, borderRadius: 8,
+            backgroundColor: "#DCFCE7",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <i className="ti ti-cash" style={{ fontSize: 20, color: "#15803D" }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#111827" }}>Aporte Disponível</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6B7280" }}>
+              Valor a ser distribuído na carteira recomendada
+            </p>
+            {aporteDisponivel > 0 && (
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#15803D" }}>
+                Patrimônio após aporte: {formatBRL(patrimonioMeta)}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <input
+          type="text"
+          value={aporteText}
+          placeholder="R$ 0,00"
+          onChange={(e) => {
+            setAporteText(e.target.value);
+            onAporteChange(parseBRL(e.target.value));
+          }}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={() => {
+            const v = parseBRL(aporteText);
+            onAporteChange(v);
+            setAporteText(v > 0 ? formatBRL(v) : "");
+          }}
+          style={{
+            type: "text",
+            textAlign: "right",
+            fontSize: 18,
+            fontWeight: 600,
+            color: "#15803D",
+            border: "1px solid #BFDBFE",
+            borderRadius: 8,
+            padding: "8px 14px",
+            width: 180,
+            outline: "none",
+            fontFamily: "inherit",
+            boxSizing: "border-box",
+          } as React.CSSProperties}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#86EFAC")}
+          onMouseLeave={(e) => {
+            if (document.activeElement !== e.currentTarget)
+              e.currentTarget.style.borderColor = "#BFDBFE";
+          }}
+        />
+      </div>
+
       {/* ── CARDS DE ATIVOS ── */}
       {CARD_ORDER.map((cardId) => (
         <CarteiraCard
@@ -142,7 +228,7 @@ export function Etapa2CarteiraRecomendada({ ativos, onAtivos, ativosAtuais, aloc
           cardId={cardId}
           ativos={ativos.filter((a) => a.card === cardId)}
           modo="recomendada"
-          patrimonio={patrimonio}
+          patrimonio={patrimonioMeta}
           metaPct={alocacaoMeta[cardId] ?? 0}
           ativosAtuaisRef={ativosAtuais}
           onAdd={() => handleAdd(cardId)}

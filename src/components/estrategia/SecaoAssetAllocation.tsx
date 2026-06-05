@@ -138,11 +138,10 @@ export function SecaoAssetAllocation({
     // macroMeta: directly from slider (already %)
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
-    // totalAportes: valorAporteBRL (consultor) quando definido, senão movimentacaoBRL
     const semManter = (r.planoAcao ?? []).filter((i) => i.acao !== "manter");
     const totalAportes = semManter
       .filter((i) => i.movimentacaoBRL > 0)
-      .reduce((s, i) => s + (Number(i.valorAporteBRL) || Number(i.movimentacaoBRL) || 0), 0);
+      .reduce((s, i) => s + i.movimentacaoBRL, 0);
     const totalResgates = semManter
       .filter((i) => i.movimentacaoBRL < 0)
       .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
@@ -154,6 +153,7 @@ export function SecaoAssetAllocation({
       totalResgates,
       macroAtual,
       macroMeta,
+      aporteDisponivel: r.aporteDisponivel,
       planoAcao: r.planoAcao.map((i) => ({
         id: i.id,
         card: i.card,
@@ -164,7 +164,6 @@ export function SecaoAssetAllocation({
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
-        valorAporteBRL: i.valorAporteBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
       })),
@@ -453,26 +452,14 @@ export function SecaoAssetAllocation({
                     : acaoEfetiva === "aportar" ? "Aportar"
                     : acaoEfetiva === "resgatar_total" ? "Resgatar total"
                     : "Resgatar parcial";
-                  const valorExibido = isAportar
-                    ? (item.valorAporteBRL != null && item.valorAporteBRL > 0
-                        ? item.valorAporteBRL
-                        : item.movimentacaoBRL)
-                    : Math.abs(item.movimentacaoBRL);
-                  const foiAjustado = isAportar &&
-                    item.valorAporteBRL != null &&
-                    item.valorAporteBRL > 0 &&
-                    item.valorAporteBRL !== item.movimentacaoBRL;
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: 13, color: "#000000", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nomeAtivo}</span>
                         <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: tipoBg, color: tipoColor }}>{tipoLabel}</span>
                       </div>
-                      <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
-                        {movPrefix}{formatCurrency(Math.abs(valorExibido))}
-                        {foiAjustado && (
-                          <span style={{ fontSize: 10, color: "#2563EB", fontWeight: 500 }}>(ajustado)</span>
-                        )}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
+                        {movPrefix}{formatCurrency(Math.abs(item.movimentacaoBRL))}
                       </span>
                     </div>
                   );

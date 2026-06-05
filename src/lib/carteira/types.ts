@@ -26,7 +26,6 @@ export interface PlanoAcaoItem {
   movimentacaoBRL: number;
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
-  valorAporteBRL?: number; // valor do aporte definido manualmente pelo consultor
 }
 
 export interface CarteiraResultado {
@@ -35,6 +34,7 @@ export interface CarteiraResultado {
   ativosRecomendados: Ativo[];
   alocacaoMeta: Record<CardId, number>;
   planoAcao: PlanoAcaoItem[];
+  aporteDisponivel?: number;
 }
 
 export const CARD_META = {

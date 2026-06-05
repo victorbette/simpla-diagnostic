@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import type { PlanoAcaoItem } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
@@ -9,16 +9,17 @@ interface Props {
   notasConsultor: string;
   onNotasConsultor: (s: string) => void;
   patrimonio: number;
+  aporteDisponivel: number;
 }
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
 
 const TIPO_CONFIG: Record<PlanoAcaoItem["acao"], { bg: string; color: string; label: string }> = {
-  manter:           { bg: "#F3F4F6",  color: "#6B7280", label: "→ Manter" },
-  aportar:          { bg: "#DCFCE7",  color: "#15803D", label: "↑ Aportar" },
-  resgatar_parcial: { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar" },
-  resgatar_total:   { bg: "#FEE2E2",  color: "#B91C1C", label: "↓ Resgatar tudo" },
-  novo:             { bg: "#DBEAFE",  color: "#1E40AF", label: "✦ Novo" },
+  manter:           { bg: "#F3F4F6", color: "#6B7280", label: "→ Manter" },
+  aportar:          { bg: "#DCFCE7", color: "#15803D", label: "↑ Aportar" },
+  resgatar_parcial: { bg: "#FEE2E2", color: "#B91C1C", label: "↓ Resgatar" },
+  resgatar_total:   { bg: "#FEE2E2", color: "#B91C1C", label: "↓ Resgatar tudo" },
+  novo:             { bg: "#DBEAFE", color: "#1E40AF", label: "✦ Novo" },
 };
 
 const selectStyle: React.CSSProperties = {
@@ -28,78 +29,8 @@ const selectStyle: React.CSSProperties = {
   cursor: "pointer", outline: "none",
 };
 
-/** Valor efetivo de aporte para exibição e cálculo do total */
-function aporteEfetivo(item: PlanoAcaoItem): number {
-  if (item.acao === "resgatar_parcial" || item.acao === "resgatar_total") return 0;
-  if (item.valorAporteBRL !== undefined) return item.valorAporteBRL;
-  if (item.acao === "aportar" || item.acao === "novo") return Math.max(0, item.movimentacaoBRL);
-  return 0;
-}
-
-/** Parseia string no formato BRL → número */
-function parseBRL(raw: string): number {
-  const clean = raw.replace(/[^\d,]/g, "").replace(",", ".");
-  const v = parseFloat(clean);
-  return isNaN(v) ? 0 : v;
-}
-
-/** Input de aporte com formatação on-blur */
-function AporteInput({
-  value,
-  onChange,
-  placeholder = "R$ 0,00",
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  placeholder?: string;
-}) {
-  const [text, setText] = useState(value > 0 ? formatBRL(value) : "");
-  const [focused, setFocused] = useState(false);
-
-  useEffect(() => {
-    if (!focused) setText(value > 0 ? formatBRL(value) : "");
-  }, [value, focused]);
-
-  return (
-    <input
-      type="text"
-      value={text}
-      placeholder={placeholder}
-      onChange={(e) => {
-        setText(e.target.value);
-        onChange(parseBRL(e.target.value));
-      }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => {
-        setFocused(false);
-        const v = parseBRL(text);
-        onChange(v);
-        setText(v > 0 ? formatBRL(v) : "");
-      }}
-      style={{
-        border: "1px solid #E5E7EB",
-        borderRadius: 6,
-        padding: "4px 8px",
-        fontSize: 12,
-        textAlign: "right",
-        width: "100%",
-        color: "#111827",
-        outline: "none",
-        boxSizing: "border-box",
-        backgroundColor: "white",
-        fontFamily: "inherit",
-      }}
-      onMouseEnter={(e) => ((e.currentTarget as HTMLInputElement).style.borderColor = "#BFDBFE")}
-      onMouseLeave={(e) => {
-        if (document.activeElement !== e.currentTarget)
-          (e.currentTarget as HTMLInputElement).style.borderColor = "#E5E7EB";
-      }}
-    />
-  );
-}
-
 export function Etapa3PlanoAcao({
-  planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio,
+  planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio, aporteDisponivel,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
 
@@ -109,38 +40,27 @@ export function Etapa3PlanoAcao({
       const next = { ...p, ...patch };
       if (patch.acao === "manter") {
         next.movimentacaoBRL = 0;
-        next.valorAporteBRL = 0;
       } else if (patch.acao !== undefined && p.acao === "manter") {
         next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
-        // pre-preencher aporte com o valor calculado se positivo
-        next.valorAporteBRL = Math.max(0, next.movimentacaoBRL);
-      } else if (patch.acao === "resgatar_parcial" || patch.acao === "resgatar_total") {
-        next.valorAporteBRL = 0;
       }
       return next;
     }));
   }
 
-  const { totalAportesAuto, totalResgates, saldoLiquido, nMovs, totalAportesConsultor } =
-    useMemo(() => {
-      const ap = planoAcao
-        .filter((p) => p.acao !== "manter" && p.movimentacaoBRL > 0)
-        .reduce((s, p) => s + p.movimentacaoBRL, 0);
-      const re = planoAcao
-        .filter((p) => p.acao !== "manter" && p.movimentacaoBRL < 0)
-        .reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
-      const consultor = planoAcao.reduce((s, item) => s + aporteEfetivo(item), 0);
-      return {
-        totalAportesAuto: ap,
-        totalResgates: re,
-        saldoLiquido: ap - re,
-        nMovs: planoAcao.filter((p) => p.acao !== "manter").length,
-        totalAportesConsultor: consultor,
-      };
-    }, [planoAcao]);
-
-  // silencia variável não usada diretamente nos cards
-  void totalAportesAuto;
+  const { totalAportes, totalResgates, saldoLiquido, nMovs } = useMemo(() => {
+    const ap = planoAcao
+      .filter((p) => p.acao !== "manter" && p.movimentacaoBRL > 0)
+      .reduce((s, p) => s + p.movimentacaoBRL, 0);
+    const re = planoAcao
+      .filter((p) => p.acao !== "manter" && p.movimentacaoBRL < 0)
+      .reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+    return {
+      totalAportes: ap,
+      totalResgates: re,
+      saldoLiquido: ap - re,
+      nMovs: planoAcao.filter((p) => p.acao !== "manter").length,
+    };
+  }, [planoAcao]);
 
   const filtrados = useMemo(() => {
     if (filtro === "todos") return planoAcao;
@@ -150,7 +70,7 @@ export function Etapa3PlanoAcao({
 
   const cardsComItens = CARD_ORDER.filter((k) => filtrados.some((p) => p.card === k));
 
-  const COLS = "2fr 1fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr";
+  const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -158,10 +78,10 @@ export function Etapa3PlanoAcao({
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {[
-          { label: "Total a Aportar",  value: formatBRL(totalAportesConsultor), color: "#15803D", border: "#15803D" },
-          { label: "Total Resgates",   value: formatBRL(totalResgates),         color: "#B91C1C", border: "#B91C1C" },
-          { label: "Saldo Líquido",    value: formatBRL(saldoLiquido),          color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", border: "#1E3A8A" },
-          { label: "Movimentações",    value: String(nMovs),                    color: "#111827", border: "#6B7280" },
+          { label: "Total Aportes",  value: formatBRL(totalAportes),  color: "#15803D", border: "#15803D" },
+          { label: "Total Resgates", value: formatBRL(totalResgates),  color: "#B91C1C", border: "#B91C1C" },
+          { label: "Saldo Líquido",  value: formatBRL(saldoLiquido),   color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", border: "#1E3A8A" },
+          { label: "Movimentações",  value: String(nMovs),             color: "#111827", border: "#6B7280" },
         ].map(({ label, value, color, border }) => (
           <div key={label} style={{
             border: "1px solid #BFDBFE", borderTop: `3px solid ${border}`,
@@ -172,6 +92,20 @@ export function Etapa3PlanoAcao({
           </div>
         ))}
       </div>
+
+      {/* Aporte badge */}
+      {aporteDisponivel > 0 && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB",
+          borderRadius: 8, padding: "8px 14px",
+        }}>
+          <i className="ti ti-cash" style={{ fontSize: 16, color: "#15803D" }} />
+          <span style={{ fontSize: 13, fontWeight: 500, color: "#15803D" }}>
+            Aporte de {formatBRL(aporteDisponivel)} incluído nos cálculos
+          </span>
+        </div>
+      )}
 
       {/* Filter pills */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -226,119 +160,90 @@ export function Etapa3PlanoAcao({
 
             {/* Table header */}
             <div style={{
-              display: "grid",
-              gridTemplateColumns: COLS,
-              gap: 8, padding: "6px 14px",
-              backgroundColor: "#1E3A8A",
+              display: "grid", gridTemplateColumns: COLS,
+              gap: 8, padding: "6px 14px", backgroundColor: "#1E3A8A",
             }}>
-              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Aporte (R$)", "Ação", "Observação", "Prioridade"].map((h) => (
+              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Ação", "Observação", "Prioridade"].map((h) => (
                 <span key={h} style={{ color: "white", fontSize: 11, fontWeight: 600 }}>{h}</span>
               ))}
             </div>
 
-            {groupItems.map((item) => {
-              const isResgatar = item.acao === "resgatar_parcial" || item.acao === "resgatar_total";
-              const isManter = item.acao === "manter";
-
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: COLS,
-                    gap: 8, padding: "8px 14px",
-                    borderTop: "1px solid #F3F4F6",
-                    alignItems: "center",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
-                >
-                  {/* Ativo */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{
-                        backgroundColor: TIPO_CONFIG[item.acao].bg,
-                        color: TIPO_CONFIG[item.acao].color,
-                        fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
-                      }}>
-                        {TIPO_CONFIG[item.acao].label}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
-                    </div>
-                    {item.segmento && (
-                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
-                    )}
+            {groupItems.map((item) => (
+              <div
+                key={item.id}
+                style={{
+                  display: "grid", gridTemplateColumns: COLS,
+                  gap: 8, padding: "8px 14px",
+                  borderTop: "1px solid #F3F4F6", alignItems: "center",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{
+                      backgroundColor: TIPO_CONFIG[item.acao].bg,
+                      color: TIPO_CONFIG[item.acao].color,
+                      fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
+                    }}>
+                      {TIPO_CONFIG[item.acao].label}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
                   </div>
-
-                  <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
-                  <span style={{ fontSize: 12, color: "#6B7280" }}>
-                    {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
-                  </span>
-
-                  <span style={{
-                    fontSize: 12, fontWeight: 600,
-                    color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
-                  }}>
-                    {item.acao === "manter" || item.movimentacaoBRL === 0
-                      ? formatBRL(0)
-                      : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
-                    }
-                  </span>
-
-                  {/* Coluna Aporte */}
-                  {isResgatar ? (
-                    <span style={{ fontSize: 12, color: "#D1D5DB", textAlign: "center" }}>—</span>
-                  ) : (
-                    <div>
-                      <AporteInput
-                        key={`${item.id}-${item.acao}`}
-                        value={aporteEfetivo(item)}
-                        onChange={(v) => updateItem(item.id, { valorAporteBRL: v })}
-                        placeholder={isManter ? "Adicional" : "R$ 0,00"}
-                      />
-                      {isManter && (
-                        <span style={{ fontSize: 10, color: "#9CA3AF", display: "block", marginTop: 2 }}>
-                          Aporte adicional opcional
-                        </span>
-                      )}
-                    </div>
+                  {item.segmento && (
+                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
                   )}
-
-                  <select
-                    value={item.acao}
-                    onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
-                    style={selectStyle}
-                  >
-                    <option value="manter">Manter</option>
-                    <option value="aportar">Aportar</option>
-                    <option value="resgatar_parcial">Resgatar parcialmente</option>
-                    <option value="resgatar_total">Resgatar tudo</option>
-                    <option value="novo">Novo</option>
-                  </select>
-
-                  <input
-                    value={item.observacao}
-                    onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                    placeholder="observação..."
-                    style={{
-                      border: "1px solid #BFDBFE", borderRadius: 6, padding: "3px 6px",
-                      fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
-                      width: "100%", boxSizing: "border-box",
-                    }}
-                  />
-
-                  <select
-                    value={item.prioridade ?? "baixa"}
-                    onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
-                    style={selectStyle}
-                  >
-                    <option value="alta">Alta</option>
-                    <option value="media">Média</option>
-                    <option value="baixa">Baixa</option>
-                  </select>
                 </div>
-              );
-            })}
+
+                <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
+                <span style={{ fontSize: 12, color: "#6B7280" }}>
+                  {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
+                </span>
+
+                <span style={{
+                  fontSize: 12, fontWeight: 600,
+                  color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
+                }}>
+                  {item.acao === "manter" || item.movimentacaoBRL === 0
+                    ? formatBRL(0)
+                    : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
+                  }
+                </span>
+
+                <select
+                  value={item.acao}
+                  onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
+                  style={selectStyle}
+                >
+                  <option value="manter">Manter</option>
+                  <option value="aportar">Aportar</option>
+                  <option value="resgatar_parcial">Resgatar parcialmente</option>
+                  <option value="resgatar_total">Resgatar tudo</option>
+                  <option value="novo">Novo</option>
+                </select>
+
+                <input
+                  value={item.observacao}
+                  onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                  placeholder="observação..."
+                  style={{
+                    border: "1px solid #BFDBFE", borderRadius: 6, padding: "3px 6px",
+                    fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
+                    width: "100%", boxSizing: "border-box",
+                  }}
+                />
+
+                <select
+                  value={item.prioridade ?? "baixa"}
+                  onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
+                  style={selectStyle}
+                >
+                  <option value="alta">Alta</option>
+                  <option value="media">Média</option>
+                  <option value="baixa">Baixa</option>
+                </select>
+              </div>
+            ))}
           </div>
         );
       })}

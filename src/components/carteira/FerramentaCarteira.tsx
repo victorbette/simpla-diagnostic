@@ -45,6 +45,7 @@ interface SavedState {
   alocacaoMeta: Record<CardId, number>;
   planoAcao: PlanoAcaoItem[];
   notasConsultor: string;
+  aporteDisponivel: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +81,6 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
-    valorAporteBRL: p.valorAporteBRL != null ? Number(p.valorAporteBRL) : undefined,
   };
 }
 
@@ -94,6 +94,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [alocacaoMeta, setAlocacaoMeta] = useState<Record<CardId, number>>(() => defaultAlocacao(clientProfile));
   const [planoAcao, setPlanoAcao] = useState<PlanoAcaoItem[]>([]);
   const [notasConsultor, setNotasConsultor] = useState("");
+  const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
   const [loaded, setLoaded] = useState(false);
 
   // Load from localStorage once
@@ -108,6 +109,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
         if (parsed.alocacaoMeta && typeof parsed.alocacaoMeta === "object") setAlocacaoMeta({ ...defaultAlocacao(clientProfile), ...parsed.alocacaoMeta });
         if (Array.isArray(parsed.planoAcao)) setPlanoAcao(parsed.planoAcao.map(migrateItemPlano));
         if (typeof parsed.notasConsultor === "string") setNotasConsultor(parsed.notasConsultor);
+        if (typeof parsed.aporteDisponivel === "number") setAporteDisponivel(parsed.aporteDisponivel);
       }
     } catch { /* ignore */ }
     setLoaded(true);
@@ -121,12 +123,12 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (debRef.current) clearTimeout(debRef.current);
     debRef.current = setTimeout(() => {
       try {
-        const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor };
+        const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel };
         localStorage.setItem(storageKey, JSON.stringify(s));
       } catch { /* ignore */ }
     }, 800);
     return () => { if (debRef.current) clearTimeout(debRef.current); };
-  }, [ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, storageKey, loaded]);
+  }, [ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, storageKey, loaded]);
 
   // Lock body scroll
   useEffect(() => {
@@ -141,7 +143,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
   function goToEtapa(n: Etapa) {
     if (n === 3) {
-      const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio);
+      const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivel);
 
       setPlanoAcao((prev) => {
         if (prev.length === 0) {
@@ -180,8 +182,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       ativosRecomendados,
       alocacaoMeta,
       planoAcao,
+      aporteDisponivel,
     };
-    try { localStorage.setItem(storageKey, JSON.stringify({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, savedAt: new Date().toISOString() })); } catch { /* ignore */ }
+    try { localStorage.setItem(storageKey, JSON.stringify({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, savedAt: new Date().toISOString() })); } catch { /* ignore */ }
     onSave?.(resultado);
   }
 
@@ -192,6 +195,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       setAlocacaoMeta(defaultAlocacao(clientProfile));
       setPlanoAcao([]);
       setNotasConsultor("");
+      setAporteDisponivel(0);
       try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
       onLimpar?.();
     }
@@ -308,6 +312,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             onAlocacaoMeta={setAlocacaoMeta}
             patrimonio={patrimonio}
             clientProfile={clientProfile}
+            aporteDisponivel={aporteDisponivel}
+            onAporteChange={setAporteDisponivel}
           />
         )}
         {etapa === 3 && (
@@ -317,6 +323,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             notasConsultor={notasConsultor}
             onNotasConsultor={setNotasConsultor}
             patrimonio={patrimonio}
+            aporteDisponivel={aporteDisponivel}
           />
         )}
         {etapa === 4 && (
