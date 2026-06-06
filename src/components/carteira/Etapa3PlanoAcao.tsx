@@ -29,10 +29,25 @@ const selectStyle: React.CSSProperties = {
   cursor: "pointer", outline: "none",
 };
 
+function formatInputBRL(value: number): string {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseBRL(text: string): number {
+  const clean = text
+    .replace(/R\$\s?/g, "")
+    .replace(/\s/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const n = parseFloat(clean);
+  return isNaN(n) ? 0 : n;
+}
+
 export function Etapa3PlanoAcao({
   planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio, aporteDisponivel,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -40,6 +55,14 @@ export function Etapa3PlanoAcao({
       const next = { ...p, ...patch };
       if (patch.acao === "manter") {
         next.movimentacaoBRL = 0;
+        next.valorResgateBRL = undefined;
+      } else if (patch.acao === "resgatar_parcial") {
+        if (p.acao === "manter") {
+          next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
+        }
+        if (next.valorResgateBRL === undefined) {
+          next.valorResgateBRL = Math.abs(next.movimentacaoBRL);
+        }
       } else if (patch.acao !== undefined && p.acao === "manter") {
         next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
       }
@@ -53,7 +76,12 @@ export function Etapa3PlanoAcao({
       .reduce((s, p) => s + p.movimentacaoBRL, 0);
     const re = planoAcao
       .filter((p) => p.acao !== "manter" && p.movimentacaoBRL < 0)
-      .reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+      .reduce((s, p) => {
+        if (p.acao === "resgatar_parcial" && p.valorResgateBRL !== undefined) {
+          return s + p.valorResgateBRL;
+        }
+        return s + Math.abs(p.movimentacaoBRL);
+      }, 0);
     return {
       totalAportes: ap,
       totalResgates: re,
@@ -171,77 +199,118 @@ export function Etapa3PlanoAcao({
             {groupItems.map((item) => (
               <div
                 key={item.id}
-                style={{
-                  display: "grid", gridTemplateColumns: COLS,
-                  gap: 8, padding: "8px 14px",
-                  borderTop: "1px solid #F3F4F6", alignItems: "center",
-                }}
+                style={{ borderTop: "1px solid #F3F4F6" }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
               >
-                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{
-                      backgroundColor: TIPO_CONFIG[item.acao].bg,
-                      color: TIPO_CONFIG[item.acao].color,
-                      fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
-                    }}>
-                      {TIPO_CONFIG[item.acao].label}
-                    </span>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                <div style={{ display: "grid", gridTemplateColumns: COLS, gap: 8, padding: "8px 14px", alignItems: "center" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <span style={{
+                        backgroundColor: TIPO_CONFIG[item.acao].bg,
+                        color: TIPO_CONFIG[item.acao].color,
+                        fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
+                      }}>
+                        {TIPO_CONFIG[item.acao].label}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                    </div>
+                    {item.segmento && (
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
+                    )}
                   </div>
-                  {item.segmento && (
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
-                  )}
+
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>
+                    {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
+                  </span>
+
+                  <span style={{
+                    fontSize: 12, fontWeight: 600,
+                    color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
+                  }}>
+                    {item.acao === "manter" || item.movimentacaoBRL === 0
+                      ? formatBRL(0)
+                      : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
+                    }
+                  </span>
+
+                  <select
+                    value={item.acao}
+                    onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
+                    style={selectStyle}
+                  >
+                    <option value="manter">Manter</option>
+                    <option value="aportar">Aportar</option>
+                    <option value="resgatar_parcial">Resgatar parcialmente</option>
+                    <option value="resgatar_total">Resgatar tudo</option>
+                    <option value="novo">Novo</option>
+                  </select>
+
+                  <input
+                    value={item.observacao}
+                    onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                    placeholder="observação..."
+                    style={{
+                      border: "1px solid #BFDBFE", borderRadius: 6, padding: "3px 6px",
+                      fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
+                      width: "100%", boxSizing: "border-box",
+                    }}
+                  />
+
+                  <select
+                    value={item.prioridade ?? "baixa"}
+                    onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
+                    style={selectStyle}
+                  >
+                    <option value="alta">Alta</option>
+                    <option value="media">Média</option>
+                    <option value="baixa">Baixa</option>
+                  </select>
                 </div>
 
-                <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
-                <span style={{ fontSize: 12, color: "#6B7280" }}>
-                  {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
-                </span>
-
-                <span style={{
-                  fontSize: 12, fontWeight: 600,
-                  color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
-                }}>
-                  {item.acao === "manter" || item.movimentacaoBRL === 0
-                    ? formatBRL(0)
-                    : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
-                  }
-                </span>
-
-                <select
-                  value={item.acao}
-                  onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
-                  style={selectStyle}
-                >
-                  <option value="manter">Manter</option>
-                  <option value="aportar">Aportar</option>
-                  <option value="resgatar_parcial">Resgatar parcialmente</option>
-                  <option value="resgatar_total">Resgatar tudo</option>
-                  <option value="novo">Novo</option>
-                </select>
-
-                <input
-                  value={item.observacao}
-                  onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                  placeholder="observação..."
-                  style={{
-                    border: "1px solid #BFDBFE", borderRadius: 6, padding: "3px 6px",
-                    fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
-                    width: "100%", boxSizing: "border-box",
-                  }}
-                />
-
-                <select
-                  value={item.prioridade ?? "baixa"}
-                  onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
-                  style={selectStyle}
-                >
-                  <option value="alta">Alta</option>
-                  <option value="media">Média</option>
-                  <option value="baixa">Baixa</option>
-                </select>
+                {item.acao === "resgatar_parcial" && (
+                  <div style={{ padding: "0 14px 10px" }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "8px 10px",
+                      background: "#FFF5F5",
+                      border: "0.5px solid #FECACA",
+                      borderRadius: 6,
+                    }}>
+                      <span style={{ fontSize: 11, color: "#B91C1C", whiteSpace: "nowrap" }}>
+                        Valor a resgatar:
+                      </span>
+                      <input
+                        type="text"
+                        value={editingValues[item.id] ?? formatInputBRL(item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))}
+                        onChange={(e) => setEditingValues((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                        onBlur={(e) => {
+                          const valor = parseBRL(e.target.value);
+                          const valorValido = Math.min(Math.max(0, valor), item.valorAtualBRL);
+                          updateItem(item.id, { valorResgateBRL: valorValido });
+                          setEditingValues((prev) => { const next = { ...prev }; delete next[item.id]; return next; });
+                        }}
+                        style={{
+                          flex: 1,
+                          border: "1px solid #FECACA",
+                          borderRadius: 4,
+                          padding: "4px 8px",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "#B91C1C",
+                          textAlign: "right",
+                          background: "white",
+                          outline: "none",
+                        }}
+                        placeholder={formatInputBRL(Math.abs(item.movimentacaoBRL))}
+                      />
+                      <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" }}>
+                        de {formatBRL(item.valorAtualBRL)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

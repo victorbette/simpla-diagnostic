@@ -28,6 +28,7 @@ export interface PlanoAcaoItem {
   movimentacaoBRL: number;
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
+  valorResgateBRL?: number;
 }
 
 export interface CarteiraResultado {

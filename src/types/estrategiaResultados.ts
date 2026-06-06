@@ -16,6 +16,7 @@ export interface PlanoAcaoItem {
   movimentacaoBRL: number;
   prioridade?: string;
   observacao?: string;
+  valorResgateBRL?: number;
 }
 
 export interface ResultadoCarteira {

@@ -27,6 +27,26 @@ function totalByCards(ativos: Ativo[], cards: CardId[]): number {
   return ativos.filter((a) => cards.includes(a.card)).reduce((s, a) => s + a.valorBRL, 0);
 }
 
+function calcularValorFinal(item: PlanoAcaoItem): number {
+  switch (item.acao) {
+    case "manter":
+      return item.valorAtualBRL;
+    case "aportar":
+    case "novo":
+      return item.valorAtualBRL + item.movimentacaoBRL;
+    case "resgatar_total":
+      return 0;
+    case "resgatar_parcial": {
+      const resgate = item.valorResgateBRL !== undefined
+        ? item.valorResgateBRL
+        : Math.abs(item.movimentacaoBRL);
+      return Math.max(0, item.valorAtualBRL - resgate);
+    }
+    default:
+      return item.valorAtualBRL;
+  }
+}
+
 function PieSection({
   title,
   data,
@@ -106,7 +126,12 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
   );
 
   const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-  const totalResgates = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+  const totalResgates = planoAcao
+    .filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0)
+    .reduce((s, p) => {
+      if (p.acao === 'resgatar_parcial' && p.valorResgateBRL !== undefined) return s + p.valorResgateBRL;
+      return s + Math.abs(p.movimentacaoBRL);
+    }, 0);
 
   const aportes = planoAcao.filter((p) => p.acao === "aportar" || p.acao === "novo");
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
@@ -207,7 +232,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[
             { title: "Aportar", items: aportes, color: "#15803D", getVal: (it: PlanoAcaoItem) => it.movimentacaoBRL },
-            { title: "Resgatar", items: resgates, color: "#B91C1C", getVal: (it: PlanoAcaoItem) => it.movimentacaoBRL },
+            { title: "Resgatar", items: resgates, color: "#B91C1C", getVal: (it: PlanoAcaoItem) => it.acao === "resgatar_parcial" && it.valorResgateBRL !== undefined ? -it.valorResgateBRL : it.movimentacaoBRL },
             { title: "Manter", items: mantidos, color: "#6B7280", getVal: (it: PlanoAcaoItem) => it.valorAtualBRL },
           ].map(({ title, items, color, getVal }, ci) => (
             <div key={title} style={{ padding: 14, borderLeft: ci > 0 ? "1px solid #BFDBFE" : "none", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -243,13 +268,24 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
       </div>
 
       {/* Seleção de Ativos Recomendados */}
-      <CardSelecaoAtivos
-        ativosRecomendados={ativosRecomendados}
-        macroMeta={alocacaoMeta}
-        patrimonio={patrimonioMeta}
-        titulo="Seleção de Ativos Recomendados"
-        subtitulo="Carteira recomendada organizada por classe"
-      />
+      {(() => {
+        const ativosComValorFinal = ativosRecomendados
+          .map((ativo) => {
+            const itemPlano = planoAcao.find((p) => p.nomeAtivo === ativo.nome && p.card === ativo.card);
+            if (!itemPlano) return ativo;
+            return { ...ativo, valorBRL: calcularValorFinal(itemPlano) };
+          })
+          .filter((a) => (Number(a.valorBRL) || 0) > 0);
+        return (
+          <CardSelecaoAtivos
+            ativosRecomendados={ativosComValorFinal}
+            macroMeta={alocacaoMeta}
+            patrimonio={patrimonioMeta}
+            titulo="Seleção de Ativos Recomendados"
+            subtitulo="Carteira recomendada organizada por classe"
+          />
+        );
+      })()}
 
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
