@@ -28,7 +28,6 @@ export function detectarOportunidades(
     if (!plan) continue;
 
     const dc   = (plan.dados_cliente  as Record<string, unknown>) ?? {};
-    const prot = (plan.protecao       as Record<string, unknown>) ?? {};
     const suc  = (plan.sucessorio     as Record<string, unknown>) ?? {};
     const est  = (plan.estrategia_inicial as Record<string, unknown>) ?? {};
 
@@ -157,18 +156,6 @@ export function detectarOportunidades(
         titulo: "Gestão de Milhas Aéreas",
         descricao: `Gasto familiar de ${fmtBRL(gastoCartao)}/mês no cartão — perfil qualificado para gestão profissional de milhas aéreas.`,
         prioridade: "alta",
-        origem: "Coleta de Dados › Situação Financeira",
-      });
-    }
-
-    // Seguro viagem — critério próprio, independente do gasto no cartão
-    if (dc.fazViagensInternacionais && !prot.temOutroSeguro) {
-      push({
-        id: `${cliente.id}_seguro_viagem`,
-        tipo: "viagens",
-        titulo: "Seguro Viagem Internacional",
-        descricao: `${Number(dc.viagensInternacionaisQtdAnual) || 1} viagem(ns) internacional(is)/ano sem seguro. Exposição a custos médicos no exterior.`,
-        prioridade: "media",
         origem: "Coleta de Dados › Situação Financeira",
       });
     }
