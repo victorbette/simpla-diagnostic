@@ -6,7 +6,7 @@ import { formatPct, formatBRL } from "@/lib/carteira/calculos";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
-import type { CarteiraResultado } from "@/lib/carteira/types";
+import type { CarteiraResultado, CardId, Ativo } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 
@@ -417,13 +417,57 @@ export function SecaoAssetAllocation({
         </div>
 
         {/* Card 3B — Seleção de Ativos Recomendados */}
-        <CardSelecaoAtivos
-          ativosRecomendados={rc.ativosRecomendados ?? []}
-          macroMeta={rc.macroMeta ?? {}}
-          patrimonio={patrimonioMeta}
-          titulo="Como sua carteira deverá ficar"
-          subtitulo="Seleção de ativos recomendados por classe"
-        />
+        {(() => {
+          const ativosRec = rc.ativosRecomendados ?? [];
+          const ativosCarteiraFinal = (rc.planoAcao ?? [])
+            .map((item) => {
+              if (!item.card) return null;
+              const acao = item.acao ?? item.tipo ?? "";
+              let valorFinal = 0;
+              switch (acao) {
+                case "novo":
+                case "aportar":
+                  valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoBRL ?? 0);
+                  break;
+                case "manter":
+                  valorFinal = item.valorAtualBRL ?? 0;
+                  break;
+                case "resgatar_parcial": {
+                  const resgate = item.valorResgateBRL !== undefined
+                    ? item.valorResgateBRL
+                    : Math.abs(item.movimentacaoBRL ?? 0);
+                  valorFinal = Math.max(0, (item.valorAtualBRL ?? 0) - resgate);
+                  break;
+                }
+                case "resgatar_total":
+                  return null;
+                default:
+                  valorFinal = item.valorAtualBRL ?? 0;
+              }
+              if (valorFinal <= 0) return null;
+              const cardId = item.card as CardId;
+              const base = ativosRec.find((a) => a.nome === item.nomeAtivo && a.card === cardId);
+              return {
+                id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
+                card: cardId,
+                nome: item.nomeAtivo,
+                segmento: item.segmento ?? base?.segmento ?? "",
+                vencimento: base?.vencimento,
+                valorBRL: valorFinal,
+              } satisfies Ativo;
+            })
+            .filter(Boolean) as Ativo[];
+          if (ativosCarteiraFinal.length === 0) return null;
+          return (
+            <CardSelecaoAtivos
+              ativosRecomendados={ativosCarteiraFinal}
+              macroMeta={rc.macroMeta ?? {}}
+              patrimonio={patrimonioMeta}
+              titulo="Como sua carteira deverá ficar"
+              subtitulo="Seleção de ativos após execução do plano"
+            />
+          );
+        })()}
 
         {/* Card 4 — Action plan */}
         <div style={CARD}>

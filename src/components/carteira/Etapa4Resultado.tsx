@@ -269,20 +269,24 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
 
       {/* Seleção de Ativos Recomendados */}
       {(() => {
-        const ativosComValorFinal = ativosRecomendados
-          .map((ativo) => {
-            const itemPlano = planoAcao.find((p) => p.nomeAtivo === ativo.nome && p.card === ativo.card);
-            if (!itemPlano) return ativo;
-            return { ...ativo, valorBRL: calcularValorFinal(itemPlano) };
+        const ativosCarteiraFinal = planoAcao
+          .map((item) => {
+            const valorFinal = calcularValorFinal(item);
+            if (valorFinal <= 0) return null;
+            const ativoRec = ativosRecomendados.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+            const ativoAtual = ativosAtuais.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+            const base = ativoRec ?? ativoAtual;
+            if (!base) return null;
+            return { ...base, valorBRL: valorFinal, nome: item.nomeAtivo, card: item.card };
           })
-          .filter((a) => (Number(a.valorBRL) || 0) > 0);
+          .filter(Boolean) as Ativo[];
         return (
           <CardSelecaoAtivos
-            ativosRecomendados={ativosComValorFinal}
+            ativosRecomendados={ativosCarteiraFinal}
             macroMeta={alocacaoMeta}
             patrimonio={patrimonioMeta}
             titulo="Seleção de Ativos Recomendados"
-            subtitulo="Carteira recomendada organizada por classe"
+            subtitulo="Carteira final após execução do plano de ação"
           />
         );
       })()}
