@@ -143,13 +143,13 @@ export function detectarOportunidades(
 
     // ── VIAGENS E MILHAS ──────────────────────────────────────────────────────
 
-    if (gastoCartao >= 10000) {
+    if (gastoCartao >= 25000) {
       push({
         id: `${cliente.id}_gestao_milhas`,
         tipo: "viagens",
         titulo: "Gestão de milhas aéreas",
-        descricao: `Gasto de ${fmtBRL(gastoCartao)}/mês no cartão. Potencial de ${Math.round((gastoCartao * 12) / 100)}k+ milhas/ano com programa otimizado.`,
-        prioridade: gastoCartao >= 25000 ? "alta" : "media",
+        descricao: `Gasto de ${fmtBRL(gastoCartao)}/mês no cartão. Perfil qualificado para gestão profissional de milhas aéreas.`,
+        prioridade: "alta",
         origem: "Coleta de Dados › Situação Financeira",
       });
     }
