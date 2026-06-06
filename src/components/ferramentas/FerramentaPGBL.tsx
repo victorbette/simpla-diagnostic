@@ -48,9 +48,11 @@ export function FerramentaPGBL({
   onSave,
 }: Props) {
   const rendaMensalColeta =
-    (dadosCliente?.rendaMensal ?? 0) + (dadosCliente?.rendaImovelMensal ?? 0);
-  const isCLT = dadosCliente?.tipoTrabalho === "clt";
-  const inssColeta = isCLT
+    (dadosCliente?.rendaMensal ?? 0) +
+    (dadosCliente?.possuiImovelRenda ? (dadosCliente?.rendaImovelMensal ?? 0) : 0);
+  const isINSSCalculado =
+    dadosCliente?.tipoTrabalho === "clt" || dadosCliente?.tipoTrabalho === "concursado";
+  const inssColeta = isINSSCalculado
     ? calcularINSSMensalCLT(rendaMensalColeta)
     : (dadosCliente?.valorINSS ?? 0);
   const tipoDeclaracaoColeta: "completa" | "simplificada" =
@@ -62,6 +64,15 @@ export function FerramentaPGBL({
     ? Math.max(1, idadeMeta - calcularIdade(dadosCliente.dataNascimento))
     : 20;
 
+  const possuiPrevidencia = dadosCliente?.possuiPrevidencia ?? false;
+  const tipoPrevidencia   = dadosCliente?.tipoPrevidencia ?? null;
+  const saldoPrevidencia  = Number(dadosCliente?.saldoPrevidencia) || 0;
+  const possuiPGBL        = possuiPrevidencia &&
+    (tipoPrevidencia === "pgbl" || tipoPrevidencia === "ambos");
+  const aporteEstimadoPGBL = possuiPGBL
+    ? Math.round(saldoPrevidencia / Math.max(1, nAnosColeta * 12))
+    : 0;
+
   const CHAVE = `ferramenta_pgbl_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
 
@@ -71,7 +82,9 @@ export function FerramentaPGBL({
     numeroDependentes: dependentesColeta,
     contribuicaoINSSMensal: inssColeta,
     despesasInstrucaoAnual: 0,
-    aporteAnualPGBL: fiscal.temPGBL ? fiscal.valorPGBLAnual : 0,
+    aporteAnualPGBL: possuiPGBL
+      ? (fiscal.valorPGBLAnual > 0 ? fiscal.valorPGBLAnual : aporteEstimadoPGBL * 12)
+      : 0,
     rentabilidadeAnual: 8,
     nAnos: nAnosColeta,
   };
@@ -214,12 +227,12 @@ export function FerramentaPGBL({
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <Label>INSS Mensal (R$)</Label>
-                {isCLT && (
+                {isINSSCalculado && (
                   <Badge
                     variant="outline"
                     style={{ fontSize: 10, color: "#15803D", borderColor: "#86EFAC" }}
                   >
-                    Calculado (CLT)
+                    Calculado
                   </Badge>
                 )}
               </div>
@@ -228,7 +241,9 @@ export function FerramentaPGBL({
                 onChange={(v) => set({ contribuicaoINSSMensal: v })}
               />
               <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>
-                Teto 2025: {formatCurrency(908.86)}/mês
+                {isINSSCalculado
+                  ? `Teto 2025: ${formatCurrency(908.86)}/mês`
+                  : "Informe sua contribuição mensal ao INSS"}
               </p>
             </div>
 
@@ -245,6 +260,63 @@ export function FerramentaPGBL({
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Banners de previdência ── */}
+      {possuiPrevidencia && tipoPrevidencia === "vgbl" && (
+        <div style={{
+          background: "#FEF3C7", border: "0.5px solid #FCD34D",
+          borderLeft: "4px solid #B45309", borderRadius: 8,
+          padding: "12px 16px", fontSize: 13, color: "#92400E",
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            <i className="ti ti-alert-triangle" style={{ marginRight: 6 }} />
+            Cliente possui apenas VGBL
+          </div>
+          O VGBL não permite dedução no Imposto de Renda.
+          Esta simulação mostra quanto o cliente poderia economizar
+          adicionando um PGBL à sua estratégia.{" "}
+          Limite disponível:{" "}
+          <strong>{formatCurrency(rendaMensalColeta * 12 * 0.12 / 12)}/mês</strong>
+        </div>
+      )}
+
+      {possuiPrevidencia && (tipoPrevidencia === "pgbl" || tipoPrevidencia === "ambos") && (
+        <div style={{
+          background: "#DCFCE7", border: "0.5px solid #86EFAC",
+          borderLeft: "4px solid #15803D", borderRadius: 8,
+          padding: "12px 16px", fontSize: 13, color: "#14532D",
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            <i className="ti ti-circle-check" style={{ marginRight: 6 }} />
+            Cliente possui PGBL ativo
+          </div>
+          Saldo atual: <strong>{formatCurrency(saldoPrevidencia)}</strong>
+          {tipoPrevidencia === "ambos" && (
+            <span style={{ marginLeft: 8, color: "#B45309" }}>
+              · Também possui VGBL (não deduz no IR)
+            </span>
+          )}
+        </div>
+      )}
+
+      {!possuiPrevidencia && (
+        <div style={{
+          background: "#EFF6FF", border: "0.5px solid #BFDBFE",
+          borderLeft: "4px solid #2563EB", borderRadius: 8,
+          padding: "12px 16px", fontSize: 13, color: "#1E40AF",
+        }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            <i className="ti ti-info-circle" style={{ marginRight: 6 }} />
+            Cliente sem previdência privada
+          </div>
+          Oportunidade de diferimento fiscal de até{" "}
+          <strong>{formatCurrency(rendaMensalColeta * 12 * 0.12 / 12)}/mês</strong>{" "}
+          com PGBL
+          {tipoDeclaracaoColeta === "completa"
+            ? " na declaração completa."
+            : " (avaliar migração para declaração completa)."}
+        </div>
+      )}
 
       {/* Card 2 — Contribuição PGBL */}
       <Card
