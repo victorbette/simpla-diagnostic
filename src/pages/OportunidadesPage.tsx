@@ -319,14 +319,19 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
         {/* Active opportunity cards */}
         {filteredOps.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 0" }}>
-            <i className="ti ti-circle-check" style={{ fontSize: 44, display: "block", marginBottom: 12, color: "#15803D" }} />
+            <i
+              className={`ti ${filtro === "seguros" ? "ti-info-circle" : "ti-circle-check"}`}
+              style={{ fontSize: 44, display: "block", marginBottom: 12, color: filtro === "seguros" ? "#6B7280" : "#15803D" }}
+            />
             <p style={{ fontSize: 15, fontWeight: 600, color: "#374151", margin: "0 0 4px" }}>
               {filtro !== "todas"
                 ? `Nenhuma oportunidade de ${TIPO_CFG[filtro].label} identificada`
                 : "Nenhuma oportunidade identificada"}
             </p>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
-              Adicione manualmente ou aguarde novos dados dos clientes.
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: "0 0 0" }}>
+              {filtro === "seguros"
+                ? "Execute a Análise de Proteção e Sucessão para mapear gaps de cobertura dos clientes."
+                : "Adicione manualmente ou aguarde novos dados dos clientes."}
             </p>
           </div>
         ) : (

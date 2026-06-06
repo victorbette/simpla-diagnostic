@@ -47,50 +47,56 @@ export function detectarOportunidades(
     }
 
     // ── SEGUROS ──────────────────────────────────────────────────────────────
+    // Fonte: resultado salvo pela Ferramenta de Análise de Proteção e Sucessão.
+    // Oportunidades de seguro só são geradas se a ferramenta foi executada.
 
-    const capitalVida     = Number(prot.capitalSeguradoVida)     || 0;
-    const capitalInvalidez = Number(prot.capitalSeguradoInvalidez) || 0;
-    const capitalNecessario = rendaMensal * 12 * 15;
-    const capitalAtual      = capitalVida + capitalInvalidez;
-    const gapProtecao       = capitalNecessario - capitalAtual;
+    const seguroResult     = (est.seguro as Record<string, unknown>) ?? {};
+    const capitalNecessario = Number(seguroResult.totalNeed)     || 0;
+    const capitalAtual      = Number(seguroResult.totalCoverage) || 0;
+    const gap               = Math.max(0, capitalNecessario - capitalAtual);
+    const ferramentaExecutada = capitalNecessario > 0;
 
-    if (gapProtecao > 50000 && numFilhos > 0) {
-      push({
-        id: `${cliente.id}_gap_protecao`,
-        tipo: "seguros",
-        titulo: "Gap de proteção identificado",
-        descricao: `Cobertura insuficiente de ${fmtBRL(gapProtecao)}. ${numFilhos} dependente(s) sem cobertura adequada de renda.`,
-        prioridade: gapProtecao > 500000 ? "alta" : "media",
-        origem: "Coleta de Dados › Proteção",
-      });
+    if (ferramentaExecutada) {
+      if (gap > 0) {
+        push({
+          id: `${cliente.id}_gap_protecao`,
+          tipo: "seguros",
+          titulo: "Cobertura de proteção insuficiente",
+          descricao: `Análise de proteção identificou gap de ${fmtBRL(gap)} na cobertura. Capital necessário: ${fmtBRL(capitalNecessario)} · Capital atual: ${fmtBRL(capitalAtual)}.`,
+          prioridade: gap > 500000 ? "alta" : "media",
+          origem: "Análise de Proteção e Sucessão",
+        });
+      }
+
+      if (!seguroResult.temSeguroVida && numFilhos > 0) {
+        push({
+          id: `${cliente.id}_sem_seguro_vida`,
+          tipo: "seguros",
+          titulo: "Sem seguro de vida",
+          descricao: `${numFilhos} dependente(s) sem cobertura de renda. Capital necessário: ${fmtBRL(capitalNecessario)}.`,
+          prioridade: "alta",
+          origem: "Análise de Proteção e Sucessão",
+        });
+      }
+
+      if (!seguroResult.temSeguroInvalidez) {
+        push({
+          id: `${cliente.id}_sem_seguro_invalidez`,
+          tipo: "seguros",
+          titulo: "Sem seguro de invalidez",
+          descricao: `Análise de proteção identificou ausência de cobertura para invalidez permanente.`,
+          prioridade: "media",
+          origem: "Análise de Proteção e Sucessão",
+        });
+      }
     }
 
-    if (!prot.possuiSeguroVida && numFilhos > 0) {
-      push({
-        id: `${cliente.id}_sem_seguro_vida`,
-        tipo: "seguros",
-        titulo: "Sem seguro de vida",
-        descricao: `${numFilhos} dependente(s) sem cobertura de renda em caso de falecimento ou invalidez.`,
-        prioridade: "alta",
-        origem: "Coleta de Dados › Proteção",
-      });
-    }
-
-    if (!prot.possuiSeguroInvalidez && rendaMensal > 5000) {
-      push({
-        id: `${cliente.id}_sem_seguro_invalidez`,
-        tipo: "seguros",
-        titulo: "Sem seguro de invalidez",
-        descricao: `Renda de ${fmtBRL(rendaMensal)}/mês sem proteção contra invalidez.`,
-        prioridade: "media",
-        origem: "Coleta de Dados › Proteção",
-      });
-    }
-
+    // RC Profissional — baseado na profissão da coleta, independente da ferramenta
     const profissao = String(dc.profissao ?? "").toLowerCase();
-    const precisaRC = ["médico", "medico", "dentista", "advogado", "consultor"].some((p) =>
-      profissao.includes(p)
-    );
+    const precisaRC = [
+      "médico", "medico", "médica", "medica",
+      "dentista", "advogado", "advogada", "consultor", "consultora",
+    ].some((p) => profissao.includes(p));
     if (precisaRC) {
       push({
         id: `${cliente.id}_seguro_rc`,
