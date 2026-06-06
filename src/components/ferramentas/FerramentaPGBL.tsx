@@ -397,6 +397,13 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
           Salvar análise
         </button>
       )}
+
+      {/* Nota informativa */}
+      <p style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5, margin: 0, textAlign: "center" }}>
+        Cálculo baseado na tabela oficial da Receita Federal 2026. Inclui redutor de isenção para rendas até
+        R$ 5.000/mês. PGBL: dedução de até 12% da renda bruta na declaração completa. IR no resgate: alíquota
+        regressiva de 15% (prazo &gt; 720 dias).
+      </p>
     </div>
   );
 }

@@ -16,23 +16,41 @@ export const formatInputBRL = (v: number) => {
 
 export const DEDUCAO_DEPENDENTE = 2275.08;
 
-// Tabela progressiva anual IRPF 2025
+// Tabela progressiva anual IRPF 2026
 const faixasAnuais = [
-  { limite: 28467.20,  aliquota: 0,     deduzir: 0        },
-  { limite: 33919.80,  aliquota: 0.075, deduzir: 2135.04  },
-  { limite: 45012.60,  aliquota: 0.15,  deduzir: 4679.03  },
-  { limite: 55976.16,  aliquota: 0.225, deduzir: 8054.97  },
-  { limite: Infinity,  aliquota: 0.275, deduzir: 10853.78 },
+  { limite: 29145.60,  aliquota: 0,     deduzir: 0        },
+  { limite: 33919.80,  aliquota: 0.075, deduzir: 2185.92  },
+  { limite: 45012.60,  aliquota: 0.15,  deduzir: 4729.91  },
+  { limite: 55976.16,  aliquota: 0.225, deduzir: 8105.85  },
+  { limite: Infinity,  aliquota: 0.275, deduzir: 10904.66 },
 ];
 
-export function calcularIRAnual(baseCalculo: number): number {
+export function calcularRedutorAnual2026(
+  rendaBruta: number,
+  irCalculado: number
+): number {
+  if (rendaBruta <= 60000) return irCalculado;
+  if (rendaBruta <= 88200) {
+    const proporcao = (88200 - rendaBruta) / (88200 - 60000);
+    const redutor = irCalculado * proporcao;
+    return Math.max(0, irCalculado - redutor);
+  }
+  return irCalculado;
+}
+
+export function calcularIRAnual(baseCalculo: number, rendaBruta?: number): number {
   if (baseCalculo <= 0) return 0;
+  let ir = 0;
   for (const f of faixasAnuais) {
     if (baseCalculo <= f.limite) {
-      return Math.max(0, baseCalculo * f.aliquota - f.deduzir);
+      ir = Math.max(0, baseCalculo * f.aliquota - f.deduzir);
+      break;
     }
   }
-  return 0;
+  if (rendaBruta !== undefined) {
+    ir = calcularRedutorAnual2026(rendaBruta, ir);
+  }
+  return ir;
 }
 
 // Tabela INSS 2025 (progressiva)

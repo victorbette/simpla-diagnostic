@@ -25,13 +25,13 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
   const deducaoDep = Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE;
 
   const baseSemPGBL = Math.max(0, i.rendaBruta - i.despesas - deducaoDep - i.inss);
-  const irSemPGBL = calcularIRAnual(baseSemPGBL);
+  const irSemPGBL = calcularIRAnual(baseSemPGBL, i.rendaBruta);
   const resultadoSem = irSemPGBL - i.irrf;
   const aliqEfetivaSem = i.rendaBruta > 0 ? (irSemPGBL / i.rendaBruta) * 100 : 0;
 
   const tetoPGBL = i.rendaBruta * 0.12;
   const baseComPGBL = Math.max(0, baseSemPGBL - tetoPGBL);
-  const irComPGBL = calcularIRAnual(baseComPGBL);
+  const irComPGBL = calcularIRAnual(baseComPGBL, i.rendaBruta);
   const resultadoCom = irComPGBL - i.irrf;
   const aliqEfetivaCom = i.rendaBruta > 0 ? (irComPGBL / i.rendaBruta) * 100 : 0;
 

@@ -1,4 +1,4 @@
-// Tabelas oficiais Receita Federal 2025
+// Tabelas oficiais Receita Federal 2026
 
 const TABELA_MENSAL = [
   { limite: 2428.80,  aliquota: 0,     deducao: 0      },
@@ -9,11 +9,11 @@ const TABELA_MENSAL = [
 ];
 
 const TABELA_ANUAL = [
-  { limite: 28467.20,  aliquota: 0,     deducao: 0        },
-  { limite: 33919.80,  aliquota: 0.075, deducao: 2135.04  },
-  { limite: 45012.60,  aliquota: 0.15,  deducao: 4679.03  },
-  { limite: 55976.16,  aliquota: 0.225, deducao: 8054.97  },
-  { limite: Infinity,  aliquota: 0.275, deducao: 10853.78 },
+  { limite: 29145.60,  aliquota: 0,     deducao: 0        },
+  { limite: 33919.80,  aliquota: 0.075, deducao: 2185.92  },
+  { limite: 45012.60,  aliquota: 0.15,  deducao: 4729.91  },
+  { limite: 55976.16,  aliquota: 0.225, deducao: 8105.85  },
+  { limite: Infinity,  aliquota: 0.275, deducao: 10904.66 },
 ];
 
 // INSS 2025 — tabela progressiva (cada faixa aplica sobre a parcela do salário)
