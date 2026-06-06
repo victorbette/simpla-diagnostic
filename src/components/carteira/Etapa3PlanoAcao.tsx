@@ -78,13 +78,13 @@ export function Etapa3PlanoAcao({
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {[
-          { label: "Total Aportes",  value: formatBRL(totalAportes),  color: "#15803D", border: "#15803D" },
-          { label: "Total Resgates", value: formatBRL(totalResgates),  color: "#B91C1C", border: "#B91C1C" },
-          { label: "Saldo Líquido",  value: formatBRL(saldoLiquido),   color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", border: "#1E3A8A" },
-          { label: "Movimentações",  value: String(nMovs),             color: "#111827", border: "#6B7280" },
-        ].map(({ label, value, color, border }) => (
+          { label: "Total Aportes",  value: formatBRL(totalAportes),  color: "#15803D" },
+          { label: "Total Resgates", value: formatBRL(totalResgates),  color: "#B91C1C" },
+          { label: "Saldo Líquido",  value: formatBRL(saldoLiquido),   color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C" },
+          { label: "Movimentações",  value: String(nMovs),             color: "#111827" },
+        ].map(({ label, value, color }) => (
           <div key={label} style={{
-            border: "1px solid #BFDBFE", borderTop: `3px solid ${border}`,
+            border: "0.5px solid #E5E7EB",
             borderRadius: 8, padding: "12px 14px", backgroundColor: "white",
           }}>
             <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px" }}>{label}</p>

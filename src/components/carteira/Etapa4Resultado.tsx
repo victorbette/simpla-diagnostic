@@ -122,8 +122,8 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
     [ativosAtuais, alocacaoMeta, patrimonioMeta]
   );
 
-  const cardStyle = (accent: string): React.CSSProperties => ({
-    border: "1px solid #BFDBFE", borderTop: `3px solid ${accent}`,
+  const cardStyle = (_accent?: string): React.CSSProperties => ({
+    border: "0.5px solid #E5E7EB",
     borderRadius: 10, backgroundColor: "white", overflow: "hidden",
   });
 

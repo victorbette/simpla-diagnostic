@@ -210,7 +210,7 @@ export function CarteiraCard({
   }
 
   return (
-    <div style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 12, overflow: "hidden" }}>
+    <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
       {/* Card header */}
       <div style={{ padding: "10px 14px", borderBottom: "1px solid #EFF6FF" }}>
