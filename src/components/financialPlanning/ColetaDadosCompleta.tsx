@@ -254,7 +254,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
 
         {/* INSS */}
-        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.contribuiINSS ? "#2563EB" : "#BFDBFE"}` }}>
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Switch
               checked={!!(dados.contribuiINSS ?? false)}
@@ -345,7 +345,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         <div style={{ marginTop: 20 }}>
           <Label className={labelCls} style={{ display: "block", marginBottom: 8 }}>Perfil de viagens</Label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{ borderRadius: 10, border: `1px solid ${dados.fazViagensNacionais ? "#2563EB" : "#BFDBFE"}`, padding: "14px 16px" }}>
+            <div style={{ borderRadius: 10, border: "0.5px solid #E5E7EB", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <Switch
                   checked={!!dados.fazViagensNacionais}
@@ -370,7 +370,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
               )}
             </div>
 
-            <div style={{ borderRadius: 10, border: `1px solid ${dados.fazViagensInternacionais ? "#2563EB" : "#BFDBFE"}`, padding: "14px 16px" }}>
+            <div style={{ borderRadius: 10, border: "0.5px solid #E5E7EB", padding: "14px 16px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <Switch
                   checked={!!dados.fazViagensInternacionais}
@@ -398,7 +398,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
 
         {/* Imóvel renda */}
-        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.possuiImovelRenda ? "#15803D" : "#BFDBFE"}` }}>
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Switch
               checked={!!(dados.possuiImovelRenda ?? false)}
@@ -423,7 +423,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
 
         {/* Imóveis próprios */}
-        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.possuiImoveis ? "#7C3AED" : "#BFDBFE"}` }}>
+        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Switch
               checked={!!(dados.possuiImoveis ?? false)}
@@ -453,7 +453,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
 
         {/* Previdência */}
-        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: `1px solid ${dados.possuiPrevidencia ? "#2563EB" : "#BFDBFE"}` }}>
+        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Switch
               checked={!!(dados.possuiPrevidencia ?? false)}

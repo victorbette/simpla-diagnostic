@@ -38,7 +38,7 @@ interface UIParams {
 }
 
 const cardGreenTop: React.CSSProperties = {
-  borderTop: "3px solid #15803D",
+  border: "0.5px solid #E5E7EB",
   borderRadius: 12,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
@@ -473,7 +473,7 @@ export function FerramentaLiberdadeFinanceira({
             const aporteAtual = params.aporteMensal;
             const suficiente = aporteAtual >= comObj;
             return (
-              <Card style={{ ...cardGreenTop, borderTop: "3px solid #1E3A8A" }}>
+              <Card style={{ ...cardGreenTop }}>
                 <CardContent className="pt-4 pb-4">
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                     <div style={{ flex: 1 }}>

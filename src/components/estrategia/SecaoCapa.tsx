@@ -64,7 +64,7 @@ export function SecaoCapa({
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
       {/* Card esquerdo */}
-      <div style={{ ...CARD, borderTop: "3px solid #3B82F6" }}>
+      <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 20px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Identidade do Documento
         </p>
@@ -134,7 +134,7 @@ export function SecaoCapa({
       </div>
 
       {/* Card direito */}
-      <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
+      <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 20px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Resumo do Cliente
         </p>

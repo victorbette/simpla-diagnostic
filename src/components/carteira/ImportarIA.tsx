@@ -326,7 +326,7 @@ export function ImportarIA({ onConfirmar, modo: _modo }: Props) {
   const checked = items.filter((it) => it.checked).length;
   return (
     <div style={{
-      backgroundColor: "white", border: "2px solid #2563EB", borderRadius: 12,
+      backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
       overflow: "hidden", marginBottom: 4,
     }}>
       {/* Header */}

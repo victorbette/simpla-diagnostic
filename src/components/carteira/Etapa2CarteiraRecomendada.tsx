@@ -124,7 +124,7 @@ export function Etapa2CarteiraRecomendada({
               {/* Group header */}
               <div style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                paddingBottom: 6, borderBottom: `1px solid ${grupo.cor}25`, marginBottom: 8,
+                paddingBottom: 6, borderBottom: "0.5px solid #F3F4F6", marginBottom: 8,
               }}>
                 <span style={{
                   fontSize: 11, fontWeight: 700, color: grupo.cor,

@@ -102,7 +102,7 @@ export function SecaoFiscal({
         style={{
           marginTop: 16,
           backgroundColor: "#EFF6FF",
-          border: "1px solid #60A5FA",
+          border: "0.5px solid #E5E7EB",
           borderRadius: 8,
           padding: "20px 24px",
           textAlign: "center",
@@ -368,12 +368,12 @@ export function SecaoFiscal({
         style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}
       >
         {/* Card 1 — PGBL tool */}
-        <div style={{ ...CARD, borderTop: "3px solid #2563EB" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           {resultadoFiscal ? toolResult : emptyState}
         </div>
 
         {/* Card 2 — Comment */}
-        <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           <p
             style={{
               fontSize: 13,

@@ -272,7 +272,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
               ))}
               {data.assets.length === 0 && <p className="text-xs text-muted-foreground">Nenhum ativo cadastrado.</p>}
             </div>
-            <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <CardContent className="pt-4 space-y-1.5">
                 <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo imediato</p>
                 {[
@@ -420,7 +420,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
             </div>
           </div>
 
-          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
               <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo contínuo</p>
               <div className="flex justify-between text-sm">
@@ -528,7 +528,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
             </div>
           </div>
 
-          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-1.5">
               <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Necessidades em vida</p>
               {[
@@ -574,7 +574,7 @@ export function FerramentaSeguro({ protecao, onSave, clientId, dadosCliente }: P
             {data.policies.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma apólice cadastrada.</p>}
           </div>
 
-          <Card style={{ borderTop: "3px solid #B91C1C", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <CardContent className="pt-4 space-y-3">
               <p className="text-xs font-semibold" style={{ color: "#6B7280" }}>Resumo de cobertura</p>
               <div className="space-y-1.5">

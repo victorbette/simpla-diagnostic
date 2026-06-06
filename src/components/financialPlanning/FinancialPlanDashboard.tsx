@@ -404,7 +404,7 @@ export function FinancialPlanDashboard({
         ] as const).map(({ Icon, label, score, color, semDados }) => {
           const nivel = nivelScore(score);
           return (
-            <div key={label} style={{ backgroundColor: "white", borderRadius: 12, padding: 20, borderTop: `3px solid ${color}`, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div key={label} style={{ backgroundColor: "white", borderRadius: 12, padding: 20, border: "0.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
               <Icon style={{ width: 24, height: 24, color }} />
               <GaugeCard score={score} color={color} semDados={semDados} />
               <p style={{ fontSize: 13, color: "#374151", textAlign: "center", margin: 0, fontWeight: 500 }}>{label}</p>

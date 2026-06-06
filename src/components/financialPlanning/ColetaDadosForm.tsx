@@ -279,7 +279,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <div
               style={{
                 borderRadius: 10,
-                border: `1px solid ${value.fazViagensNacionais ? "#2563EB" : "#BFDBFE"}`,
+                border: "0.5px solid #E5E7EB",
                 padding: "14px 16px",
                 transition: "border-color 0.2s",
               }}
@@ -356,7 +356,7 @@ export function ColetaDadosForm({ value, onChange, onComplete }: Props) {
             <div
               style={{
                 borderRadius: 10,
-                border: `1px solid ${value.fazViagensInternacionais ? "#2563EB" : "#BFDBFE"}`,
+                border: "0.5px solid #E5E7EB",
                 padding: "14px 16px",
                 transition: "border-color 0.2s",
               }}
