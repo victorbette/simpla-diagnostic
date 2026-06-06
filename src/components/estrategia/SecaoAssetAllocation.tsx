@@ -139,13 +139,15 @@ export function SecaoAssetAllocation({
     // macroMeta: directly from slider (already %)
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
-    const semManter = (r.planoAcao ?? []).filter((i) => i.acao !== "manter");
-    const totalAportes = semManter
-      .filter((i) => i.movimentacaoBRL > 0)
+    const totalAportes = (r.planoAcao ?? [])
+      .filter((i) => (i.acao === "aportar" || i.acao === "novo") && i.movimentacaoBRL > 0)
       .reduce((s, i) => s + i.movimentacaoBRL, 0);
-    const totalResgates = semManter
-      .filter((i) => i.movimentacaoBRL < 0)
-      .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
+    const totalResgates = (r.planoAcao ?? [])
+      .filter((i) => i.acao === "resgatar_parcial" || i.acao === "resgatar_total")
+      .reduce((s, i) => {
+        if (i.acao === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
+        return s + Math.abs(i.movimentacaoBRL);
+      }, 0);
 
     onResultadoCarteira({
       patrimonio,
@@ -269,8 +271,16 @@ export function SecaoAssetAllocation({
     })
     .filter((d) => d.value > 0.1);
 
-  const totalAportes = rc.totalAportes ?? 0;
-  const totalResgates = rc.totalResgates ?? 0;
+  const totalAportes = (rc.planoAcao ?? [])
+    .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
+    .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
+  const totalResgates = (rc.planoAcao ?? [])
+    .filter((i) => { const a = i.acao ?? i.tipo; return a === "resgatar_parcial" || a === "resgatar_total"; })
+    .reduce((s, i) => {
+      const a = i.acao ?? i.tipo;
+      if (a === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
+      return s + Math.abs(i.movimentacaoBRL ?? 0);
+    }, 0);
   const saldoLiquido = totalAportes - totalResgates;
 
   // Comparative table data
@@ -286,9 +296,7 @@ export function SecaoAssetAllocation({
     })
     .filter((d) => d.pctAtual > 0 || d.pctMeta > 0);
 
-  // Action plan (exclude manter)
-  const actionItems = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").slice(0, 10);
-  const totalVisivel = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").length;
+  const actionItems = rc.planoAcao ?? [];
 
   const groupedByCard: Record<string, typeof actionItems> = {};
   for (const item of actionItems) {
@@ -471,11 +479,8 @@ export function SecaoAssetAllocation({
 
         {/* Card 4 — Action plan */}
         <div style={CARD}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>Plano de Ação</p>
-            {totalVisivel > 10 && (
-              <span style={{ fontSize: 12, color: "#2563EB", fontWeight: 600 }}>Ver todos ({totalVisivel}) →</span>
-            )}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
@@ -498,25 +503,43 @@ export function SecaoAssetAllocation({
                   {cardLabel}
                 </p>
                 {items.map((item) => {
-                  const acaoEfetiva = item.acao || item.tipo || "";
-                  const isAportar = item.movimentacaoBRL > 0;
-                  const movColor = isAportar ? "#15803D" : "#B91C1C";
-                  const movPrefix = isAportar ? "+" : "−";
-                  const tipoBg = isAportar ? "#DCFCE7" : "#FEE2E2";
-                  const tipoColor = isAportar ? "#15803D" : "#B91C1C";
-                  const tipoLabel =
-                    acaoEfetiva === "novo" ? "Novo"
-                    : acaoEfetiva === "aportar" ? "Aportar"
-                    : acaoEfetiva === "resgatar_total" ? "Resgatar total"
-                    : "Resgatar parcial";
+                  const acao = item.acao ?? item.tipo ?? "";
+                  const badge =
+                    acao === "novo"             ? { label: "✦ Novo",             bg: "#DBEAFE", color: "#1E40AF" } :
+                    acao === "aportar"          ? { label: "↑ Aportar",          bg: "#DCFCE7", color: "#15803D" } :
+                    acao === "manter"           ? { label: "→ Manter",           bg: "#F3F4F6", color: "#6B7280" } :
+                    acao === "resgatar_parcial" ? { label: "↓ Resgatar Parcial", bg: "#FEF3C7", color: "#B45309" } :
+                    acao === "resgatar_total"   ? { label: "↓ Resgatar Total",   bg: "#FEE2E2", color: "#B91C1C" } :
+                                                  { label: acao || "—",          bg: "#F3F4F6", color: "#6B7280" };
+                  let movTexto = "";
+                  let movCor = "#111827";
+                  if (acao === "manter") {
+                    movTexto = "R$ 0,00";
+                    movCor = "#9CA3AF";
+                  } else if (acao === "resgatar_parcial") {
+                    const valor = item.valorResgateBRL !== undefined
+                      ? item.valorResgateBRL
+                      : Math.abs(item.movimentacaoBRL ?? 0);
+                    movTexto = "−" + formatBRL(valor);
+                    movCor = "#B45309";
+                  } else if (acao === "resgatar_total") {
+                    movTexto = "−" + formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
+                    movCor = "#B91C1C";
+                  } else if ((item.movimentacaoBRL ?? 0) > 0) {
+                    movTexto = "+" + formatBRL(item.movimentacaoBRL ?? 0);
+                    movCor = "#15803D";
+                  } else {
+                    movTexto = formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
+                    movCor = "#111827";
+                  }
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: 13, color: "#000000", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nomeAtivo}</span>
-                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: tipoBg, color: tipoColor }}>{tipoLabel}</span>
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color }}>{badge.label}</span>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
-                        {movPrefix}{formatCurrency(Math.abs(item.movimentacaoBRL))}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: movCor, flexShrink: 0, marginLeft: 12 }}>
+                        {movTexto}
                       </span>
                     </div>
                   );
