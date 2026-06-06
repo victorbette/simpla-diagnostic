@@ -82,7 +82,7 @@ function PieSection({
   );
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
+export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
   const patrimonioMeta = patrimonio + aporteDisponivel;
 
   const grupoAtual = useMemo(
@@ -240,6 +240,86 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
           ))}
         </div>
       </div>
+
+      {/* Seleção de Ativos Recomendados */}
+      {ativosRecomendados.length > 0 && (() => {
+        const grupos = CARD_ORDER
+          .map((cardId) => ({ cardId, itens: ativosRecomendados.filter((a) => a.card === cardId) }))
+          .filter((g) => g.itens.length > 0);
+        const totalGeral = ativosRecomendados.reduce((s, a) => s + a.valorBRL, 0);
+
+        return (
+          <div style={cardStyle()}>
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid #F3F4F6", fontSize: 13, fontWeight: 600, color: "#111827" }}>
+              Seleção de Ativos Recomendados
+            </div>
+            {grupos.map(({ cardId, itens }) => {
+              const meta = CARD_META[cardId];
+              const isRF = cardId === "resgate_longo" || cardId === "resgate_rapido";
+              const subtotal = itens.reduce((s, a) => s + a.valorBRL, 0);
+              return (
+                <div key={cardId}>
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "8px 16px", backgroundColor: "#F8FAFC",
+                    borderBottom: "0.5px solid #F3F4F6",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <i className={`ti ${meta.icone}`} style={{ fontSize: 14, color: meta.cor }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{meta.label}</span>
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.sub}</span>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: meta.cor }}>{formatBRL(subtotal)}</span>
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+                      <thead>
+                        <tr style={{ backgroundColor: "#F0F7FF" }}>
+                          {["Segmento", "Nome do Ativo", ...(isRF ? ["Vencimento"] : []), "Valor"].map((h) => (
+                            <th key={h} style={{
+                              padding: "6px 14px",
+                              textAlign: h === "Valor" ? "right" : "left",
+                              color: "#6B7280", fontWeight: 600, fontSize: 11,
+                            }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itens.map((ativo, idx) => (
+                          <tr key={ativo.id} style={{ backgroundColor: idx % 2 === 0 ? "white" : "#FAFAFA" }}>
+                            <td style={{ padding: "7px 14px" }}>
+                              <span style={{
+                                backgroundColor: meta.cor + "18",
+                                color: meta.cor,
+                                borderRadius: 4, padding: "2px 6px", fontSize: 10, fontWeight: 500,
+                              }}>
+                                {ativo.segmento || meta.label}
+                              </span>
+                            </td>
+                            <td style={{ padding: "7px 14px", color: "#111827", fontWeight: 500 }}>{ativo.nome}</td>
+                            {isRF && (
+                              <td style={{ padding: "7px 14px", color: "#9CA3AF" }}>{ativo.vencimento || "—"}</td>
+                            )}
+                            <td style={{ padding: "7px 14px", textAlign: "right", color: "#374151", fontWeight: 500 }}>{formatBRL(ativo.valorBRL)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "10px 16px", borderTop: "1px solid #F3F4F6",
+              backgroundColor: "#F8FAFC",
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Total da Carteira Proposta</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#1E3A8A" }}>{formatBRL(totalGeral)}</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
