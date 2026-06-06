@@ -468,20 +468,18 @@ export function SecaoFiscal({
         title="Calculadora de Diferimento Fiscal"
       >
         <FerramentaPGBL
-          clientId={plan.clientId}
-          fiscal={plan.fiscal}
-          dadosCliente={plan.dadosCliente}
-          idadeMeta={plan.planejamentoIF.idadeMeta}
-          onSave={(result) => {
+          plan={plan}
+          onClose={() => setPgblModal(false)}
+          onSave={(r) => {
             onResultadoFiscal({
-              rendaAnual: result.rendaAnual,
-              tetoPGBLAnual: result.tetoPGBLAnual,
-              aporteAnual: result.aporteAnual,
-              irComPGBL: result.irComPGBL,
-              irSemPGBL: result.irSemPGBL,
-              economiaAnual: result.economiaAnual,
-              espacoDisponivelMensal: result.espacoDisponivelMensal,
-              aproveitandoTeto: result.aproveitandoTeto,
+              rendaAnual: r.rendaAnual,
+              tetoPGBLAnual: r.tetoPGBLAnual,
+              aporteAnual: r.aporteAnual,
+              irComPGBL: r.irComPGBL,
+              irSemPGBL: r.irSemPGBL,
+              economiaAnual: r.economiaAnual,
+              espacoDisponivelMensal: r.espacoDisponivelMensal,
+              aproveitandoTeto: r.aproveitandoTeto,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });
