@@ -149,36 +149,39 @@ export function detectarOportunidades(
 
     // ── VIAGENS E MILHAS ──────────────────────────────────────────────────────
 
+    // Gestão de milhas — ÚNICO critério: gasto familiar >= R$ 25.000/mês no cartão
     if (gastoCartao >= 25000) {
       push({
         id: `${cliente.id}_gestao_milhas`,
         tipo: "viagens",
-        titulo: "Gestão de milhas aéreas",
-        descricao: `Gasto de ${fmtBRL(gastoCartao)}/mês no cartão. Perfil qualificado para gestão profissional de milhas aéreas.`,
+        titulo: "Gestão de Milhas Aéreas",
+        descricao: `Gasto familiar de ${fmtBRL(gastoCartao)}/mês no cartão — perfil qualificado para gestão profissional de milhas aéreas.`,
         prioridade: "alta",
         origem: "Coleta de Dados › Situação Financeira",
       });
     }
 
+    // Seguro viagem — critério próprio, independente do gasto no cartão
     if (dc.fazViagensInternacionais && !prot.temOutroSeguro) {
       push({
         id: `${cliente.id}_seguro_viagem`,
         tipo: "viagens",
-        titulo: "Seguro viagem internacional",
-        descricao: `${Number(dc.viagensInternacionaisQtdAnual) || 1} viagem(ns) internacionais/ano sem seguro. Exposição a custos médicos no exterior.`,
+        titulo: "Seguro Viagem Internacional",
+        descricao: `${Number(dc.viagensInternacionaisQtdAnual) || 1} viagem(ns) internacional(is)/ano sem seguro. Exposição a custos médicos no exterior.`,
         prioridade: "media",
         origem: "Coleta de Dados › Situação Financeira",
       });
     }
 
+    // Objetivos de viagem no Simulador IF — só com gasto >= R$ 25.000 no cartão
     const viagensObj = objetivosIF.filter((o) => o.tipo === "viagem");
-    if (viagensObj.length > 0 && gastoCartao >= 5000) {
+    if (viagensObj.length > 0 && gastoCartao >= 25000) {
       push({
         id: `${cliente.id}_objetivo_viagem`,
         tipo: "viagens",
-        titulo: "Projetos de viagem mapeados",
-        descricao: `${viagensObj.length} viagem(ns) planejada(s) na estratégia. Gasto de ${fmtBRL(gastoCartao)}/mês no cartão — potencial de acúmulo de milhas para custeio.`,
-        prioridade: "media",
+        titulo: "Projetos de Viagem com Potencial de Milhas",
+        descricao: `${viagensObj.length} viagem(ns) planejada(s) na estratégia. Com gasto de ${fmtBRL(gastoCartao)}/mês no cartão, possível custeio via milhas acumuladas.`,
+        prioridade: "alta",
         origem: "Simulador de Liberdade Financeira",
       });
     }
