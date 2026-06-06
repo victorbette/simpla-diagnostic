@@ -96,10 +96,9 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
 
   // ── Style helpers ─────────────────────────────────────────────────────────────
 
-  const cardStyle = (borderColor: string, bg = "white"): React.CSSProperties => ({
+  const cardStyle = (_borderColor: string, bg = "white"): React.CSSProperties => ({
     backgroundColor: bg,
-    border: "0.5px solid #BFDBFE",
-    borderLeft: `4px solid ${borderColor}`,
+    border: "0.5px solid #E5E7EB",
     borderRadius: 12,
     padding: "20px 24px",
   });

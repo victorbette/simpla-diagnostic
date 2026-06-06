@@ -434,7 +434,7 @@ export function HomePage() {
                       style={{
                         borderRadius: 12,
                         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        borderLeft: `4px solid ${pc.borderColor}`,
+                        border: "0.5px solid #E5E7EB",
                         padding: 20,
                         minHeight: 240,
                       }}

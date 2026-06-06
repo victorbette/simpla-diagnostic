@@ -285,8 +285,7 @@ export function Etapa2CarteiraRecomendada({
       {/* ── CARD APORTE DISPONÍVEL ── */}
       <div style={{
         backgroundColor: "white",
-        border: "0.5px solid #BFDBFE",
-        borderLeft: "4px solid #15803D",
+        border: "0.5px solid #E5E7EB",
         borderRadius: 12,
         padding: "16px 20px",
         display: "flex",

@@ -22,8 +22,7 @@ export function CardGestaoMilhas({
     <div style={{
       backgroundColor: "white",
       borderRadius: 12,
-      border: "0.5px solid #BFDBFE",
-      borderLeft: "4px solid #2563EB",
+      border: "0.5px solid #E5E7EB",
       padding: "20px 24px",
       marginTop: 16,
       width: "100%",

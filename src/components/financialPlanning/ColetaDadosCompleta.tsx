@@ -63,8 +63,8 @@ function SecaoCard({
       backgroundColor: "white",
       borderRadius: 12,
       boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+      border: "0.5px solid #E5E7EB",
       marginBottom: 16,
-      borderLeft: `3px solid ${color}`,
       width: "100%",
       boxSizing: "border-box",
     }}>

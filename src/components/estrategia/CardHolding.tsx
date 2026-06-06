@@ -47,7 +47,7 @@ export function CardHolding({
     <div
       style={{
         backgroundColor: "white",
-        borderLeft: "4px solid #7C3AED",
+        border: "0.5px solid #E5E7EB",
         borderRadius: 12,
         padding: 24,
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",

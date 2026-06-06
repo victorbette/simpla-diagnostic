@@ -424,7 +424,7 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── BLOCO 4A: Card Asset Allocation ───────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #2563EB" }}>
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={PieChart} title="Asset Allocation" score={scoreAA} color="#2563EB" />
 
         {semDadosAA ? (
@@ -489,7 +489,7 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── BLOCO 4B: Card Aposentadoria / IF ─────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #059669" }}>
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Sunset} title="Aposentadoria / IF" score={scoreIF} color="#059669" />
         {semDadosIF ? (
           <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
@@ -512,7 +512,7 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── BLOCO 4C: Card Proteção e Sucessório ──────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #B91C1C" }}>
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Shield} title="Proteção e Sucessório" score={scoreProtecaoSucessorio} color="#B91C1C" />
 
         {semDadosPS ? (
@@ -645,7 +645,7 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── BLOCO 4D: Card Fiscal ──────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", borderLeft: "4px solid #B45309" }}>
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Receipt} title="Planejamento Fiscal" score={scoreFiscal} color="#B45309" />
         <MetricGrid cols={2}>
           <Metric label="Renda Anual Bruta"      value={fmt0(rendaAnualFiscal)} />
