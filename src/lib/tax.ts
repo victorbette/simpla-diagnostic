@@ -53,15 +53,15 @@ export function calcularIRAnual(baseCalculo: number, rendaBruta?: number): numbe
   return ir;
 }
 
-// Tabela INSS 2025 (progressiva)
-const faixasINSS = [
-  { ate: 1518.00,  aliquota: 0.075 },
+// Tabela INSS 2026 (progressiva)
+const faixasINSS2026 = [
+  { ate: 1621.00,  aliquota: 0.075 },
   { ate: 2793.88,  aliquota: 0.09  },
   { ate: 4190.83,  aliquota: 0.12  },
-  { ate: 8157.41,  aliquota: 0.14  },
+  { ate: 8475.55,  aliquota: 0.14  },
   { ate: Infinity, aliquota: 0.14  },
 ];
-const TETO_INSS = 908.86;
+const TETO_INSS_2026 = 988.09;
 
 export function calcularINSSMensal(
   rendaMensal: number,
@@ -70,12 +70,12 @@ export function calcularINSSMensal(
   if (["autonomo", "empresario"].includes(tipoTrabalho)) return 0;
   let inss = 0;
   let base = 0;
-  for (const f of faixasINSS) {
+  for (const f of faixasINSS2026) {
     if (rendaMensal <= base) break;
     const topo = Math.min(rendaMensal, f.ate);
     inss += (topo - base) * f.aliquota;
     base = f.ate;
     if (rendaMensal <= f.ate) break;
   }
-  return Math.min(inss, TETO_INSS);
+  return Math.min(inss, TETO_INSS_2026);
 }
