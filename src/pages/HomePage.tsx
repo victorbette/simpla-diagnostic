@@ -6,7 +6,6 @@ import {
   UserPlus,
   Plus,
   Users,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,17 +27,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
+import { OportunidadesPage } from "@/pages/OportunidadesPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
 import { supabase } from "@/integrations/supabase/client";
+import { detectarOportunidades } from "@/lib/detectarOportunidades";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type DashFPStatus = "sem_fp" | "iniciado" | "em_andamento" | "completo";
-type OpCategoria = "seguros" | "imoveis" | "viagens" | "outros";
-type FiltroOp = "todas" | OpCategoria;
 
 interface DashPlan {
   rendaMensal: number;
@@ -54,26 +53,6 @@ interface DashPlan {
   temEstrategia: boolean;
 }
 
-interface OpManual {
-  id: string;
-  clienteId: string;
-  clienteNome: string;
-  titulo: string;
-  descricao: string;
-  categoria: OpCategoria;
-  criadaEm: string;
-}
-
-interface AutoOp {
-  id: string;
-  clienteId: string;
-  clienteNome: string;
-  titulo: string;
-  descricao: string;
-  categoria: OpCategoria;
-  tipo: "auto";
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getInitials(nome: string): string {
@@ -87,6 +66,26 @@ function formatDate(iso: string | undefined | null): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("pt-BR");
+}
+
+function rawToDashPlan(row: Record<string, unknown>): DashPlan {
+  const dc  = (row.dados_cliente  as Record<string, unknown>) ?? {};
+  const pif = (row.planejamento_if as Record<string, unknown>) ?? {};
+  const prot = (row.protecao      as Record<string, unknown>) ?? {};
+  const fis  = (row.fiscal        as Record<string, unknown>) ?? {};
+  return {
+    rendaMensal:             (dc.rendaMensal            as number)  ?? 0,
+    idadeMeta:               (pif.idadeMeta             as number)  ?? 0,
+    temFilhos:               (dc.temFilhos              as boolean) ?? false,
+    possuiSeguroVida:        (prot.possuiSeguroVida     as boolean) ?? false,
+    possuiSeguroInvalidez:   (prot.possuiSeguroInvalidez as boolean) ?? false,
+    tipoDeclaracao:          (fis.tipoDeclaracao        as string)  ?? "nao_sei",
+    possuiImoveis:           (dc.possuiImoveis          as boolean) ?? false,
+    patrimonioTotal:         (dc.patrimonioTotalEstimado as number) ?? 0,
+    fazViagensInternacionais:(dc.fazViagensInternacionais as boolean) ?? false,
+    valorFaturaCartao:       (dc.valorFaturaCartao      as number)  ?? 0,
+    temEstrategia:           row.estrategia_inicial != null,
+  };
 }
 
 function calcularStatusFP(client: Client, plan: DashPlan | null): DashFPStatus {
@@ -107,31 +106,13 @@ function detectarPendencias(client: Client, plan: DashPlan | null): string[] {
   return p;
 }
 
-function detectarOportunidades(client: Client, plan: DashPlan | null): AutoOp[] {
-  if (!plan) return [];
-  const ops: AutoOp[] = [];
-  if (!plan.possuiSeguroVida && plan.rendaMensal > 3000) {
-    ops.push({ id: `${client.id}-sv`, clienteId: client.id, clienteNome: client.nome, titulo: "Seguro de vida", descricao: "Renda relevante sem cobertura de vida", categoria: "seguros", tipo: "auto" });
-  }
-  if (!plan.possuiSeguroInvalidez) {
-    ops.push({ id: `${client.id}-si`, clienteId: client.id, clienteNome: client.nome, titulo: "Seguro de invalidez", descricao: "Sem proteção contra incapacidade laboral", categoria: "seguros", tipo: "auto" });
-  }
-  if (!plan.possuiImoveis && plan.patrimonioTotal > 200000) {
-    ops.push({ id: `${client.id}-im`, clienteId: client.id, clienteNome: client.nome, titulo: "Investimento em imóveis", descricao: "Patrimônio sem exposição imobiliária", categoria: "imoveis", tipo: "auto" });
-  }
-  if (plan.fazViagensInternacionais && plan.valorFaturaCartao > 1000) {
-    ops.push({ id: `${client.id}-mi`, clienteId: client.id, clienteNome: client.nome, titulo: "Cartão de milhas", descricao: "Viagens internacionais sem milhas otimizadas", categoria: "viagens", tipo: "auto" });
-  }
-  return ops;
-}
-
 function profileConfig(perfil: string | null | undefined) {
   switch (perfil) {
-    case "moderado":           return { badgeBg: "#EFF6FF", badgeText: "#2563EB", dotColor: "#2563EB", label: "MODERADO" };
-    case "conservador":        return { badgeBg: "#EAF0F5", badgeText: "#1E40AF", dotColor: "#3B82F6", label: "CONSERVADOR" };
+    case "moderado":             return { badgeBg: "#EFF6FF", badgeText: "#2563EB", dotColor: "#2563EB", label: "MODERADO" };
+    case "conservador":          return { badgeBg: "#EAF0F5", badgeText: "#1E40AF", dotColor: "#3B82F6", label: "CONSERVADOR" };
     case "conservador_moderado": return { badgeBg: "#EAF0F5", badgeText: "#1E40AF", dotColor: "#3B82F6", label: "CONS. MODERADO" };
-    case "arrojado":           return { badgeBg: "#FEE2E2", badgeText: "#B91C1C", dotColor: "#B91C1C", label: "ARROJADO" };
-    default:                   return { badgeBg: "#F0F7FF", badgeText: "#6B7280", dotColor: "#BFDBFE", label: "SEM PERFIL" };
+    case "arrojado":             return { badgeBg: "#FEE2E2", badgeText: "#B91C1C", dotColor: "#B91C1C", label: "ARROJADO" };
+    default:                     return { badgeBg: "#F0F7FF", badgeText: "#6B7280", dotColor: "#BFDBFE", label: "SEM PERFIL" };
   }
 }
 
@@ -142,14 +123,7 @@ const FP_STATUS_CFG: Record<DashFPStatus, { label: string; color: string; dot: s
   completo:     { label: "Completo",      color: "#15803D", dot: "#15803D" },
 };
 
-const OP_CAT_CFG: Record<OpCategoria, { label: string; bg: string; color: string; icon: string }> = {
-  seguros: { label: "Seguros", bg: "#FEF3C7", color: "#92400E", icon: "ti-shield-check" },
-  imoveis: { label: "Imóveis", bg: "#DCFCE7", color: "#166534", icon: "ti-building" },
-  viagens: { label: "Viagens", bg: "#EDE9FE", color: "#6D28D9", icon: "ti-plane" },
-  outros:  { label: "Outros",  bg: "#F3F4F6", color: "#6B7280", icon: "ti-bulb" },
-};
-
-// ─── Form / localStorage helpers ──────────────────────────────────────────────
+// ─── Form ─────────────────────────────────────────────────────────────────────
 
 interface ClientForm {
   nome: string; email: string; telefone: string;
@@ -157,77 +131,59 @@ interface ClientForm {
 }
 const EMPTY_FORM: ClientForm = { nome: "", email: "", telefone: "", cpf: "", nascimento: "", observacoes: "" };
 
-function loadOpsManual(userId: string): OpManual[] {
-  try { const r = localStorage.getItem(`oportunidades_manuais_${userId}`); if (r) return JSON.parse(r) as OpManual[]; } catch { /**/ }
-  return [];
-}
-function saveOpsManual(userId: string, ops: OpManual[]) {
-  try { localStorage.setItem(`oportunidades_manuais_${userId}`, JSON.stringify(ops)); } catch { /**/ }
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomePage() {
   const { user, signOut } = useAuth();
   const clientStore = useClientStore();
 
-  const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
+  const [clienteSelecionado, setClienteSelecionado]     = useState<Client | null>(null);
   const [clienteAcompanhamento, setClienteAcompanhamento] = useState<Client | null>(null);
+  const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
 
-  const [search, setSearch] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
+  const [search, setSearch]               = useState("");
+  const [modalAberto, setModalAberto]     = useState(false);
   const [clienteEditando, setClienteEditando] = useState<Client | null>(null);
-  const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
-  const [salvando, setSalvando] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [form, setForm]                   = useState<ClientForm>(EMPTY_FORM);
+  const [salvando, setSalvando]           = useState(false);
+  const [deleteTarget, setDeleteTarget]   = useState<Client | null>(null);
 
-  const [plansMap, setPlansMap] = useState<Record<string, DashPlan | null>>({});
+  // Raw Supabase rows keyed by client ID
+  const [rawPlans, setRawPlans] = useState<Record<string, Record<string, unknown>>>({});
 
-  const [filtroOp, setFiltroOp] = useState<FiltroOp>("todas");
-  const [opsManual, setOpsManual] = useState<OpManual[]>(() => loadOpsManual(user?.id ?? ""));
-  const [modalOp, setModalOp] = useState(false);
-  const [formOp, setFormOp] = useState({ clienteId: "", titulo: "", descricao: "", categoria: "seguros" as OpCategoria });
-
-  // Batch-load plans whenever the set of planIds changes
+  // Batch-load plans when client list changes
   const planIdsKey = clientStore.clients.map((c) => c.planId ?? "").join(",");
   useEffect(() => {
     const planIds = clientStore.clients.filter((c) => c.planId).map((c) => c.planId as string);
-    if (planIds.length === 0) { setPlansMap({}); return; }
+    if (planIds.length === 0) { setRawPlans({}); return; }
 
     supabase
       .from("financial_plans")
-      .select("id, client_id, dados_cliente, planejamento_if, protecao, fiscal, estrategia_inicial")
+      .select("id, client_id, dados_cliente, planejamento_if, protecao, fiscal, sucessorio, estrategia_inicial")
       .in("id", planIds)
       .then(({ data }) => {
-        const map: Record<string, DashPlan | null> = {};
+        const map: Record<string, Record<string, unknown>> = {};
         for (const c of clientStore.clients) {
-          if (!c.planId) { map[c.id] = null; continue; }
+          if (!c.planId) continue;
           const row = (data ?? []).find((r) => r.id === c.planId);
-          if (!row) { map[c.id] = null; continue; }
-          const dc = (row.dados_cliente as Record<string, unknown>) ?? {};
-          const pif = (row.planejamento_if as Record<string, unknown>) ?? {};
-          const prot = (row.protecao as Record<string, unknown>) ?? {};
-          const fis = (row.fiscal as Record<string, unknown>) ?? {};
-          map[c.id] = {
-            rendaMensal: (dc.rendaMensal as number) ?? 0,
-            idadeMeta: (pif.idadeMeta as number) ?? 0,
-            temFilhos: (dc.temFilhos as boolean) ?? false,
-            possuiSeguroVida: (prot.possuiSeguroVida as boolean) ?? false,
-            possuiSeguroInvalidez: (prot.possuiSeguroInvalidez as boolean) ?? false,
-            tipoDeclaracao: (fis.tipoDeclaracao as string) ?? "nao_sei",
-            possuiImoveis: (dc.possuiImoveis as boolean) ?? false,
-            patrimonioTotal: (dc.patrimonioTotalEstimado as number) ?? 0,
-            fazViagensInternacionais: (dc.fazViagensInternacionais as boolean) ?? false,
-            valorFaturaCartao: (dc.valorFaturaCartao as number) ?? 0,
-            temEstrategia: row.estrategia_inicial != null,
-          };
+          if (row) map[c.id] = row as unknown as Record<string, unknown>;
         }
-        setPlansMap(map);
+        setRawPlans(map);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planIdsKey]);
 
   // ── Derived ───────────────────────────────────────────────────────────────
+
+  // Compute DashPlan for each client from rawPlans
+  const plansMap = useMemo<Record<string, DashPlan | null>>(() => {
+    const map: Record<string, DashPlan | null> = {};
+    for (const c of clientStore.clients) {
+      const row = rawPlans[c.id];
+      map[c.id] = row ? rawToDashPlan(row) : null;
+    }
+    return map;
+  }, [clientStore.clients, rawPlans]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -237,21 +193,24 @@ export function HomePage() {
     );
   }, [clientStore.clients, search]);
 
-  const autoOps = useMemo<AutoOp[]>(
-    () => clientStore.clients.flatMap((c) => detectarOportunidades(c, plansMap[c.id] ?? null)),
-    [clientStore.clients, plansMap]
+  const autoOps = useMemo(
+    () => detectarOportunidades(clientStore.clients, rawPlans),
+    [clientStore.clients, rawPlans]
   );
 
-  const allOps = useMemo(() => {
-    const manual = opsManual.map((o) => ({ ...o, tipo: "manual" as const }));
-    const auto = autoOps.map((o) => ({ ...o, criadaEm: "", tipo: "auto" as const }));
-    return [...auto, ...manual];
-  }, [autoOps, opsManual]);
-
-  const filteredOps = useMemo(
-    () => (filtroOp === "todas" ? allOps : allOps.filter((o) => o.categoria === filtroOp)),
-    [allOps, filtroOp]
-  );
+  // Count active oportunidades (auto + manual, minus resolved)
+  const totalOportunidades = useMemo(() => {
+    try {
+      const resolved = new Set<string>(JSON.parse(localStorage.getItem("oportunidades_resolvidas") ?? "[]"));
+      const manual: Array<{ id: string }> = JSON.parse(localStorage.getItem("oportunidades_manuais") ?? "[]");
+      return (
+        autoOps.filter((o) => !resolved.has(o.id)).length +
+        manual.filter((o) => !resolved.has(o.id)).length
+      );
+    } catch {
+      return autoOps.length;
+    }
+  }, [autoOps]);
 
   const totalCompleto = useMemo(
     () => clientStore.clients.filter((c) => calcularStatusFP(c, plansMap[c.id] ?? null) === "completo").length,
@@ -263,7 +222,7 @@ export function HomePage() {
     [clientStore.clients, plansMap]
   );
 
-  const userLabel = (user?.email ?? "").split("@")[0] || "Consultor";
+  const userLabel    = (user?.email ?? "").split("@")[0] || "Consultor";
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   // ── Overlays ─────────────────────────────────────────────────────────────
@@ -284,6 +243,21 @@ export function HomePage() {
         clienteId={clienteAcompanhamento.id}
         clienteNome={clienteAcompanhamento.nome}
         onVoltar={() => setClienteAcompanhamento(null)}
+      />
+    );
+  }
+
+  if (mostrarOportunidades) {
+    return (
+      <OportunidadesPage
+        clientes={clientStore.clients}
+        rawPlans={rawPlans}
+        onVoltar={() => setMostrarOportunidades(false)}
+        onAbrirCliente={(id) => {
+          const c = clientStore.clients.find((cl) => cl.id === id);
+          setMostrarOportunidades(false);
+          if (c) setClienteSelecionado(c);
+        }}
       />
     );
   }
@@ -337,32 +311,6 @@ export function HomePage() {
     finally { setDeleteTarget(null); }
   }
 
-  function handleAdicionarOp() {
-    if (!formOp.titulo.trim() || !formOp.clienteId) { toast.error("Selecione o cliente e preencha o título."); return; }
-    const cliente = clientStore.clients.find((c) => c.id === formOp.clienteId);
-    const nova: OpManual = {
-      id: crypto.randomUUID(),
-      clienteId: formOp.clienteId,
-      clienteNome: cliente?.nome ?? "",
-      titulo: formOp.titulo.trim(),
-      descricao: formOp.descricao.trim(),
-      categoria: formOp.categoria,
-      criadaEm: new Date().toISOString(),
-    };
-    const updated = [nova, ...opsManual];
-    setOpsManual(updated);
-    saveOpsManual(user?.id ?? "", updated);
-    setModalOp(false);
-    setFormOp({ clienteId: "", titulo: "", descricao: "", categoria: "seguros" });
-    toast.success("Oportunidade adicionada.");
-  }
-
-  function handleRemoverOpManual(id: string) {
-    const updated = opsManual.filter((o) => o.id !== id);
-    setOpsManual(updated);
-    saveOpsManual(user?.id ?? "", updated);
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   const totalClientes = clientStore.clients.length;
@@ -407,7 +355,7 @@ export function HomePage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-            {/* Title + search */}
+            {/* Title + actions */}
             <div className="flex flex-col sm:flex-row sm:items-end gap-4">
               <div className="flex-1">
                 <p className="font-semibold uppercase tracking-widest mb-1" style={{ color: "#3B82F6", fontSize: 11 }}>DASHBOARD</p>
@@ -416,7 +364,7 @@ export function HomePage() {
                   <span style={{ color: "#6B7280", fontSize: 16 }}>({totalClientes})</span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-3 shrink-0" style={{ flexWrap: "wrap" }}>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
                   <input
@@ -425,13 +373,25 @@ export function HomePage() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
-                    style={{ width: 260 }}
+                    style={{ width: 240 }}
                   />
                 </div>
                 <button
+                  onClick={() => setMostrarOportunidades(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                >
+                  <i className="ti ti-bulb" style={{ fontSize: 15 }} />
+                  Oportunidades
+                  {totalOportunidades > 0 && (
+                    <span style={{ background: "#EF4444", color: "white", borderRadius: "99px", fontSize: 10, fontWeight: 700, padding: "1px 6px", marginLeft: 2 }}>
+                      {totalOportunidades}
+                    </span>
+                  )}
+                </button>
+                <button
                   onClick={openNovoCliente}
-                  className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: "#1E3A8A" }}
+                  className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-2 transition hover:opacity-90"
+                  style={{ backgroundColor: "#111827" }}
                 >
                   <UserPlus className="h-4 w-4" />
                   Novo Cliente
@@ -439,13 +399,12 @@ export function HomePage() {
               </div>
             </div>
 
-            {/* Summary cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+            {/* Summary cards (3) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
               {[
-                { label: "Total Clientes",  value: totalClientes,   icon: "ti-users",         color: "#1E3A8A", bg: "#EFF6FF" },
-                { label: "FP Completo",     value: totalCompleto,   icon: "ti-check-circle",  color: "#15803D", bg: "#DCFCE7" },
-                { label: "Com Pendências",  value: totalPendencias, icon: "ti-alert-circle",  color: "#B45309", bg: "#FEF3C7" },
-                { label: "Oportunidades",   value: allOps.length,   icon: "ti-star",          color: "#7C3AED", bg: "#EDE9FE" },
+                { label: "Total Clientes",  value: totalClientes,   icon: "ti-users",        color: "#1E3A8A", bg: "#EFF6FF" },
+                { label: "FP Completo",     value: totalCompleto,   icon: "ti-check-circle", color: "#15803D", bg: "#DCFCE7" },
+                { label: "Com Pendências",  value: totalPendencias, icon: "ti-alert-circle", color: "#B45309", bg: "#FEF3C7" },
               ].map(({ label, value, icon, color, bg }) => (
                 <div key={label} style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -480,7 +439,7 @@ export function HomePage() {
               </div>
             ) : (
               <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
-                {/* Header row */}
+                {/* Table header */}
                 <div style={{ display: "grid", gridTemplateColumns: "3fr 1fr 1.2fr 1fr 1.2fr 2fr", gap: 8, padding: "10px 20px", backgroundColor: "#1E3A8A" }}>
                   {["CLIENTE", "PERFIL", "STATUS FP", "ÚLTIMA ATZ.", "PENDÊNCIAS", "AÇÕES"].map((h) => (
                     <span key={h} style={{ color: "white", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em" }}>{h}</span>
@@ -489,12 +448,12 @@ export function HomePage() {
 
                 {/* Data rows */}
                 {filtered.map((c) => {
-                  const plan = plansMap[c.id] ?? null;
-                  const fpStatus = calcularStatusFP(c, plan);
-                  const fpCfg = FP_STATUS_CFG[fpStatus];
-                  const pc = profileConfig(c.planSuitabilityPerfil);
+                  const plan       = plansMap[c.id] ?? null;
+                  const fpStatus   = calcularStatusFP(c, plan);
+                  const fpCfg      = FP_STATUS_CFG[fpStatus];
+                  const pc         = profileConfig(c.planSuitabilityPerfil);
                   const pendencias = detectarPendencias(c, plan);
-                  const ultimaAtZ = c.planUpdatedAt ?? c.dataCriacao;
+                  const ultimaAtZ  = c.planUpdatedAt ?? c.dataCriacao;
 
                   return (
                     <div
@@ -579,82 +538,6 @@ export function HomePage() {
                 })}
               </div>
             )}
-
-            {/* Oportunidades section */}
-            {totalClientes > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 600, color: "#3B82F6", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>CROSS-SELL</p>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Oportunidades</h2>
-                  </div>
-                  <button
-                    onClick={() => { setFormOp({ clienteId: "", titulo: "", descricao: "", categoria: "seguros" }); setModalOp(true); }}
-                    style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "white", backgroundColor: "#1E3A8A", border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer" }}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Nova oportunidade
-                  </button>
-                </div>
-
-                {/* Filter pills */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {(["todas", "seguros", "imoveis", "viagens", "outros"] as const).map((cat) => {
-                    const isActive = filtroOp === cat;
-                    const label = cat === "todas" ? "Todas" : OP_CAT_CFG[cat].label;
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => setFiltroOp(cat)}
-                        style={{ fontSize: 12, fontWeight: 600, padding: "5px 14px", borderRadius: 20, border: `1.5px solid ${isActive ? "#1E3A8A" : "#E5E7EB"}`, backgroundColor: isActive ? "#1E3A8A" : "white", color: isActive ? "white" : "#6B7280", cursor: "pointer" }}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Cards */}
-                {filteredOps.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "40px 0", color: "#9CA3AF", fontSize: 14 }}>
-                    <i className="ti ti-star-off" style={{ fontSize: 36, display: "block", marginBottom: 10 }} />
-                    Nenhuma oportunidade detectada
-                  </div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-                    {filteredOps.map((op) => {
-                      const catCfg = OP_CAT_CFG[op.categoria];
-                      const isManual = op.tipo === "manual";
-                      return (
-                        <div key={op.id} style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 16 }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ backgroundColor: catCfg.bg, borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700, color: catCfg.color, display: "flex", alignItems: "center", gap: 4 }}>
-                                <i className={`ti ${catCfg.icon}`} style={{ fontSize: 11 }} />
-                                {catCfg.label}
-                              </span>
-                              {isManual && (
-                                <span style={{ fontSize: 10, color: "#9CA3AF", backgroundColor: "#F3F4F6", borderRadius: 4, padding: "2px 6px" }}>Manual</span>
-                              )}
-                            </div>
-                            {isManual && (
-                              <button onClick={() => handleRemoverOpManual(op.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#D1D5DB", padding: 2 }}>
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                          </div>
-                          <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 3px" }}>{op.clienteNome}</p>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{op.titulo}</p>
-                          {op.descricao && (
-                            <p style={{ fontSize: 12, color: "#6B7280", margin: 0, lineHeight: 1.4 }}>{op.descricao}</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
       </main>
@@ -710,52 +593,6 @@ export function HomePage() {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancelar</Button>
             <Button variant="destructive" onClick={handleConfirmarExcluir}>Excluir</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add manual oportunidade modal */}
-      <Dialog open={modalOp} onOpenChange={setModalOp}>
-        <DialogContent className="sm:max-w-[440px]" style={{ borderRadius: 12 }}>
-          <DialogHeader><DialogTitle>Nova Oportunidade</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Cliente <span className="text-[#B91C1C]">*</span></Label>
-              <select
-                value={formOp.clienteId}
-                onChange={(e) => setFormOp((p) => ({ ...p, clienteId: e.target.value }))}
-                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 14, outline: "none" }}
-              >
-                <option value="">Selecione o cliente...</option>
-                {clientStore.clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Categoria</Label>
-              <select
-                value={formOp.categoria}
-                onChange={(e) => setFormOp((p) => ({ ...p, categoria: e.target.value as OpCategoria }))}
-                style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid #E5E7EB", fontSize: 14, outline: "none" }}
-              >
-                {(["seguros", "imoveis", "viagens", "outros"] as const).map((cat) => (
-                  <option key={cat} value={cat}>{OP_CAT_CFG[cat].label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Título <span className="text-[#B91C1C]">*</span></Label>
-              <Input value={formOp.titulo} onChange={(e) => setFormOp((p) => ({ ...p, titulo: e.target.value }))} placeholder="Ex: Seguro de vida" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Descrição (opcional)</Label>
-              <Textarea rows={2} value={formOp.descricao} onChange={(e) => setFormOp((p) => ({ ...p, descricao: e.target.value }))} placeholder="Detalhes da oportunidade..." />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setModalOp(false)}>Cancelar</Button>
-            <Button onClick={handleAdicionarOp} style={{ backgroundColor: "#1E3A8A", color: "white" }}>Adicionar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
