@@ -30,7 +30,7 @@ export function Rebalanceamento({ carteira }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Aporte input */}
-      <div style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 12, padding: 20 }}>
+      <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: "#111827", margin: "0 0 12px" }}>
           Simular Rebalanceamento
         </p>
@@ -70,7 +70,7 @@ export function Rebalanceamento({ carteira }: Props) {
       </div>
 
       {/* Rebalancing table */}
-      <div style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
         <div style={{
           display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr",
           gap: 8, padding: "8px 16px", backgroundColor: "#1E3A8A",
@@ -134,7 +134,7 @@ export function Rebalanceamento({ carteira }: Props) {
       </div>
 
       {/* Bar chart comparison */}
-      <div style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 12, padding: 20 }}>
+      <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
         <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 16px" }}>Alocação: Atual vs Meta</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {rebalanceamento.map(({ cardId, meta, atualPct, metaPct }) => (

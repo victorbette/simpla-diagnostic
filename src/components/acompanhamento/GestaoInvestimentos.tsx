@@ -86,12 +86,12 @@ function CarteiraAtual({ carteira, savedAt }: { carteira: ResultadoCarteira; sav
       {/* Summary */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {[
-          { label: "Patrimônio",     value: formatBRL(carteira.patrimonio),   color: "#1E3A8A", top: "#1E3A8A" },
-          { label: "Total Aportes",  value: formatBRL(carteira.totalAportes), color: "#15803D", top: "#15803D" },
-          { label: "Total Resgates", value: formatBRL(carteira.totalResgates), color: "#B91C1C", top: "#B91C1C" },
-          { label: "Movimentações",  value: String(planoFiltrado.length),      color: "#111827", top: "#6B7280" },
-        ].map(({ label, value, color, top }) => (
-          <div key={label} style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderTop: `3px solid ${top}`, borderRadius: 10, padding: "12px 16px" }}>
+          { label: "Patrimônio",     value: formatBRL(carteira.patrimonio),    color: "#1E3A8A" },
+          { label: "Total Aportes",  value: formatBRL(carteira.totalAportes),  color: "#15803D" },
+          { label: "Total Resgates", value: formatBRL(carteira.totalResgates), color: "#B91C1C" },
+          { label: "Movimentações",  value: String(planoFiltrado.length),       color: "#111827" },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "12px 16px" }}>
             <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px" }}>{label}</p>
             <p style={{ fontSize: 17, fontWeight: 700, color, margin: 0 }}>{value}</p>
           </div>
@@ -99,7 +99,7 @@ function CarteiraAtual({ carteira, savedAt }: { carteira: ResultadoCarteira; sav
       </div>
 
       {/* Allocation comparison */}
-      <div style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 12, padding: 20 }}>
+      <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Alocação por Categoria</span>
           <span style={{ fontSize: 11, color: "#9CA3AF" }}>Salvo em {savedAt}</span>
@@ -149,7 +149,7 @@ function CarteiraAtual({ carteira, savedAt }: { carteira: ResultadoCarteira; sav
             const groupTotal = items.reduce((s, p) => s + p.movimentacaoBRL, 0);
 
             return (
-              <div key={cardId} style={{ backgroundColor: "white", border: "1px solid #BFDBFE", borderRadius: 8, overflow: "hidden" }}>
+              <div key={cardId} style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, overflow: "hidden" }}>
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   backgroundColor: "#F8FAFC", padding: "8px 16px", borderBottom: "1px solid #BFDBFE",
