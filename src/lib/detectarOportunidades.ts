@@ -27,9 +27,9 @@ export function detectarOportunidades(
     const plan = plans[cliente.id];
     if (!plan) continue;
 
-    const dc   = (plan.dados_cliente  as Record<string, unknown>) ?? {};
-    const suc  = (plan.sucessorio     as Record<string, unknown>) ?? {};
-    const est  = (plan.estrategia_inicial as Record<string, unknown>) ?? {};
+    const dc  = (plan.dados_cliente  as Record<string, unknown>) ?? {};
+    const suc = (plan.sucessorio     as Record<string, unknown>) ?? {};
+    const est = (plan.estrategia_inicial as Record<string, unknown>) ?? {};
 
     const filhos    = (dc.filhos as unknown[]) ?? [];
     const numFilhos = filhos.length || (Number(dc.numeroFilhos) || 0);
@@ -49,10 +49,10 @@ export function detectarOportunidades(
     // Fonte: resultado salvo pela Ferramenta de Análise de Proteção e Sucessão.
     // Oportunidades de seguro só são geradas se a ferramenta foi executada.
 
-    const seguroResult     = (est.seguro as Record<string, unknown>) ?? {};
-    const capitalNecessario = Number(seguroResult.totalNeed)     || 0;
-    const capitalAtual      = Number(seguroResult.totalCoverage) || 0;
-    const gap               = Math.max(0, capitalNecessario - capitalAtual);
+    const seguroResult      = (est.seguro as Record<string, unknown>) ?? {};
+    const capitalNecessario  = Number(seguroResult.totalNeed)     || 0;
+    const capitalAtual       = Number(seguroResult.totalCoverage) || 0;
+    const gap                = Math.max(0, capitalNecessario - capitalAtual);
     const ferramentaExecutada = capitalNecessario > 0;
 
     if (ferramentaExecutada) {
@@ -132,7 +132,7 @@ export function detectarOportunidades(
       });
     }
 
-    const ifData      = (est.if as Record<string, unknown>) ?? {};
+    const ifData      = (est["if"] as Record<string, unknown>) ?? {};
     const objetivosIF = (ifData.objetivos as Array<Record<string, unknown>>) ?? [];
     const objImovel   = objetivosIF.find((o) => o.tipo === "casa");
     if (objImovel) {

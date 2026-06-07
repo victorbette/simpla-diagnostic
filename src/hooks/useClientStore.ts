@@ -18,6 +18,11 @@ export interface Client {
   planStatus: "nao_iniciado" | "rascunho" | "completo";
   planUpdatedAt: string | null;
   planSuitabilityPerfil: string | null;
+  planDadosCliente: Record<string, unknown> | null;
+  planPlanejamentoIF: Record<string, unknown> | null;
+  planFiscal: Record<string, unknown> | null;
+  planSucessorio: Record<string, unknown> | null;
+  planEstrategia: Record<string, unknown> | null;
 }
 
 export interface Simulation {
@@ -37,6 +42,7 @@ function mapRow(row: Record<string, unknown>): Client {
   const plans = (row.financial_plans as Array<Record<string, unknown>> | null) ?? [];
   const plan = plans[0] ?? null;
   const suitability = plan?.suitability as Record<string, unknown> | null | undefined;
+  const dadosClienteRaw = plan?.dados_cliente as Record<string, unknown> | null | undefined;
 
   return {
     id: row.id as string,
@@ -52,7 +58,15 @@ function mapRow(row: Record<string, unknown>): Client {
     planId: (plan?.id as string | null) ?? null,
     planStatus: ((plan?.status as string) ?? "nao_iniciado") as Client["planStatus"],
     planUpdatedAt: (plan?.updated_at as string | null) ?? null,
-    planSuitabilityPerfil: (suitability?.perfil as string | null) ?? null,
+    planSuitabilityPerfil:
+      (dadosClienteRaw?.suitabilityPerfil as string | null)
+      ?? (suitability?.perfil as string | null)
+      ?? null,
+    planDadosCliente: dadosClienteRaw ?? null,
+    planPlanejamentoIF: (plan?.planejamento_if as Record<string, unknown> | null | undefined) ?? null,
+    planFiscal: (plan?.fiscal as Record<string, unknown> | null | undefined) ?? null,
+    planSucessorio: (plan?.sucessorio as Record<string, unknown> | null | undefined) ?? null,
+    planEstrategia: (plan?.estrategia_inicial as Record<string, unknown> | null | undefined) ?? null,
   };
 }
 
@@ -90,7 +104,7 @@ export function useClientStore() {
           .select(`
             id, user_id, nome, email, telefone, cpf,
             data_nascimento, observacoes, data_criacao, updated_at,
-            financial_plans ( id, status, updated_at, suitability )
+            financial_plans ( id, status, updated_at, suitability, dados_cliente, planejamento_if, fiscal, sucessorio, estrategia_inicial )
           `)
           .eq("user_id", user.id)
           .order("data_criacao", { ascending: false });
@@ -165,6 +179,11 @@ export function useClientStore() {
         planStatus: "nao_iniciado",
         planUpdatedAt: null,
         planSuitabilityPerfil: null,
+        planDadosCliente: null,
+        planPlanejamentoIF: null,
+        planFiscal: null,
+        planSucessorio: null,
+        planEstrategia: null,
       };
 
       invalidateCache();

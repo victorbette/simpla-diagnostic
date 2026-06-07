@@ -79,7 +79,7 @@ function saveResolvidas(ids: Set<string>) {
   try { localStorage.setItem(LS_RESOLVIDAS, JSON.stringify([...ids])); } catch { /**/ }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helper ───────────────────────────────────────────────────────────────────
 
 function getInitials(nome: string): string {
   const words = nome.trim().split(/\s+/);
@@ -99,12 +99,12 @@ interface Props {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente }: Props) {
-  const [filtro, setFiltro]             = useState<Filtro>("todas");
-  const [busca, setBusca]               = useState("");
-  const [resolvidas, setResolvidas]     = useState<Set<string>>(loadResolvidas);
-  const [opsManual, setOpsManual]       = useState<OportunidadeManual[]>(loadManual);
+  const [filtro, setFiltro]               = useState<Filtro>("todas");
+  const [busca, setBusca]                 = useState("");
+  const [resolvidas, setResolvidas]       = useState<Set<string>>(loadResolvidas);
+  const [opsManual, setOpsManual]         = useState<OportunidadeManual[]>(loadManual);
   const [verResolvidas, setVerResolvidas] = useState(false);
-  const [modalNovaOp, setModalNovaOp]   = useState(false);
+  const [modalNovaOp, setModalNovaOp]     = useState(false);
   const [formOp, setFormOp] = useState({
     tipo: "seguros" as Tipo,
     clienteId: "",
@@ -147,7 +147,7 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
     return [...auto, ...manual];
   }, [autoOps, opsManual]);
 
-  const activeOps    = useMemo(() => allOps.filter((o) => !resolvidas.has(o.id)), [allOps, resolvidas]);
+  const activeOps     = useMemo(() => allOps.filter((o) => !resolvidas.has(o.id)), [allOps, resolvidas]);
   const resolvidasOps = useMemo(() => allOps.filter((o) =>  resolvidas.has(o.id)), [allOps, resolvidas]);
 
   const filteredOps = useMemo(() => {
@@ -222,9 +222,11 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
     <div className="min-h-screen" style={{ backgroundColor: "#F0F7FF" }}>
 
       {/* Header */}
-      <header
-        style={{ backgroundColor: "#1E3A8A", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 40 }}
-      >
+      <header style={{
+        backgroundColor: "#1E3A8A", padding: "14px 32px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        position: "sticky", top: 0, zIndex: 40,
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
           <button
             onClick={onVoltar}
@@ -270,7 +272,8 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
                 key={tipo}
                 onClick={() => setFiltro(filtro === tipo ? "todas" : tipo)}
                 style={{
-                  backgroundColor: "white", border: `1.5px solid ${isActive ? cfg.color : "#E5E7EB"}`,
+                  backgroundColor: "white",
+                  border: `1.5px solid ${isActive ? cfg.color : "#E5E7EB"}`,
                   borderRadius: 12, padding: "16px 20px", cursor: "pointer",
                   transition: "border-color 150ms",
                 }}
@@ -328,7 +331,7 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
                 ? `Nenhuma oportunidade de ${TIPO_CFG[filtro].label} identificada`
                 : "Nenhuma oportunidade identificada"}
             </p>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: "0 0 0" }}>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>
               {filtro === "seguros"
                 ? "Execute a Análise de Proteção e Sucessão para mapear gaps de cobertura dos clientes."
                 : "Adicione manualmente ou aguarde novos dados dos clientes."}
@@ -453,66 +456,65 @@ interface OpCardProps {
 }
 
 function OpCard({ op, onResolver, onVerCliente, onRemoverManual }: OpCardProps) {
-  const tipoCfg = TIPO_CFG[op.tipo];
-  const priCfg  = PRIORIDADE_CFG[op.prioridade];
-  const isManual = op.tipo_entrada === "manual";
+  const cfg = TIPO_CFG[op.tipo];
+  const pc  = PRIORIDADE_CFG[op.prioridade];
 
   return (
-    <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "18px 20px", display: "flex", flexDirection: "column" }}>
-      {/* Top row: tipo badge + auto/manual badge + prioridade + remove */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, backgroundColor: tipoCfg.bg, color: tipoCfg.color, fontSize: 10, fontWeight: 700, borderRadius: 6, padding: "3px 8px" }}>
-            <i className={`ti ${tipoCfg.icon}`} style={{ fontSize: 11 }} />
-            {tipoCfg.label}
-          </span>
-          {isManual ? (
-            <span style={{ fontSize: 10, backgroundColor: "#F3F4F6", color: "#374151", borderRadius: 4, padding: "2px 6px", fontWeight: 600 }}>Manual</span>
-          ) : (
-            <span style={{ fontSize: 10, backgroundColor: "#F0F9FF", color: "#0369A1", borderRadius: 4, padding: "2px 6px", fontWeight: 600 }}>Auto</span>
-          )}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 11, color: priCfg.color, fontWeight: 600 }}>{priCfg.label}</span>
-          {isManual && (
-            <button
-              onClick={() => onRemoverManual(op.id)}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "#D1D5DB", padding: 2, display: "flex" }}
-              title="Remover"
-            >
-              <X style={{ width: 13, height: 13 }} />
-            </button>
-          )}
-        </div>
+    <div style={{
+      backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
+      padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10,
+    }}>
+      {/* Badges */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, backgroundColor: cfg.bg, color: cfg.color, fontSize: 10, fontWeight: 700, borderRadius: 6, padding: "3px 8px" }}>
+          <i className={`ti ${cfg.icon}`} style={{ fontSize: 11 }} />
+          {cfg.label}
+        </span>
+        {op.tipo_entrada === "auto" ? (
+          <span style={{ fontSize: 10, fontWeight: 600, backgroundColor: "#F0F9FF", color: "#0369A1", borderRadius: 6, padding: "3px 8px" }}>Auto</span>
+        ) : (
+          <span style={{ fontSize: 10, fontWeight: 600, backgroundColor: "#F3F4F6", color: "#374151", borderRadius: 6, padding: "3px 8px" }}>Manual</span>
+        )}
+        <span style={{ fontSize: 10, fontWeight: 600, color: pc.color, marginLeft: "auto" }}>{pc.label}</span>
+        {op.tipo_entrada === "manual" && (
+          <button
+            onClick={() => onRemoverManual(op.id)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 0, display: "flex", alignItems: "center" }}
+            title="Remover"
+          >
+            <X style={{ width: 14, height: 14 }} />
+          </button>
+        )}
       </div>
 
-      {/* Cliente */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12 }}>
-        <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "#DBEAFE", color: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+      {/* Client */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "#DBEAFE", color: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
           {getInitials(op.clienteNome)}
         </div>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{op.clienteNome}</span>
+        <span style={{ fontSize: 12, color: "#374151", fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{op.clienteNome}</span>
+        {op.clientePerfil && (
+          <span style={{ fontSize: 10, color: "#9CA3AF", flexShrink: 0 }}>{op.clientePerfil}</span>
+        )}
       </div>
 
-      {/* Título */}
-      <p style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "8px 0 0" }}>{op.titulo}</p>
+      {/* Title + description */}
+      <div>
+        <p style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>{op.titulo}</p>
+        <p style={{ fontSize: 13, color: "#6B7280", margin: 0, lineHeight: 1.5 }}>{op.descricao}</p>
+      </div>
 
-      {/* Descrição */}
-      {op.descricao && (
-        <p style={{ fontSize: 13, color: "#6B7280", lineHeight: 1.5, margin: "4px 0 0" }}>{op.descricao}</p>
-      )}
-
-      {/* Origem */}
-      <p style={{ fontSize: 10, color: "#9CA3AF", margin: "8px 0 0", display: "flex", alignItems: "center", gap: 4 }}>
-        <i className="ti ti-database" style={{ fontSize: 10 }} />
-        Fonte: {op.origem}
-      </p>
+      {/* Origin */}
+      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        <i className="ti ti-database" style={{ fontSize: 11, color: "#9CA3AF" }} />
+        <span style={{ fontSize: 11, color: "#9CA3AF" }}>Fonte: {op.origem}</span>
+      </div>
 
       {/* Footer */}
-      <div style={{ borderTop: "0.5px solid #F3F4F6", marginTop: 12, paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid #F3F4F6", marginTop: "auto" }}>
         <button
           onClick={() => onVerCliente(op.clienteId)}
-          style={{ fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0 }}
+          style={{ fontSize: 12, fontWeight: 600, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
         >
           Ver cliente →
         </button>
