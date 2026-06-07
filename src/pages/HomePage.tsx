@@ -266,6 +266,11 @@ export function HomePage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   const totalClientes = clientStore.clients.length;
+  const totalConcluido = clientStore.clients.filter((c) => c.planStatus === "completo").length;
+  const totalAndamento = clientStore.clients.filter((c) => c.planStatus === "rascunho").length;
+  const totalSemFP = clientStore.clients.filter(
+    (c) => !c.planStatus || c.planStatus === "nao_iniciado"
+  ).length;
 
   const totalOportunidades = (() => {
     let manuais: Array<{ id: string }> = [];
@@ -397,6 +402,26 @@ export function HomePage() {
               Novo Cliente
             </button>
           </div>
+        </div>
+
+        {/* Summary cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          {[
+            { label: "Total de Clientes", value: totalClientes, color: "#1E3A8A", bg: "white", border: "#BFDBFE", icon: "ti-users" },
+            { label: "FP Concluído",       value: totalConcluido, color: "#15803D", bg: "#F0FDF4", border: "#BBF7D0", icon: "ti-circle-check" },
+            { label: "Em Andamento",       value: totalAndamento, color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", icon: "ti-loader-2" },
+            { label: "Sem FP",             value: totalSemFP,    color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB", icon: "ti-file-off" },
+          ].map(({ label, value, color, bg, border, icon }) => (
+            <div key={label} style={{ background: bg, border: `0.5px solid ${border}`, borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <i className={`ti ${icon}`} style={{ fontSize: 18, color }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
+                <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>{label}</div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Table */}
