@@ -112,6 +112,7 @@ export function HomePage() {
   const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
   const [mostrarConfig, setMostrarConfig] = useState(false);
   const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   // All hooks must be before conditional returns
@@ -479,14 +480,19 @@ export function HomePage() {
                         {pendencias.length > 0 && (
                           <div
                             style={{ position: "relative", display: "inline-block" }}
-                            onMouseEnter={() => setTooltipAberto(c.id)}
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = Math.min(rect.left, window.innerWidth - 290);
+                              setTooltipPos({ x, y: rect.bottom + 8 });
+                              setTooltipAberto(c.id);
+                            }}
                             onMouseLeave={() => setTooltipAberto(null)}
                           >
                             <span style={{ fontSize: 10, fontWeight: 600, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", cursor: "default", marginLeft: 8 }}>
                               {pendencias.length} pendência{pendencias.length > 1 ? "s" : ""}
                             </span>
                             {tooltipAberto === c.id && (
-                              <div style={{ position: "absolute", top: "100%", left: 0, zIndex: 100, marginTop: 6, background: "#1F2937", color: "white", borderRadius: 8, padding: "10px 14px", minWidth: 220, boxShadow: "0 4px 16px rgba(0,0,0,0.15)", pointerEvents: "none" }}>
+                              <div style={{ position: "fixed", top: tooltipPos.y, left: tooltipPos.x, zIndex: 9999, background: "#1F2937", color: "white", borderRadius: 8, padding: "10px 14px", minWidth: 220, maxWidth: 280, boxShadow: "0 4px 16px rgba(0,0,0,0.2)", pointerEvents: "none" }}>
                                 <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                                   Pendências
                                 </div>
