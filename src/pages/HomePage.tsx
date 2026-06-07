@@ -1,8 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   LogOut,
-  MoreHorizontal,
   UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,13 +15,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
 import { useAuth } from "@/contexts/AuthContext";
@@ -117,6 +109,8 @@ export function HomePage() {
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
+  const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   // All hooks must be before conditional returns
   const filtered = useMemo(() => {
@@ -141,6 +135,14 @@ export function HomePage() {
     }
     return result;
   }, [clientStore.clients]);
+
+  useEffect(() => {
+    const fechar = () => setMenuAberto(null);
+    if (menuAberto) {
+      document.addEventListener("click", fechar);
+      return () => document.removeEventListener("click", fechar);
+    }
+  }, [menuAberto]);
 
   const userEmail = user?.email ?? "";
   const userLabel = userEmail.split("@")[0] || "Consultor";
@@ -253,7 +255,6 @@ export function HomePage() {
   }
 
   function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
-  function handleAbrirEstrategia(c: Client) { setClienteSelecionado(c); }
   function handleAbrirAcompanhamento(c: Client) { setClienteAcompanhamento(c); }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -393,13 +394,13 @@ export function HomePage() {
           <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
             {/* Table header */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr 1fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
               <span>Cliente</span>
               <span>Perfil</span>
               <span>Status FP</span>
               <span>Atualização</span>
-              <span>Pendências</span>
               <span>Ações</span>
+              <span />
             </div>
 
             {/* Search empty state */}
@@ -421,29 +422,64 @@ export function HomePage() {
               return (
                 <div
                   key={c.id}
-                  style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr 1fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+                  style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAFA")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
                 >
-                  {/* Cliente */}
+                  {/* CLIENTE */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                       {getInitials(c.nome)}
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
+
+                        {/* Badge de pendências com tooltip */}
+                        {pendencias.length > 0 && (
+                          <div
+                            style={{ position: "relative", display: "inline-block" }}
+                            onMouseEnter={() => setTooltipAberto(c.id)}
+                            onMouseLeave={() => setTooltipAberto(null)}
+                          >
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", cursor: "default", marginLeft: 8 }}>
+                              {pendencias.length} pendência{pendencias.length > 1 ? "s" : ""}
+                            </span>
+                            {tooltipAberto === c.id && (
+                              <div style={{ position: "absolute", top: "100%", left: 0, zIndex: 100, marginTop: 6, background: "#1F2937", color: "white", borderRadius: 8, padding: "10px 14px", minWidth: 220, boxShadow: "0 4px 16px rgba(0,0,0,0.15)", pointerEvents: "none" }}>
+                                <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                                  Pendências
+                                </div>
+                                {pendencias.map((p) => (
+                                  <div key={p} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, marginBottom: 4 }}>
+                                    <i className="ti ti-alert-circle" style={{ fontSize: 11, color: "#FCD34D" }} />
+                                    {p}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Check mark for no pendências */}
+                        {pendencias.length === 0 && c.planStatus !== "nao_iniciado" && (
+                          <span style={{ fontSize: 10, color: "#15803D", marginLeft: 8 }}>
+                            <i className="ti ti-circle-check" style={{ fontSize: 11 }} />
+                          </span>
+                        )}
+                      </div>
                       <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
                     </div>
                   </div>
 
-                  {/* Perfil */}
+                  {/* PERFIL */}
                   <div>
                     <span style={{ fontSize: 10, fontWeight: 600, color: perfil.color, background: perfil.bg, padding: "3px 10px", borderRadius: 99 }}>
                       {perfil.label}
                     </span>
                   </div>
 
-                  {/* Status FP */}
+                  {/* STATUS FP */}
                   <div>
                     {(() => {
                       const s = c.planStatus;
@@ -461,69 +497,62 @@ export function HomePage() {
                     })()}
                   </div>
 
-                  {/* Atualização */}
+                  {/* ATUALIZAÇÃO */}
                   <div style={{ fontSize: 12, color: "#6B7280" }}>
                     {formatDate(c.planUpdatedAt)}
                   </div>
 
-                  {/* Pendências */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {pendencias.length === 0 && c.planStatus !== "nao_iniciado" ? (
-                      <span style={{ fontSize: 11, color: "#15803D", display: "flex", alignItems: "center", gap: 4 }}>
-                        <i className="ti ti-circle-check" style={{ fontSize: 12 }} />
-                        Sem pendências
-                      </span>
-                    ) : (
-                      <>
-                        {pendencias.slice(0, 2).map((p) => (
-                          <span key={p} style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", whiteSpace: "nowrap" as const }}>
-                            {p}
-                          </span>
-                        ))}
-                        {pendencias.length > 2 && (
-                          <span style={{ fontSize: 10, color: "#6B7280", background: "#F3F4F6", borderRadius: 99, padding: "2px 8px" }}>
-                            +{pendencias.length - 2}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Ações */}
-                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
+                  {/* AÇÕES */}
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <button
                       onClick={() => handleAbrirFP(c)}
                       title="Financial Planning"
-                      style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                      style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
                     >
                       FP
                     </button>
                     <button
-                      onClick={() => handleAbrirEstrategia(c)}
-                      title="Estratégia Inicial"
-                      style={{ fontSize: 11, color: "#15803D", background: "#DCFCE7", border: "0.5px solid #BBF7D0", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
-                    >
-                      Estratégia
-                    </button>
-                    <button
                       onClick={() => handleAbrirAcompanhamento(c)}
                       title="Acompanhamento"
-                      style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                      style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
                     >
                       Acompanhar
                     </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, cursor: "pointer", background: "transparent", border: "0.5px solid #E5E7EB", color: "#9CA3AF" }}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditarCliente(c)}>Editar cliente</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setDeleteTarget(c)} className="text-[#B91C1C] focus:text-[#B91C1C]">Excluir cliente</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  </div>
+
+                  {/* ⋮ MENU */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMenuAberto(menuAberto === c.id ? null : c.id); }}
+                      style={{ background: "none", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                    >
+                      <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
+                    </button>
+                    {menuAberto === c.id && (
+                      <div style={{ position: "absolute", right: 0, top: "100%", zIndex: 50, marginTop: 4, background: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.08)", minWidth: 140, overflow: "hidden" }}>
+                        <div
+                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#374151", cursor: "pointer" }}
+                          onClick={() => { openEditarCliente(c); setMenuAberto(null); }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFF")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                        >
+                          <i className="ti ti-pencil" style={{ fontSize: 14, color: "#6B7280" }} />
+                          Editar cliente
+                        </div>
+                        <div style={{ height: "0.5px", background: "#F3F4F6" }} />
+                        <div
+                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#B91C1C", cursor: "pointer" }}
+                          onClick={() => { setDeleteTarget(c); setMenuAberto(null); }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF5F5")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                        >
+                          <i className="ti ti-trash" style={{ fontSize: 14, color: "#B91C1C" }} />
+                          Remover cliente
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
