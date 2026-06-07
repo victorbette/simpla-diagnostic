@@ -4,8 +4,6 @@ import {
   LogOut,
   MoreHorizontal,
   UserPlus,
-  Plus,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +25,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
-import { ClientCardSkeleton } from "@/components/ui/ClientCardSkeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
@@ -40,20 +37,7 @@ import { detectarOportunidades } from "@/lib/detectarOportunidades";
 const DARK = "#000000";
 const GOLD = "#3B82F6";
 
-const AVATAR_COLORS = [
-  "bg-purple-200 text-[#2563EB]",
-  "bg-teal-200 text-[#2563EB]",
-  "bg-green-200 text-[#15803D]",
-  "bg-amber-200 text-[#2563EB]",
-  "bg-red-200 text-[#B91C1C]",
-  "bg-indigo-200 text-indigo-700",
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function avatarColorByIndex(idx: number): string {
-  return AVATAR_COLORS[idx % AVATAR_COLORS.length];
-}
 
 function getInitials(nome: string): string {
   const words = nome.trim().split(/\s+/);
@@ -61,58 +45,20 @@ function getInitials(nome: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-function formatDate(iso: string | undefined): string {
+function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("pt-BR");
 }
 
-type FPStatus = "nao_iniciado" | "em_andamento" | "concluido";
-
-interface ProfileConfig {
-  borderColor: string;
-  badgeBg: string;
-  badgeText: string;
-  dotColor: string;
-  label: string;
-}
-
-function profileConfig(perfil: string | null | undefined): ProfileConfig {
+function profileConfig(perfil: string | null | undefined) {
   switch (perfil) {
-    case "moderado":
-      return {
-        borderColor: "#2563EB",
-        badgeBg: "#EFF6FF",
-        badgeText: "#2563EB",
-        dotColor: "#2563EB",
-        label: "MODERADO",
-      };
-    case "conservador":
-    case "conservador_moderado":
-      return {
-        borderColor: "#3B82F6",
-        badgeBg: "#EAF0F5",
-        badgeText: "#1E40AF",
-        dotColor: "#3B82F6",
-        label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
-      };
-    case "arrojado":
-      return {
-        borderColor: "#B91C1C",
-        badgeBg: "#FEE2E2",
-        badgeText: "#B91C1C",
-        dotColor: "#B91C1C",
-        label: "ARROJADO",
-      };
-    default:
-      return {
-        borderColor: "#9CA3AF",
-        badgeBg: "#F0F7FF",
-        badgeText: "#6B7280",
-        dotColor: "#BFDBFE",
-        label: "SEM PERFIL",
-      };
+    case "moderado":             return { bg: "#EFF6FF", color: "#2563EB", label: "MODERADO" };
+    case "conservador":          return { bg: "#EAF0F5", color: "#1E40AF", label: "CONSERVADOR" };
+    case "conservador_moderado": return { bg: "#EAF0F5", color: "#1E40AF", label: "CONS. MODERADO" };
+    case "arrojado":             return { bg: "#FEE2E2", color: "#B91C1C", label: "ARROJADO" };
+    default:                     return { bg: "#F3F4F6", color: "#6B7280", label: "SEM PERFIL" };
   }
 }
 
@@ -306,6 +252,10 @@ export function HomePage() {
     }
   }
 
+  function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
+  function handleAbrirEstrategia(c: Client) { setClienteSelecionado(c); }
+  function handleAbrirAcompanhamento(c: Client) { setClienteAcompanhamento(c); }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   const totalClientes = clientStore.clients.length;
@@ -378,386 +328,216 @@ export function HomePage() {
       {/* ── Main ── */}
       <main className="mx-auto max-w-7xl px-6 py-8">
 
+        {/* Title row */}
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
+          <div className="flex-1">
+            <p className="font-semibold uppercase tracking-widest mb-1" style={{ color: GOLD, fontSize: 11 }}>
+              DASHBOARD
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h1 className="font-bold" style={{ color: DARK, fontSize: 32 }}>
+                Meus Clientes
+              </h1>
+              <span style={{ color: "#6B7280", fontSize: 18 }}>
+                ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+                style={{ width: 280 }}
+              />
+            </div>
+            <button
+              onClick={() => setMostrarOportunidades(true)}
+              className="relative flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
+              style={{ backgroundColor: "#1E3A8A" }}
+            >
+              <i className="ti ti-bulb" style={{ fontSize: 16 }} />
+              Oportunidades
+              {totalOportunidades > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 h-5 min-w-5 rounded-full flex items-center justify-center text-white text-xs font-bold px-1"
+                  style={{ backgroundColor: "#B91C1C" }}
+                >
+                  {totalOportunidades > 99 ? "99+" : totalOportunidades}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={openNovoCliente}
+              className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
+              style={{ backgroundColor: DARK }}
+            >
+              <UserPlus className="h-4 w-4" />
+              Novo Cliente
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
         {clientStore.loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 24 }}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ClientCardSkeleton key={i} />
-            ))}
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
+            <i className="ti ti-loader-2" style={{ fontSize: 32, display: "block", marginBottom: 8 }} />
+            Carregando clientes...
           </div>
         ) : (
-          <>
-            {/* ── Title row ── */}
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-8">
-              <div className="flex-1">
-                <p
-                  className="font-semibold uppercase tracking-widest mb-1"
-                  style={{ color: GOLD, fontSize: 11 }}
-                >
-                  DASHBOARD
-                </p>
-                <div className="flex items-baseline gap-3">
-                  <h1
-                    className="font-bold"
-                    style={{ color: DARK, fontSize: 32 }}
-                  >
-                    Meus Clientes
-                  </h1>
-                  <span style={{ color: "#6B7280", fontSize: 18 }}>
-                    ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
-                  </span>
-                </div>
-              </div>
+          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
-              {/* Search + button */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: "#9CA3AF" }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
-                    style={{ width: 280 }}
-                  />
-                </div>
-                <button
-                  onClick={() => setMostrarOportunidades(true)}
-                  className="relative flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: "#1E3A8A" }}
-                >
-                  <i className="ti ti-bulb" style={{ fontSize: 16 }} />
-                  Oportunidades
-                  {totalOportunidades > 0 && (
-                    <span
-                      className="absolute -top-1.5 -right-1.5 h-5 min-w-5 rounded-full flex items-center justify-center text-white text-xs font-bold px-1"
-                      style={{ backgroundColor: "#B91C1C" }}
-                    >
-                      {totalOportunidades > 99 ? "99+" : totalOportunidades}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={openNovoCliente}
-                  className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: DARK }}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Novo Cliente
-                </button>
-              </div>
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr 1fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+              <span>Cliente</span>
+              <span>Perfil</span>
+              <span>Status FP</span>
+              <span>Atualização</span>
+              <span>Pendências</span>
+              <span>Ações</span>
             </div>
 
-            {/* ── Grid ── */}
-            {clientStore.clients.length === 0 ? (
-              /* Empty — no clients at all */
-              <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Users className="h-16 w-16" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-xl font-semibold" style={{ color: "#111827" }}>
-                  Nenhum cliente cadastrado
-                </h2>
-                <p className="text-sm" style={{ color: "#6B7280" }}>
-                  Adicione seu primeiro cliente para começar
-                </p>
-                <button
-                  onClick={openNovoCliente}
-                  className="mt-2 flex items-center gap-2 text-white text-sm font-medium rounded-lg px-6 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: DARK }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar primeiro cliente
-                </button>
-              </div>
-            ) : filtered.length === 0 ? (
-              /* Empty — search no results */
-              <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Search className="h-14 w-14" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-lg font-semibold" style={{ color: "#111827" }}>
-                  Nenhum cliente encontrado para &ldquo;{search}&rdquo;
-                </h2>
-                <button
-                  onClick={() => setSearch("")}
-                  className="mt-2 border border-[#93C5FD] text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-[#F0F7FF] transition"
-                  style={{ color: "#111827" }}
-                >
+            {/* Search empty state */}
+            {filtered.length === 0 && clientStore.clients.length > 0 && (
+              <div style={{ padding: "40px 20px", textAlign: "center", color: "#9CA3AF" }}>
+                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: "#D1D5DB" }} />
+                <p style={{ fontSize: 13 }}>Nenhum resultado para &ldquo;{search}&rdquo;</p>
+                <button onClick={() => setSearch("")} style={{ marginTop: 8, fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer" }}>
                   Limpar busca
                 </button>
               </div>
-            ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                style={{ gap: 24 }}
-              >
-                {filtered.map((c, idx) => {
-                  const perfil = c.planSuitabilityPerfil ?? null;
-                  const pc = profileConfig(perfil);
+            )}
 
-                  const fpStatus: FPStatus =
-                    c.planStatus === "nao_iniciado"
-                      ? "nao_iniciado"
-                      : c.planStatus === "completo"
-                      ? "concluido"
-                      : "em_andamento";
+            {/* Data rows */}
+            {filtered.map((c) => {
+              const pendencias = detectarPendencias(c);
+              const perfil = profileConfig(c.planSuitabilityPerfil);
 
-                  const ultimoContato = c.planUpdatedAt ?? c.dataCriacao;
-
-                  return (
-                    <div
-                      key={c.id}
-                      className="bg-white flex flex-col"
-                      style={{
-                        borderRadius: 12,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        border: "0.5px solid #E5E7EB",
-                        padding: 20,
-                        minHeight: 240,
-                      }}
-                    >
-                      {/* Row 1: profile badge + menu */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div
-                          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
-                          style={{ backgroundColor: pc.badgeBg, color: pc.badgeText }}
-                        >
-                          <span
-                            className="h-1.5 w-1.5 rounded-full inline-block shrink-0"
-                            style={{ backgroundColor: pc.dotColor }}
-                          />
-                          {pc.label}
-                        </div>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#DBEAFE] transition-colors"
-                              style={{ color: "#9CA3AF" }}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditarCliente(c)}>
-                              Editar cliente
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeleteTarget(c)}
-                              className="text-[#B91C1C] focus:text-[#B91C1C]"
-                            >
-                              Excluir cliente
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* Row 2: avatar + name + date */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <div
-                          className={`h-12 w-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 select-none ${avatarColorByIndex(idx)}`}
-                        >
-                          {getInitials(c.nome)}
-                        </div>
-                        <div className="min-w-0">
-                          <p
-                            className="font-semibold truncate"
-                            style={{ fontSize: 16, color: "#000000" }}
-                          >
-                            {c.nome}
-                          </p>
-                          <p style={{ fontSize: 12, color: "#9CA3AF" }}>
-                            Cadastrado em {formatDate(c.dataCriacao)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div style={{ height: 1, backgroundColor: "#F0F7FF", marginBottom: 16 }} />
-
-                      {/* Row 3: metrics */}
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p
-                            className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
-                          >
-                            ÚLTIMO CONTATO
-                          </p>
-                          <p
-                            className="font-semibold"
-                            style={{ fontSize: 13, color: "#111827" }}
-                          >
-                            {ultimoContato ? formatDate(ultimoContato) : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
-                          >
-                            FINANCIAL PLANNING
-                          </p>
-                          <div className="flex items-center gap-1.5">
-                            {fpStatus === "em_andamento" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#3B82F6" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#0891B2" }}
-                                >
-                                  Em andamento
-                                </span>
-                              </>
-                            )}
-                            {fpStatus === "concluido" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#15803D" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#15803D" }}
-                                >
-                                  Concluído
-                                </span>
-                              </>
-                            )}
-                            {fpStatus === "nao_iniciado" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#BFDBFE" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#6B7280" }}
-                                >
-                                  Não iniciado
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Row 3.5: pendências */}
-                      {(() => {
-                        if (!c.planId) return null;
-                        const pends = detectarPendencias(c);
-                        const SHOW = 2;
-                        const visible = pends.slice(0, SHOW);
-                        const extra = pends.length - SHOW;
-                        if (pends.length === 0) {
-                          return (
-                            <div className="flex flex-wrap gap-1.5 mb-3">
-                              <span
-                                className="text-xs font-medium px-2.5 py-1 rounded-full"
-                                style={{ backgroundColor: "#DCFCE7", color: "#15803D" }}
-                              >
-                                ✓ Sem pendências
-                              </span>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {visible.map((p) => (
-                              <span
-                                key={p}
-                                className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                style={{ backgroundColor: "#FEF3C7", color: "#B45309" }}
-                              >
-                                {p}
-                              </span>
-                            ))}
-                            {extra > 0 && (
-                              <span
-                                className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                style={{ backgroundColor: "#F3F4F6", color: "#6B7280" }}
-                              >
-                                +{extra}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Row 4: CTA buttons */}
-                      <div style={{ display: "flex", gap: 8 }}>
-                        {fpStatus === "concluido" ? (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg transition hover:opacity-80"
-                            style={{
-                              flex: 1,
-                              border: `1.5px solid ${DARK}`,
-                              color: DARK,
-                              backgroundColor: "transparent",
-                              padding: "10px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            Ver plano →
-                          </button>
-                        ) : fpStatus === "em_andamento" ? (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg text-white transition hover:opacity-90"
-                            style={{
-                              flex: 1,
-                              backgroundColor: DARK,
-                              padding: "10px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            Continuar FP →
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-2"
-                            style={{
-                              flex: 1,
-                              border: `1.5px solid ${DARK}`,
-                              color: DARK,
-                              backgroundColor: "transparent",
-                              padding: "10px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            <Plus className="h-4 w-4" />
-                            Iniciar FP
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setClienteAcompanhamento(c)}
-                          className="font-medium rounded-lg transition hover:opacity-90 flex items-center justify-center gap-1.5"
-                          style={{
-                            backgroundColor: "#1E3A8A",
-                            color: "white",
-                            padding: "10px 14px",
-                            fontSize: 13,
-                            border: "none",
-                            flexShrink: 0,
-                          }}
-                          title="Acompanhamento Consultivo"
-                        >
-                          <i className="ti ti-chart-bar" style={{ fontSize: 14 }} />
-                          Acomp.
-                        </button>
-                      </div>
+              return (
+                <div
+                  key={c.id}
+                  style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 2fr 1fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAFA")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                >
+                  {/* Cliente */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      {getInitials(c.nome)}
                     </div>
-                  );
-                })}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
+                    </div>
+                  </div>
+
+                  {/* Perfil */}
+                  <div>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: perfil.color, background: perfil.bg, padding: "3px 10px", borderRadius: 99 }}>
+                      {perfil.label}
+                    </span>
+                  </div>
+
+                  {/* Status FP */}
+                  <div>
+                    {(() => {
+                      const s = c.planStatus;
+                      const cfg =
+                        s === "completo"
+                          ? { label: "Concluído",    color: "#15803D", bg: "#DCFCE7" }
+                          : s === "rascunho"
+                          ? { label: "Em andamento", color: "#2563EB", bg: "#DBEAFE" }
+                          : { label: "Não iniciado", color: "#9CA3AF", bg: "#F3F4F6" };
+                      return (
+                        <span style={{ fontSize: 11, fontWeight: 500, color: cfg.color, background: cfg.bg, padding: "3px 10px", borderRadius: 99 }}>
+                          {cfg.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Atualização */}
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                    {formatDate(c.planUpdatedAt)}
+                  </div>
+
+                  {/* Pendências */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                    {pendencias.length === 0 && c.planStatus !== "nao_iniciado" ? (
+                      <span style={{ fontSize: 11, color: "#15803D", display: "flex", alignItems: "center", gap: 4 }}>
+                        <i className="ti ti-circle-check" style={{ fontSize: 12 }} />
+                        Sem pendências
+                      </span>
+                    ) : (
+                      <>
+                        {pendencias.slice(0, 2).map((p) => (
+                          <span key={p} style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", whiteSpace: "nowrap" as const }}>
+                            {p}
+                          </span>
+                        ))}
+                        {pendencias.length > 2 && (
+                          <span style={{ fontSize: 10, color: "#6B7280", background: "#F3F4F6", borderRadius: 99, padding: "2px 8px" }}>
+                            +{pendencias.length - 2}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Ações */}
+                  <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", alignItems: "center" }}>
+                    <button
+                      onClick={() => handleAbrirFP(c)}
+                      title="Financial Planning"
+                      style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                    >
+                      FP
+                    </button>
+                    <button
+                      onClick={() => handleAbrirEstrategia(c)}
+                      title="Estratégia Inicial"
+                      style={{ fontSize: 11, color: "#15803D", background: "#DCFCE7", border: "0.5px solid #BBF7D0", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                    >
+                      Estratégia
+                    </button>
+                    <button
+                      onClick={() => handleAbrirAcompanhamento(c)}
+                      title="Acompanhamento"
+                      style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                    >
+                      Acompanhar
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, cursor: "pointer", background: "transparent", border: "0.5px solid #E5E7EB", color: "#9CA3AF" }}>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditarCliente(c)}>Editar cliente</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setDeleteTarget(c)} className="text-[#B91C1C] focus:text-[#B91C1C]">Excluir cliente</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Empty state — no clients */}
+            {clientStore.clients.length === 0 && (
+              <div style={{ padding: "48px 20px", textAlign: "center", color: "#9CA3AF" }}>
+                <i className="ti ti-users" style={{ fontSize: 32, display: "block", marginBottom: 8 }} />
+                <div style={{ fontSize: 14 }}>Nenhum cliente cadastrado</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Clique em &ldquo;+ Novo Cliente&rdquo; para começar</div>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
