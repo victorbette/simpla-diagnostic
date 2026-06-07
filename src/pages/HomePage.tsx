@@ -22,6 +22,7 @@ import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
 import { toast } from "sonner";
 import { OportunidadesPage } from "@/pages/OportunidadesPage";
+import { ConfiguracoesPage } from "@/pages/ConfiguracoesPage";
 import { detectarOportunidades } from "@/lib/detectarOportunidades";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -109,6 +110,7 @@ export function HomePage() {
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
+  const [mostrarConfig, setMostrarConfig] = useState(false);
   const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
@@ -149,6 +151,10 @@ export function HomePage() {
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   // ── Overlay ───────────────────────────────────────────────────────────────
+
+  if (mostrarConfig) {
+    return <ConfiguracoesPage onFechar={() => setMostrarConfig(false)} />;
+  }
 
   if (mostrarOportunidades) {
     return (
@@ -315,6 +321,15 @@ export function HomePage() {
             >
               {userInitials}
             </div>
+            <button
+              onClick={() => setMostrarConfig(true)}
+              title="Configurações"
+              style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "6px 8px", borderRadius: 6, display: "flex", alignItems: "center", opacity: 0.75 }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.75")}
+            >
+              <i className="ti ti-settings" style={{ fontSize: 18 }} />
+            </button>
             <button
               onClick={signOut}
               className="text-[#9CA3AF] hover:text-white transition-colors p-1"
