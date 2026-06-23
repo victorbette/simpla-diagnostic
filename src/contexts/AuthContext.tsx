@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearAppStorage } from "@/lib/clearAppStorage";
 
 interface AuthContextValue {
   session: Session | null;
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+    clearAppStorage();
   }
 
   return (

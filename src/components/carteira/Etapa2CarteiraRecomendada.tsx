@@ -3,7 +3,6 @@ import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
-import { ImportarIA } from "./ImportarIA";
 
 interface Props {
   ativos: Ativo[];
@@ -76,10 +75,6 @@ export function Etapa2CarteiraRecomendada({
 
   function handleChange(id: string, campo: keyof Ativo, valor: string | number) {
     onAtivos(ativos.map((a) => (a.id === id ? { ...a, [campo]: valor } : a)));
-  }
-
-  function handleIA(novos: Ativo[]) {
-    onAtivos([...ativos, ...novos]);
   }
 
   return (
@@ -204,9 +199,6 @@ export function Etapa2CarteiraRecomendada({
           </div>
         </div>
       </div>
-
-      {/* ── IA IMPORT ── */}
-      <ImportarIA onConfirmar={handleIA} modo="recomendada" />
 
       {/* ── CARD APORTE DISPONÍVEL ── */}
       <div style={{

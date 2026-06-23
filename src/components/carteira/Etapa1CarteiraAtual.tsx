@@ -1,7 +1,6 @@
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER } from "@/lib/carteira/types";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
-import { ImportarIA } from "./ImportarIA";
 
 interface Props {
   ativos: Ativo[];
@@ -22,14 +21,8 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio }: Props) {
     onAtivos(ativos.map((a) => (a.id === id ? { ...a, [campo]: valor } : a)));
   }
 
-  function handleIA(novos: Ativo[]) {
-    onAtivos([...ativos, ...novos]);
-  }
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
-      <ImportarIA onConfirmar={handleIA} modo="atual" />
-
       {CARD_ORDER.map((cardId) => (
         <CarteiraCard
           key={cardId}
