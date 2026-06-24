@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 
 export function LoginPage() {
-  const { signIn, signUp } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,19 +26,6 @@ export function LoginPage() {
       await signIn(email, password);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao entrar. Verifique suas credenciais.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signUp(email, password);
-      toast.success("Cadastro realizado! Verifique seu e-mail para confirmar a conta.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro ao cadastrar. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -80,7 +67,7 @@ export function LoginPage() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-2">
+          <CardFooter>
             <Button
               type="submit"
               className="w-full"
@@ -88,15 +75,6 @@ export function LoginPage() {
               onClick={handleSignIn}
             >
               {loading ? "Entrando..." : "Entrar"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={loading}
-              onClick={handleSignUp}
-            >
-              {loading ? "Cadastrando..." : "Cadastrar"}
             </Button>
           </CardFooter>
         </form>
