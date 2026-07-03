@@ -6,6 +6,7 @@ import {
   UserPlus,
   Plus,
   Users,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ import {
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
 import { ClientCardSkeleton } from "@/components/ui/ClientCardSkeleton";
+import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
@@ -148,6 +150,7 @@ export function HomePage() {
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [senhaModalAberto, setSenhaModalAberto] = useState(false);
 
   // All hooks must be before conditional returns
   const filtered = useMemo(() => {
@@ -303,6 +306,14 @@ export function HomePage() {
             >
               {userInitials}
             </div>
+            <button
+              onClick={() => setSenhaModalAberto(true)}
+              className="flex items-center gap-1.5 text-[#9CA3AF] hover:text-white transition-colors text-sm p-1"
+              title="Alterar senha"
+            >
+              <KeyRound className="h-5 w-5" />
+              <span className="hidden sm:inline">Alterar Senha</span>
+            </button>
             <button
               onClick={signOut}
               className="text-[#9CA3AF] hover:text-white transition-colors p-1"
@@ -765,6 +776,12 @@ export function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Change password modal ── */}
+      <ChangePasswordModal
+        open={senhaModalAberto}
+        onOpenChange={setSenhaModalAberto}
+      />
     </div>
   );
 }
