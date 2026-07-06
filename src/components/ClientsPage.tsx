@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -109,6 +110,9 @@ function AddClientDialog({ open, onOpenChange, onSubmit }: AddClientDialogProps)
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Novo cliente</DialogTitle>
+          <DialogDescription>
+            Preencha os dados do cliente. Apenas o nome é obrigatório.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

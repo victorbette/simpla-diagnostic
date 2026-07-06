@@ -130,6 +130,18 @@ create policy "users_own_estrategias" on public.estrategias_iniciais
     )
   );
 
+-- ─── grants ──────────────────────────────────────────────────────────────────
+-- RLS controla QUAIS linhas cada usuário enxerga, mas a role ainda precisa dos
+-- privilégios básicos de tabela (erro 42501 sem eles). Apenas `authenticated`
+-- recebe acesso — `anon` fica sem nenhum privilégio (app exige login).
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.clients               to authenticated;
+grant select, insert, update, delete on public.simulations           to authenticated;
+grant select, insert, update, delete on public.diagnostics           to authenticated;
+grant select, insert, update, delete on public.financial_plans       to authenticated;
+grant select, insert, update, delete on public.estrategias_iniciais  to authenticated;
+revoke all on all tables in schema public from anon;
+
 -- ─── índices ─────────────────────────────────────────────────────────────────
 create index if not exists clients_user_id_idx        on public.clients(user_id);
 create index if not exists simulations_client_id_idx  on public.simulations(client_id);
