@@ -128,18 +128,15 @@
   flex-shrink: 0;
 }
 
-/* ── Document page — A4 paper simulation on screen ────────── */
-.doc-page {
-  background: white;
-  width: 794px;
-  min-height: 1123px;
-  padding: 56px 64px 48px;
-  box-sizing: border-box;
-  position: relative;
-  margin: 0 auto 48px;
-  box-shadow: 0 4px 24px rgba(30, 58, 138, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+/* ── Documento A4 (Estratégia Inicial) ─────────────────────── */
+/* Dimensões/layout vêm inline do PaginaDoc; aqui só a apresentação de tela */
+.doc-pagina {
+  box-shadow: 0 4px 24px rgba(30, 58, 138, 0.1), 0 1px 4px rgba(0, 0, 0, 0.05);
   border-radius: 6px;
 }
+
+/* Blocos que só existem na impressão (ex.: texto das observações) */
+.doc-print-only { display: none; }
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
@@ -148,72 +145,73 @@
   .no-print { display: none !important; }
   .app-main-header { display: none !important; }
   .estrategia-abas-topo { display: none !important; }
-  .doc-nav-header { display: none !important; }
   .doc-screen-only { display: none !important; }
   header, .sidebar, .btn-imprimir { display: none !important; }
 
-  /* Cada página em folha separada — usa inline style pageBreakAfter:always */
+  .doc-print-only { display: block !important; }
+  .doc-vazio-no-print { display: none !important; }
+
+  /* Neutralizar containers da UI que clipariam a impressão
+     (a página da estratégia usa position:fixed + overflow:hidden) */
+  html, body, #root { height: auto !important; overflow: visible !important; }
+  .estrategia-inicial-root {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .estrategia-inicial-root > div {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .estrategia-final-root {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+  .doc-pages-wrap { padding: 0 !important; }
+
+  /* Se o overlay "Gerar PDF Consultor" estiver aberto, imprimir só ele */
+  .estrategia-inicial-root:has(.print-layer) .estrategia-final-root {
+    display: none !important;
+  }
+
+  /* Cada página do documento em folha própria */
   .doc-pagina {
-    page-break-after: always !important;
-    break-after: page !important;
     box-shadow: none !important;
     border-radius: 0 !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
   }
   .doc-pagina:last-child {
     page-break-after: avoid !important;
     break-after: avoid !important;
   }
 
-  /* Legado — quebras manuais */
-  .page-break-before {
-    page-break-before: always !important;
-    break-before: page !important;
-  }
-
   /* Evitar quebra dentro de cards */
-  .no-page-break {
+  .doc-card, .no-page-break {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Legado — doc-page */
-  .doc-page {
-    width: 210mm !important;
-    min-height: 297mm !important;
-    padding: 20mm 22mm !important;
-    box-sizing: border-box !important;
-    background: white !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
-  }
-
-  /* Textarea — mostrar texto na impressão */
-  textarea {
+  /* Controles de formulário viram texto plano */
+  .doc-pagina textarea,
+  .doc-pagina input,
+  .doc-pagina select {
     border: none !important;
     resize: none !important;
     overflow: visible !important;
     background: transparent !important;
     padding: 0 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
   }
-
   @page {
     size: A4;
     margin: 0;
   }
 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-  /* Textarea comments print as plain text */
-  textarea {
-    border: none !important;
-    resize: none !important;
-    overflow: visible !important;
-    background: transparent !important;
-    padding: 0 !important;
-  }
 }
 
 @keyframes spin {

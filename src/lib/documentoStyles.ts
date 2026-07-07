@@ -1,64 +1,82 @@
 import type { CSSProperties } from "react";
 
-export const PAGINA: CSSProperties = {
-  background: "white",
-  width: "100%",
-  maxWidth: 794,
-  minHeight: 1123,
-  margin: "0 auto 32px",
-  padding: "64px 72px",
-  boxSizing: "border-box",
-  position: "relative",
-  boxShadow: "0 2px 16px rgba(0,0,0,0.08)",
-  borderRadius: 4,
-  pageBreakAfter: "always",
-};
+/* ── Tokens visuais do documento impresso ──────────────────────
+ * Identidade única (navy + azul) com acentos semânticos apenas
+ * para dados (positivo/negativo/atenção) — nunca por seção.
+ */
+export const DOC = {
+  navy:       "#1E3A8A",
+  navyInk:    "#16295C",
+  navyDeep:   "#0C1D42",
+  blue:       "#2563EB",
+  blueLight:  "#60A5FA",
+  blueSoft:   "#EFF6FF",
+  blueBorder: "#BFDBFE",
+  ink:        "#111827",
+  texto:      "#374151",
+  muted:      "#6B7280",
+  hint:       "#9CA3AF",
+  linha:      "#E5E7EB",
+  linhaSoft:  "#F3F4F6",
+  verde:      "#15803D",
+  verdeBg:    "#DCFCE7",
+  vermelho:   "#B91C1C",
+  vermelhoBg: "#FEE2E2",
+  ambar:      "#B45309",
+  ambarBg:    "#FEF3C7",
+  fonte:      '"Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif',
+} as const;
 
-export const HEADER_PAGINA = (corAccent = "#1E3A8A"): CSSProperties => ({
-  borderBottom: `2px solid ${corAccent}`,
-  paddingBottom: 16,
-  marginBottom: 32,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-});
-
+/* Título da página de conteúdo (usado pelo HeaderSecao) */
 export const TITULO_SECAO: CSSProperties = {
-  fontSize: 22,
+  fontSize: 24,
   fontWeight: 700,
-  color: "#1E3A8A",
-  letterSpacing: "-0.02em",
+  color: DOC.navyInk,
+  letterSpacing: "-0.01em",
   margin: 0,
+  lineHeight: 1.2,
 };
 
 export const TEXTO_CORPO: CSSProperties = {
-  fontSize: 13,
-  color: "#374151",
-  lineHeight: "1.8",
+  fontSize: 12.5,
+  color: DOC.texto,
+  lineHeight: 1.75,
   margin: 0,
 };
 
-export const LABEL_METRICA: CSSProperties = {
-  fontSize: 10,
-  color: "#9CA3AF",
+/* Label uppercase pequena de card/métrica */
+export const LABEL_CARD: CSSProperties = {
+  fontSize: 9.5,
+  color: DOC.hint,
   textTransform: "uppercase",
-  letterSpacing: "0.06em",
-  marginBottom: 4,
-  fontWeight: 500,
-  margin: "0 0 4px",
+  letterSpacing: "0.12em",
+  fontWeight: 600,
+  margin: "0 0 6px",
 };
 
-export const VALOR_METRICA: CSSProperties = {
-  fontSize: 20,
+export const VALOR_CARD: CSSProperties = {
+  fontSize: 19,
   fontWeight: 700,
-  color: "#111827",
+  color: DOC.ink,
   margin: 0,
+  letterSpacing: "-0.01em",
+  lineHeight: 1.25,
 };
 
-export const CARD_METRICA: CSSProperties = {
-  background: "#F8FAFF",
-  border: "0.5px solid #BFDBFE",
-  borderRadius: 8,
+export const CARD: CSSProperties = {
+  background: "white",
+  border: `1px solid ${DOC.linha}`,
+  borderRadius: 10,
   padding: "14px 18px",
   boxSizing: "border-box",
 };
+
+/* Label de subseção (ex.: PROTEÇÃO, AÇÕES IMEDIATAS) */
+export const LABEL_SUBSECAO = (cor: string = DOC.navy): CSSProperties => ({
+  fontSize: 10.5,
+  fontWeight: 700,
+  letterSpacing: "0.14em",
+  textTransform: "uppercase",
+  color: cor,
+  margin: "0 0 10px",
+});

@@ -1,119 +1,71 @@
-import { PAGINA, HEADER_PAGINA, TITULO_SECAO } from "@/lib/documentoStyles";
+import { DOC } from "@/lib/documentoStyles";
+import { ITENS_SUMARIO, PAG, TOTAL_PAGINAS } from "@/lib/documentoPaginas";
+import { PaginaDoc } from "./PaginaDoc";
+import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   nomeCliente: string;
-  scores: Record<string, number>;
 }
 
-const ITENS_SUMARIO = [
-  { pagina: 1, label: "Capa",                    cor: "#6B7280"  },
-  { pagina: 2, label: "Disclaimer",              cor: "#6B7280"  },
-  { pagina: 3, label: "Sumário",                 cor: "#6B7280"  },
-  { pagina: 4, label: "Liberdade Financeira",    icone: "ti-beach",       cor: "#059669", scoreKey: "lf"     },
-  { pagina: 5, label: "Asset Allocation",        icone: "ti-chart-pie",   cor: "#2563EB", scoreKey: "aa"     },
-  { pagina: 6, label: "Proteção e Sucessório",   icone: "ti-shield",      cor: "#B91C1C", scoreKey: "ps"     },
-  { pagina: 7, label: "Planejamento Fiscal",     icone: "ti-receipt",     cor: "#B45309", scoreKey: "fiscal" },
-  { pagina: 8, label: "Próximos Passos",         icone: "ti-list-checks", cor: "#7C3AED"                     },
-  { pagina: 9, label: "Mãos à Obra",             icone: "ti-rocket",      cor: "#1E3A8A"                     },
-] as const;
-
-export function DocSumario({ nomeCliente, scores }: Props) {
+export function DocSumario({ nomeCliente }: Props) {
   return (
-    <div style={PAGINA} className="doc-pagina">
-      {/* Header */}
-      <div style={HEADER_PAGINA()}>
-        <div>
-          <span style={TITULO_SECAO}>Sumário</span>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6B7280" }}>
-            Estratégia Inicial · {nomeCliente}
-          </p>
-        </div>
-        <img src="/logo-si.svg" height={24} alt="Simpla Invest" style={{ opacity: 0.6, objectFit: "contain" }} />
-      </div>
+    <PaginaDoc
+      rodape={<RodapePagina nomeCliente={nomeCliente} numPagina={PAG.sumario} totalPaginas={TOTAL_PAGINAS} />}
+    >
+      <HeaderSecao titulo="Sumário" />
 
-      {/* TOC */}
-      <div>
-        {ITENS_SUMARIO.map((item) => {
-          const score = "scoreKey" in item ? scores[item.scoreKey] : undefined;
-          return (
+      <div style={{ marginTop: 24 }}>
+        {ITENS_SUMARIO.map((item) => (
+          <div
+            key={item.numero}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 18,
+              padding: "15px 0",
+              borderBottom: `1px solid ${DOC.linhaSoft}`,
+            }}
+          >
             <div
-              key={item.pagina}
               style={{
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                background: item.preConteudo ? DOC.navyInk : DOC.blue,
+                color: "white",
                 display: "flex",
                 alignItems: "center",
-                padding: "14px 0",
-                borderBottom: "0.5px solid #F3F4F6",
-                gap: 16,
+                justifyContent: "center",
+                fontSize: 12.5,
+                fontWeight: 700,
+                flexShrink: 0,
               }}
             >
-              {/* Número em círculo */}
-              <div
-                style={{
-                  width: 28,
-                  height: 28,
-                  background: item.cor,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}
-              >
-                {item.pagina}
-              </div>
-
-              {/* Ícone */}
-              {"icone" in item && item.icone && (
-                <i
-                  className={`ti ${item.icone}`}
-                  style={{ fontSize: 16, color: item.cor, flexShrink: 0 }}
-                  aria-hidden="true"
-                />
-              )}
-
-              {/* Label */}
-              <span style={{ flex: 1, fontSize: 14, color: "#111827", fontWeight: 500 }}>
-                {item.label}
-              </span>
-
-              {/* Score */}
-              {score !== undefined && (
-                <span style={{ fontSize: 12, color: "#6B7280", marginRight: 16 }}>
-                  Score: {score}/100
-                </span>
-              )}
-
-              {/* Linha pontilhada */}
-              <div
-                style={{
-                  width: 120,
-                  borderBottom: "1px dotted #D1D5DB",
-                }}
-              />
-
-              {/* Número de página */}
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "#6B7280",
-                  fontWeight: 500,
-                  fontVariantNumeric: "tabular-nums",
-                  minWidth: 12,
-                  textAlign: "right",
-                }}
-              >
-                {item.pagina}
-              </span>
+              {item.numero}
             </div>
-          );
-        })}
-      </div>
 
-      <RodapePagina nomeCliente={nomeCliente} numPagina={3} totalPaginas={9} />
-    </div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: DOC.ink, whiteSpace: "nowrap" }}>
+              {item.label}
+            </span>
+
+            <div style={{ flex: 1, borderBottom: `1px solid ${DOC.linha}` }} />
+
+            <span
+              style={{
+                fontSize: 13.5,
+                fontWeight: 700,
+                color: DOC.texto,
+                fontVariantNumeric: "tabular-nums",
+                minWidth: 22,
+                textAlign: "right",
+              }}
+            >
+              {item.pagina}
+            </span>
+          </div>
+        ))}
+      </div>
+    </PaginaDoc>
   );
 }

@@ -1,11 +1,14 @@
-import { useState, useMemo } from "react";
+import { PieChart, Pie, Cell } from "recharts";
 import { formatCurrency } from "@/lib/format";
 import { calcularAlocacaoAtual, ALOCACAO_ALVO, PERFIL_LABELS } from "@/types/financialPlanning";
-import type { FinancialPlan } from "@/types/financialPlanning";
+import type { FinancialPlan, MacroalocacaoAlvo } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { nivelScore, calcularScores } from "@/lib/estrategiaScores";
-import { PAGINA, HEADER_PAGINA, TITULO_SECAO, TEXTO_CORPO, LABEL_METRICA } from "@/lib/documentoStyles";
+import { DOC, TEXTO_CORPO, CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
+import { PAG, TOTAL_PAGINAS } from "@/lib/documentoPaginas";
+import { PaginaDoc } from "./PaginaDoc";
+import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
+import { CalloutConsultor } from "./CalloutConsultor";
 
 const CLASSE_LABELS: Record<string, string> = {
   rendaFixa: "Renda Fixa",
@@ -17,11 +20,11 @@ const CLASSE_LABELS: Record<string, string> = {
 };
 
 const CLASSE_COLORS: Record<string, string> = {
-  rendaFixa: "#1E40AF",
-  acoes: "#15803D",
-  fiis: "#2563EB",
+  rendaFixa: "#1E3A8A",
+  acoes: "#2563EB",
+  fiis: "#60A5FA",
   rvGlobal: "#7C3AED",
-  rfGlobal: "#1E40AF",
+  rfGlobal: "#0891B2",
   cripto: "#B45309",
 };
 
@@ -31,172 +34,285 @@ interface Props {
   nomeCliente: string;
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
-  numPagina: number;
 }
 
-export function DocAssetAllocation({ nomeCliente, plan, resultados, numPagina }: Props) {
-  const score = useMemo(() => calcularScores(plan, resultados).aaScore, [plan, resultados]);
-  const storKey = `doc_coment_${plan.clientId}_aa`;
-  const [comentario, setComentario] = useState(() => localStorage.getItem(storKey) ?? "");
+function fmtPct(v: number) {
+  return `${v.toFixed(1).replace(".", ",")}%`;
+}
 
-  const updateComentario = (v: string) => {
-    setComentario(v);
-    try { localStorage.setItem(storKey, v); } catch { /**/ }
-  };
-
-  const perfil = plan.dadosCliente.suitabilityPerfil;
-  const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "Não definido";
-  const nv = nivelScore(score);
-  const alocAtual = calcularAlocacaoAtual(plan.ativosAtuais);
-  const alocMeta = perfil ? ALOCACAO_ALVO[perfil] : null;
-  const patrimonio = resultados.carteira?.patrimonio ?? plan.ativosAtuais.total;
+/** Donut fixo (sem ResponsiveContainer — impressão confiável) */
+function Donut({
+  titulo,
+  totalLabel,
+  aloc,
+  patrimonio,
+}: {
+  titulo: string;
+  totalLabel: string;
+  aloc: MacroalocacaoAlvo;
+  patrimonio: number;
+}) {
+  const dados = CHAVES.filter((k) => (aloc[k] ?? 0) > 0.05).map((k) => ({
+    name: CLASSE_LABELS[k],
+    value: aloc[k],
+    cor: CLASSE_COLORS[k],
+    chave: k,
+  }));
 
   return (
-    <div style={PAGINA} className="doc-pagina">
-      {/* Header */}
-      <div style={HEADER_PAGINA("#2563EB")}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, background: "#2563EB", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
-            <i className="ti ti-chart-pie" style={{ fontSize: 20 }} />
-          </div>
-          <span style={TITULO_SECAO}>Asset Allocation</span>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: "#DBEAFE", color: "#1E40AF" }}>{perfilLabel}</span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: nv.bg, color: nv.color }}>{score}/100 · {nv.label}</span>
-        </div>
-      </div>
-
-      {/* Intro */}
-      <p style={{ ...TEXTO_CORPO, marginBottom: 24 }}>
-        A alocação de ativos é a base de uma estratégia sólida de investimentos. Com base no
-        perfil <strong>{perfilLabel}</strong> e patrimônio financeiro de{" "}
-        <strong>{formatCurrency(patrimonio)}</strong>, definimos a seguinte distribuição recomendada.
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: DOC.ink, textAlign: "center" }}>
+        {titulo}
       </p>
-
-      {/* Tabelas */}
-      {plan.dadosCliente.comecandoDoZero ? (
-        <div style={{ background: "#F0FDF4", border: "1px solid #DCFCE7", borderRadius: 8, padding: "14px 18px", marginBottom: 24 }}>
-          <p style={{ margin: 0, fontWeight: 600, color: "#059669", display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
-            <i className="ti ti-check" style={{ fontSize: 15 }} />
-            Iniciando a jornada de investimentos — carteira a ser construída com perfil {perfilLabel}.
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-          {/* Atual */}
-          <div>
-            <p style={{ ...LABEL_METRICA, marginBottom: 8 }}>Carteira Atual</p>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
-                  <th style={{ textAlign: "left", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>Classe</th>
-                  <th style={{ textAlign: "right", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>%</th>
-                  <th style={{ textAlign: "right", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {CHAVES.filter((k) => (alocAtual[k] ?? 0) > 0).map((k) => (
-                  <tr key={k} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <td style={{ padding: "4px 6px", display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: CLASSE_COLORS[k], display: "inline-block", flexShrink: 0 }} />
-                      {CLASSE_LABELS[k]}
-                    </td>
-                    <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: 600 }}>{alocAtual[k].toFixed(1)}%</td>
-                    <td style={{ padding: "4px 6px", textAlign: "right", color: "#6B7280" }}>{formatCurrency(patrimonio * alocAtual[k] / 100)}</td>
-                  </tr>
-                ))}
-                <tr style={{ borderTop: "2px solid #E5E7EB" }}>
-                  <td style={{ padding: "4px 6px", fontWeight: 700 }}>Total</td>
-                  <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: 700 }}>100%</td>
-                  <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: 700 }}>{formatCurrency(patrimonio)}</td>
-                </tr>
-              </tbody>
-            </table>
+      <p style={{ margin: 0, fontSize: 10.5, color: DOC.muted, textAlign: "center" }}>{totalLabel}</p>
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <PieChart width={170} height={150}>
+          <Pie
+            data={dados}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={42}
+            outerRadius={64}
+            paddingAngle={2}
+            isAnimationActive={false}
+            stroke="white"
+            strokeWidth={1.5}
+          >
+            {dados.map((d) => (
+              <Cell key={d.chave} fill={d.cor} />
+            ))}
+          </Pie>
+        </PieChart>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {dados.map((d) => (
+          <div key={d.chave} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: d.cor, flexShrink: 0 }} />
+            <span style={{ flex: 1, fontSize: 10.5, color: DOC.texto }}>{d.name}</span>
+            <span style={{ fontSize: 10.5, fontWeight: 600, color: DOC.ink }}>{fmtPct(d.value)}</span>
+            <span style={{ fontSize: 10.5, color: DOC.hint, minWidth: 74, textAlign: "right" }}>
+              {formatCurrency((patrimonio * d.value) / 100)}
+            </span>
           </div>
-
-          {/* Meta */}
-          {alocMeta && (
-            <div>
-              <p style={{ ...LABEL_METRICA, color: "#2563EB", marginBottom: 8 }}>Alocação Recomendada</p>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid #E5E7EB" }}>
-                    <th style={{ textAlign: "left", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>Classe</th>
-                    <th style={{ textAlign: "right", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>% Meta</th>
-                    <th style={{ textAlign: "right", padding: "3px 6px", color: "#9CA3AF", fontWeight: 600, fontSize: 10 }}>Dif.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {CHAVES.filter((k) => (alocMeta[k] ?? 0) > 0).map((k) => {
-                    const dif = alocMeta[k] - (alocAtual[k] ?? 0);
-                    return (
-                      <tr key={k} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                        <td style={{ padding: "4px 6px", display: "flex", alignItems: "center", gap: 5 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: CLASSE_COLORS[k], display: "inline-block", flexShrink: 0 }} />
-                          {CLASSE_LABELS[k]}
-                        </td>
-                        <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: 600 }}>{alocMeta[k].toFixed(1)}%</td>
-                        <td style={{ padding: "4px 6px", textAlign: "right", color: dif > 0 ? "#059669" : dif < 0 ? "#B91C1C" : "#9CA3AF", fontWeight: 600 }}>
-                          {dif > 0 ? "+" : ""}{dif.toFixed(1)}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  <tr style={{ borderTop: "2px solid #E5E7EB" }}>
-                    <td style={{ padding: "4px 6px", fontWeight: 700 }}>Total</td>
-                    <td style={{ padding: "4px 6px", textAlign: "right", fontWeight: 700 }}>100%</td>
-                    <td style={{ padding: "4px 6px", textAlign: "right" }} />
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Plano de ação */}
-      {resultados.carteira && resultados.carteira.planoAcao.length > 0 && (
-        <div style={{ marginBottom: 20 }}>
-          <p style={{ ...LABEL_METRICA, marginBottom: 8 }}>O que fazer</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-            {resultados.carteira.planoAcao.slice(0, 8).map((item) => {
-              const badge = item.movimentacaoBRL > 0
-                ? { label: "Aportar", color: "#059669", bg: "#DCFCE7" }
-                : item.movimentacaoBRL < 0
-                ? { label: "Resgatar", color: "#B91C1C", bg: "#FEE2E2" }
-                : { label: "Manter", color: "#6B7280", bg: "#F3F4F6" };
-              return (
-                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 10px", background: "#F8FAFF", borderRadius: 5, border: "0.5px solid #BFDBFE" }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 999, background: badge.bg, color: badge.color, flexShrink: 0 }}>{badge.label}</span>
-                  <span style={{ flex: 1, fontSize: 12, color: "#111827" }}>{item.nomeAtivo}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: item.movimentacaoBRL > 0 ? "#059669" : "#B91C1C" }}>
-                    {formatCurrency(Math.abs(item.movimentacaoBRL))}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <ConsultorBox value={comentario} onChange={updateComentario} />
-
-      <RodapePagina nomeCliente={nomeCliente} numPagina={numPagina} totalPaginas={9} />
+        ))}
+      </div>
     </div>
   );
 }
 
-function ConsultorBox({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+const TH: React.CSSProperties = {
+  padding: "7px 10px",
+  fontSize: 9.5,
+  fontWeight: 700,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  color: "white",
+  textAlign: "right",
+  whiteSpace: "nowrap",
+};
+
+const TD: React.CSSProperties = {
+  padding: "6px 10px",
+  fontSize: 11.5,
+  color: DOC.texto,
+  textAlign: "right",
+  fontVariantNumeric: "tabular-nums",
+};
+
+export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
+  const perfil = plan.dadosCliente.suitabilityPerfil;
+  const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
+  const alocAtual = calcularAlocacaoAtual(plan.ativosAtuais);
+  const alocMeta = perfil ? ALOCACAO_ALVO[perfil] : null;
+  const patrimonio = resultados.carteira?.patrimonio ?? plan.ativosAtuais.total;
+  const comecandoDoZero = plan.dadosCliente.comecandoDoZero;
+  const planoAcao = resultados.carteira?.planoAcao ?? [];
+
+  const linhas = CHAVES.filter(
+    (k) => (alocAtual[k] ?? 0) > 0.05 || ((alocMeta?.[k] ?? 0) > 0.05),
+  );
+
   return (
-    <div style={{ background: "#FFFBEB", border: "0.5px solid #FDE68A", borderLeft: "4px solid #F59E0B", borderRadius: 8, padding: "12px 16px", marginTop: 16, marginBottom: 56 }}>
-      <p style={{ fontSize: 10, color: "#B45309", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px" }}>Comentários do Consultor</p>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Adicione comentários personalizados para o cliente..."
-        style={{ width: "100%", minHeight: 72, padding: "6px 8px", border: "1px solid #FDE68A", borderRadius: 6, fontSize: 12, color: "#000", resize: "vertical", fontFamily: "inherit", outline: "none", boxSizing: "border-box", background: "white" }}
-      />
-    </div>
+    <PaginaDoc
+      rodape={<RodapePagina nomeCliente={nomeCliente} numPagina={PAG.aa} totalPaginas={TOTAL_PAGINAS} />}
+    >
+      <HeaderSecao titulo="Asset Allocation" />
+
+      <p style={{ ...TEXTO_CORPO, marginBottom: 18 }}>
+        Com base no perfil <strong>{perfilLabel}</strong> e patrimônio financeiro de{" "}
+        <strong>{formatCurrency(patrimonio)}</strong>, definimos a distribuição recomendada abaixo,
+        comparada com a carteira atual.
+      </p>
+
+      {comecandoDoZero ? (
+        <div
+          style={{
+            ...CARD,
+            background: DOC.verdeBg,
+            border: "1px solid #BBF7D0",
+            marginBottom: 18,
+          }}
+        >
+          <p style={{ margin: 0, fontWeight: 600, color: DOC.verde, fontSize: 12.5 }}>
+            Iniciando a jornada de investimentos — carteira a ser construída conforme o perfil{" "}
+            {perfilLabel}.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p style={LABEL_SUBSECAO()}>Alocação Atual vs Proposta</p>
+          <div className="doc-card" style={{ display: "flex", gap: 26, marginBottom: 20 }}>
+            <Donut
+              titulo="Atual"
+              totalLabel={formatCurrency(patrimonio)}
+              aloc={alocAtual}
+              patrimonio={patrimonio}
+            />
+            {alocMeta && (
+              <Donut
+                titulo="Proposta"
+                totalLabel={formatCurrency(patrimonio)}
+                aloc={alocMeta}
+                patrimonio={patrimonio}
+              />
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Tabela comparativa */}
+      {alocMeta && !comecandoDoZero && (
+        <table
+          className="doc-card"
+          style={{ width: "100%", borderCollapse: "collapse", marginBottom: 18, borderRadius: 8, overflow: "hidden" }}
+        >
+          <thead>
+            <tr style={{ background: DOC.navy }}>
+              <th style={{ ...TH, textAlign: "left" }}>Classe</th>
+              <th style={TH}>% Atual</th>
+              <th style={TH}>R$ Atual</th>
+              <th style={TH}>% Meta</th>
+              <th style={TH}>R$ Meta</th>
+              <th style={TH}>Dif R$</th>
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((k, i) => {
+              const pctAtual = alocAtual[k] ?? 0;
+              const pctMeta = alocMeta[k] ?? 0;
+              const vAtual = (patrimonio * pctAtual) / 100;
+              const vMeta = (patrimonio * pctMeta) / 100;
+              const dif = vMeta - vAtual;
+              return (
+                <tr key={k} style={{ background: i % 2 === 0 ? "white" : "#F6F9FE" }}>
+                  <td style={{ ...TD, textAlign: "left" }}>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: CLASSE_COLORS[k],
+                        marginRight: 7,
+                      }}
+                    />
+                    {CLASSE_LABELS[k]}
+                  </td>
+                  <td style={TD}>{fmtPct(pctAtual)}</td>
+                  <td style={TD}>{formatCurrency(vAtual)}</td>
+                  <td style={{ ...TD, fontWeight: 600 }}>{fmtPct(pctMeta)}</td>
+                  <td style={{ ...TD, fontWeight: 600 }}>{formatCurrency(vMeta)}</td>
+                  <td
+                    style={{
+                      ...TD,
+                      fontWeight: 700,
+                      color: dif > 0.5 ? DOC.verde : dif < -0.5 ? DOC.vermelho : DOC.hint,
+                    }}
+                  >
+                    {dif > 0.5 ? "+" : ""}
+                    {formatCurrency(dif)}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: `2px solid ${DOC.linha}`, background: "white" }}>
+              <td style={{ ...TD, textAlign: "left", fontWeight: 700, color: DOC.ink }}>Total</td>
+              <td style={{ ...TD, fontWeight: 700 }}>100%</td>
+              <td style={{ ...TD, fontWeight: 700 }}>{formatCurrency(patrimonio)}</td>
+              <td style={{ ...TD, fontWeight: 700 }}>100%</td>
+              <td style={{ ...TD, fontWeight: 700 }}>{formatCurrency(patrimonio)}</td>
+              <td style={TD} />
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Plano de ação da carteira */}
+      {planoAcao.length > 0 && (
+        <div>
+          <p style={LABEL_SUBSECAO()}>Movimentações Recomendadas</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {planoAcao.slice(0, 6).map((item) => {
+              const badge =
+                item.movimentacaoBRL > 0
+                  ? { label: "Aportar", color: DOC.verde, bg: DOC.verdeBg }
+                  : item.movimentacaoBRL < 0
+                  ? { label: "Resgatar", color: DOC.vermelho, bg: DOC.vermelhoBg }
+                  : { label: "Manter", color: DOC.muted, bg: DOC.linhaSoft };
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "5px 12px",
+                    background: "white",
+                    borderRadius: 6,
+                    border: `1px solid ${DOC.linha}`,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: 999,
+                      background: badge.bg,
+                      color: badge.color,
+                      flexShrink: 0,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    {badge.label}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 11.5, color: DOC.ink }}>{item.nomeAtivo}</span>
+                  <span
+                    style={{
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: item.movimentacaoBRL > 0 ? DOC.verde : item.movimentacaoBRL < 0 ? DOC.vermelho : DOC.hint,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {item.movimentacaoBRL === 0 ? "—" : formatCurrency(Math.abs(item.movimentacaoBRL))}
+                  </span>
+                </div>
+              );
+            })}
+            {planoAcao.length > 6 && (
+              <p style={{ margin: "2px 0 0", fontSize: 10.5, color: DOC.hint }}>
+                + {planoAcao.length - 6} outras movimentações detalhadas com o consultor
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <CalloutConsultor clientId={plan.clientId} secao="aa" />
+    </PaginaDoc>
   );
 }

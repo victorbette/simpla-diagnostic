@@ -322,7 +322,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div className="estrategia-inicial-root" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
       {/* Header */}
       <div className="app-main-header" style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>

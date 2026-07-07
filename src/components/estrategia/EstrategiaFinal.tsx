@@ -1,12 +1,14 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { calcularScores } from "@/lib/estrategiaScores";
 import { CONFIG_CONSULTOR_DEFAULT } from "@/lib/documentoConfig";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
+import { gerarPDF } from "@/lib/gerarPDF";
 import { DocCapa } from "./documento/DocCapa";
 import { DocDisclaimer } from "./documento/DocDisclaimer";
 import { DocSumario } from "./documento/DocSumario";
+import { DocPerfilInvestidor } from "./documento/DocPerfilInvestidor";
+import { DivisoriaSecao } from "./documento/DivisoriaSecao";
 import { DocLiberdadeFinanceira } from "./documento/DocLiberdadeFinanceira";
 import { DocAssetAllocation } from "./documento/DocAssetAllocation";
 import { DocProtecaoSucessorio } from "./documento/DocProtecaoSucessorio";
@@ -37,18 +39,12 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
     try { localStorage.setItem("config_consultor", JSON.stringify(config)); } catch { /**/ }
   }, [config]);
 
-  const scoresCalc = useMemo(() => calcularScores(plan, resultados), [plan, resultados]);
-
-  const scores: Record<string, number> = {
-    lf:     scoresCalc.lfScore,
-    aa:     scoresCalc.aaScore,
-    ps:     scoresCalc.psScore,
-    fiscal: scoresCalc.fiscalScore,
-  };
-
   const dataEstrategia =
     resultados.estrategiaFinal?.dataGeracao ??
     new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
+  // Nome curto do consultor para a capa (sem credenciais entre parênteses)
+  const nomeConsultorCapa = config.nomeCompleto.replace(/\s*\(.*\)\s*$/, "");
 
   const handleResultadosChange = useCallback(
     (r: ResultadosEstrategia) => { onResultadosChange?.(r); },
@@ -85,7 +81,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         </div>
 
         <button
-          onClick={() => window.print()}
+          onClick={() => gerarPDF(clientName)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -107,59 +103,40 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
       </div>
 
       {/* Documento */}
-      <div style={{ padding: "32px 16px" }}>
-        {/* Página 1 */}
-        <DocCapa nomeCliente={clientName} dataEstrategia={dataEstrategia} />
+      <div className="doc-pages-wrap" style={{ padding: "32px 16px" }}>
+        <DocCapa
+          nomeCliente={clientName}
+          dataEstrategia={dataEstrategia}
+          nomeConsultor={nomeConsultorCapa}
+        />
 
-        {/* Página 2 */}
         <DocDisclaimer nomeCliente={clientName} config={config} onConfigChange={setConfig} />
 
-        {/* Página 3 */}
-        <DocSumario nomeCliente={clientName} scores={scores} />
+        <DocSumario nomeCliente={clientName} />
 
-        {/* Página 4 */}
-        <DocLiberdadeFinanceira
-          nomeCliente={clientName}
-          plan={plan}
-          resultados={resultados}
-          numPagina={4}
-        />
+        <DocPerfilInvestidor nomeCliente={clientName} plan={plan} />
 
-        {/* Página 5 */}
-        <DocAssetAllocation
-          nomeCliente={clientName}
-          plan={plan}
-          resultados={resultados}
-          numPagina={5}
-        />
+        <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={clientName} />
+        <DocLiberdadeFinanceira nomeCliente={clientName} plan={plan} resultados={resultados} />
 
-        {/* Página 6 */}
-        <DocProtecaoSucessorio
-          nomeCliente={clientName}
-          plan={plan}
-          resultados={resultados}
-          numPagina={6}
-        />
+        <DivisoriaSecao titulo="Asset Allocation" nomeCliente={clientName} />
+        <DocAssetAllocation nomeCliente={clientName} plan={plan} resultados={resultados} />
 
-        {/* Página 7 */}
-        <DocPlanejamentoFiscal
-          nomeCliente={clientName}
-          plan={plan}
-          resultados={resultados}
-          numPagina={7}
-        />
+        <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={clientName} />
+        <DocProtecaoSucessorio nomeCliente={clientName} plan={plan} resultados={resultados} />
 
-        {/* Página 8 */}
+        <DivisoriaSecao titulo="Planejamento Fiscal" nomeCliente={clientName} />
+        <DocPlanejamentoFiscal nomeCliente={clientName} plan={plan} resultados={resultados} />
+
+        <DivisoriaSecao titulo="Plano de Ação" nomeCliente={clientName} />
         <DocProximosPassos
           nomeCliente={clientName}
           plan={plan}
           resultados={resultados}
           onResultadosChange={handleResultadosChange}
-          numPagina={8}
         />
 
-        {/* Página 9 */}
-        <DocMaosAObra nomeCliente={clientName} config={config} numPagina={9} />
+        <DocMaosAObra nomeCliente={clientName} config={config} />
       </div>
     </div>
   );

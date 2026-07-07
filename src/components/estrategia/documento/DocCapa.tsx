@@ -1,108 +1,78 @@
-import { PAGINA } from "@/lib/documentoStyles";
+import { PaginaDoc } from "./PaginaDoc";
+import { MarcaSimpla } from "./MarcaSimpla";
 
 interface Props {
   nomeCliente: string;
   dataEstrategia: string;
+  nomeConsultor: string;
 }
 
-export function DocCapa({ nomeCliente, dataEstrategia }: Props) {
+const LABEL_CAPA = {
+  fontSize: 10,
+  letterSpacing: "0.22em",
+  textTransform: "uppercase" as const,
+  color: "rgba(178,203,255,0.85)",
+  fontWeight: 500,
+  margin: 0,
+};
+
+export function DocCapa({ nomeCliente, dataEstrategia, nomeConsultor }: Props) {
   return (
-    <div style={{ ...PAGINA, display: "flex", flexDirection: "column" }} className="doc-pagina">
-      {/* Topo colorido — sangra até a borda da página */}
-      <div
-        style={{
-          background: "#1E3A8A",
-          margin: "-64px -72px 0",
-          padding: "64px 72px 48px",
-          marginBottom: 48,
-        }}
-      >
-        <img src="/logo-si.svg" height={52} alt="Simpla Invest" style={{ objectFit: "contain" }} />
-        <div
-          style={{
-            color: "#93C5FD",
-            fontSize: 11,
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            marginTop: 16,
-            fontWeight: 500,
-          }}
-        >
-          Financial Planning
-        </div>
-      </div>
+    <PaginaDoc escura paddingConteudo="16mm 18mm 12mm">
+      <MarcaSimpla clara tamanho={34} />
 
-      {/* Corpo */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          paddingTop: 48,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            color: "#9CA3AF",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            marginBottom: 16,
-          }}
-        >
-          Estratégia Inicial
-        </div>
+      {/* Bloco central */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <p style={{ ...LABEL_CAPA, marginBottom: 18 }}>Financial Planning</p>
 
-        <div
+        <h1
           style={{
-            fontSize: 38,
+            fontSize: 42,
             fontWeight: 800,
-            color: "#111827",
+            color: "white",
             lineHeight: 1.15,
-            marginBottom: 8,
+            letterSpacing: "-0.01em",
+            margin: 0,
+            maxWidth: "150mm",
           }}
         >
           {nomeCliente}
-        </div>
+        </h1>
 
         <div
           style={{
-            width: 48,
-            height: 3,
-            background: "#2563EB",
+            width: 52,
+            height: 3.5,
+            background: "#3B82F6",
             borderRadius: 2,
-            margin: "20px 0",
+            margin: "34px 0 30px",
           }}
         />
 
-        <div style={{ fontSize: 13, color: "#6B7280", marginBottom: 4 }}>
-          Início do acompanhamento
-        </div>
-        <div style={{ fontSize: 15, color: "#111827", fontWeight: 500 }}>
-          {dataEstrategia}
+        <div style={{ display: "flex", gap: "48mm" }}>
+          <div>
+            <p style={{ ...LABEL_CAPA, marginBottom: 8 }}>Data de Elaboração</p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "white" }}>
+              {dataEstrategia}
+            </p>
+          </div>
+          <div>
+            <p style={{ ...LABEL_CAPA, marginBottom: 8 }}>Consultor</p>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "white" }}>
+              {nomeConsultor}
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Rodapé da capa */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 64,
-          left: 72,
-          right: 72,
-          borderTop: "0.5px solid #E5E7EB",
-          paddingTop: 16,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span style={{ fontSize: 10, color: "#9CA3AF" }}>
-          Documento confidencial · Uso exclusivo do cliente
-        </span>
-        <span style={{ fontSize: 10, color: "#9CA3AF" }}>simpla.invest</span>
+      <div style={{ borderTop: "1px solid rgba(255,255,255,0.18)", paddingTop: 12 }}>
+        <p style={{ margin: 0, fontSize: 10.5, color: "rgba(226,236,255,0.75)", lineHeight: 1.6 }}>
+          Documento confidencial elaborado
+          <br />
+          exclusivamente para {nomeCliente}
+        </p>
       </div>
-    </div>
+    </PaginaDoc>
   );
 }
