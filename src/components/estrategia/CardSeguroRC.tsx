@@ -10,8 +10,7 @@ export function CardSeguroRC({ info }: Props) {
       style={{
         background: "white",
         borderRadius: 12,
-        border: "0.5px solid #BFDBFE",
-        borderLeft: "4px solid #B91C1C",
+        border: "0.5px solid #E5E7EB",
         padding: "20px 24px",
         marginTop: 16,
         width: "100%",
@@ -79,7 +78,6 @@ export function CardSeguroRC({ info }: Props) {
           background: "#FFF5F5",
           borderRadius: 8,
           padding: "14px 16px",
-          borderLeft: "3px solid #FECACA",
         }}
       >
         <p style={{ margin: 0, fontSize: 14, color: "#374151", lineHeight: 1.6 }}>

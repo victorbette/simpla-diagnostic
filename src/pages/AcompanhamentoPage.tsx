@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
-import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
+import type { ResultadosEstrategia, ResultadoIF, ResultadoSeguro, ResultadoFiscal } from "@/types/estrategiaResultados";
+import { defaultResultados } from "@/types/estrategiaResultados";
+import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { GestaoInvestimentos } from "@/components/acompanhamento/GestaoInvestimentos";
 import { AcompLF } from "@/components/acompanhamento/AcompLF";
 import { AcompProtecao } from "@/components/acompanhamento/AcompProtecao";
@@ -21,20 +23,75 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "fiscal",        label: "Fiscal",                 icon: "ti-receipt" },
 ];
 
+interface AcompData {
+  comentarios: Record<string, string>;
+  tags: Record<string, string[]>;
+}
+
+function loadAcompData(clienteId: string): AcompData {
+  try {
+    const saved = localStorage.getItem(`estrategia_v2_${clienteId}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        comentarios: (parsed.comentarios as Record<string, string>) ?? {},
+        tags: (parsed.tags as Record<string, string[]>) ?? {},
+      };
+    }
+  } catch { /**/ }
+  return { comentarios: {}, tags: {} };
+}
+
+function saveAcompData(clienteId: string, patch: Partial<AcompData>) {
+  try {
+    const key = `estrategia_v2_${clienteId}`;
+    const existing = JSON.parse(localStorage.getItem(key) ?? "{}") as Record<string, unknown>;
+    localStorage.setItem(key, JSON.stringify({ ...existing, ...patch }));
+  } catch { /**/ }
+}
+
 export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) {
   const [tab, setTab] = useState<Tab>("investimentos");
-  const [resultados, setResultados] = useState<ResultadosEstrategia | null>(null);
+  const { plan, loading, carregarPlano } = useFinancialPlanStore();
+
+  const [data, setData] = useState<AcompData>(() => loadAcompData(clienteId));
+
+  const resultadosKey = `resultados_estrategia_${clienteId}`;
+  const [resultados, setResultados] = useState<ResultadosEstrategia>(() => {
+    try {
+      const raw = localStorage.getItem(resultadosKey);
+      if (raw) return JSON.parse(raw) as ResultadosEstrategia;
+    } catch { /**/ }
+    return defaultResultados;
+  });
 
   useEffect(() => {
-    const raw = localStorage.getItem(`resultados_estrategia_${clienteId}`);
-    if (raw) {
-      try {
-        setResultados(JSON.parse(raw));
-      } catch {
-        // corrupt data — treat as null
-      }
-    }
-  }, [clienteId]);
+    carregarPlano(clienteId);
+  }, [clienteId, carregarPlano]);
+
+  function handleComentario(secao: string, v: string) {
+    setData((prev) => {
+      const next = { ...prev, comentarios: { ...prev.comentarios, [secao]: v } };
+      saveAcompData(clienteId, { comentarios: next.comentarios });
+      return next;
+    });
+  }
+
+  function handleTags(secao: string, v: string[]) {
+    setData((prev) => {
+      const next = { ...prev, tags: { ...prev.tags, [secao]: v } };
+      saveAcompData(clienteId, { tags: next.tags });
+      return next;
+    });
+  }
+
+  function handleResultados(patch: Partial<ResultadosEstrategia>) {
+    setResultados((prev) => {
+      const next = { ...prev, ...patch };
+      try { localStorage.setItem(resultadosKey, JSON.stringify(next)); } catch { /**/ }
+      return next;
+    });
+  }
 
   const savedAt = (() => {
     const r = resultados?.carteira ?? resultados?.if ?? resultados?.seguro ?? resultados?.fiscal;
@@ -101,24 +158,77 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
 
       {/* Content */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
-        {!resultados ? (
-          <div style={{
-            textAlign: "center", padding: "80px 0",
-            color: "#9CA3AF", fontSize: 15,
-          }}>
-            <i className="ti ti-database-off" style={{ fontSize: 44, display: "block", marginBottom: 16, color: "#BFDBFE" }} />
-            <p style={{ margin: "0 0 8px", fontWeight: 600, color: "#6B7280" }}>Nenhum dado salvo para este cliente</p>
-            <p style={{ margin: 0, fontSize: 13 }}>Complete o Financial Planning e salve os resultados primeiro.</p>
-          </div>
-        ) : (
-          <>
-            {tab === "investimentos" && <GestaoInvestimentos carteira={resultados.carteira} />}
-            {tab === "lf"            && <AcompLF resultadoIF={resultados.if} />}
-            {tab === "protecao"      && <AcompProtecao resultadoSeguro={resultados.seguro} />}
-            {tab === "fiscal"        && <AcompFiscal resultadoFiscal={resultados.fiscal} />}
-          </>
+        {tab === "investimentos" && (
+          <GestaoInvestimentos carteira={resultados.carteira} />
+        )}
+
+        {tab === "lf" && (
+          plan ? (
+            <AcompLF
+              plan={plan}
+              comentario={data.comentarios["aposentadoria"] ?? ""}
+              onComentarioChange={(v) => handleComentario("aposentadoria", v)}
+              tags={data.tags["aposentadoria"] ?? []}
+              onTagsChange={(v) => handleTags("aposentadoria", v)}
+              resultadoIF={resultados.if}
+              onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
+            />
+          ) : (
+            <PlanLoading loading={loading} />
+          )
+        )}
+
+        {tab === "protecao" && (
+          plan ? (
+            <AcompProtecao
+              plan={plan}
+              comentario={data.comentarios["protecaoSucessorio"] ?? ""}
+              onComentarioChange={(v) => handleComentario("protecaoSucessorio", v)}
+              tags={data.tags["protecaoSucessorio"] ?? []}
+              onTagsChange={(v) => handleTags("protecaoSucessorio", v)}
+              resultadoSeguro={resultados.seguro}
+              onResultadoSeguro={(r: ResultadoSeguro) => handleResultados({ seguro: r })}
+            />
+          ) : (
+            <PlanLoading loading={loading} />
+          )
+        )}
+
+        {tab === "fiscal" && (
+          plan ? (
+            <AcompFiscal
+              plan={plan}
+              comentario={data.comentarios["fiscal"] ?? ""}
+              onComentarioChange={(v) => handleComentario("fiscal", v)}
+              tags={data.tags["fiscal"] ?? []}
+              onTagsChange={(v) => handleTags("fiscal", v)}
+              resultadoFiscal={resultados.fiscal}
+              onResultadoFiscal={(r: ResultadoFiscal) => handleResultados({ fiscal: r })}
+            />
+          ) : (
+            <PlanLoading loading={loading} />
+          )
         )}
       </main>
+    </div>
+  );
+}
+
+function PlanLoading({ loading }: { loading: boolean }) {
+  return (
+    <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF", fontSize: 15 }}>
+      {loading ? (
+        <>
+          <i className="ti ti-loader-2" style={{ fontSize: 44, display: "block", marginBottom: 16, color: "#BFDBFE" }} />
+          <p style={{ margin: 0, color: "#6B7280" }}>Carregando plano...</p>
+        </>
+      ) : (
+        <>
+          <i className="ti ti-database-off" style={{ fontSize: 44, display: "block", marginBottom: 16, color: "#BFDBFE" }} />
+          <p style={{ margin: "0 0 8px", fontWeight: 600, color: "#6B7280" }}>Plano não encontrado</p>
+          <p style={{ margin: 0, fontSize: 13 }}>Complete o Financial Planning para este cliente primeiro.</p>
+        </>
+      )}
     </div>
   );
 }

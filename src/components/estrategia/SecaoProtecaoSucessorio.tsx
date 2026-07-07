@@ -109,10 +109,7 @@ export function SecaoProtecaoSucessorio({
     <div
       style={{
         ...CARD,
-        borderLeft: "4px solid #1E3A8A",
-        borderRadius: 0,
-        borderTopRightRadius: 12,
-        borderBottomRightRadius: 12,
+        border: "0.5px solid #E5E7EB",
       }}
     >
       <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>

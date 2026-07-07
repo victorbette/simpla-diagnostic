@@ -4,6 +4,7 @@ import { Save } from "lucide-react";
 import type { Ativo, PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL, formatPct } from "@/lib/carteira/calculos";
+import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 
 interface Props {
   ativosAtuais: Ativo[];
@@ -11,6 +12,7 @@ interface Props {
   alocacaoMeta: Record<CardId, number>;
   planoAcao: PlanoAcaoItem[];
   patrimonio: number;
+  aporteDisponivel?: number;
   onSave: () => void;
 }
 
@@ -23,6 +25,26 @@ const GRUPOS = [
 
 function totalByCards(ativos: Ativo[], cards: CardId[]): number {
   return ativos.filter((a) => cards.includes(a.card)).reduce((s, a) => s + a.valorBRL, 0);
+}
+
+function calcularValorFinal(item: PlanoAcaoItem): number {
+  switch (item.acao) {
+    case "manter":
+      return item.valorAtualBRL;
+    case "aportar":
+    case "novo":
+      return item.valorAtualBRL + item.movimentacaoBRL;
+    case "resgatar_total":
+      return 0;
+    case "resgatar_parcial": {
+      const resgate = item.valorResgateBRL !== undefined
+        ? item.valorResgateBRL
+        : Math.abs(item.movimentacaoBRL);
+      return Math.max(0, item.valorAtualBRL - resgate);
+    }
+    default:
+      return item.valorAtualBRL;
+  }
 }
 
 function PieSection({
@@ -81,7 +103,9 @@ function PieSection({
   );
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, onSave }: Props) {
+export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
+  const patrimonioMeta = patrimonio + aporteDisponivel;
+
   const grupoAtual = useMemo(
     () => GRUPOS.map((g) => {
       const valor = totalByCards(ativosAtuais, g.cards);
@@ -91,36 +115,41 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
     [ativosAtuais, patrimonio]
   );
 
-  // grupoMeta: use alocacaoMeta slider values (same patrimônio base as atual)
+  // grupoMeta: use alocacaoMeta slider values × (patrimônio + aporte)
   const grupoMeta = useMemo(
     () => GRUPOS.map((g) => {
       const pct = g.cards.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
-      const valor = (pct / 100) * patrimonio;
+      const valor = (pct / 100) * patrimonioMeta;
       return { nome: g.nome, valor, pct: Math.round(pct * 10) / 10, cor: g.cor };
     }),
-    [alocacaoMeta, patrimonio]
+    [alocacaoMeta, patrimonioMeta]
   );
 
   const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-  const totalResgates = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0).reduce((s, p) => s + Math.abs(p.movimentacaoBRL), 0);
+  const totalResgates = planoAcao
+    .filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0)
+    .reduce((s, p) => {
+      if (p.acao === 'resgatar_parcial' && p.valorResgateBRL !== undefined) return s + p.valorResgateBRL;
+      return s + Math.abs(p.movimentacaoBRL);
+    }, 0);
 
   const aportes = planoAcao.filter((p) => p.acao === "aportar" || p.acao === "novo");
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
   const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
-  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × patrimônio
+  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × (patrimônio + aporte)
   const cardTotais = useMemo(
     () => CARD_ORDER.map((cardId) => {
       const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
       const pctMeta = alocacaoMeta[cardId] ?? 0;
-      const meta = (pctMeta / 100) * patrimonio;
+      const meta = (pctMeta / 100) * patrimonioMeta;
       return { cardId, atual, meta, dif: meta - atual };
     }),
-    [ativosAtuais, alocacaoMeta, patrimonio]
+    [ativosAtuais, alocacaoMeta, patrimonioMeta]
   );
 
-  const cardStyle = (accent: string): React.CSSProperties => ({
-    border: "1px solid #BFDBFE", borderTop: `3px solid ${accent}`,
+  const cardStyle = (_accent?: string): React.CSSProperties => ({
+    border: "0.5px solid #E5E7EB",
     borderRadius: 10, backgroundColor: "white", overflow: "hidden",
   });
 
@@ -134,7 +163,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[
-            { label: "Patrimônio Total", value: formatBRL(patrimonio), color: "#1E3A8A" },
+            { label: "Patrimônio Total", value: formatBRL(patrimonioMeta), color: "#1E3A8A" },
             { label: "Total Aportes",    value: formatBRL(totalAportes), color: "#15803D" },
             { label: "Total Resgates",   value: formatBRL(totalResgates), color: "#B91C1C" },
           ].map(({ label, value, color }, i) => (
@@ -203,7 +232,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[
             { title: "Aportar", items: aportes, color: "#15803D", getVal: (it: PlanoAcaoItem) => it.movimentacaoBRL },
-            { title: "Resgatar", items: resgates, color: "#B91C1C", getVal: (it: PlanoAcaoItem) => it.movimentacaoBRL },
+            { title: "Resgatar", items: resgates, color: "#B91C1C", getVal: (it: PlanoAcaoItem) => it.acao === "resgatar_parcial" && it.valorResgateBRL !== undefined ? -it.valorResgateBRL : it.movimentacaoBRL },
             { title: "Manter", items: mantidos, color: "#6B7280", getVal: (it: PlanoAcaoItem) => it.valorAtualBRL },
           ].map(({ title, items, color, getVal }, ci) => (
             <div key={title} style={{ padding: 14, borderLeft: ci > 0 ? "1px solid #BFDBFE" : "none", display: "flex", flexDirection: "column", gap: 6 }}>
@@ -237,6 +266,30 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados: _ativosRecom
           ))}
         </div>
       </div>
+
+      {/* Seleção de Ativos Recomendados */}
+      {(() => {
+        const ativosCarteiraFinal = planoAcao
+          .map((item) => {
+            const valorFinal = calcularValorFinal(item);
+            if (valorFinal <= 0) return null;
+            const ativoRec = ativosRecomendados.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+            const ativoAtual = ativosAtuais.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+            const base = ativoRec ?? ativoAtual;
+            if (!base) return null;
+            return { ...base, valorBRL: valorFinal, nome: item.nomeAtivo, card: item.card };
+          })
+          .filter(Boolean) as Ativo[];
+        return (
+          <CardSelecaoAtivos
+            ativosRecomendados={ativosCarteiraFinal}
+            macroMeta={alocacaoMeta}
+            patrimonio={patrimonioMeta}
+            titulo="Seleção de Ativos Recomendados"
+            subtitulo="Carteira final após execução do plano de ação"
+          />
+        );
+      })()}
 
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>

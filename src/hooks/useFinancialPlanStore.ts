@@ -13,6 +13,29 @@ import type {
 } from "@/types/financialPlanning";
 import { initialDadosCliente } from "@/types/financialPlanning";
 
+// ─── Status calculation ───────────────────────────────────────────────────────
+
+function calcularStatus(
+  dadosCliente: Record<string, unknown> | null | undefined,
+  estrategia: Record<string, unknown> | null | undefined
+): "nao_iniciado" | "rascunho" | "completo" {
+  const dc = dadosCliente ?? {};
+  const est = estrategia ?? {};
+  const temCarteira =
+    est.carteira != null &&
+    Number((est.carteira as Record<string, unknown>)?.patrimonio ?? 0) > 0;
+  const temIF = est["if"] != null && Object.keys(est["if"] as object).length > 0;
+  const temProtecao =
+    est.seguro != null && Object.keys(est.seguro as object).length > 0;
+  if (temCarteira && temIF && temProtecao) return "completo";
+  const temDadosColeta =
+    Number(dc.rendaMensal) > 0 ||
+    Number(dc.patrimonioTotal) > 0 ||
+    Boolean(dc.suitabilityPerfil);
+  if (temDadosColeta) return "rascunho";
+  return "nao_iniciado";
+}
+
 // ─── DB row → FinancialPlan ───────────────────────────────────────────────────
 
 interface PlanRow {
@@ -128,7 +151,7 @@ export function useFinancialPlanStore() {
         fiscal: {},
         sucessorio: {},
         notas_assessor: "",
-        status: "rascunho",
+        status: "nao_iniciado",
       })
       .select()
       .single();
@@ -157,6 +180,20 @@ export function useFinancialPlanStore() {
       const payload = planToPayload(planAtual);
 
       if (planAtual.id) {
+        // Pre-fetch estrategia_inicial (not in FinancialPlan type) to compute status
+        const { data: estRow } = await supabase
+          .from("financial_plans")
+          .select("estrategia_inicial")
+          .eq("id", planAtual.id)
+          .single();
+        const estrategiaAtual =
+          (estRow as unknown as { estrategia_inicial: Record<string, unknown> | null } | null)
+            ?.estrategia_inicial ?? null;
+        payload.status = calcularStatus(
+          planAtual.dadosCliente as unknown as Record<string, unknown>,
+          estrategiaAtual
+        );
+
         const { data, error: updateError } = await supabase
           .from("financial_plans")
           .update(payload)
@@ -214,10 +251,14 @@ export function useFinancialPlanStore() {
 
   const saveEstrategia = useCallback(
     async (planId: string, estrategia: Record<string, unknown>): Promise<void> => {
+      const dcRaw = (planRef.current?.dadosCliente ?? {}) as Record<string, unknown>;
+      const novoStatus = calcularStatus(dcRaw, estrategia);
+
       const { error: updateError } = await supabase
         .from("financial_plans")
         .update({
           estrategia_inicial: estrategia,
+          status: novoStatus,
           updated_at: new Date().toISOString(),
         })
         .eq("id", planId);

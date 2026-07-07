@@ -6,8 +6,9 @@ import { formatPct, formatBRL } from "@/lib/carteira/calculos";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
-import type { CarteiraResultado } from "@/lib/carteira/types";
+import type { CarteiraResultado, CardId, Ativo } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
+import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 
 interface Props {
   plan: FinancialPlan;
@@ -138,13 +139,15 @@ export function SecaoAssetAllocation({
     // macroMeta: directly from slider (already %)
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
-    const semManter = (r.planoAcao ?? []).filter((i) => i.acao !== "manter");
-    const totalAportes = semManter
-      .filter((i) => i.movimentacaoBRL > 0)
+    const totalAportes = (r.planoAcao ?? [])
+      .filter((i) => (i.acao === "aportar" || i.acao === "novo") && i.movimentacaoBRL > 0)
       .reduce((s, i) => s + i.movimentacaoBRL, 0);
-    const totalResgates = semManter
-      .filter((i) => i.movimentacaoBRL < 0)
-      .reduce((s, i) => s + Math.abs(i.movimentacaoBRL), 0);
+    const totalResgates = (r.planoAcao ?? [])
+      .filter((i) => i.acao === "resgatar_parcial" || i.acao === "resgatar_total")
+      .reduce((s, i) => {
+        if (i.acao === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
+        return s + Math.abs(i.movimentacaoBRL);
+      }, 0);
 
     onResultadoCarteira({
       patrimonio,
@@ -153,6 +156,7 @@ export function SecaoAssetAllocation({
       totalResgates,
       macroAtual,
       macroMeta,
+      ativosRecomendados: r.ativosRecomendados ?? [],
       aporteDisponivel: r.aporteDisponivel,
       planoAcao: r.planoAcao.map((i) => ({
         id: i.id,
@@ -164,6 +168,7 @@ export function SecaoAssetAllocation({
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
+        valorResgateBRL: i.valorResgateBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
       })),
@@ -179,7 +184,7 @@ export function SecaoAssetAllocation({
 
   // ── Comment card (always visible) ─────────────────────────────────────────
   const commentCard = (
-    <div style={{ ...CARD, borderLeft: "4px solid #1E3A8A", borderRadius: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
+    <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
         Estratégia e Recomendações
       </p>
@@ -249,6 +254,7 @@ export function SecaoAssetAllocation({
   // ── State B — carteira defined ────────────────────────────────────────────
   const rc = resultadoCarteira;
   const patrimonio = rc.patrimonio;
+  const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   // PieChart data — value is % (0–100), brl derived from patrimonio
   const dadosAtual = CARD_ORDER
@@ -261,12 +267,20 @@ export function SecaoAssetAllocation({
   const dadosMeta = CARD_ORDER
     .map((cardId) => {
       const value = Number(rc.macroMeta[cardId]) || 0;
-      return { key: cardId, name: CARD_META[cardId].label, value, color: CARD_META[cardId].cor, brl: (value / 100) * patrimonio };
+      return { key: cardId, name: CARD_META[cardId].label, value, color: CARD_META[cardId].cor, brl: (value / 100) * patrimonioMeta };
     })
     .filter((d) => d.value > 0.1);
 
-  const totalAportes = rc.totalAportes ?? 0;
-  const totalResgates = rc.totalResgates ?? 0;
+  const totalAportes = (rc.planoAcao ?? [])
+    .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
+    .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
+  const totalResgates = (rc.planoAcao ?? [])
+    .filter((i) => { const a = i.acao ?? i.tipo; return a === "resgatar_parcial" || a === "resgatar_total"; })
+    .reduce((s, i) => {
+      const a = i.acao ?? i.tipo;
+      if (a === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
+      return s + Math.abs(i.movimentacaoBRL ?? 0);
+    }, 0);
   const saldoLiquido = totalAportes - totalResgates;
 
   // Comparative table data
@@ -275,16 +289,14 @@ export function SecaoAssetAllocation({
       const pctAtual = Number(rc.macroAtual[cardId]) || 0;
       const pctMeta = Number(rc.macroMeta[cardId]) || 0;
       const brlAtual = (pctAtual / 100) * patrimonio;
-      const brlMeta = (pctMeta / 100) * patrimonio;
+      const brlMeta = (pctMeta / 100) * patrimonioMeta;
       const difBRL = brlMeta - brlAtual;
 
       return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctAtual, brlAtual, pctMeta, brlMeta, difBRL };
     })
     .filter((d) => d.pctAtual > 0 || d.pctMeta > 0);
 
-  // Action plan (exclude manter)
-  const actionItems = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").slice(0, 10);
-  const totalVisivel = rc.planoAcao.filter((i) => (i.acao || i.tipo) !== "manter").length;
+  const actionItems = rc.planoAcao ?? [];
 
   const groupedByCard: Record<string, typeof actionItems> = {};
   for (const item of actionItems) {
@@ -359,7 +371,7 @@ export function SecaoAssetAllocation({
             </div>
             <div>
               <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
-                Proposta — {formatCurrency(patrimonio)}
+                Proposta — {formatCurrency(patrimonioMeta)}
               </p>
               <DonutChart data={dadosMeta} centerLabel="Proposta" />
             </div>
@@ -406,19 +418,69 @@ export function SecaoAssetAllocation({
               <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>
                 {formatPct(dadosTabela.reduce((s, d) => s + d.pctMeta, 0))}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonio)}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>R$ 0,00</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonioMeta)}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>—</span>
             </div>
           )}
         </div>
 
+        {/* Card 3B — Seleção de Ativos Recomendados */}
+        {(() => {
+          const ativosRec = rc.ativosRecomendados ?? [];
+          const ativosCarteiraFinal = (rc.planoAcao ?? [])
+            .map((item) => {
+              if (!item.card) return null;
+              const acao = item.acao ?? item.tipo ?? "";
+              let valorFinal = 0;
+              switch (acao) {
+                case "novo":
+                case "aportar":
+                  valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoBRL ?? 0);
+                  break;
+                case "manter":
+                  valorFinal = item.valorAtualBRL ?? 0;
+                  break;
+                case "resgatar_parcial": {
+                  const resgate = item.valorResgateBRL !== undefined
+                    ? item.valorResgateBRL
+                    : Math.abs(item.movimentacaoBRL ?? 0);
+                  valorFinal = Math.max(0, (item.valorAtualBRL ?? 0) - resgate);
+                  break;
+                }
+                case "resgatar_total":
+                  return null;
+                default:
+                  valorFinal = item.valorAtualBRL ?? 0;
+              }
+              if (valorFinal <= 0) return null;
+              const cardId = item.card as CardId;
+              const base = ativosRec.find((a) => a.nome === item.nomeAtivo && a.card === cardId);
+              return {
+                id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
+                card: cardId,
+                nome: item.nomeAtivo,
+                segmento: item.segmento ?? base?.segmento ?? "",
+                vencimento: base?.vencimento,
+                valorBRL: valorFinal,
+              } satisfies Ativo;
+            })
+            .filter(Boolean) as Ativo[];
+          if (ativosCarteiraFinal.length === 0) return null;
+          return (
+            <CardSelecaoAtivos
+              ativosRecomendados={ativosCarteiraFinal}
+              macroMeta={rc.macroMeta ?? {}}
+              patrimonio={patrimonioMeta}
+              titulo="Como sua carteira deverá ficar"
+              subtitulo="Seleção de ativos após execução do plano"
+            />
+          );
+        })()}
+
         {/* Card 4 — Action plan */}
         <div style={CARD}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>Plano de Ação</p>
-            {totalVisivel > 10 && (
-              <span style={{ fontSize: 12, color: "#2563EB", fontWeight: 600 }}>Ver todos ({totalVisivel}) →</span>
-            )}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
@@ -441,25 +503,43 @@ export function SecaoAssetAllocation({
                   {cardLabel}
                 </p>
                 {items.map((item) => {
-                  const acaoEfetiva = item.acao || item.tipo || "";
-                  const isAportar = item.movimentacaoBRL > 0;
-                  const movColor = isAportar ? "#15803D" : "#B91C1C";
-                  const movPrefix = isAportar ? "+" : "−";
-                  const tipoBg = isAportar ? "#DCFCE7" : "#FEE2E2";
-                  const tipoColor = isAportar ? "#15803D" : "#B91C1C";
-                  const tipoLabel =
-                    acaoEfetiva === "novo" ? "Novo"
-                    : acaoEfetiva === "aportar" ? "Aportar"
-                    : acaoEfetiva === "resgatar_total" ? "Resgatar total"
-                    : "Resgatar parcial";
+                  const acao = item.acao ?? item.tipo ?? "";
+                  const badge =
+                    acao === "novo"             ? { label: "✦ Novo",             bg: "#DBEAFE", color: "#1E40AF" } :
+                    acao === "aportar"          ? { label: "↑ Aportar",          bg: "#DCFCE7", color: "#15803D" } :
+                    acao === "manter"           ? { label: "→ Manter",           bg: "#F3F4F6", color: "#6B7280" } :
+                    acao === "resgatar_parcial" ? { label: "↓ Resgatar Parcial", bg: "#FEF3C7", color: "#B45309" } :
+                    acao === "resgatar_total"   ? { label: "↓ Resgatar Total",   bg: "#FEE2E2", color: "#B91C1C" } :
+                                                  { label: acao || "—",          bg: "#F3F4F6", color: "#6B7280" };
+                  let movTexto = "";
+                  let movCor = "#111827";
+                  if (acao === "manter") {
+                    movTexto = "R$ 0,00";
+                    movCor = "#9CA3AF";
+                  } else if (acao === "resgatar_parcial") {
+                    const valor = item.valorResgateBRL !== undefined
+                      ? item.valorResgateBRL
+                      : Math.abs(item.movimentacaoBRL ?? 0);
+                    movTexto = "−" + formatBRL(valor);
+                    movCor = "#B45309";
+                  } else if (acao === "resgatar_total") {
+                    movTexto = "−" + formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
+                    movCor = "#B91C1C";
+                  } else if ((item.movimentacaoBRL ?? 0) > 0) {
+                    movTexto = "+" + formatBRL(item.movimentacaoBRL ?? 0);
+                    movCor = "#15803D";
+                  } else {
+                    movTexto = formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
+                    movCor = "#111827";
+                  }
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
                         <span style={{ fontSize: 13, color: "#000000", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nomeAtivo}</span>
-                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: tipoBg, color: tipoColor }}>{tipoLabel}</span>
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color }}>{badge.label}</span>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: movColor, flexShrink: 0, marginLeft: 12 }}>
-                        {movPrefix}{formatCurrency(Math.abs(item.movimentacaoBRL))}
+                      <span style={{ fontSize: 13, fontWeight: 600, color: movCor, flexShrink: 0, marginLeft: 12 }}>
+                        {movTexto}
                       </span>
                     </div>
                   );

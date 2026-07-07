@@ -102,7 +102,7 @@ export function SecaoFiscal({
         style={{
           marginTop: 16,
           backgroundColor: "#EFF6FF",
-          border: "1px solid #60A5FA",
+          border: "0.5px solid #E5E7EB",
           borderRadius: 8,
           padding: "20px 24px",
           textAlign: "center",
@@ -368,12 +368,12 @@ export function SecaoFiscal({
         style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}
       >
         {/* Card 1 — PGBL tool */}
-        <div style={{ ...CARD, borderTop: "3px solid #2563EB" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           {resultadoFiscal ? toolResult : emptyState}
         </div>
 
         {/* Card 2 — Comment */}
-        <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           <p
             style={{
               fontSize: 13,
@@ -468,20 +468,18 @@ export function SecaoFiscal({
         title="Calculadora de Diferimento Fiscal"
       >
         <FerramentaPGBL
-          clientId={plan.clientId}
-          fiscal={plan.fiscal}
-          dadosCliente={plan.dadosCliente}
-          idadeMeta={plan.planejamentoIF.idadeMeta}
-          onSave={(result) => {
+          plan={plan}
+          onClose={() => setPgblModal(false)}
+          onSave={(r) => {
             onResultadoFiscal({
-              rendaAnual: result.rendaAnual,
-              tetoPGBLAnual: result.tetoPGBLAnual,
-              aporteAnual: result.aporteAnual,
-              irComPGBL: result.irComPGBL,
-              irSemPGBL: result.irSemPGBL,
-              economiaAnual: result.economiaAnual,
-              espacoDisponivelMensal: result.espacoDisponivelMensal,
-              aproveitandoTeto: result.aproveitandoTeto,
+              rendaAnual: r.rendaAnual,
+              tetoPGBLAnual: r.tetoPGBLAnual,
+              aporteAnual: r.aporteAnual,
+              irComPGBL: r.irComPGBL,
+              irSemPGBL: r.irSemPGBL,
+              economiaAnual: r.economiaAnual,
+              espacoDisponivelMensal: r.espacoDisponivelMensal,
+              aproveitandoTeto: r.aproveitandoTeto,
               dataCalculo: new Date().toISOString(),
               savedAt: new Date().toISOString(),
             });

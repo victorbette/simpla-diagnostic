@@ -43,7 +43,7 @@ export function SecaoProximosPassos({
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Ações geradas automaticamente */}
-      <div style={{ ...CARD, borderTop: "3px solid #1E40AF" }}>
+      <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Próximos Passos
         </p>
@@ -116,7 +116,7 @@ export function SecaoProximosPassos({
       </div>
 
       {/* Considerações finais */}
-      <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
+      <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
         <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
           Considerações Finais
         </p>

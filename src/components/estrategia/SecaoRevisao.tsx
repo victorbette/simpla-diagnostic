@@ -229,10 +229,8 @@ function allocToSlices(alloc: Record<string, number>): PieSlice[] {
 // ─── Card wrapper ─────────────────────────────────────────────────────────────
 
 function AreaCard({
-  borderColor,
   children,
 }: {
-  borderColor: string;
   children: React.ReactNode;
 }): React.ReactElement {
   return (
@@ -240,7 +238,7 @@ function AreaCard({
       style={{
         backgroundColor: "white",
         borderRadius: 12,
-        borderLeft: `4px solid ${borderColor}`,
+        border: "0.5px solid #E5E7EB",
         boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
         overflow: "hidden",
       }}
@@ -447,7 +445,7 @@ export function SecaoRevisao({
         const idade = dc.dataNascimento ? calcularIdade(dc.dataNascimento) : plan.planejamentoIF.idadeAtual;
         const nFilhos = (dc.filhos ?? []).length;
         return (
-          <div style={{ backgroundColor: "white", borderRadius: 12, borderLeft: "4px solid #1E40AF", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
+          <div style={{ backgroundColor: "white", borderRadius: 12, border: "0.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
               Dados do Cliente
             </p>
@@ -473,7 +471,7 @@ export function SecaoRevisao({
       {/* ── BLOCO 1: Cards por área ── */}
 
       {/* Card 1: Asset Allocation */}
-      <AreaCard borderColor="#000000">
+      <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <PieChartIcon style={{ width: 20, height: 20, color: "#000000" }} />
@@ -645,7 +643,7 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 2: Aposentadoria / IF */}
-      <AreaCard borderColor="#15803D">
+      <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Flame style={{ width: 20, height: 20, color: "#15803D" }} />
@@ -732,7 +730,7 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 3: Proteção e Sucessório */}
-      <AreaCard borderColor="#B91C1C">
+      <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Shield style={{ width: 20, height: 20, color: "#B91C1C" }} />
@@ -869,7 +867,7 @@ export function SecaoRevisao({
       </AreaCard>
 
       {/* Card 4: Planejamento Fiscal */}
-      <AreaCard borderColor="#2563EB">
+      <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Receipt style={{ width: 20, height: 20, color: "#2563EB" }} />
@@ -1001,7 +999,7 @@ export function SecaoRevisao({
 
       {/* ── BLOCO 2.5: Ações Prioritárias ── */}
       {acoesPrioritarias.length > 0 && (
-        <div style={{ backgroundColor: "white", borderRadius: 12, borderLeft: "4px solid #B91C1C", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
+        <div style={{ backgroundColor: "white", borderRadius: 12, border: "0.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", padding: "16px 20px" }}>
           <p style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 12px" }}>
             Ações Prioritárias
           </p>
@@ -1023,7 +1021,7 @@ export function SecaoRevisao({
         style={{
           backgroundColor: "white",
           borderRadius: 12,
-          borderLeft: "4px solid #3B82F6",
+          border: "0.5px solid #E5E7EB",
           boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
           padding: 24,
         }}

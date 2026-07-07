@@ -99,7 +99,7 @@ export function SecaoAposentadoria({
     <>
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Card 1 — Simulator */}
-        <div style={{ ...CARD, borderTop: "3px solid #15803D" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           {resultadoIF ? (
             <>
               {/* Header row */}
@@ -253,7 +253,7 @@ export function SecaoAposentadoria({
         )}
 
         {/* Card 2 — Comment */}
-        <div style={{ ...CARD, borderTop: "3px solid #1E3A8A" }}>
+        <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Estratégia e Recomendações
           </p>

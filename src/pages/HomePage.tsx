@@ -1,12 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   LogOut,
-  MoreHorizontal,
   UserPlus,
-  Plus,
-  Users,
-  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,41 +15,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
-import { ClientCardSkeleton } from "@/components/ui/ClientCardSkeleton";
-import { ChangePasswordModal } from "@/components/ChangePasswordModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
 import { toast } from "sonner";
+import { OportunidadesPage } from "@/pages/OportunidadesPage";
+import { ConfiguracoesPage } from "@/pages/ConfiguracoesPage";
+import { detectarOportunidades } from "@/lib/detectarOportunidades";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const DARK = "#000000";
 const GOLD = "#3B82F6";
 
-const AVATAR_COLORS = [
-  "bg-purple-200 text-[#2563EB]",
-  "bg-teal-200 text-[#2563EB]",
-  "bg-green-200 text-[#15803D]",
-  "bg-amber-200 text-[#2563EB]",
-  "bg-red-200 text-[#B91C1C]",
-  "bg-indigo-200 text-indigo-700",
-];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function avatarColorByIndex(idx: number): string {
-  return AVATAR_COLORS[idx % AVATAR_COLORS.length];
-}
 
 function getInitials(nome: string): string {
   const words = nome.trim().split(/\s+/);
@@ -61,58 +38,20 @@ function getInitials(nome: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-function formatDate(iso: string | undefined): string {
+function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("pt-BR");
 }
 
-type FPStatus = "nao_iniciado" | "em_andamento" | "concluido";
-
-interface ProfileConfig {
-  borderColor: string;
-  badgeBg: string;
-  badgeText: string;
-  dotColor: string;
-  label: string;
-}
-
-function profileConfig(perfil: string | null | undefined): ProfileConfig {
+function profileConfig(perfil: string | null | undefined) {
   switch (perfil) {
-    case "moderado":
-      return {
-        borderColor: "#2563EB",
-        badgeBg: "#EFF6FF",
-        badgeText: "#2563EB",
-        dotColor: "#2563EB",
-        label: "MODERADO",
-      };
-    case "conservador":
-    case "conservador_moderado":
-      return {
-        borderColor: "#3B82F6",
-        badgeBg: "#EAF0F5",
-        badgeText: "#1E40AF",
-        dotColor: "#3B82F6",
-        label: perfil === "conservador_moderado" ? "CONS. MODERADO" : "CONSERVADOR",
-      };
-    case "arrojado":
-      return {
-        borderColor: "#B91C1C",
-        badgeBg: "#FEE2E2",
-        badgeText: "#B91C1C",
-        dotColor: "#B91C1C",
-        label: "ARROJADO",
-      };
-    default:
-      return {
-        borderColor: "#9CA3AF",
-        badgeBg: "#F0F7FF",
-        badgeText: "#6B7280",
-        dotColor: "#BFDBFE",
-        label: "SEM PERFIL",
-      };
+    case "moderado":             return { bg: "#EFF6FF", color: "#2563EB", label: "MODERADO" };
+    case "conservador":          return { bg: "#EAF0F5", color: "#1E40AF", label: "CONSERVADOR" };
+    case "conservador_moderado": return { bg: "#EAF0F5", color: "#1E40AF", label: "CONS. MODERADO" };
+    case "arrojado":             return { bg: "#FEE2E2", color: "#B91C1C", label: "ARROJADO" };
+    default:                     return { bg: "#F3F4F6", color: "#6B7280", label: "SEM PERFIL" };
   }
 }
 
@@ -136,6 +75,26 @@ const EMPTY_FORM: ClientForm = {
   observacoes: "",
 };
 
+// ─── Pendências ───────────────────────────────────────────────────────────────
+
+function detectarPendencias(cliente: Client): string[] {
+  if (!cliente.planId) return [];
+  const pend: string[] = [];
+  const dc     = (cliente.planDadosCliente ?? {}) as Record<string, unknown>;
+  const planIF = (cliente.planPlanejamentoIF ?? {}) as Record<string, unknown>;
+  const fiscal = (cliente.planFiscal ?? {}) as Record<string, unknown>;
+  const est    = (cliente.planEstrategia ?? {}) as Record<string, unknown>;
+  if (!cliente.planSuitabilityPerfil) pend.push("Sem perfil de risco");
+  if (!dc.rendaMensal || Number(dc.rendaMensal) === 0) pend.push("Renda não preenchida");
+  if (!planIF.idadeMeta || Number(planIF.idadeMeta) === 0) pend.push("Meta de IF não definida");
+  if (!fiscal.tipoDeclaracao || fiscal.tipoDeclaracao === "nao_sei") pend.push("Declaração IR indefinida");
+  if (dc.possuiPrevidencia && dc.tipoPrevidencia === "vgbl" && fiscal.tipoDeclaracao === "completa") pend.push("VGBL com declaração completa");
+  const filhos = (dc.filhos as Array<unknown>) ?? [];
+  if (!dc.temSeguroVida && filhos.length > 0) pend.push("Sem seguro de vida");
+  if (!est || Object.keys(est).length === 0) pend.push("Estratégia não iniciada");
+  return pend;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomePage() {
@@ -150,7 +109,11 @@ export function HomePage() {
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
-  const [senhaModalAberto, setSenhaModalAberto] = useState(false);
+  const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
+  const [mostrarConfig, setMostrarConfig] = useState(false);
+  const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [menuAberto, setMenuAberto] = useState<string | null>(null);
 
   // All hooks must be before conditional returns
   const filtered = useMemo(() => {
@@ -163,11 +126,51 @@ export function HomePage() {
     );
   }, [clientStore.clients, search]);
 
+  const rawPlans = useMemo((): Record<string, Record<string, unknown>> => {
+    const result: Record<string, Record<string, unknown>> = {};
+    for (const c of clientStore.clients) {
+      if (!c.planId) continue;
+      result[c.id] = {
+        dados_cliente: c.planDadosCliente ?? {},
+        sucessorio: c.planSucessorio ?? {},
+        estrategia_inicial: c.planEstrategia ?? {},
+      };
+    }
+    return result;
+  }, [clientStore.clients]);
+
+  useEffect(() => {
+    const fechar = () => setMenuAberto(null);
+    if (menuAberto) {
+      document.addEventListener("click", fechar);
+      return () => document.removeEventListener("click", fechar);
+    }
+  }, [menuAberto]);
+
   const userEmail = user?.email ?? "";
   const userLabel = userEmail.split("@")[0] || "Consultor";
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
   // ── Overlay ───────────────────────────────────────────────────────────────
+
+  if (mostrarConfig) {
+    return <ConfiguracoesPage onFechar={() => setMostrarConfig(false)} />;
+  }
+
+  if (mostrarOportunidades) {
+    return (
+      <OportunidadesPage
+        clientes={clientStore.clients}
+        rawPlans={rawPlans}
+        onVoltar={() => setMostrarOportunidades(false)}
+        onAbrirCliente={(clienteId) => {
+          const found = clientStore.clients.find((cl) => cl.id === clienteId);
+          if (found) setClienteSelecionado(found);
+          setMostrarOportunidades(false);
+        }}
+      />
+    );
+  }
 
   if (clienteSelecionado) {
     return (
@@ -258,9 +261,27 @@ export function HomePage() {
     }
   }
 
+  function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
+  function handleAbrirAcompanhamento(c: Client) { setClienteAcompanhamento(c); }
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   const totalClientes = clientStore.clients.length;
+  const totalConcluido = clientStore.clients.filter((c) => c.planStatus === "completo").length;
+  const totalAndamento = clientStore.clients.filter((c) => c.planStatus === "rascunho").length;
+  const totalSemFP = clientStore.clients.filter(
+    (c) => !c.planStatus || c.planStatus === "nao_iniciado"
+  ).length;
+
+  const totalOportunidades = (() => {
+    let manuais: Array<{ id: string }> = [];
+    let resolvidasArr: string[] = [];
+    try { manuais = JSON.parse(localStorage.getItem("oportunidades_manuais") ?? "[]"); } catch { /* */ }
+    try { resolvidasArr = JSON.parse(localStorage.getItem("oportunidades_resolvidas") ?? "[]"); } catch { /* */ }
+    const resolvidasSet = new Set(resolvidasArr);
+    const autoOps = detectarOportunidades(clientStore.clients, rawPlans);
+    return [...autoOps, ...manuais].filter((op) => !resolvidasSet.has(op.id)).length;
+  })();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F0F7FF" }}>
@@ -307,12 +328,13 @@ export function HomePage() {
               {userInitials}
             </div>
             <button
-              onClick={() => setSenhaModalAberto(true)}
-              className="flex items-center gap-1.5 text-[#9CA3AF] hover:text-white transition-colors text-sm p-1"
-              title="Alterar senha"
+              onClick={() => setMostrarConfig(true)}
+              title="Configurações"
+              style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "6px 8px", borderRadius: 6, display: "flex", alignItems: "center", opacity: 0.75 }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.75")}
             >
-              <KeyRound className="h-5 w-5" />
-              <span className="hidden sm:inline">Alterar Senha</span>
+              <i className="ti ti-settings" style={{ fontSize: 18 }} />
             </button>
             <button
               onClick={signOut}
@@ -328,327 +350,269 @@ export function HomePage() {
       {/* ── Main ── */}
       <main className="mx-auto max-w-7xl px-6 py-8">
 
-        {clientStore.loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 24 }}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ClientCardSkeleton key={i} />
-            ))}
+        {/* Title row */}
+        <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-6">
+          <div className="flex-1">
+            <p className="font-semibold uppercase tracking-widest mb-1" style={{ color: GOLD, fontSize: 11 }}>
+              DASHBOARD
+            </p>
+            <div className="flex items-baseline gap-3">
+              <h1 className="font-bold" style={{ color: DARK, fontSize: 32 }}>
+                Meus Clientes
+              </h1>
+              <span style={{ color: "#6B7280", fontSize: 18 }}>
+                ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
+              </span>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* ── Title row ── */}
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-8">
-              <div className="flex-1">
-                <p
-                  className="font-semibold uppercase tracking-widest mb-1"
-                  style={{ color: GOLD, fontSize: 11 }}
-                >
-                  DASHBOARD
-                </p>
-                <div className="flex items-baseline gap-3">
-                  <h1
-                    className="font-bold"
-                    style={{ color: DARK, fontSize: 32 }}
-                  >
-                    Meus Clientes
-                  </h1>
-                  <span style={{ color: "#6B7280", fontSize: 18 }}>
-                    ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})
-                  </span>
-                </div>
-              </div>
 
-              {/* Search + button */}
-              <div className="flex items-center gap-3 shrink-0">
-                <div className="relative">
-                  <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-                    style={{ color: "#9CA3AF" }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
-                    style={{ width: 280 }}
-                  />
-                </div>
-                <button
-                  onClick={openNovoCliente}
-                  className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: DARK }}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+                style={{ width: 280 }}
+              />
+            </div>
+            <button
+              onClick={() => setMostrarOportunidades(true)}
+              className="relative flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
+              style={{ backgroundColor: "#1E3A8A" }}
+            >
+              <i className="ti ti-bulb" style={{ fontSize: 16 }} />
+              Oportunidades
+              {totalOportunidades > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 h-5 min-w-5 rounded-full flex items-center justify-center text-white text-xs font-bold px-1"
+                  style={{ backgroundColor: "#B91C1C" }}
                 >
-                  <UserPlus className="h-4 w-4" />
-                  Novo Cliente
-                </button>
+                  {totalOportunidades > 99 ? "99+" : totalOportunidades}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={openNovoCliente}
+              className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
+              style={{ backgroundColor: DARK }}
+            >
+              <UserPlus className="h-4 w-4" />
+              Novo Cliente
+            </button>
+          </div>
+        </div>
+
+        {/* Summary cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          {[
+            { label: "Total de Clientes", value: totalClientes, color: "#1E3A8A", bg: "white", border: "#BFDBFE", icon: "ti-users" },
+            { label: "FP Concluído",       value: totalConcluido, color: "#15803D", bg: "#F0FDF4", border: "#BBF7D0", icon: "ti-circle-check" },
+            { label: "Em Andamento",       value: totalAndamento, color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", icon: "ti-loader-2" },
+            { label: "Sem FP",             value: totalSemFP,    color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB", icon: "ti-file-off" },
+          ].map(({ label, value, color, bg, border, icon }) => (
+            <div key={label} style={{ background: bg, border: `0.5px solid ${border}`, borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <i className={`ti ${icon}`} style={{ fontSize: 18, color }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 700, color, lineHeight: 1.1 }}>{value}</div>
+                <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>{label}</div>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* ── Grid ── */}
-            {clientStore.clients.length === 0 ? (
-              /* Empty — no clients at all */
-              <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Users className="h-16 w-16" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-xl font-semibold" style={{ color: "#111827" }}>
-                  Nenhum cliente cadastrado
-                </h2>
-                <p className="text-sm" style={{ color: "#6B7280" }}>
-                  Adicione seu primeiro cliente para começar
-                </p>
-                <button
-                  onClick={openNovoCliente}
-                  className="mt-2 flex items-center gap-2 text-white text-sm font-medium rounded-lg px-6 py-3 transition hover:opacity-90"
-                  style={{ backgroundColor: DARK }}
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar primeiro cliente
-                </button>
-              </div>
-            ) : filtered.length === 0 ? (
-              /* Empty — search no results */
-              <div className="flex flex-col items-center gap-4 py-24 text-center">
-                <Search className="h-14 w-14" style={{ color: "#9CA3AF" }} />
-                <h2 className="text-lg font-semibold" style={{ color: "#111827" }}>
-                  Nenhum cliente encontrado para &ldquo;{search}&rdquo;
-                </h2>
-                <button
-                  onClick={() => setSearch("")}
-                  className="mt-2 border border-[#93C5FD] text-sm font-medium rounded-lg px-5 py-2.5 bg-white hover:bg-[#F0F7FF] transition"
-                  style={{ color: "#111827" }}
-                >
+        {/* Table */}
+        {clientStore.loading ? (
+          <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
+            <i className="ti ti-loader-2" style={{ fontSize: 32, display: "block", marginBottom: 8 }} />
+            Carregando clientes...
+          </div>
+        ) : (
+          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+
+            {/* Table header */}
+            <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+              <span>Cliente</span>
+              <span>Perfil</span>
+              <span>Status FP</span>
+              <span>Atualização</span>
+              <span>Ações</span>
+              <span />
+            </div>
+
+            {/* Search empty state */}
+            {filtered.length === 0 && clientStore.clients.length > 0 && (
+              <div style={{ padding: "40px 20px", textAlign: "center", color: "#9CA3AF" }}>
+                <Search className="h-10 w-10 mx-auto mb-3" style={{ color: "#D1D5DB" }} />
+                <p style={{ fontSize: 13 }}>Nenhum resultado para &ldquo;{search}&rdquo;</p>
+                <button onClick={() => setSearch("")} style={{ marginTop: 8, fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer" }}>
                   Limpar busca
                 </button>
               </div>
-            ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                style={{ gap: 24 }}
-              >
-                {filtered.map((c, idx) => {
-                  const perfil = c.planSuitabilityPerfil ?? null;
-                  const pc = profileConfig(perfil);
+            )}
 
-                  const fpStatus: FPStatus =
-                    c.planStatus === "nao_iniciado"
-                      ? "nao_iniciado"
-                      : c.planStatus === "completo"
-                      ? "concluido"
-                      : "em_andamento";
+            {/* Data rows */}
+            {filtered.map((c) => {
+              const pendencias = detectarPendencias(c);
+              const perfil = profileConfig(c.planSuitabilityPerfil);
 
-                  const ultimoContato = c.planUpdatedAt ?? c.dataCriacao;
+              return (
+                <div
+                  key={c.id}
+                  style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAFA")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                >
+                  {/* CLIENTE */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      {getInitials(c.nome)}
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
 
-                  return (
-                    <div
-                      key={c.id}
-                      className="bg-white flex flex-col"
-                      style={{
-                        borderRadius: 12,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        borderLeft: `4px solid ${pc.borderColor}`,
-                        padding: 20,
-                        minHeight: 240,
-                      }}
-                    >
-                      {/* Row 1: profile badge + menu */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div
-                          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide"
-                          style={{ backgroundColor: pc.badgeBg, color: pc.badgeText }}
-                        >
-                          <span
-                            className="h-1.5 w-1.5 rounded-full inline-block shrink-0"
-                            style={{ backgroundColor: pc.dotColor }}
-                          />
-                          {pc.label}
-                        </div>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-[#DBEAFE] transition-colors"
-                              style={{ color: "#9CA3AF" }}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openEditarCliente(c)}>
-                              Editar cliente
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeleteTarget(c)}
-                              className="text-[#B91C1C] focus:text-[#B91C1C]"
-                            >
-                              Excluir cliente
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* Row 2: avatar + name + date */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <div
-                          className={`h-12 w-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 select-none ${avatarColorByIndex(idx)}`}
-                        >
-                          {getInitials(c.nome)}
-                        </div>
-                        <div className="min-w-0">
-                          <p
-                            className="font-semibold truncate"
-                            style={{ fontSize: 16, color: "#000000" }}
+                        {/* Badge de pendências com tooltip */}
+                        {pendencias.length > 0 && (
+                          <div
+                            style={{ position: "relative", display: "inline-block" }}
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const x = Math.min(rect.left, window.innerWidth - 290);
+                              setTooltipPos({ x, y: rect.bottom + 8 });
+                              setTooltipAberto(c.id);
+                            }}
+                            onMouseLeave={() => setTooltipAberto(null)}
                           >
-                            {c.nome}
-                          </p>
-                          <p style={{ fontSize: 12, color: "#9CA3AF" }}>
-                            Cadastrado em {formatDate(c.dataCriacao)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div style={{ height: 1, backgroundColor: "#F0F7FF", marginBottom: 16 }} />
-
-                      {/* Row 3: metrics */}
-                      <div className="grid grid-cols-2 gap-4 mb-5 flex-1">
-                        <div>
-                          <p
-                            className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
-                          >
-                            ÚLTIMO CONTATO
-                          </p>
-                          <p
-                            className="font-semibold"
-                            style={{ fontSize: 13, color: "#111827" }}
-                          >
-                            {ultimoContato ? formatDate(ultimoContato) : "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p
-                            className="uppercase tracking-wide mb-1"
-                            style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600 }}
-                          >
-                            FINANCIAL PLANNING
-                          </p>
-                          <div className="flex items-center gap-1.5">
-                            {fpStatus === "em_andamento" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#3B82F6" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#0891B2" }}
-                                >
-                                  Em andamento
-                                </span>
-                              </>
-                            )}
-                            {fpStatus === "concluido" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#15803D" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#15803D" }}
-                                >
-                                  Concluído
-                                </span>
-                              </>
-                            )}
-                            {fpStatus === "nao_iniciado" && (
-                              <>
-                                <span
-                                  className="h-2 w-2 rounded-full inline-block shrink-0"
-                                  style={{ backgroundColor: "#BFDBFE" }}
-                                />
-                                <span
-                                  className="font-semibold"
-                                  style={{ fontSize: 13, color: "#6B7280" }}
-                                >
-                                  Não iniciado
-                                </span>
-                              </>
+                            <span style={{ fontSize: 10, fontWeight: 600, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", cursor: "default", marginLeft: 8 }}>
+                              {pendencias.length} pendência{pendencias.length > 1 ? "s" : ""}
+                            </span>
+                            {tooltipAberto === c.id && (
+                              <div style={{ position: "fixed", top: tooltipPos.y, left: tooltipPos.x, zIndex: 9999, background: "#1F2937", color: "white", borderRadius: 8, padding: "10px 14px", minWidth: 220, maxWidth: 280, boxShadow: "0 4px 16px rgba(0,0,0,0.2)", pointerEvents: "none" }}>
+                                <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                                  Pendências
+                                </div>
+                                {pendencias.map((p) => (
+                                  <div key={p} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, marginBottom: 4 }}>
+                                    <i className="ti ti-alert-circle" style={{ fontSize: 11, color: "#FCD34D" }} />
+                                    {p}
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </div>
+                        )}
+
+                        {/* Check mark for no pendências */}
+                        {pendencias.length === 0 && c.planStatus !== "nao_iniciado" && (
+                          <span style={{ fontSize: 10, color: "#15803D", marginLeft: 8 }}>
+                            <i className="ti ti-circle-check" style={{ fontSize: 11 }} />
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
+                    </div>
+                  </div>
+
+                  {/* PERFIL */}
+                  <div>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: perfil.color, background: perfil.bg, padding: "3px 10px", borderRadius: 99 }}>
+                      {perfil.label}
+                    </span>
+                  </div>
+
+                  {/* STATUS FP */}
+                  <div>
+                    {(() => {
+                      const s = c.planStatus;
+                      const cfg =
+                        s === "completo"
+                          ? { label: "Concluído",    color: "#15803D", bg: "#DCFCE7" }
+                          : s === "rascunho"
+                          ? { label: "Em andamento", color: "#2563EB", bg: "#DBEAFE" }
+                          : { label: "Não iniciado", color: "#9CA3AF", bg: "#F3F4F6" };
+                      return (
+                        <span style={{ fontSize: 11, fontWeight: 500, color: cfg.color, background: cfg.bg, padding: "3px 10px", borderRadius: 99 }}>
+                          {cfg.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  {/* ATUALIZAÇÃO */}
+                  <div style={{ fontSize: 12, color: "#6B7280" }}>
+                    {formatDate(c.planUpdatedAt)}
+                  </div>
+
+                  {/* AÇÕES */}
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <button
+                      onClick={() => handleAbrirFP(c)}
+                      title="Financial Planning"
+                      style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                    >
+                      FP
+                    </button>
+                    <button
+                      onClick={() => handleAbrirAcompanhamento(c)}
+                      title="Acompanhamento"
+                      style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                    >
+                      Acompanhar
+                    </button>
+                  </div>
+
+                  {/* ⋮ MENU */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMenuAberto(menuAberto === c.id ? null : c.id); }}
+                      style={{ background: "none", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                    >
+                      <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
+                    </button>
+                    {menuAberto === c.id && (
+                      <div style={{ position: "absolute", right: 0, top: "100%", zIndex: 50, marginTop: 4, background: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.08)", minWidth: 140, overflow: "hidden" }}>
+                        <div
+                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#374151", cursor: "pointer" }}
+                          onClick={() => { openEditarCliente(c); setMenuAberto(null); }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFF")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                        >
+                          <i className="ti ti-pencil" style={{ fontSize: 14, color: "#6B7280" }} />
+                          Editar cliente
+                        </div>
+                        <div style={{ height: "0.5px", background: "#F3F4F6" }} />
+                        <div
+                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#B91C1C", cursor: "pointer" }}
+                          onClick={() => { setDeleteTarget(c); setMenuAberto(null); }}
+                          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF5F5")}
+                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                        >
+                          <i className="ti ti-trash" style={{ fontSize: 14, color: "#B91C1C" }} />
+                          Remover cliente
                         </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
 
-                      {/* Row 4: CTA buttons */}
-                      <div style={{ display: "flex", gap: 8 }}>
-                        {fpStatus === "concluido" ? (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg transition hover:opacity-80"
-                            style={{
-                              flex: 1,
-                              border: `1.5px solid ${DARK}`,
-                              color: DARK,
-                              backgroundColor: "transparent",
-                              padding: "9px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            Ver plano →
-                          </button>
-                        ) : fpStatus === "em_andamento" ? (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg text-white transition hover:opacity-90"
-                            style={{
-                              flex: 1,
-                              backgroundColor: DARK,
-                              padding: "9px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            Continuar FP →
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setClienteSelecionado(c)}
-                            className="font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-1"
-                            style={{
-                              flex: 1,
-                              border: `1.5px solid ${DARK}`,
-                              color: DARK,
-                              backgroundColor: "transparent",
-                              padding: "9px 0",
-                              fontSize: 13,
-                            }}
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                            Iniciar FP
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setClienteAcompanhamento(c)}
-                          className="font-medium rounded-lg transition hover:opacity-80 flex items-center justify-center gap-1"
-                          style={{
-                            flex: 1,
-                            border: "1.5px solid #1E3A8A",
-                            color: "#1E3A8A",
-                            backgroundColor: "transparent",
-                            padding: "9px 0",
-                            fontSize: 13,
-                          }}
-                        >
-                          <i className="ti ti-chart-bar" style={{ fontSize: 14 }} />
-                          Acompanhamento
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Empty state — no clients */}
+            {clientStore.clients.length === 0 && (
+              <div style={{ padding: "48px 20px", textAlign: "center", color: "#9CA3AF" }}>
+                <i className="ti ti-users" style={{ fontSize: 32, display: "block", marginBottom: 8 }} />
+                <div style={{ fontSize: 14 }}>Nenhum cliente cadastrado</div>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Clique em &ldquo;+ Novo Cliente&rdquo; para começar</div>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
@@ -776,12 +740,6 @@ export function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* ── Change password modal ── */}
-      <ChangePasswordModal
-        open={senhaModalAberto}
-        onOpenChange={setSenhaModalAberto}
-      />
     </div>
   );
 }

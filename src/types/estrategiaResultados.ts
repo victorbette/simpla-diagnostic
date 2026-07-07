@@ -2,6 +2,7 @@
 // and store percentages (0–100).
 import type { ObjetivoVida } from "@/types/objetivos";
 import type { PontoProjecao } from "@/lib/financialFreedomCalc";
+import type { Ativo } from "@/lib/carteira/types";
 
 export interface PlanoAcaoItem {
   id: string;
@@ -15,6 +16,7 @@ export interface PlanoAcaoItem {
   movimentacaoBRL: number;
   prioridade?: string;
   observacao?: string;
+  valorResgateBRL?: number;
 }
 
 export interface ResultadoCarteira {
@@ -25,6 +27,7 @@ export interface ResultadoCarteira {
   macroAtual: Record<string, number>;   // CardId → % atual
   macroMeta: Record<string, number>;    // CardId → % meta (do slider)
   planoAcao: PlanoAcaoItem[];
+  ativosRecomendados?: Ativo[];
   aporteDisponivel?: number;
   dataCalculo: string;
   savedAt: string;
