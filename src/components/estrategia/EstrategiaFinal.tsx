@@ -20,10 +20,13 @@ interface Props {
   clientName: string;
   onFechar?: () => void;
   onResultadosChange?: (r: ResultadosEstrategia) => void;
+  onConcluir?: () => Promise<void>;
 }
 
-export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChange }: Props) {
+export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChange, onConcluir }: Props) {
   // Config do consultor — persistida em localStorage
+  const [salvando, setSalvando] = useState(false);
+
   const [config, setConfig] = useState<ConfigConsultor>(() => {
     try {
       const salvo = localStorage.getItem("config_consultor");
@@ -85,7 +88,13 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         </div>
 
         <button
-          onClick={() => window.print()}
+          onClick={async () => {
+            setSalvando(true);
+            await onConcluir?.();
+            setSalvando(false);
+            window.print();
+          }}
+          disabled={salvando}
           style={{
             display: "flex",
             alignItems: "center",
@@ -97,12 +106,22 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
             padding: "8px 20px",
             fontSize: 13,
             fontWeight: 600,
-            cursor: "pointer",
+            cursor: salvando ? "not-allowed" : "pointer",
             fontFamily: "inherit",
+            opacity: salvando ? 0.85 : 1,
           }}
         >
-          <i className="ti ti-printer" style={{ fontSize: 16 }} aria-hidden="true" />
-          Imprimir / Salvar PDF
+          {salvando ? (
+            <>
+              <i className="ti ti-loader-2" style={{ fontSize: 15, animation: "spin 1s linear infinite" }} aria-hidden="true" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <i className="ti ti-printer" style={{ fontSize: 15 }} aria-hidden="true" />
+              Imprimir / Salvar PDF
+            </>
+          )}
         </button>
       </div>
 
