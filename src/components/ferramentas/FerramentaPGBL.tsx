@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip,
-  LabelList, ResponsiveContainer, Cell,
+  LineChart, Line, XAxis, YAxis, Tooltip,
+  CartesianGrid, ResponsiveContainer,
 } from "recharts";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { formatBRL, DEDUCAO_DEPENDENTE, TETO_INSS_2026, calcularINSSMensal } from "@/lib/tax";
-import { simularDeclaracaoIRPF } from "@/lib/simularDeclaracao";
+import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simularDeclaracao";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 
 export interface SavedPGBLResult {
@@ -29,6 +29,9 @@ interface Props {
 export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
   const dc     = plan?.dadosCliente;
   const fiscal = plan?.fiscal;
+  const plIF   = plan?.planejamentoIF;
+  const idadeAtual = plIF?.idadeAtual ?? 35;
+  const nAnos      = Math.max(1, (plIF?.idadeMeta ?? 65) - idadeAtual);
 
   // ── Renda ──────────────────────────────────────────────────────────────────
   const rendaMensalBruta =
@@ -97,10 +100,19 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
     });
   }, [temPGBL, renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value]);
 
-  const chartData = sim ? [
-    { name: "Sem PGBL", valor: sim.irSemPGBL },
-    { name: "Com PGBL", valor: sim.irComPGBL },
-  ] : [];
+  const projecao = useMemo(() => {
+    if (!sim || sim.economia <= 0) return [];
+    return calcularProjecaoPatrimonio({
+      aporteAnualPGBL: sim.aporteEfetivo,
+      economiaAnual:   sim.economia,
+      nAnos,
+      idadeAtual,
+      saldoInicial:    saldoPrevidencia,
+    });
+  }, [sim, nAnos, idadeAtual, saldoPrevidencia]);
+
+  const ultimoPonto = projecao[projecao.length - 1];
+  const diferencaFinal = ultimoPonto ? ultimoPonto.comPGBL - ultimoPonto.semPGBL : 0;
 
   function handleSave() {
     if (!sim || !onSave) return;
@@ -485,35 +497,77 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
             </div>
           )}
 
-          {/* ── Gráfico Comparativo ───────────────────────────────────────── */}
-          <div style={cardStyle("#2563EB")}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <i className="ti ti-chart-bar" style={{ fontSize: 18, color: "#2563EB" }} />
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Comparativo de Imposto Devido</span>
-            </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData} barCategoryGap="40%" margin={{ top: 28, right: 20, left: 20, bottom: 8 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tickFormatter={(v: number) => v >= 1000 ? `R$${(v / 1000).toFixed(0)}k` : `R$${v}`}
-                  tick={{ fontSize: 11 }}
-                  width={64}
-                />
-                <Tooltip formatter={(v: unknown) => [formatBRL(Number(v)), "Imposto"]} />
-                <Bar dataKey="valor" maxBarSize={100} radius={[4, 4, 0, 0] as [number, number, number, number]}>
-                  {chartData.map((_, i) => (
-                    <Cell key={i} fill={i === 0 ? "#B91C1C" : "#15803D"} />
-                  ))}
-                  <LabelList
-                    dataKey="valor"
-                    position="top"
-                    formatter={(v: unknown) => formatBRL(Number(v))}
-                    style={{ fontSize: 11, fill: "#374151", fontWeight: 600 }}
+          {/* ── Gráfico Patrimônio Acumulado ─────────────────────────────── */}
+          {projecao.length > 0 && (
+            <div style={cardStyle("#2563EB")}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <i className="ti ti-trending-up" style={{ fontSize: 18, color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Comparativo de Patrimônio Acumulado</span>
+              </div>
+              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 12px" }}>
+                Projeção em {nAnos} anos · Taxa IPCA+5% a.a.
+              </p>
+
+              <div style={{ display: "flex", gap: 20, marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 20, height: 2, backgroundColor: "#B91C1C" }} />
+                  <span style={{ fontSize: 12, color: "#374151" }}>Sem PGBL</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 20, height: 2, backgroundColor: "#15803D" }} />
+                  <span style={{ fontSize: 12, color: "#374151" }}>Com PGBL + restituição reinvestida</span>
+                </div>
+              </div>
+
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={projecao} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                  <XAxis
+                    dataKey="idade"
+                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    tickFormatter={(v: unknown) => `${v} anos`}
+                    interval="preserveStartEnd"
                   />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    tickFormatter={(v: unknown) => {
+                      const n = Number(v);
+                      if (n >= 1_000_000) return `R$ ${(n / 1_000_000).toFixed(1)}M`;
+                      if (n >= 1_000) return `R$ ${(n / 1_000).toFixed(0)}k`;
+                      return `R$ ${n}`;
+                    }}
+                    width={80}
+                  />
+                  <Tooltip
+                    formatter={(value: unknown, name: unknown) => [
+                      Number(value).toLocaleString("pt-BR", {
+                        style: "currency", currency: "BRL",
+                        maximumFractionDigits: 0,
+                      }),
+                      name === "semPGBL" ? "Sem PGBL" : "Com PGBL + restituição",
+                    ]}
+                    labelFormatter={(v: unknown) => `Idade: ${v} anos`}
+                    contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
+                  />
+                  <Line type="monotone" dataKey="semPGBL" stroke="#B91C1C" strokeWidth={2} dot={false} name="semPGBL" />
+                  <Line type="monotone" dataKey="comPGBL" stroke="#15803D" strokeWidth={2} dot={false} name="comPGBL" />
+                </LineChart>
+              </ResponsiveContainer>
+
+              <div style={{ backgroundColor: "#DCFCE7", border: "1px solid #BBF7D0", borderRadius: 10, padding: "16px 20px", marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <p style={{ fontSize: 12, color: "#15803D", margin: "0 0 4px" }}>Diferença acumulada em {nAnos} anos</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(diferencaFinal)}</p>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>a favor do Cenário B (com PGBL)</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", margin: "0 0 4px" }}>Economia anual reinvestida</p>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(sim.economia)}</p>
+                  <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>× {nAnos} anos + juros compostos</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── Card Diagnóstico ──────────────────────────────────────────── */}
           {sim.economia > 0 && (
@@ -523,10 +577,11 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
                 <span style={{ fontSize: 14, fontWeight: 700, color: "#15803D" }}>O Poder da Eficiência Tributária</span>
               </div>
               <p style={{ fontSize: 13, color: "#14532D", margin: 0, lineHeight: 1.6 }}>
-                Ao realocar <strong>{formatBRL(sim.aporteEfetivo)}</strong> para a aposentadoria via PGBL,
-                você reduz a base de cálculo e força a Receita Federal a devolver{" "}
-                <strong>{formatBRL(sim.economia)}</strong> do imposto pago. Isso equivale a{" "}
-                <strong>{formatBRL(sim.economia / 12)}/mês</strong> reinvestidos na sua aposentadoria.
+                Ao contribuir <strong>{formatBRL(sim.aporteEfetivo / 12)}/mês</strong> em PGBL,
+                você economiza <strong>{formatBRL(sim.economia)}/ano</strong> no IR.
+                Reinvestindo essa restituição a uma taxa conservadora de IPCA+5% ao ano, a diferença
+                acumulada em <strong>{nAnos} anos</strong> é de{" "}
+                <strong>{formatBRL(diferencaFinal)}</strong> — o poder dos juros compostos trabalhando ao seu favor.
               </p>
             </div>
           )}
