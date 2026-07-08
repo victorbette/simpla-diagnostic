@@ -355,12 +355,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
               Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
-          <button
-            onClick={() => setPrintMode("consultor")}
-            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.5)", backgroundColor: "transparent", color: "white", fontSize: 13, cursor: "pointer" }}
-          >
-            Gerar PDF Consultor
-          </button>
         </div>
       </div>
 
