@@ -6,6 +6,7 @@ export interface DeclaracaoInput {
   despesas: number;
   dependentes: number;
   inss: number;
+  aporteAnual?: number; // se informado, usa esse valor (cap no teto); senão usa o teto completo
 }
 
 export interface DeclaracaoResult {
@@ -14,6 +15,7 @@ export interface DeclaracaoResult {
   resultadoSem: number;
   aliqEfetivaSem: number;
   tetoPGBL: number;
+  aporteEfetivo: number; // deducão PGBL realmente usada no cálculo
   baseComPGBL: number;
   irComPGBL: number;
   resultadoCom: number;
@@ -30,7 +32,12 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
   const aliqEfetivaSem = i.rendaBruta > 0 ? (irSemPGBL / i.rendaBruta) * 100 : 0;
 
   const tetoPGBL = i.rendaBruta * 0.12;
-  const baseComPGBL = Math.max(0, baseSemPGBL - tetoPGBL);
+  const aporteEfetivo =
+    i.aporteAnual !== undefined && i.aporteAnual > 0
+      ? Math.min(i.aporteAnual, tetoPGBL)
+      : tetoPGBL;
+
+  const baseComPGBL = Math.max(0, baseSemPGBL - aporteEfetivo);
   const irComPGBL = calcularIRAnual(baseComPGBL, i.rendaBruta);
   const resultadoCom = irComPGBL - i.irrf;
   const aliqEfetivaCom = i.rendaBruta > 0 ? (irComPGBL / i.rendaBruta) * 100 : 0;
@@ -39,7 +46,8 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
 
   return {
     baseSemPGBL, irSemPGBL, resultadoSem, aliqEfetivaSem,
-    tetoPGBL, baseComPGBL, irComPGBL, resultadoCom,
-    aliqEfetivaCom, economia,
+    tetoPGBL, aporteEfetivo,
+    baseComPGBL, irComPGBL, resultadoCom, aliqEfetivaCom,
+    economia,
   };
 }
