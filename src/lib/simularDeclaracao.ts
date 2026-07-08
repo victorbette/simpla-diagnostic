@@ -51,3 +51,46 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
     economia,
   };
 }
+
+// Taxa nominal conservadora: IPCA ~4% + retorno real ~5% = 9% a.a.
+const TAXA_ANUAL = 0.09;
+const TAXA_MENSAL = Math.pow(1 + TAXA_ANUAL, 1 / 12) - 1;
+
+export interface PontoProjecao {
+  ano: number;
+  idade: number;
+  semPGBL: number;
+  comPGBL: number;
+}
+
+export function calcularProjecaoPatrimonio(params: {
+  aporteAnualPGBL: number;
+  economiaAnual: number;
+  nAnos: number;
+  idadeAtual: number;
+  saldoInicial?: number;
+}): PontoProjecao[] {
+  const { aporteAnualPGBL, economiaAnual, nAnos, idadeAtual, saldoInicial = 0 } = params;
+
+  const pontos: PontoProjecao[] = [];
+  let saldoSemPGBL = saldoInicial;
+  let saldoComPGBL = saldoInicial;
+
+  const aporteMensal = aporteAnualPGBL / 12;
+  const restituicaoMensal = economiaAnual / 12;
+
+  for (let ano = 0; ano <= nAnos; ano++) {
+    pontos.push({
+      ano,
+      idade: idadeAtual + ano,
+      semPGBL: Math.round(saldoSemPGBL),
+      comPGBL: Math.round(saldoComPGBL),
+    });
+    for (let mes = 0; mes < 12; mes++) {
+      saldoSemPGBL = saldoSemPGBL * (1 + TAXA_MENSAL) + aporteMensal;
+      saldoComPGBL = saldoComPGBL * (1 + TAXA_MENSAL) + aporteMensal + restituicaoMensal;
+    }
+  }
+
+  return pontos;
+}
