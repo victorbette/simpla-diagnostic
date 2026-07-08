@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import {
   calcularIF,
@@ -228,6 +229,20 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
     };
   }, []);
 
+  // ── Marcar FP como concluído ────────────────────────────────────────────────
+
+  const handleConcluir = useCallback(async () => {
+    if (!plan.id) return;
+    try {
+      await supabase
+        .from("financial_plans")
+        .update({ status: "completo", updated_at: new Date().toISOString() })
+        .eq("id", plan.id);
+    } catch (err) {
+      console.error("handleConcluir failed:", err);
+    }
+  }, [plan.id]);
+
   // ── Save no Supabase ────────────────────────────────────────────────────────
 
   const handleSalvarCloud = useCallback(async (dataAtual: EstrategiaData) => {
@@ -419,6 +434,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             resultados={resultados}
             clientName={clientName}
             onResultadosChange={(r) => setResultados(r)}
+            onConcluir={handleConcluir}
           />
         ) : (
           <div style={{ flex: 1, overflowY: "auto", background: "#F0F7FF", padding: "28px 32px" }}>
