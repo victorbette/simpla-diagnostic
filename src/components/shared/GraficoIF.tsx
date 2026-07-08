@@ -64,9 +64,18 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  const xTickInicio = Math.ceil(idadeAtual / 5) * 5;
+  const totalMeses = projecaoCompleta[projecaoCompleta.length - 1]?.mes ?? (90 - idadeAtual) * 12;
+  const agePorMes = new Map<number, number>();
   const xTicks: number[] = [];
-  for (let i = xTickInicio; i <= 90; i += 5) xTicks.push(i);
+  const idadesVistas = new Set<number>();
+  for (const p of projecaoCompleta) {
+    const a = Math.floor(Number(p.idade));
+    agePorMes.set(p.mes, a);
+    if (a % 5 === 0 && !idadesVistas.has(a)) {
+      idadesVistas.add(a);
+      xTicks.push(p.mes);
+    }
+  }
 
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
 
@@ -198,11 +207,14 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
         <XAxis
-          dataKey="idade"
+          dataKey="mes"
           type="number"
-          domain={[idadeAtual, 90]}
+          domain={[0, totalMeses]}
           ticks={xTicks}
-          tickFormatter={(v: number) => `${v}`}
+          tickFormatter={(mes: number) => {
+            const a = agePorMes.get(mes);
+            return a !== undefined ? String(a) : '';
+          }}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
           tickLine={false}
