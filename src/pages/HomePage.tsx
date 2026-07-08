@@ -114,6 +114,7 @@ export function HomePage() {
   const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   // All hooks must be before conditional returns
   const filtered = useMemo(() => {
@@ -140,7 +141,7 @@ export function HomePage() {
   }, [clientStore.clients]);
 
   useEffect(() => {
-    const fechar = () => setMenuAberto(null);
+    const fechar = () => { setMenuAberto(null); setMenuPos(null); };
     if (menuAberto) {
       document.addEventListener("click", fechar);
       return () => document.removeEventListener("click", fechar);
@@ -262,7 +263,15 @@ export function HomePage() {
   }
 
   function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
-  function handleAbrirAcompanhamento(c: Client) { setClienteAcompanhamento(c); }
+
+  function abrirMenu(e: React.MouseEvent, clienteId: string) {
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = Math.min(rect.right - 144, window.innerWidth - 160);
+    const y = rect.bottom + 4;
+    setMenuPos({ x, y });
+    setMenuAberto(menuAberto === clienteId ? null : clienteId);
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -557,48 +566,18 @@ export function HomePage() {
                     >
                       FP
                     </button>
-                    <button
-                      onClick={() => handleAbrirAcompanhamento(c)}
-                      title="Acompanhamento"
-                      style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
-                    >
-                      Acompanhar
-                    </button>
                   </div>
 
                   {/* ⋮ MENU */}
-                  <div style={{ position: "relative" }}>
+                  <div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setMenuAberto(menuAberto === c.id ? null : c.id); }}
+                      onClick={(e) => abrirMenu(e, c.id)}
                       style={{ background: "none", border: "none", borderRadius: 6, padding: "4px 6px", cursor: "pointer", color: "#9CA3AF", display: "flex", alignItems: "center", justifyContent: "center" }}
                       onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                     >
                       <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
                     </button>
-                    {menuAberto === c.id && (
-                      <div style={{ position: "absolute", right: 0, top: "100%", zIndex: 50, marginTop: 4, background: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.08)", minWidth: 140, overflow: "hidden" }}>
-                        <div
-                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#374151", cursor: "pointer" }}
-                          onClick={() => { openEditarCliente(c); setMenuAberto(null); }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFF")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
-                        >
-                          <i className="ti ti-pencil" style={{ fontSize: 14, color: "#6B7280" }} />
-                          Editar cliente
-                        </div>
-                        <div style={{ height: "0.5px", background: "#F3F4F6" }} />
-                        <div
-                          style={{ display: "flex", gap: 8, alignItems: "center", padding: "10px 14px", fontSize: 13, color: "#B91C1C", cursor: "pointer" }}
-                          onClick={() => { setDeleteTarget(c); setMenuAberto(null); }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF5F5")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
-                        >
-                          <i className="ti ti-trash" style={{ fontSize: 14, color: "#B91C1C" }} />
-                          Remover cliente
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               );
@@ -615,6 +594,38 @@ export function HomePage() {
           </div>
         )}
       </main>
+
+      {/* ── ⋮ Dropdown (position fixed) ── */}
+      {menuAberto && menuPos && (() => {
+        const clienteMenu = clientStore.clients.find((c) => c.id === menuAberto);
+        if (!clienteMenu) return null;
+        return (
+          <div
+            style={{ position: "fixed", top: menuPos.y, left: menuPos.x, zIndex: 9999, background: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, boxShadow: "0 4px 16px rgba(0,0,0,0.10)", minWidth: 144, overflow: "hidden" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => { openEditarCliente(clienteMenu); setMenuAberto(null); setMenuPos(null); }}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 14px", fontSize: 13, color: "#374151", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#F8FAFF")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+            >
+              <i className="ti ti-pencil" style={{ fontSize: 14, color: "#6B7280" }} />
+              Editar cliente
+            </button>
+            <div style={{ height: "0.5px", background: "#F3F4F6" }} />
+            <button
+              onClick={() => { setDeleteTarget(clienteMenu); setMenuAberto(null); setMenuPos(null); }}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 14px", fontSize: 13, color: "#B91C1C", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#FFF5F5")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+            >
+              <i className="ti ti-trash" style={{ fontSize: 14, color: "#B91C1C" }} />
+              Remover cliente
+            </button>
+          </div>
+        );
+      })()}
 
       {/* ── Add/Edit modal ── */}
       <Dialog open={modalAberto} onOpenChange={setModalAberto}>
