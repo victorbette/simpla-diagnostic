@@ -2,7 +2,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import { ALOCACAO_ALVO, PERFIL_LABELS, calcularAlocacaoAtual } from "@/types/financialPlanning";
+import { ALOCACAO_ALVO, calcularAlocacaoAtual } from "@/types/financialPlanning";
 import type { AtivoAtual, PerfilRisco } from "@/types/financialPlanning";
 
 const CAMPOS: { key: keyof Omit<AtivoAtual, "total">; label: string; hint: string; color: string }[] = [
@@ -102,35 +102,6 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero,
             </div>
           </div>
 
-          {/* Comparison bars */}
-          {total > 0 && suitabilityPerfil && alvo && (
-            <div style={{ backgroundColor: "#EAF0F5", border: "1px solid #A8C4D8", borderRadius: 10, padding: 16 }}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF", margin: "0 0 12px", textTransform: "uppercase" }}>
-                Comparação com perfil {PERFIL_LABELS[suitabilityPerfil]}
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {CAMPOS.map(({ key, label, color }) => {
-                  const atual = alocacaoAtual[key] ?? 0;
-                  const alvoVal = alvo[key] ?? 0;
-                  return (
-                    <div key={key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 80px", gap: 8, alignItems: "center" }}>
-                      <span style={{ fontSize: 12, color: "#6B7280" }}>{label}</span>
-                      <div style={{ position: "relative", height: 8, backgroundColor: "#BFDBFE", borderRadius: 4, overflow: "hidden" }}>
-                        <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.min(100, atual)}%`, backgroundColor: color, borderRadius: 4 }} />
-                        {alvoVal > 0 && (
-                          <div style={{ position: "absolute", top: 0, height: "100%", width: 2, backgroundColor: "#111827", left: `${Math.min(100, alvoVal)}%` }} />
-                        )}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#111827", textAlign: "right" }}>
-                        <span style={{ fontWeight: 600 }}>{formatNumber(atual, 1)}%</span>
-                        <span style={{ color: "#9CA3AF" }}> / {alvoVal}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>
