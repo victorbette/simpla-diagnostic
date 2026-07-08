@@ -589,6 +589,8 @@ export interface DadosCliente {
   tipoPrevidencia: "pgbl" | "vgbl" | "ambos" | null;
   saldoPrevidencia: number;
   comecandoDoZero: boolean;
+  nomeConjuge?: string;
+  dataNascimentoConjuge?: string;
 }
 
 export const initialDadosCliente: DadosCliente = {
