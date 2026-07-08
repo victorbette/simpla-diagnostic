@@ -4,7 +4,7 @@ import {
   LabelList, ResponsiveContainer, Cell,
 } from "recharts";
 import type { FinancialPlan } from "@/types/financialPlanning";
-import { formatBRL, DEDUCAO_DEPENDENTE, calcularINSSMensal } from "@/lib/tax";
+import { formatBRL, DEDUCAO_DEPENDENTE, TETO_INSS_2026, calcularINSSMensal } from "@/lib/tax";
 import { simularDeclaracaoIRPF } from "@/lib/simularDeclaracao";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 
@@ -219,10 +219,10 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
                 </span>
               )}
             </div>
-            <input type="text" value={inss.display} onChange={inss.onChange} onBlur={inss.onBlur} placeholder="0,00" style={inputStyle} />
+            <input type="text" value={inss.display} onChange={inss.onChange} onBlur={inss.onBlur} placeholder="0,00" readOnly={isINSSCalculado} style={{ ...inputStyle, backgroundColor: isINSSCalculado ? "#F9FAFB" : "white" }} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
               {isINSSCalculado
-                ? `Teto 2025: ${formatBRL(908.86 * 12)}/ano`
+                ? `Teto 2026: ${formatBRL(TETO_INSS_2026 * 12)}/ano`
                 : "Informe o INSS pago"}
             </p>
           </div>
@@ -231,7 +231,9 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
       </div>
 
       {/* Banners de previdência */}
-      {possuiPrevidencia && tipoPrevidencia === "vgbl" && (
+
+      {/* VGBL + completa → âmbar: oportunidade de migrar para PGBL */}
+      {possuiPrevidencia && tipoPrevidencia === "vgbl" && tipoDecl === "completa" && (
         <div style={{ background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#92400E" }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>
             <i className="ti ti-alert-triangle" style={{ marginRight: 6 }} />
@@ -243,7 +245,21 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
         </div>
       )}
 
-      {possuiPGBL && (
+      {/* PGBL + simplificada → âmbar: PGBL não está sendo aproveitado */}
+      {possuiPGBL && tipoDecl === "simplificada" && (
+        <div style={{ background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#92400E" }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>
+            <i className="ti ti-alert-triangle" style={{ marginRight: 6 }} />
+            PGBL na Declaração Simplificada
+          </div>
+          O PGBL não gera benefício fiscal na declaração simplificada. Avaliar migração para declaração
+          completa para aproveitar a dedução de até{" "}
+          <strong>{formatBRL(rendaMensalBruta * 12 * 0.12 / 12)}/mês</strong>.
+        </div>
+      )}
+
+      {/* PGBL ativo + declaração correta → verde */}
+      {possuiPGBL && tipoDecl !== "simplificada" && (
         <div style={{ background: "#DCFCE7", border: "0.5px solid #86EFAC", borderLeft: "4px solid #15803D", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#14532D" }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>
             <i className="ti ti-circle-check" style={{ marginRight: 6 }} />
@@ -256,6 +272,7 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
         </div>
       )}
 
+      {/* Sem previdência → azul */}
       {!possuiPrevidencia && (
         <div style={{ background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "12px 16px", fontSize: 13, color: "#1E40AF" }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>

@@ -29,7 +29,7 @@ export function calcularRedutorAnual2026(
   rendaBruta: number,
   irCalculado: number
 ): number {
-  if (rendaBruta <= 60000) return irCalculado;
+  if (rendaBruta <= 60000) return 0;
   if (rendaBruta <= 88200) {
     const proporcao = (88200 - rendaBruta) / (88200 - 60000);
     const redutor = irCalculado * proporcao;
@@ -61,7 +61,7 @@ const faixasINSS2026 = [
   { ate: 8475.55,  aliquota: 0.14  },
   { ate: Infinity, aliquota: 0.14  },
 ];
-const TETO_INSS_2026 = 988.09;
+export const TETO_INSS_2026 = 988.09;
 
 export function calcularINSSMensal(
   rendaMensal: number,
