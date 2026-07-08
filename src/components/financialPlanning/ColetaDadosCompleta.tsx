@@ -192,6 +192,46 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
           </div>
         </div>
 
+        {/* Dados do Cônjuge */}
+        {(dados.estadoCivil === "casado" || dados.estadoCivil === "uniao_estavel") && (
+          <div style={{ background: "#F8FAFF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "16px 20px", marginTop: 12 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-heart" style={{ fontSize: 13 }} />
+              Dados do Cônjuge
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>
+                  Nome completo do cônjuge
+                </label>
+                <input
+                  type="text"
+                  value={dados.nomeConjuge ?? ""}
+                  onChange={e => setDados("nomeConjuge", e.target.value)}
+                  placeholder="Nome do cônjuge"
+                  style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", boxSizing: "border-box" }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>
+                  Data de nascimento do cônjuge
+                </label>
+                <input
+                  type="date"
+                  value={dados.dataNascimentoConjuge ?? ""}
+                  onChange={e => setDados("dataNascimentoConjuge", e.target.value)}
+                  style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", boxSizing: "border-box" }}
+                />
+                {dados.dataNascimentoConjuge && (
+                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
+                    {Math.floor((Date.now() - new Date(dados.dataNascimentoConjuge).getTime()) / (365.25 * 24 * 3600 * 1000))} anos
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Lista de filhos */}
         {dados.temFilhos && (
           <div style={{ marginTop: 16, padding: "16px 20px", backgroundColor: "#F8FAFF", borderRadius: 10, border: "1px solid #BFDBFE" }}>
