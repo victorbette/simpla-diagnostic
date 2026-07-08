@@ -32,14 +32,13 @@ interface Props {
   mesNascimento?: number;
 }
 
-export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, mesIF, mesNascimento }: Props) {
-  // Projection already runs to age 100 — use it directly
-  const projecaoCompleta = projecao ?? [];
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF }: Props) {
+  const projecaoCompleta = (projecao ?? []).filter(p => Number(p.idade) <= 90);
 
   const dadosMesclados = useMemo(
-    () => projecaoCompleta.map((ponto, i) => ({
+    () => projecaoCompleta.map((ponto) => ({
       ...ponto,
-      patrimonioIdeal: curvaIdeal?.[i] ?? null,
+      patrimonioIdeal: curvaIdeal?.[ponto.mes] ?? null,
     })),
     [projecaoCompleta, curvaIdeal],
   );
@@ -65,16 +64,9 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  const mesAniversario: number = mesNascimento ?? (
-    projecaoCompleta.find((p) => p.mes > 0 && Number(p.idade) === Math.floor(Number(p.idade)))
-      ?.mesDoAno ?? projecaoCompleta[0].mesDoAno
-  );
-
-  const totalMeses = projecaoCompleta[projecaoCompleta.length - 1]?.mes ?? (100 - idadeAtual) * 12;
-  const xTicks = projecaoCompleta
-    .filter((p) => p.mesDoAno === mesAniversario && Math.floor(Number(p.idade) || 0) % 5 === 0)
-    .map((p) => p.mes);
-  if (!xTicks.includes(0)) xTicks.unshift(0);
+  const xTickInicio = Math.ceil(idadeAtual / 5) * 5;
+  const xTicks: number[] = [];
+  for (let i = xTickInicio; i <= 90; i += 5) xTicks.push(i);
 
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
 
@@ -206,18 +198,15 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 280, 
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
         <XAxis
-          dataKey="mes"
+          dataKey="idade"
           type="number"
-          domain={[0, totalMeses]}
+          domain={[idadeAtual, 90]}
           ticks={xTicks}
-          tickFormatter={(mes: number) => {
-            const ponto = projecaoCompleta[mes];
-            if (ponto) return String(Math.floor(Number(ponto.idade) || 0));
-            return String(Math.floor(idadeAtual + mes / 12));
-          }}
+          tickFormatter={(v: number) => `${v}`}
           tick={{ fontSize: 11, fill: "#9CA3AF" }}
           axisLine={false}
           tickLine={false}
+          label={{ value: "Idade", position: "insideBottomRight", offset: -8, fontSize: 10, fill: "#9CA3AF" }}
         />
         <YAxis
           domain={[0, yMax]}

@@ -578,7 +578,7 @@ export function FerramentaLiberdadeFinanceira({
             projecao={result.projecao}
             curvaIdeal={result.curvaIdeal}
             objetivos={objetivos}
-            height={300}
+            height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
           />
