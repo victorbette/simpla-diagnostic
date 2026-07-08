@@ -75,26 +75,6 @@ const EMPTY_FORM: ClientForm = {
   observacoes: "",
 };
 
-// ─── Pendências ───────────────────────────────────────────────────────────────
-
-function detectarPendencias(cliente: Client): string[] {
-  if (!cliente.planId) return [];
-  const pend: string[] = [];
-  const dc     = (cliente.planDadosCliente ?? {}) as Record<string, unknown>;
-  const planIF = (cliente.planPlanejamentoIF ?? {}) as Record<string, unknown>;
-  const fiscal = (cliente.planFiscal ?? {}) as Record<string, unknown>;
-  const est    = (cliente.planEstrategia ?? {}) as Record<string, unknown>;
-  if (!cliente.planSuitabilityPerfil) pend.push("Sem perfil de risco");
-  if (!dc.rendaMensal || Number(dc.rendaMensal) === 0) pend.push("Renda não preenchida");
-  if (!planIF.idadeMeta || Number(planIF.idadeMeta) === 0) pend.push("Meta de IF não definida");
-  if (!fiscal.tipoDeclaracao || fiscal.tipoDeclaracao === "nao_sei") pend.push("Declaração IR indefinida");
-  if (dc.possuiPrevidencia && dc.tipoPrevidencia === "vgbl" && fiscal.tipoDeclaracao === "completa") pend.push("VGBL com declaração completa");
-  const filhos = (dc.filhos as Array<unknown>) ?? [];
-  if (!dc.temSeguroVida && filhos.length > 0) pend.push("Sem seguro de vida");
-  if (!est || Object.keys(est).length === 0) pend.push("Estratégia não iniciada");
-  return pend;
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomePage() {
@@ -111,8 +91,6 @@ export function HomePage() {
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
   const [mostrarConfig, setMostrarConfig] = useState(false);
-  const [tooltipAberto, setTooltipAberto] = useState<string | null>(null);
-  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -466,7 +444,6 @@ export function HomePage() {
 
             {/* Data rows */}
             {filtered.map((c) => {
-              const pendencias = detectarPendencias(c);
               const perfil = profileConfig(c.planSuitabilityPerfil);
 
               return (
@@ -482,47 +459,7 @@ export function HomePage() {
                       {getInitials(c.nome)}
                     </div>
                     <div>
-                      <div style={{ display: "flex", alignItems: "center" }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
-
-                        {/* Badge de pendências com tooltip */}
-                        {pendencias.length > 0 && (
-                          <div
-                            style={{ position: "relative", display: "inline-block" }}
-                            onMouseEnter={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const x = Math.min(rect.left, window.innerWidth - 290);
-                              setTooltipPos({ x, y: rect.bottom + 8 });
-                              setTooltipAberto(c.id);
-                            }}
-                            onMouseLeave={() => setTooltipAberto(null)}
-                          >
-                            <span style={{ fontSize: 10, fontWeight: 600, color: "#B45309", background: "#FEF3C7", border: "0.5px solid #FCD34D", borderRadius: 99, padding: "2px 8px", cursor: "default", marginLeft: 8 }}>
-                              {pendencias.length} pendência{pendencias.length > 1 ? "s" : ""}
-                            </span>
-                            {tooltipAberto === c.id && (
-                              <div style={{ position: "fixed", top: tooltipPos.y, left: tooltipPos.x, zIndex: 9999, background: "#1F2937", color: "white", borderRadius: 8, padding: "10px 14px", minWidth: 220, maxWidth: 280, boxShadow: "0 4px 16px rgba(0,0,0,0.2)", pointerEvents: "none" }}>
-                                <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
-                                  Pendências
-                                </div>
-                                {pendencias.map((p) => (
-                                  <div key={p} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, marginBottom: 4 }}>
-                                    <i className="ti ti-alert-circle" style={{ fontSize: 11, color: "#FCD34D" }} />
-                                    {p}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Check mark for no pendências */}
-                        {pendencias.length === 0 && c.planStatus !== "nao_iniciado" && (
-                          <span style={{ fontSize: 10, color: "#15803D", marginLeft: 8 }}>
-                            <i className="ti ti-circle-check" style={{ fontSize: 11 }} />
-                          </span>
-                        )}
-                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
                       <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
                     </div>
                   </div>
