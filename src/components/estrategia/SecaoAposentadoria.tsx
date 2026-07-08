@@ -138,7 +138,7 @@ export function SecaoAposentadoria({
                   projecao={projecaoAtiva}
                   curvaIdeal={resultadoIF.curvaIdeal}
                   objetivos={objetivosFiltrados}
-                  height={320}
+                  height={420}
                   mesIF={resultadoIF.mesInicioRetirada ?? (resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
                   mesNascimento={resultadoIF.mesNascimento}
                 />
