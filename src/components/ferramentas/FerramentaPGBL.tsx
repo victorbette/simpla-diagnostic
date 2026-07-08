@@ -29,9 +29,15 @@ interface Props {
 export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
   const dc     = plan?.dadosCliente;
   const fiscal = plan?.fiscal;
-  const plIF   = plan?.planejamentoIF;
-  const idadeAtual = plIF?.idadeAtual ?? 35;
-  const nAnos      = Math.max(1, (plIF?.idadeMeta ?? 65) - idadeAtual);
+
+  const idadeAtual = dc?.dataNascimento
+    ? Math.floor(
+        (Date.now() - new Date(dc.dataNascimento).getTime()) /
+        (365.25 * 24 * 3600 * 1000)
+      )
+    : 0;
+  const idadeMeta = plan?.planejamentoIF?.idadeMeta ?? 60;
+  const nAnos     = idadeAtual > 0 ? Math.max(1, idadeMeta - idadeAtual) : 0;
 
   // ── Renda ──────────────────────────────────────────────────────────────────
   const rendaMensalBruta =
@@ -498,7 +504,14 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
           )}
 
           {/* ── Gráfico Patrimônio Acumulado ─────────────────────────────── */}
-          {projecao.length > 0 && (
+          {idadeAtual === 0 ? (
+            <div style={{ background: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: 20, textAlign: "center" }}>
+              <i className="ti ti-info-circle" style={{ fontSize: 22, color: "#60A5FA", marginBottom: 8, display: "block" }} />
+              <p style={{ fontSize: 13, color: "#6B7280", margin: 0, lineHeight: 1.6 }}>
+                Preencha a data de nascimento e idade de aposentadoria na Coleta de Dados para visualizar a projeção.
+              </p>
+            </div>
+          ) : projecao.length > 0 ? (
             <div style={cardStyle("#2563EB")}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                 <i className="ti ti-trending-up" style={{ fontSize: 18, color: "#2563EB" }} />
@@ -567,7 +580,7 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* ── Card Diagnóstico ──────────────────────────────────────────── */}
           {sim.economia > 0 && (
