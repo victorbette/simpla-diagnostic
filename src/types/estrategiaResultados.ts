@@ -92,6 +92,13 @@ export interface ResultadoFiscal {
   aproveitandoTeto: boolean;
   dataCalculo: string;
   savedAt: string;
+  // Inputs do formulário (para restauração ao reabrir a calculadora)
+  inputRendaAnualBruta?: number;
+  inputIrrf?: number;
+  inputDespesas?: number;
+  inputDependentes?: number;
+  inputInssAnual?: number;
+  inputAporteMensalPGBL?: number;
 }
 
 export interface EstrategiaFinalComentarios {
