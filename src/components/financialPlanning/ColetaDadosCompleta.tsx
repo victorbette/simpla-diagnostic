@@ -584,8 +584,8 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
       </SecaoCard>
 
-      {/* ─── SEÇÃO 4: Aposentadoria / IF ─── */}
-      <SecaoCard color="#059669" Icon={Sunset} title="Aposentadoria / IF" subtitle="Parâmetros para planejamento de independência financeira">
+      {/* ─── SEÇÃO 4: Aposentadoria ─── */}
+      <SecaoCard color="#059669" Icon={Sunset} title="Aposentadoria" subtitle="Parâmetros para planejamento de independência financeira">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
 
           {calculatedAge ? (

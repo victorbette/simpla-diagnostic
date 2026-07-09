@@ -125,13 +125,13 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         {patrimonioIdealVal != null && (
           <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 14, height: 2, background: "#1E3A8A", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
-            Meta IF: {formatCurrency(patrimonioIdealVal)}
+            Aposentadoria Ideal: {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
         {ifPonto && ponto.mes === ifPonto.mes && (
           <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
             <Sunset style={{ width: 12, height: 12 }} />
-            Independência Financeira
+            Aposentadoria Ideal
           </div>
         )}
         {objsDoPonto.map((obj) => {
@@ -262,7 +262,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             activeDot={false}
             connectNulls={false}
             isAnimationActive={false}
-            name="Meta IF"
+            name="Aposentadoria Ideal"
           />
         )}
 

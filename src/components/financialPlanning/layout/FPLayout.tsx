@@ -15,10 +15,10 @@ const STEP_META: Record<FPStep, { title: string; subtitle: string; next: string 
   ativos: {
     title: "Patrimônio atual",
     subtitle: "Carteira de investimentos e ativos do cliente",
-    next: "Aposentadoria / IF",
+    next: "Aposentadoria",
   },
   aposentadoria: {
-    title: "Aposentadoria / IF",
+    title: "Aposentadoria",
     subtitle: "Planejamento de independência financeira e aposentadoria",
     next: "Proteção e Sucessório",
   },

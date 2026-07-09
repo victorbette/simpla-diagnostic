@@ -398,7 +398,7 @@ export function FinancialPlanDashboard({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {([
           { Icon: PieChart, label: "Asset Allocation",      score: scoreAA,                 color: "#2563EB", semDados: semDadosAA },
-          { Icon: Sunset,   label: "Aposentadoria / IF",    score: scoreIF,                 color: "#059669", semDados: semDadosIF },
+          { Icon: Sunset,   label: "Aposentadoria",           score: scoreIF,                 color: "#059669", semDados: semDadosIF },
           { Icon: Shield,   label: "Proteção e Sucessório", score: scoreProtecaoSucessorio, color: "#B91C1C", semDados: semDadosPS },
           { Icon: Receipt,  label: "Planejamento Fiscal",   score: scoreFiscal,             color: "#B45309", semDados: semDadosFiscal },
         ] as const).map(({ Icon, label, score, color, semDados }) => {
@@ -488,9 +488,9 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4B: Card Aposentadoria / IF ─────────────────────────────────── */}
+      {/* ── BLOCO 4B: Card Aposentadoria ──────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
-        <CardHeader Icon={Sunset} title="Aposentadoria / IF" score={scoreIF} color="#059669" />
+        <CardHeader Icon={Sunset} title="Aposentadoria" score={scoreIF} color="#059669" />
         {semDadosIF ? (
           <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
             <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Desejada na IF para ver o diagnóstico</p>
