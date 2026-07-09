@@ -202,6 +202,15 @@ export function FinancialPlanDashboard({
   // ── Aporte ───────────────────────────────────────────────────────────────────
   const aporteMensal = Number(dc.aportesMensalMedio) || 0;
 
+  // ── Índice de Poupança CFP ───────────────────────────────────────────────────
+  const custoDeVidaMensal       = Number(dc.custoDeVidaMensal) || 0;
+  const valorDisponivelInvestir = rendaMensalTotal - custoDeVidaMensal;
+  const indicePoupancaRaw       = rendaMensalTotal > 0
+    ? (valorDisponivelInvestir / rendaMensalTotal) * 100
+    : 0;
+  const indicePoupanca          = Math.max(0, indicePoupancaRaw);
+  const temDadosPoupanca        = rendaMensalTotal > 0 && custoDeVidaMensal > 0;
+
   // ── Idade ────────────────────────────────────────────────────────────────────
   const idadeAtual = dc.dataNascimento
     ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
@@ -491,6 +500,50 @@ export function FinancialPlanDashboard({
       {/* ── BLOCO 4B: Card Aposentadoria ──────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Sunset} title="Aposentadoria" score={scoreIF} color="#059669" />
+
+        {/* ── Índice de Poupança CFP ── */}
+        {temDadosPoupanca && (
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            backgroundColor: indicePoupanca >= 20 ? "#F0FDF4" : indicePoupanca >= 10 ? "#FFFBEB" : "#FEF2F2",
+            border: `1px solid ${indicePoupanca >= 20 ? "#A8C8AB" : indicePoupanca >= 10 ? "#FDE68A" : "#FECACA"}`,
+            borderRadius: 8,
+            padding: "12px 16px",
+            marginBottom: 16,
+          }}>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 2px" }}>
+                Índice de Poupança
+              </p>
+              <p style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: indicePoupanca >= 20 ? "#15803D" : indicePoupanca >= 10 ? "#B45309" : "#B91C1C",
+                margin: 0,
+              }}>
+                {indicePoupanca.toFixed(1)}%
+              </p>
+              <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>
+                Valor disponível: {formatCurrency(valorDisponivelInvestir)}
+              </p>
+            </div>
+            <div>
+              {indicePoupanca >= 20 && (
+                <span style={{ fontSize: 12, fontWeight: 600, backgroundColor: "#DCFCE7", color: "#15803D", borderRadius: 9999, padding: "3px 10px" }}>Saudável</span>
+              )}
+              {indicePoupanca >= 10 && indicePoupanca < 20 && (
+                <span style={{ fontSize: 12, fontWeight: 600, backgroundColor: "#FEF3C7", color: "#B45309", borderRadius: 9999, padding: "3px 10px" }}>Atenção</span>
+              )}
+              {indicePoupanca < 10 && (
+                <span style={{ fontSize: 12, fontWeight: 600, backgroundColor: "#FEE2E2", color: "#B91C1C", borderRadius: 9999, padding: "3px 10px" }}>Crítico</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {semDadosIF ? (
           <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
             <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Desejada na IF para ver o diagnóstico</p>
