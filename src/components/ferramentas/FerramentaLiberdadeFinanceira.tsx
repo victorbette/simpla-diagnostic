@@ -322,7 +322,7 @@ export function FerramentaLiberdadeFinanceira({
               {/* Renda Mensal Desejada */}
               <div className="flex flex-col gap-1.5">
                 <div style={{ display: "flex", alignItems: "center" }}>
-                  <Label style={{ color: "#6B7280" }}>Renda mensal desejada na IF</Label>
+                  <Label style={{ color: "#6B7280" }}>Renda mensal desejada na Aposentadoria</Label>
                   {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
                   {rendaEditada && (
                     <button

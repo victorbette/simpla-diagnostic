@@ -622,12 +622,12 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
           )}
 
           <div className={fieldCls}>
-            <Label className={labelCls}>Renda mensal desejada na IF</Label>
+            <Label className={labelCls}>Renda mensal desejada na Aposentadoria</Label>
             <CurrencyInput
               value={plan.planejamentoIF.rendaMensalDesejada}
               onChange={(v) => setIF("rendaMensalDesejada", v)}
             />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Quanto o cliente quer receber/mês na IF</p>
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Quanto o cliente quer receber/mês na Aposentadoria</p>
           </div>
 
           {dados.patrimonioFinanceiroEstimado > 0 ? (
