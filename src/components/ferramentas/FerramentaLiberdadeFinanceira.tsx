@@ -478,7 +478,7 @@ export function FerramentaLiberdadeFinanceira({
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                        {temObjs ? "Aporte necessário (com objetivos)" : "Aporte necessário para atingir IF"}
+                        {temObjs ? "Aporte necessário (com objetivos)" : "Aporte necessário para atingir Aposentadoria"}
                       </p>
                       <p style={{ fontSize: 22, fontWeight: 700, color: "#1E3A8A", margin: 0 }} className="tabular-nums">
                         {formatCurrency(comObj)}/mês
