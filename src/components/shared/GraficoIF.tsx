@@ -177,38 +177,48 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     );
   };
 
-  // ── Custom dot renderer ───────────────────────────────────────────────────────
-  const renderDot = (dotProps: Record<string, unknown>) => {
+  // ── Dot renderer — ícone de aposentadoria (sempre visível) ───────────────────
+  const renderDotIF = (dotProps: Record<string, unknown>) => {
+    const cx = dotProps.cx as number | undefined;
+    const cy = dotProps.cy as number | undefined;
+    const payload = dotProps.payload as PontoProjecao | undefined;
+    if (!payload || cx === undefined || cy === undefined) return <g />;
+    if (ifPonto === undefined || payload.mes !== ifPonto.mes) return <g />;
+
+    const ra = 20;
+    return (
+      <g>
+        <circle cx={cx} cy={cy - ra - 4} r={ra} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
+        <foreignObject x={cx - ra} y={cy - ra - 4 - ra} width={ra * 2} height={ra * 2}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
+            <Sunset style={{ width: 16, height: 16, color: COR_APOSENTADORIA }} />
+          </div>
+        </foreignObject>
+        <circle cx={cx} cy={cy} r={5} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
+      </g>
+    );
+  };
+
+  // ── Dot renderer — ícones de objetivos (visíveis apenas com mostrarProjetado) ─
+  const renderDotObjetivos = (dotProps: Record<string, unknown>) => {
     const cx = dotProps.cx as number | undefined;
     const cy = dotProps.cy as number | undefined;
     const payload = dotProps.payload as PontoProjecao | undefined;
     if (!payload || cx === undefined || cy === undefined) return <g />;
     const objsDoPonto = objByMesIdx.get(payload.mes) ?? [];
-    const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
-
-    if (objsDoPonto.length === 0 && !ehIF) return <g />;
+    if (objsDoPonto.length === 0) return <g />;
 
     const r = 18;
     const ra = r + 2;
+    // If the IF icon is at the same point, offset objectives above it
+    const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
+    const baseOffset = ehIF ? (ra * 2 + 8) : 0;
 
     return (
       <g>
-        {ehIF && (
-          <g>
-            <circle cx={cx} cy={cy - ra - 4} r={ra} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
-            <foreignObject x={cx - ra} y={cy - ra - 4 - ra} width={ra * 2} height={ra * 2}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-                <Sunset style={{ width: 16, height: 16, color: COR_APOSENTADORIA }} />
-              </div>
-            </foreignObject>
-            <circle cx={cx} cy={cy} r={5} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
-          </g>
-        )}
-
         {objsDoPonto.map((obj, i) => {
           const meta = getObjetivoMeta(obj.tipo);
           const Icon = ICON_MAP[meta.icone];
-          const baseOffset = ehIF ? (ra * 2 + 8) : 0;
           const offsetY = cy - r - 4 - baseOffset - i * (r * 2 + 4);
           const iconSize = (r - 2) * 2;
           return (
@@ -299,8 +309,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <Area
               type="monotone"
               dataKey="patrimonio"
-              stroke="#2563EB"
-              strokeWidth={2}
+              stroke="none"
+              strokeWidth={0}
               fill="url(#gradReal)"
               fillOpacity={1}
               dot={false}
@@ -320,14 +330,14 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
               fill="none"
               fillOpacity={0}
               dot={false}
-              activeDot={false}
+              activeDot={{ r: 5, fill: "#1E3A8A", stroke: "white", strokeWidth: 2 }}
               connectNulls={false}
               isAnimationActive={false}
               name="Aposentadoria Ideal"
             />
           )}
 
-          {/* 3. DOTS — área invisível apenas para renderizar ícones de objetivos e IF */}
+          {/* 3a. DOTS — ícone de aposentadoria (sempre visível) */}
           <Area
             type="monotone"
             dataKey="patrimonio"
@@ -336,10 +346,26 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             fill="none"
             fillOpacity={0}
             isAnimationActive={false}
-            dot={renderDot}
+            dot={renderDotIF}
             activeDot={false}
-            name="Projeção com objetivos"
+            name="Aposentadoria marcador"
           />
+
+          {/* 3b. DOTS — ícones de objetivos (ocultos junto com a área) */}
+          {mostrarProjetado && (
+            <Area
+              type="monotone"
+              dataKey="patrimonio"
+              stroke="none"
+              strokeWidth={0}
+              fill="none"
+              fillOpacity={0}
+              isAnimationActive={false}
+              dot={renderDotObjetivos}
+              activeDot={false}
+              name="Projeção com objetivos"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
 
