@@ -123,7 +123,6 @@ export function FerramentaLiberdadeFinanceira({
 
   const [params, setParams] = useState<UIParams>(initialParams);
   const [patrimonioEditado, setPatrimonioEditado] = useState(false);
-  const [aporteEditado,     setAporteEditado]     = useState(false);
   const [rendaEditada,      setRendaEditada]       = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
 
@@ -154,11 +153,10 @@ export function FerramentaLiberdadeFinanceira({
       ...prev,
       idadeAtual:       idadeAtualCalculada,
       patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
-      aporteMensal:      !aporteEditado     ? aporteColeta     : prev.aporteMensal,
       rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
+  }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
 
   const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
 
@@ -297,13 +295,10 @@ export function FerramentaLiberdadeFinanceira({
               <div className="flex flex-col gap-1.5">
                 <div style={{ display: "flex", alignItems: "center" }}>
                   <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
-                  {aporteColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                  {aporteEditado && (
+                  {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
+                  {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
                     <button
-                      onClick={() => {
-                        setP({ aporteMensal: aporteColeta });
-                        setAporteEditado(false);
-                      }}
+                      onClick={() => setP({ aporteMensal: aporteColeta })}
                       style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                     >
                       ↺ Restaurar
@@ -312,10 +307,7 @@ export function FerramentaLiberdadeFinanceira({
                 </div>
                 <CurrencyInput
                   value={params.aporteMensal}
-                  onChange={(v) => {
-                    setP({ aporteMensal: v });
-                    setAporteEditado(v !== aporteColeta);
-                  }}
+                  onChange={(v) => setP({ aporteMensal: v })}
                 />
               </div>
 
