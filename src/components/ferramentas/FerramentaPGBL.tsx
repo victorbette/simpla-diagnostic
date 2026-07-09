@@ -17,6 +17,13 @@ export interface SavedPGBLResult {
   economiaAnual: number;
   espacoDisponivelMensal: number;
   aproveitandoTeto: boolean;
+  // Inputs para restauração do formulário
+  inputRendaAnualBruta?: number;
+  inputIrrf?: number;
+  inputDespesas?: number;
+  inputDependentes?: number;
+  inputInssAnual?: number;
+  inputAporteMensalPGBL?: number;
 }
 
 interface Props {
@@ -24,9 +31,10 @@ interface Props {
   clientName?: string;
   onClose?: () => void;
   onSave?: (r: SavedPGBLResult) => void;
+  savedResult?: SavedPGBLResult | null;
 }
 
-export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
+export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const dc     = plan?.dadosCliente;
   const fiscal = plan?.fiscal;
 
@@ -65,14 +73,17 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
   const tipoDecl = fiscal?.tipoDeclaracao ?? "nao_sei";
 
   // ── Inputs ─────────────────────────────────────────────────────────────────
-  const renda       = useCurrencyInput(rendaAnualBruta);
-  const irrf        = useCurrencyInput(0);
-  const despesas    = useCurrencyInput(0);
-  const inss        = useCurrencyInput(inssAnualCalc);
-  const aporteMensal = useCurrencyInput(temPGBL ? 0 : tetoPGBL / 12);
-  const [dependentes, setDependentes] = useState(String(numDependentes));
+  const renda        = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? rendaAnualBruta);
+  const irrf         = useCurrencyInput(savedResult?.inputIrrf ?? 0);
+  const despesas     = useCurrencyInput(savedResult?.inputDespesas ?? 0);
+  const inss         = useCurrencyInput(savedResult?.inputInssAnual ?? inssAnualCalc);
+  const aporteMensal = useCurrencyInput(savedResult?.inputAporteMensalPGBL ?? (temPGBL ? 0 : tetoPGBL / 12));
+  const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? numDependentes));
+
+  const [salvo, setSalvo] = useState(false);
 
   useEffect(() => {
+    if (savedResult) return;
     renda.set(rendaAnualBruta);
     inss.set(inssAnualCalc);
     aporteMensal.set(temPGBL ? 0 : rendaAnualBruta * 0.12 / 12);
@@ -131,8 +142,18 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
       economiaAnual:          sim.economia,
       espacoDisponivelMensal: Math.max(0, (sim.tetoPGBL - sim.aporteEfetivo) / 12),
       aproveitandoTeto:       sim.aporteEfetivo >= sim.tetoPGBL,
+      inputRendaAnualBruta:   renda.value,
+      inputIrrf:              irrf.value,
+      inputDespesas:          despesas.value,
+      inputDependentes:       Math.max(0, parseInt(dependentes) || 0),
+      inputInssAnual:         inss.value,
+      inputAporteMensalPGBL:  aporteMensal.value,
     });
-    onClose?.();
+    setSalvo(true);
+    setTimeout(() => {
+      setSalvo(false);
+      onClose?.();
+    }, 2000);
   }
 
   // ── Style helpers ──────────────────────────────────────────────────────────
@@ -603,19 +624,44 @@ export function FerramentaPGBL({ plan, onClose, onSave }: Props) {
 
       {/* ── Salvar ───────────────────────────────────────────────────────── */}
       {onSave && (
-        <button
-          onClick={handleSave}
-          disabled={!sim}
-          style={{
-            width: "100%",
-            backgroundColor: sim ? "#15803D" : "#D1D5DB",
-            color: "white", border: "none", borderRadius: 8,
-            padding: "12px 0", fontSize: 14, fontWeight: 600,
-            cursor: sim ? "pointer" : "not-allowed",
-          }}
-        >
-          Salvar análise
-        </button>
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          padding: "16px 0 0",
+          marginTop: 8,
+          borderTop: "0.5px solid #E5E7EB",
+        }}>
+          <button
+            onClick={handleSave}
+            disabled={!sim || salvo}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              backgroundColor: salvo ? "#15803D" : (sim ? "#2563EB" : "#D1D5DB"),
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              padding: "8px 20px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: sim && !salvo ? "pointer" : "not-allowed",
+              transition: "background-color 0.2s",
+            }}
+          >
+            {salvo ? (
+              <>
+                <i className="ti ti-circle-check" style={{ fontSize: 15 }} />
+                Salvo!
+              </>
+            ) : (
+              <>
+                <i className="ti ti-device-floppy" style={{ fontSize: 15 }} />
+                Salvar simulação
+              </>
+            )}
+          </button>
+        </div>
       )}
 
       {/* ── Nota informativa ─────────────────────────────────────────────── */}

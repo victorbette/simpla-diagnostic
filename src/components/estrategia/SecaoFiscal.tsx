@@ -520,20 +520,42 @@ export function SecaoFiscal({
         <FerramentaPGBL
           plan={plan}
           onClose={() => setPgblModal(false)}
+          savedResult={resultadoFiscal ? {
+            rendaAnual:             resultadoFiscal.rendaAnual,
+            tetoPGBLAnual:          resultadoFiscal.tetoPGBLAnual,
+            aporteAnual:            resultadoFiscal.aporteAnual,
+            irComPGBL:              resultadoFiscal.irComPGBL,
+            irSemPGBL:              resultadoFiscal.irSemPGBL,
+            economiaAnual:          resultadoFiscal.economiaAnual,
+            espacoDisponivelMensal: resultadoFiscal.espacoDisponivelMensal,
+            aproveitandoTeto:       resultadoFiscal.aproveitandoTeto,
+            inputRendaAnualBruta:   resultadoFiscal.inputRendaAnualBruta,
+            inputIrrf:              resultadoFiscal.inputIrrf,
+            inputDespesas:          resultadoFiscal.inputDespesas,
+            inputDependentes:       resultadoFiscal.inputDependentes,
+            inputInssAnual:         resultadoFiscal.inputInssAnual,
+            inputAporteMensalPGBL:  resultadoFiscal.inputAporteMensalPGBL,
+          } : null}
           onSave={(r) => {
             onResultadoFiscal({
-              rendaAnual: r.rendaAnual,
-              tetoPGBLAnual: r.tetoPGBLAnual,
-              aporteAnual: r.aporteAnual,
-              irComPGBL: r.irComPGBL,
-              irSemPGBL: r.irSemPGBL,
-              economiaAnual: r.economiaAnual,
+              rendaAnual:             r.rendaAnual,
+              tetoPGBLAnual:          r.tetoPGBLAnual,
+              aporteAnual:            r.aporteAnual,
+              irComPGBL:              r.irComPGBL,
+              irSemPGBL:              r.irSemPGBL,
+              economiaAnual:          r.economiaAnual,
               espacoDisponivelMensal: r.espacoDisponivelMensal,
-              aproveitandoTeto: r.aproveitandoTeto,
-              dataCalculo: new Date().toISOString(),
-              savedAt: new Date().toISOString(),
+              aproveitandoTeto:       r.aproveitandoTeto,
+              dataCalculo:            new Date().toISOString(),
+              savedAt:                new Date().toISOString(),
+              inputRendaAnualBruta:   r.inputRendaAnualBruta,
+              inputIrrf:              r.inputIrrf,
+              inputDespesas:          r.inputDespesas,
+              inputDependentes:       r.inputDependentes,
+              inputInssAnual:         r.inputInssAnual,
+              inputAporteMensalPGBL:  r.inputAporteMensalPGBL,
             });
-            setPgblModal(false);
+            // Modal close is handled by FerramentaPGBL.handleSave after 2s "Salvo!" feedback
           }}
         />
       </FerramentaModal>
