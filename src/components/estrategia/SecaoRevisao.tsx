@@ -648,7 +648,7 @@ export function SecaoRevisao({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Flame style={{ width: 20, height: 20, color: "#15803D" }} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
-              Aposentadoria / IF
+              Aposentadoria
             </span>
             {statusBadge("aposentadoria", estrategia)}
           </div>
@@ -659,7 +659,7 @@ export function SecaoRevisao({
               {/* 4 métricas */}
               <div style={{ display: "flex", gap: 24, marginBottom: 16, flexWrap: "wrap" }}>
                 {metrica(
-                  "Pat. na IF",
+                  "Pat. na Aposentadoria",
                   safeCurrency(resultados.if.patrimonioAposentadoria)
                 )}
                 {metrica(
@@ -718,7 +718,7 @@ export function SecaoRevisao({
               </div>
             </>
           ) : (
-            <Placeholder text="Simulador de IF não executado — utilize a ferramenta de Aposentadoria" />
+            <Placeholder text="Simulador de Aposentadoria não executado — utilize a ferramenta de Aposentadoria" />
           )}
 
           <CommentArea

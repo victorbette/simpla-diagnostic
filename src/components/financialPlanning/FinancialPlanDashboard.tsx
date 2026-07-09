@@ -546,7 +546,7 @@ export function FinancialPlanDashboard({
 
         {semDadosIF ? (
           <div style={{ textAlign: "center", padding: "24px 16px", backgroundColor: "#F8FAFF", borderRadius: 8 }}>
-            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Desejada na IF para ver o diagnóstico</p>
+            <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Preencha a Renda Desejada na Aposentadoria para ver o diagnóstico</p>
           </div>
         ) : (
           <>

@@ -257,7 +257,7 @@ export function FerramentaLiberdadeFinanceira({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade IF</Label>
+                  <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade de Aposentadoria</Label>
                   <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
                     value={params.idadeAposentadoria}
                     onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
@@ -410,7 +410,7 @@ export function FerramentaLiberdadeFinanceira({
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
                 <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Patrimônio na IF
+                  Patrimônio na Aposentadoria
                 </p>
                 <p style={{ fontSize: 18, fontWeight: 700, color: "#000000" }} className="tabular-nums">
                   {formatCurrency(result.patrimonioNaIF)}
@@ -502,7 +502,7 @@ export function FerramentaLiberdadeFinanceira({
                           border: "1px solid #A8C8AB", borderRadius: 8,
                           padding: "5px 12px", fontSize: 12, fontWeight: 600,
                         }}>
-                          IF alcançada ✓
+                          Aposentadoria alcançada ✓
                         </span>
                       ) : (
                         <span style={{
