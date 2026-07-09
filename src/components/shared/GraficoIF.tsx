@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
@@ -28,12 +28,20 @@ interface Props {
   height?: number;
   /** Absolute month index where accumulation ends — used for IF marker dot only */
   mesIF?: number;
-  /** Birth month 1-12 — used for reliable birthday-aligned x-axis ticks */
+  /** Birth month 1-12 */
   mesNascimento?: number;
 }
 
 export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF }: Props) {
-  const projecaoCompleta = (projecao ?? []).filter(p => Number(p.idade) <= 90);
+  // ── Hooks (must be before any early return) ──────────────────────────────────
+  const [mostrarProjetado, setMostrarProjetado] = useState(true);
+  const [mostrarIdeal, setMostrarIdeal] = useState(true);
+  const [range, setRange] = useState<"2a" | "5a" | "10a" | "max">("max");
+
+  const projecaoCompleta = useMemo(
+    () => (projecao ?? []).filter(p => Number(p.idade) <= 90),
+    [projecao],
+  );
 
   const dadosMesclados = useMemo(
     () => projecaoCompleta.map((ponto) => ({
@@ -43,6 +51,25 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     [projecaoCompleta, curvaIdeal],
   );
 
+  const idadeAtual = useMemo(
+    () => Math.floor(Number(projecaoCompleta[0]?.idade) || 0),
+    [projecaoCompleta],
+  );
+
+  const dominioX = useMemo((): [number, number] => {
+    if (range === "max") return [idadeAtual, 90];
+    const anos = range === "2a" ? 2 : range === "5a" ? 5 : 10;
+    return [idadeAtual, Math.min(idadeAtual + anos, 90)];
+  }, [range, idadeAtual]);
+
+  const dadosFiltrados = useMemo(
+    () => dadosMesclados.filter(
+      d => Number(d.idade) >= dominioX[0] && Number(d.idade) <= dominioX[1],
+    ),
+    [dadosMesclados, dominioX],
+  );
+
+  // ── Early return ─────────────────────────────────────────────────────────────
   if (!projecaoCompleta.length) {
     return (
       <div style={{ height, display: "flex", alignItems: "center", justifyContent: "center", color: "#9CA3AF", fontSize: 13 }}>
@@ -51,12 +78,12 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     );
   }
 
-  const idadeAtual = Math.floor(Number(projecaoCompleta[0].idade) || 0);
+  // ── Derived values (non-hook, safe after early return) ────────────────────────
 
-  // Y-axis: ceil max patrimônio to next 500k multiple
+  // Y-axis based on visible (filtered) data
   const maxPatrimonio = Math.max(
-    ...projecaoCompleta.map((p) => Number(p.patrimonio) || 0),
-    ...(curvaIdeal ?? []).map((v) => Number(v) || 0),
+    ...dadosFiltrados.map((p) => Number(p.patrimonio) || 0),
+    ...dadosFiltrados.map((p) => Number(p.patrimonioIdeal) || 0),
     0,
   );
   const STEP = 500_000;
@@ -64,11 +91,13 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
-  const totalMeses = projecaoCompleta[projecaoCompleta.length - 1]?.mes ?? (90 - idadeAtual) * 12;
-  const agePorMes = new Map<number, number>();
+  // X-axis from filtered data
+  const firstMes   = dadosFiltrados[0]?.mes ?? 0;
+  const totalMeses  = dadosFiltrados[dadosFiltrados.length - 1]?.mes ?? (90 - idadeAtual) * 12;
+  const agePorMes  = new Map<number, number>();
   const xTicks: number[] = [];
   const idadesVistas = new Set<number>();
-  for (const p of projecaoCompleta) {
+  for (const p of dadosFiltrados) {
     const a = Math.floor(Number(p.idade));
     agePorMes.set(p.mes, a);
     if (a % 5 === 0 && !idadesVistas.has(a)) {
@@ -79,6 +108,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
 
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
 
+  // Objectives lookup maps
   const objByMesAno = new Map<string, ObjetivoVida[]>();
   for (const obj of objetivos) {
     const key = `${obj.ano}-${obj.mes}`;
@@ -92,6 +122,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     if (list?.length) objByMesIdx.set(p.mes, list);
   }
 
+  // ── Custom Tooltip ────────────────────────────────────────────────────────────
   const CustomTooltip = ({
     active, payload,
   }: {
@@ -116,24 +147,23 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
         padding: "8px 12px",
         fontSize: 12,
-        minWidth: 160,
+        minWidth: 180,
       }}>
-        <p style={{ margin: "0 0 2px", color: "#6B7280" }}>
+        <p style={{ margin: "0 0 4px", color: "#6B7280" }}>
           {mesLabel} · {idade.toFixed(1)} anos
         </p>
-        <p style={{ margin: 0, fontWeight: 600, color: "#2563EB" }}>{formatCurrency(patrimonio)}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+          <span style={{ width: 14, height: 3, background: "#2563EB", display: "inline-block", borderRadius: 2, flexShrink: 0 }} />
+          <span style={{ color: "#6B7280", fontSize: 11 }}>Patrimônio Total Projetado</span>
+        </div>
+        <p style={{ margin: "0 0 4px", fontWeight: 600, color: "#2563EB" }}>{formatCurrency(patrimonio)}</p>
         {patrimonioIdealVal != null && (
           <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 14, height: 2, background: "#1E3A8A", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
             Aposentadoria Ideal: {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
-        {ifPonto && ponto.mes === ifPonto.mes && (
-          <div style={{ color: COR_APOSENTADORIA, marginTop: 4, display: "flex", alignItems: "center", gap: 4, fontWeight: 500 }}>
-            <Sunset style={{ width: 12, height: 12 }} />
-            Aposentadoria Ideal
-          </div>
-        )}
+        {/* IF icon marker: sem texto no tooltip (melhoria 1) */}
         {objsDoPonto.map((obj) => {
           const meta = getObjetivoMeta(obj.tipo);
           const sinal = obj.tipo === "aportes_financeiros" ? "+" : "−";
@@ -147,6 +177,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     );
   };
 
+  // ── Custom dot renderer ───────────────────────────────────────────────────────
   const renderDot = (dotProps: Record<string, unknown>) => {
     const cx = dotProps.cx as number | undefined;
     const cy = dotProps.cy as number | undefined;
@@ -196,90 +227,156 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     );
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────────
+  const temCurvaIdeal = !!(curvaIdeal && curvaIdeal.length > 0);
+
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={dadosMesclados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
-        <defs>
-          <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.6} />
-            <stop offset="95%" stopColor="#2563EB" stopOpacity={0.25} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
-        <XAxis
-          dataKey="mes"
-          type="number"
-          domain={[0, totalMeses]}
-          ticks={xTicks}
-          tickFormatter={(mes: number) => {
-            const a = agePorMes.get(mes);
-            return a !== undefined ? String(a) : '';
-          }}
-          tick={{ fontSize: 11, fill: "#9CA3AF" }}
-          axisLine={false}
-          tickLine={false}
-          label={{ value: "Idade", position: "insideBottomRight", offset: -8, fontSize: 10, fill: "#9CA3AF" }}
-        />
-        <YAxis
-          domain={[0, yMax]}
-          ticks={yTicks}
-          tickFormatter={(v: number) => {
-            const val = Number(v) || 0;
-            if (val === 0) return "R$ 0";
-            if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
-            return `${(val / 1_000).toFixed(0)}K`;
-          }}
-          tick={{ fontSize: 11, fill: "#9CA3AF" }}
-          axisLine={false}
-          tickLine={false}
-          width={52}
-        />
-        <Tooltip content={<CustomTooltip />} />
+    <div>
+      {/* Pills de zoom (canto direito, acima do gráfico) */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 4, marginBottom: 8 }}>
+        {(["2a", "5a", "10a", "max"] as const).map(r => (
+          <button
+            key={r}
+            onClick={() => setRange(r)}
+            style={{
+              fontSize: 11,
+              fontWeight: range === r ? 600 : 400,
+              color: range === r ? "#2563EB" : "#9CA3AF",
+              background: range === r ? "#DBEAFE" : "transparent",
+              border: range === r ? "0.5px solid #BFDBFE" : "0.5px solid #E5E7EB",
+              borderRadius: 6,
+              padding: "3px 10px",
+              cursor: "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {r === "2a" ? "2 anos" : r === "5a" ? "5 anos" : r === "10a" ? "10 anos" : "Máx"}
+          </button>
+        ))}
+      </div>
 
-        {/* 1. ÁREA AZUL — fundo sólido, sem linha, sem dot */}
-        <Area
-          type="monotone"
-          dataKey="patrimonio"
-          stroke="none"
-          strokeWidth={0}
-          fill="url(#gradReal)"
-          fillOpacity={1}
-          dot={false}
-          activeDot={false}
-          isAnimationActive={false}
-        />
+      <ResponsiveContainer width="100%" height={height}>
+        <AreaChart data={dadosFiltrados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
+          <defs>
+            <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.6} />
+              <stop offset="95%" stopColor="#2563EB" stopOpacity={0.25} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" horizontal={true} vertical={false} />
+          <XAxis
+            dataKey="mes"
+            type="number"
+            domain={[firstMes, totalMeses]}
+            ticks={xTicks}
+            tickFormatter={(mes: number) => {
+              const a = agePorMes.get(mes);
+              return a !== undefined ? String(a) : "";
+            }}
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+            label={{ value: "Idade", position: "insideBottomRight", offset: -8, fontSize: 10, fill: "#9CA3AF" }}
+          />
+          <YAxis
+            domain={[0, yMax]}
+            ticks={yTicks}
+            tickFormatter={(v: number) => {
+              const val = Number(v) || 0;
+              if (val === 0) return "R$ 0";
+              if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+              return `${(val / 1_000).toFixed(0)}K`;
+            }}
+            tick={{ fontSize: 11, fill: "#9CA3AF" }}
+            axisLine={false}
+            tickLine={false}
+            width={52}
+          />
+          <Tooltip content={<CustomTooltip />} />
 
-        {/* 2. LINHA AZUL ESCURO — curvaIdeal, sem fill */}
-        {curvaIdeal && curvaIdeal.length > 0 && (
+          {/* 1. ÁREA AZUL — patrimônio projetado, com activeDot ao hover */}
+          {mostrarProjetado && (
+            <Area
+              type="monotone"
+              dataKey="patrimonio"
+              stroke="#2563EB"
+              strokeWidth={2}
+              fill="url(#gradReal)"
+              fillOpacity={1}
+              dot={false}
+              activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
+              isAnimationActive={false}
+              name="Patrimônio Total Projetado"
+            />
+          )}
+
+          {/* 2. LINHA AZUL ESCURO — curva ideal de aposentadoria */}
+          {mostrarIdeal && temCurvaIdeal && (
+            <Area
+              type="monotone"
+              dataKey="patrimonioIdeal"
+              stroke="#1E3A8A"
+              strokeWidth={2.5}
+              fill="none"
+              fillOpacity={0}
+              dot={false}
+              activeDot={false}
+              connectNulls={false}
+              isAnimationActive={false}
+              name="Aposentadoria Ideal"
+            />
+          )}
+
+          {/* 3. DOTS — área invisível apenas para renderizar ícones de objetivos e IF */}
           <Area
             type="monotone"
-            dataKey="patrimonioIdeal"
-            stroke="#1E3A8A"
-            strokeWidth={2.5}
+            dataKey="patrimonio"
+            stroke="none"
+            strokeWidth={0}
             fill="none"
             fillOpacity={0}
-            dot={false}
-            activeDot={false}
-            connectNulls={false}
             isAnimationActive={false}
-            name="Aposentadoria Ideal"
+            dot={renderDot}
+            activeDot={false}
+            name="Projeção com objetivos"
           />
-        )}
+        </AreaChart>
+      </ResponsiveContainer>
 
-        {/* 3. DOTS E ÍCONES — área invisível só para renderizar marcadores no topo */}
-        <Area
-          type="monotone"
-          dataKey="patrimonio"
-          stroke="none"
-          strokeWidth={0}
-          fill="none"
-          fillOpacity={0}
-          isAnimationActive={false}
-          dot={renderDot}
-          activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
-          name="Projeção com objetivos"
-        />
-      </AreaChart>
-    </ResponsiveContainer>
+      {/* Legenda clicável abaixo do gráfico */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 12 }}>
+        <button
+          onClick={() => setMostrarProjetado(p => !p)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: "none", border: "none", cursor: "pointer",
+            padding: "4px 8px", borderRadius: 6,
+            opacity: mostrarProjetado ? 1 : 0.4,
+            transition: "opacity 200ms",
+            fontFamily: "inherit",
+          }}
+        >
+          <div style={{ width: 24, height: 3, background: "#2563EB", borderRadius: 2 }} />
+          <span style={{ fontSize: 12, color: "#374151" }}>Patrimônio Total Projetado</span>
+        </button>
+
+        {temCurvaIdeal && (
+          <button
+            onClick={() => setMostrarIdeal(p => !p)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: "none", border: "none", cursor: "pointer",
+              padding: "4px 8px", borderRadius: 6,
+              opacity: mostrarIdeal ? 1 : 0.4,
+              transition: "opacity 200ms",
+              fontFamily: "inherit",
+            }}
+          >
+            <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
