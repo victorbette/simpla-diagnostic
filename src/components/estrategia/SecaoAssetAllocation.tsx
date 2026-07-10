@@ -1,8 +1,8 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Label } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { PieChart as PieChartIcon } from "lucide-react";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/format";
-import { formatPct, formatBRL } from "@/lib/carteira/calculos";
+import { formatBRL } from "@/lib/carteira/calculos";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
@@ -31,80 +31,63 @@ const CARD: React.CSSProperties = {
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
 
-// ── DonutChart ────────────────────────────────────────────────────────────────
+// ── PizzaChart ─────────────────────────────────────────────────────────────────
 
-interface DonutChartProps {
-  data: { name: string; value: number; color: string; key: string; brl: number }[];
-  centerLabel: string;
+interface PizzaSlice {
+  key: string;
+  name: string;
+  value: number;
+  color: string;
+  brl: number;
 }
 
-function DonutChart({ data, centerLabel }: DonutChartProps) {
-  const total = data.reduce((s, d) => s + d.value, 0);
-
+function PizzaChart({ data, titulo, subtitulo }: { data: PizzaSlice[]; titulo: string; subtitulo: string }) {
   if (data.length === 0) {
     return (
-      <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#F0F7FF", borderRadius: 8, flexDirection: "column", gap: 6 }}>
-        <PieChartIcon size={32} color="#3B82F6" strokeWidth={1.5} />
-        <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0, textAlign: "center" }}>Sem dados para exibir</p>
+      <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#F0F7FF", borderRadius: 8, flexDirection: "column", gap: 6 }}>
+        <PieChartIcon size={28} color="#3B82F6" strokeWidth={1.5} />
+        <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>Sem dados para exibir</p>
       </div>
     );
   }
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={200}>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            innerRadius={55}
-            outerRadius={85}
-            paddingAngle={2}
-            strokeWidth={1.5}
-            stroke="white"
-          >
-            {data.map((d, i) => <Cell key={i} fill={d.color} />)}
-            <Label
-              content={({ viewBox }) => {
-                const vb = viewBox as { cx?: number; cy?: number };
-                const cx = vb.cx ?? 0;
-                const cy = vb.cy ?? 0;
-                return (
-                  <text textAnchor="middle">
-                    <tspan x={cx} y={cy - 7} fontSize={10} fill="#6B7280">{centerLabel}</tspan>
-                    <tspan x={cx} y={cy + 11} fontSize={15} fontWeight="700" fill="#000000">{total.toFixed(0)}%</tspan>
-                  </text>
-                );
-              }}
-            />
-          </Pie>
-          <Tooltip formatter={(v: number, name: string) => [`${v.toFixed(1)}%`, name]} />
-        </PieChart>
-      </ResponsiveContainer>
-
-      {/* Legend */}
-      <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 4 }}>
-        <tbody>
+      <p style={{ fontSize: 12, fontWeight: 700, color: "#374151", margin: "0 0 2px" }}>{titulo}</p>
+      <p style={{ fontSize: 11, color: "#9CA3AF", margin: "0 0 12px" }}>{subtitulo}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ flexShrink: 0 }}>
+          <PieChart width={160} height={160}>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={0}
+              outerRadius={75}
+              paddingAngle={2}
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell key={index} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]} />
+          </PieChart>
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
           {data.map((d) => (
-            <tr key={d.key}>
-              <td style={{ padding: "2px 0" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, display: "inline-block", flexShrink: 0 }} />
-                  <span style={{ color: "#374151" }}>{d.name}</span>
-                </div>
-              </td>
-              <td style={{ padding: "2px 0", textAlign: "right", color: "#6B7280", paddingLeft: 6 }}>
-                {d.value.toFixed(1).replace(".", ",")}%
-              </td>
-              <td style={{ padding: "2px 0", textAlign: "right", color: "#9CA3AF", paddingLeft: 6 }}>
-                {formatBRL(d.brl)}
-              </td>
-            </tr>
+            <div key={d.key} style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0, marginTop: 3 }} />
+              <div>
+                <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.3 }}>{d.name}</p>
+                <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>
+                  {d.value.toFixed(1).replace(".", ",")}% · {formatBRL(d.brl)}
+                </p>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 }
@@ -127,7 +110,6 @@ export function SecaoAssetAllocation({
   function handleCarteiraSave(r: CarteiraResultado) {
     const patrimonio = r.patrimonio;
 
-    // macroAtual: per-card % computed from ativosAtuais
     const macroAtual: Record<string, number> = {};
     for (const cardId of CARD_ORDER) {
       const totalDoCard = r.ativosAtuais
@@ -136,7 +118,6 @@ export function SecaoAssetAllocation({
       macroAtual[cardId] = patrimonio > 0 ? (totalDoCard / patrimonio) * 100 : 0;
     }
 
-    // macroMeta: directly from slider (already %)
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
     const totalAportes = (r.planoAcao ?? [])
@@ -256,7 +237,7 @@ export function SecaoAssetAllocation({
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
-  // PieChart data — value is % (0–100), brl derived from patrimonio
+  // Pizza chart data
   const dadosAtual = CARD_ORDER
     .map((cardId) => {
       const value = Number(rc.macroAtual[cardId]) || 0;
@@ -271,6 +252,15 @@ export function SecaoAssetAllocation({
     })
     .filter((d) => d.value > 0.1);
 
+  // Proposed-only table data
+  const dadosProposta = CARD_ORDER
+    .map((cardId) => {
+      const pctMeta = Number(rc.macroMeta[cardId]) || 0;
+      const brlMeta = (pctMeta / 100) * patrimonio;
+      return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctMeta, brlMeta };
+    })
+    .filter((d) => d.pctMeta > 0);
+
   const totalAportes = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
     .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
@@ -283,19 +273,6 @@ export function SecaoAssetAllocation({
     }, 0);
   const saldoLiquido = totalAportes - totalResgates;
 
-  // Comparative table data
-  const dadosTabela = CARD_ORDER
-    .map((cardId) => {
-      const pctAtual = Number(rc.macroAtual[cardId]) || 0;
-      const pctMeta = Number(rc.macroMeta[cardId]) || 0;
-      const brlAtual = (pctAtual / 100) * patrimonio;
-      const brlMeta = (pctMeta / 100) * patrimonioMeta;
-      const difBRL = brlMeta - brlAtual;
-
-      return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctAtual, brlAtual, pctMeta, brlMeta, difBRL };
-    })
-    .filter((d) => d.pctAtual > 0 || d.pctMeta > 0);
-
   const actionItems = rc.planoAcao ?? [];
 
   const groupedByCard: Record<string, typeof actionItems> = {};
@@ -306,7 +283,6 @@ export function SecaoAssetAllocation({
     if (!groupedByCard[cardLabel]) groupedByCard[cardLabel] = [];
     groupedByCard[cardLabel].push(item);
   }
-
 
   return (
     <>
@@ -357,69 +333,67 @@ export function SecaoAssetAllocation({
           </div>
         </div>
 
-        {/* Card 2 — PieCharts */}
+        {/* Card 2 — Pizza charts (Atual vs Proposta) */}
         <div style={CARD}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 20px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Alocação Atual vs Proposta
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-            <div>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
-                Atual — {formatCurrency(patrimonio)}
-              </p>
-              <DonutChart data={dadosAtual} centerLabel="Atual" />
-            </div>
-            <div>
-              <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 8px", textAlign: "center", fontWeight: 600 }}>
-                Proposta — {formatCurrency(patrimonioMeta)}
-              </p>
-              <DonutChart data={dadosMeta} centerLabel="Proposta" />
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+            <PizzaChart
+              data={dadosAtual}
+              titulo="Atual"
+              subtitulo={formatCurrency(patrimonio)}
+            />
+            <PizzaChart
+              data={dadosMeta}
+              titulo="Proposta"
+              subtitulo={formatCurrency(patrimonioMeta)}
+            />
           </div>
         </div>
 
-        {/* Card 3 — Comparative table */}
+        {/* Card 3 — Proposed allocation table */}
         <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", backgroundColor: "#1E3A8A", padding: "10px 20px" }}>
-            {["Classe", "% Atual", "R$ Atual", "% Meta", "R$ Meta", "Dif R$"].map((h, i) => (
-              <span key={h} style={{ fontSize: 11, fontWeight: 700, color: "white", textTransform: "uppercase", letterSpacing: "0.04em", textAlign: i === 0 ? "left" : "right" }}>
+          {/* Header */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "10px 12px", borderBottom: "0.5px solid #E5E7EB" }}>
+            {(["CLASSE", "% PROPOSTA", "R$ PROPOSTO"] as const).map((h, i) => (
+              <span key={h} style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: i === 0 ? "left" : "right" }}>
                 {h}
               </span>
             ))}
           </div>
 
-          {dadosTabela.map((d, idx) => (
-              <div
-                key={d.cardId}
-                style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", padding: "10px 20px", backgroundColor: idx % 2 === 0 ? "white" : "#F0F7FF", borderBottom: "1px solid #F0F7FF", alignItems: "center" }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#000000" }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.cor, flexShrink: 0 }} />
-                  {d.label}
-                </div>
-                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatPct(d.pctAtual)}</span>
-                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(d.brlAtual)}</span>
-                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatPct(d.pctMeta)}</span>
-                <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(d.brlMeta)}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: d.difBRL > 0 ? "#15803D" : d.difBRL < 0 ? "#B91C1C" : "#9CA3AF", textAlign: "right" }}>
-                  {d.difBRL === 0 ? "—" : `${d.difBRL > 0 ? "+" : ""}${formatBRL(d.difBRL)}`}
+          {/* Rows */}
+          {dadosProposta.map((d) => (
+            <div
+              key={d.cardId}
+              style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", borderBottom: "0.5px solid #F9FAFB", alignItems: "center" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.cor, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{d.label}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 99, backgroundColor: `${d.cor}33`, color: d.cor }}>
+                  {d.pctMeta.toFixed(0)}%
                 </span>
               </div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827", textAlign: "right" }}>
+                {formatBRL(d.brlMeta)}
+              </span>
+            </div>
           ))}
 
-          {/* Total row */}
-          {dadosTabela.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 65px 100px 65px 100px 110px", padding: "10px 20px", backgroundColor: "#F8FAFC", borderTop: "2px solid #BFDBFE", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>
-                {formatPct(dadosTabela.reduce((s, d) => s + d.pctAtual, 0))}
+          {/* Footer */}
+          {dadosProposta.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
+                {formatBRL(patrimonio)}
               </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonio)}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>
-                {formatPct(dadosTabela.reduce((s, d) => s + d.pctMeta, 0))}
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonioMeta)}</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>—</span>
             </div>
           )}
         </div>
