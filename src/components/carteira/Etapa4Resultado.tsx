@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { Save } from "lucide-react";
 import type { Ativo, PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
-import { formatBRL, formatPct } from "@/lib/carteira/calculos";
+import { formatBRL } from "@/lib/carteira/calculos";
 import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
+import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
 
 interface Props {
   ativosAtuais: Ativo[];
@@ -14,17 +14,6 @@ interface Props {
   patrimonio: number;
   aporteDisponivel?: number;
   onSave: () => void;
-}
-
-const GRUPOS = [
-  { nome: "Renda Fixa",    cards: ["resgate_longo", "resgate_rapido"] as CardId[], cor: "#1E3A8A" },
-  { nome: "RV Brasil",     cards: ["acoes", "fiis"] as CardId[],                   cor: "#15803D" },
-  { nome: "Internacional", cards: ["exterior"] as CardId[],                         cor: "#B45309" },
-  { nome: "Criptoativos",  cards: ["cripto"] as CardId[],                           cor: "#2563EB" },
-];
-
-function totalByCards(ativos: Ativo[], cards: CardId[]): number {
-  return ativos.filter((a) => cards.includes(a.card)).reduce((s, a) => s + a.valorBRL, 0);
 }
 
 function calcularValorFinal(item: PlanoAcaoItem): number {
@@ -47,82 +36,20 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
   }
 }
 
-function PieSection({
-  title,
-  data,
-}: {
-  title: string;
-  data: { nome: string; valor: number; pct: number; cor: string }[];
-}) {
-  const pieData = data.filter((d) => d.pct > 0);
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 4px" }}>{title}</p>
-      {pieData.length > 0 ? (
-        <>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="pct"
-                nameKey="nome"
-                cx="50%"
-                cy="50%"
-                innerRadius="45%"
-                outerRadius="80%"
-                paddingAngle={2}
-              >
-                {pieData.map((d, i) => <Cell key={i} fill={d.cor} />)}
-              </Pie>
-              <Tooltip formatter={(v: number) => formatPct(v)} />
-            </PieChart>
-          </ResponsiveContainer>
-          <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse", marginTop: 4 }}>
-            <tbody>
-              {pieData.map((d) => (
-                <tr key={d.nome}>
-                  <td style={{ padding: "2px 0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.cor, display: "inline-block" }} />
-                      <span style={{ color: "#374151" }}>{d.nome}</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: "2px 0", textAlign: "right", color: "#6B7280" }}>{formatPct(d.pct)}</td>
-                  <td style={{ padding: "2px 0", textAlign: "right", color: "#9CA3AF", paddingLeft: 6 }}>{formatBRL(d.valor)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      ) : (
-        <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#9CA3AF" }}>
-          Sem dados
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
   const patrimonioMeta = patrimonio + aporteDisponivel;
 
-  const grupoAtual = useMemo(
-    () => GRUPOS.map((g) => {
-      const valor = totalByCards(ativosAtuais, g.cards);
-      const pct = patrimonio > 0 ? (valor / patrimonio) * 100 : 0;
-      return { nome: g.nome, valor, pct: Math.round(pct * 10) / 10, cor: g.cor };
-    }),
-    [ativosAtuais, patrimonio]
-  );
+  const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
 
-  // grupoMeta: use alocacaoMeta slider values × (patrimônio + aporte)
-  const grupoMeta = useMemo(
-    () => GRUPOS.map((g) => {
-      const pct = g.cards.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
-      const valor = (pct / 100) * patrimonioMeta;
-      return { nome: g.nome, valor, pct: Math.round(pct * 10) / 10, cor: g.cor };
-    }),
-    [alocacaoMeta, patrimonioMeta]
+  const macroAtualCalc = useMemo(
+    () => CARD_ORDER.reduce((acc, id) => {
+      const total = ativosAtuais
+        .filter((a) => a.card === id)
+        .reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+      acc[id] = patrimonioTotal > 0 ? (total / patrimonioTotal) * 100 : 0;
+      return acc;
+    }, {} as Record<string, number>),
+    [ativosAtuais, patrimonioTotal]
   );
 
   const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
@@ -176,16 +103,11 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
       </div>
 
       {/* Alocação Atual vs Proposta */}
-      <div style={cardStyle("#2563EB")}>
-        <div style={{ padding: "10px 16px", borderBottom: "1px solid #BFDBFE", fontSize: 13, fontWeight: 600, color: "#111827" }}>
-          Alocação Atual vs Proposta
-        </div>
-        <div style={{ padding: 16, display: "flex", gap: 24 }}>
-          <PieSection title="Carteira Atual" data={grupoAtual} />
-          <div style={{ width: 1, backgroundColor: "#BFDBFE", flexShrink: 0 }} />
-          <PieSection title="Carteira Proposta" data={grupoMeta} />
-        </div>
-      </div>
+      <CardAlocacaoComparativa
+        macroAtual={macroAtualCalc}
+        macroMeta={alocacaoMeta}
+        patrimonio={patrimonioMeta}
+      />
 
       {/* Comparativo por Card */}
       <div style={cardStyle("#2563EB")}>
