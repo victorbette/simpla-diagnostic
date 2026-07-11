@@ -24,7 +24,7 @@ const AREAS = [
   "Asset Allocation",
   "Liberdade Financeira",
   "Proteção e Sucessório",
-  "Planejamento Fiscal",
+  "Planejamento Tributário",
   "Geral",
 ];
 
@@ -45,7 +45,7 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
 
   const fiscalEspaco = resultados.fiscal?.espacoDisponivelMensal ?? (calcularFiscal(plan.fiscal).espacoPGBL / 12);
   if (fiscalEspaco > 0 && plan.fiscal.tipoDeclaracao === "completa") {
-    passos.push({ id: crypto.randomUUID(), descricao: "Abrir ou aumentar contribuição PGBL para aproveitar benefício fiscal", prioridade: "media", dataPrevisao: "", area: "Planejamento Fiscal" });
+    passos.push({ id: crypto.randomUUID(), descricao: "Abrir ou aumentar contribuição PGBL para aproveitar benefício fiscal", prioridade: "media", dataPrevisao: "", area: "Planejamento Tributário" });
   }
 
   const holding = calcularPerfilHolding({ ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa }, plan.sucessorio);

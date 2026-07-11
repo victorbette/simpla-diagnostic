@@ -13,7 +13,7 @@ const ITENS_SUMARIO = [
   { pagina: 4, label: "Liberdade Financeira",    icone: "ti-beach",       cor: "#059669", scoreKey: "lf"     },
   { pagina: 5, label: "Asset Allocation",        icone: "ti-chart-pie",   cor: "#2563EB", scoreKey: "aa"     },
   { pagina: 6, label: "Proteção e Sucessório",   icone: "ti-shield",      cor: "#B91C1C", scoreKey: "ps"     },
-  { pagina: 7, label: "Planejamento Fiscal",     icone: "ti-receipt",     cor: "#B45309", scoreKey: "fiscal" },
+  { pagina: 7, label: "Planejamento Tributário",     icone: "ti-receipt",     cor: "#B45309", scoreKey: "fiscal" },
   { pagina: 8, label: "Próximos Passos",         icone: "ti-list-checks", cor: "#7C3AED"                     },
   { pagina: 9, label: "Mãos à Obra",             icone: "ti-rocket",      cor: "#1E3A8A"                     },
 ] as const;

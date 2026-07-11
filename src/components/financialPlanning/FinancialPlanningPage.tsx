@@ -27,7 +27,7 @@ const ABAS = [
   { id: "liberdade_financeira", label: "Liberdade Financeira",  icone: "ti-beach"            },
   { id: "asset_allocation",     label: "Asset Allocation",      icone: "ti-chart-pie"        },
   { id: "protecao_sucessorio",  label: "Proteção e Sucessório", icone: "ti-shield"           },
-  { id: "planejamento_fiscal",  label: "Planejamento Fiscal",   icone: "ti-receipt"          },
+  { id: "planejamento_fiscal",  label: "Planejamento Tributário",   icone: "ti-receipt"          },
   { id: "resultado",            label: "Resultado",             icone: "ti-chart-bar"        },
   { id: "estrategia_pronta",    label: "Estratégia Pronta",     icone: "ti-file-download"    },
 ];
