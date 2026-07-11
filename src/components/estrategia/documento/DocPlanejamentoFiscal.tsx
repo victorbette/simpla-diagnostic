@@ -54,14 +54,14 @@ export function DocPlanejamentoFiscal({ nomeCliente, plan, resultados, numPagina
           <div style={{ width: 40, height: 40, background: "#B45309", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
             <i className="ti ti-receipt" style={{ fontSize: 20 }} />
           </div>
-          <span style={TITULO_SECAO}>Planejamento Fiscal</span>
+          <span style={TITULO_SECAO}>Planejamento Tributário</span>
         </div>
         <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 999, background: nv.bg, color: nv.color }}>{score}/100 · {nv.label}</span>
       </div>
 
       {/* Intro */}
       <p style={{ ...TEXTO_CORPO, marginBottom: 24 }}>
-        O planejamento fiscal busca maximizar sua eficiência tributária de forma legal, garantindo
+        O planejamento tributário busca maximizar sua eficiência tributária de forma legal, garantindo
         que você pague apenas o imposto devido e aproveite todos os benefícios disponíveis na
         legislação brasileira.
       </p>

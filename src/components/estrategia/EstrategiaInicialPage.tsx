@@ -61,7 +61,7 @@ const SECOES: SecaoConfig[] = [
   { id: "assetAllocation",    label: "Asset Allocation",       icone: "ti-chart-pie"     },
   { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
-  { id: "fiscal",             label: "Planejamento Fiscal",    icone: "ti-receipt"       },
+  { id: "fiscal",             label: "Planejamento Tributário",    icone: "ti-receipt"       },
   { id: "estrategia_pronta",  label: "Estratégia Pronta",      icone: "ti-file-download" },
 ];
 
