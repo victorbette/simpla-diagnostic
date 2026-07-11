@@ -9,10 +9,30 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ColetaDadosCompleta } from "./ColetaDadosCompleta";
 import { FinancialPlanDashboard } from "./FinancialPlanDashboard";
 import { FinancialPlanPrintAdvisor, FinancialPlanPrintClient } from "./FinancialPlanPrint";
-import { EstrategiaInicialPage } from "@/components/estrategia/EstrategiaInicialPage";
+import { SecaoAposentadoria } from "@/components/estrategia/SecaoAposentadoria";
+import { SecaoAssetAllocation } from "@/components/estrategia/SecaoAssetAllocation";
+import { SecaoProtecaoSucessorio } from "@/components/estrategia/SecaoProtecaoSucessorio";
+import { SecaoFiscal } from "@/components/estrategia/SecaoFiscal";
+import { EstrategiaFinal } from "@/components/estrategia/EstrategiaFinal";
+import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
+import { defaultResultados } from "@/types/estrategiaResultados";
 
 const DARK = "#000000";
 const GOLD = "#3B82F6";
+
+// ── Abas ─────────────────────────────────────────────────────────────────────────────
+
+const ABAS = [
+  { id: "coleta",               label: "Coleta de Dados",       icone: "ti-clipboard-list"  },
+  { id: "liberdade_financeira", label: "Liberdade Financeira",  icone: "ti-beach"            },
+  { id: "asset_allocation",     label: "Asset Allocation",      icone: "ti-chart-pie"        },
+  { id: "protecao_sucessorio",  label: "Proteção e Sucessório", icone: "ti-shield"           },
+  { id: "planejamento_fiscal",  label: "Planejamento Fiscal",   icone: "ti-receipt"          },
+  { id: "resultado",            label: "Resultado",             icone: "ti-chart-bar"        },
+  { id: "estrategia_pronta",    label: "Estratégia Pronta",     icone: "ti-file-download"    },
+];
+
+// ── Component ─────────────────────────────────────────────────────────────────────────
 
 interface Props {
   clientId: string;
@@ -24,31 +44,76 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   const store = useFinancialPlanStore();
   const { user, signOut } = useAuth();
   const [plan, setPlan] = useState<FinancialPlan>(() => initialFinancialPlan(clientId));
-  const [aba, setAba] = useState<"coleta" | "resultado">("coleta");
+  const [abaAtiva, setAbaAtiva] = useState("coleta");
   const [saving, setSaving] = useState(false);
   const [printMode, setPrintMode] = useState<"advisor" | "client" | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [mostrarEstrategia, setMostrarEstrategia] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const planInitialized = useRef(false);
+
+  // ── Strategy state (localStorage-backed) ─────────────────────────────────
+
+  const resultadosKey = `resultados_estrategia_${clientId}`;
+  const estrategiaKey = `estrategia_v2_${clientId}`;
+
+  const [resultados, setResultados] = useState<ResultadosEstrategia>(() => {
+    try {
+      const saved = localStorage.getItem(resultadosKey);
+      if (saved) return JSON.parse(saved) as ResultadosEstrategia;
+    } catch { /**/ }
+    return defaultResultados;
+  });
+
+  const [comentarios, setComentarios] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(estrategiaKey);
+      if (saved) return (JSON.parse(saved) as { comentarios?: Record<string, string> }).comentarios ?? {};
+    } catch { /**/ }
+    return {};
+  });
+
+  const [allTags, setAllTags] = useState<Record<string, string[]>>(() => {
+    try {
+      const saved = localStorage.getItem(estrategiaKey);
+      if (saved) return (JSON.parse(saved) as { tags?: Record<string, string[]> }).tags ?? {};
+    } catch { /**/ }
+    return {};
+  });
+
+  // Persist resultados to localStorage on change
+  useEffect(() => {
+    try { localStorage.setItem(resultadosKey, JSON.stringify(resultados)); } catch { /**/ }
+  }, [resultados, resultadosKey]);
+
+  // Persist comentarios + tags to localStorage on change
+  const estrategiaDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (estrategiaDebounce.current) clearTimeout(estrategiaDebounce.current);
+    estrategiaDebounce.current = setTimeout(() => {
+      try {
+        const current = localStorage.getItem(estrategiaKey);
+        const base = current ? JSON.parse(current) : {};
+        localStorage.setItem(estrategiaKey, JSON.stringify({ ...base, comentarios, tags: allTags }));
+      } catch { /**/ }
+    }, 600);
+  }, [comentarios, allTags, estrategiaKey]);
+
+  // ── Auth ────────────────────────────────────────────────────────────────────────
 
   const userEmail = user?.email ?? "";
   const userLabel = userEmail.split("@")[0] || "Consultor";
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
-  // Load (or create) plan on mount
+  // ── Plan init ──────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const init = async () => {
       await store.carregarPlano(clientId);
-
       if (!store.planRef.current) {
-        try {
-          await store.criarPlano(clientId);
-        } catch (err) {
+        try { await store.criarPlano(clientId); } catch (err) {
           console.error("FinancialPlanningPage: criarPlano failed", err);
         }
       }
-
       if (!planInitialized.current) {
         planInitialized.current = true;
         if (store.planRef.current) {
@@ -57,15 +122,21 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         }
       }
     };
-
     init().catch(console.error);
+    return () => {
+      if (estrategiaDebounce.current) clearTimeout(estrategiaDebounce.current);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
+
+  // ── Plan update ──────────────────────────────────────────────────────────────────
 
   const updatePlan = useCallback((patch: Partial<FinancialPlan>) => {
     setPlan((prev) => ({ ...prev, ...patch }));
     setDirty(true);
   }, []);
+
+  // ── Save ───────────────────────────────────────────────────────────────────────────
 
   async function handleSave(status?: FinancialPlan["status"]) {
     setSaving(true);
@@ -88,32 +159,22 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
 
   async function handleBackToClients() {
     if (dirty) {
-      const resposta = window.confirm(
-        "Há alterações não salvas. Deseja salvar antes de sair?"
-      );
+      const resposta = window.confirm("Há alterações não salvas. Deseja salvar antes de sair?");
       if (resposta) {
-        try {
-          await handleSave();
-        } catch {
-          // erro já exibido em handleSave
-        }
+        try { await handleSave(); } catch { /* erro já exibido */ }
       }
     }
     onClose();
   }
+
+  // ── Coleta complete ───────────────────────────────────────────────────────────
 
   function handleColetaComplete(dadosCliente: DadosCliente) {
     const newPlan: FinancialPlan = {
       ...plan,
       dadosCliente,
       suitability: dadosCliente.suitabilityPerfil
-        ? {
-            respostas: [],
-            totalPontos: 0,
-            percentual: 0,
-            perfil: dadosCliente.suitabilityPerfil,
-            dataResposta: new Date().toISOString(),
-          }
+        ? { respostas: [], totalPontos: 0, percentual: 0, perfil: dadosCliente.suitabilityPerfil, dataResposta: new Date().toISOString() }
         : plan.suitability,
       planejamentoIF:
         plan.planejamentoIF.idadeAtual === 35
@@ -176,34 +237,29 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
 
   function handlePrint(type: "advisor" | "client") {
     setPrintMode(type);
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 300);
+    setTimeout(() => { window.print(); setPrintMode(null); }, 300);
   }
 
-  // ── Estratégia overlay ────────────────────────────────────────────────────
-  if (mostrarEstrategia) {
-    return (
-      <EstrategiaInicialPage
-        plan={plan}
-        clientName={clientName}
-        onClose={() => setMostrarEstrategia(false)}
-        onSaveCloud={async (data) => {
-          if (!plan.id) throw new Error("Salve o Financial Planning antes de salvar a estratégia.");
-          await store.saveEstrategia(plan.id, data as unknown as Record<string, unknown>);
-        }}
-        onLoadCloud={async () => {
-          if (!plan.id) return null;
-          return store.loadEstrategia(plan.id) as Promise<Record<string, unknown> | null>;
-        }}
-      />
-    );
-  }
+  // ── Per-section comentario / tags helpers ───────────────────────────────────
+
+  const secaoComentario = comentarios[abaAtiva] ?? "";
+  const secaoTags = allTags[abaAtiva] ?? [];
+
+  const handleComentarioChange = useCallback(
+    (v: string) => setComentarios((prev) => ({ ...prev, [abaAtiva]: v })),
+    [abaAtiva]
+  );
+  const handleTagsChange = useCallback(
+    (v: string[]) => setAllTags((prev) => ({ ...prev, [abaAtiva]: v })),
+    [abaAtiva]
+  );
+
+  // ── Render ────────────────────────────────────────────────────────────────────────
 
   return (
     <>
       <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+
         {/* ── Header ── */}
         <header
           style={{
@@ -217,7 +273,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
             zIndex: 40,
           }}
         >
-          {/* Back + Logo */}
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
             <button
               onClick={handleBackToClients}
@@ -236,64 +291,31 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
               ← Clientes
             </button>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <img
-                src="/logo-si.svg"
-                alt="Simpla Invest"
-                style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
-              />
+              <img src="/logo-si.svg" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
               <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-                <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                  Simpla Invest
-                </span>
-                <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
-                  Financial Planning
-                </span>
+                <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+                <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
               </div>
             </div>
-            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>
-              — {clientName}
-            </span>
+            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
           </div>
 
-          {/* User info */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             <div style={{ textAlign: "right" }}>
-              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>
-                {userLabel}
-              </p>
-              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>
-                Consultor financeiro
-              </p>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
+              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
             </div>
             <div
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                backgroundColor: GOLD,
-                color: DARK,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 13,
-                fontWeight: 700,
-                flexShrink: 0,
-                userSelect: "none",
+                width: 36, height: 36, borderRadius: "50%",
+                backgroundColor: GOLD, color: DARK,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none",
               }}
             >
               {userInitials}
             </div>
-            <button
-              onClick={signOut}
-              title="Sair"
-              style={{
-                background: "none",
-                border: "none",
-                color: "#9CA3AF",
-                cursor: "pointer",
-                padding: 4,
-              }}
-            >
+            <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
               <LogOut size={18} />
             </button>
           </div>
@@ -307,36 +329,39 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
             padding: "0 24px",
             display: "flex",
             alignItems: "center",
-            gap: 0,
             flexShrink: 0,
-            height: 44,
+            overflowX: "auto",
           }}
         >
-          {(["coleta", "resultado"] as const).map((tab) => (
+          {ABAS.map((aba) => (
             <button
-              key={tab}
-              onClick={() => setAba(tab)}
+              key={aba.id}
+              onClick={() => setAbaAtiva(aba.id)}
               style={{
                 background: "none",
                 border: "none",
-                borderBottom: aba === tab ? "2px solid #1E3A8A" : "2px solid transparent",
-                color: aba === tab ? "#1E3A8A" : "#6B7280",
-                fontWeight: aba === tab ? 700 : 500,
+                borderBottom: abaAtiva === aba.id ? "2px solid #1E3A8A" : "2px solid transparent",
+                color: abaAtiva === aba.id ? "#1E3A8A" : "#6B7280",
+                fontWeight: abaAtiva === aba.id ? 700 : 500,
                 fontSize: 13,
-                padding: "0 18px",
-                height: "100%",
+                padding: "0 14px",
+                height: 44,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontFamily: "inherit",
                 transition: "color 0.15s",
+                flexShrink: 0,
               }}
             >
-              {tab === "coleta" ? "Coleta de Dados" : "Resultado"}
+              <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
+              {aba.label}
             </button>
           ))}
 
-          {/* Spacer + save status + Salvar button */}
-          <div style={{ flex: 1 }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, paddingLeft: 16, flexShrink: 0 }}>
             {dirty && !saving && (
               <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563EB" }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#2563EB", display: "inline-block" }} />
@@ -370,45 +395,115 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         </div>
 
         {/* ── Content ── */}
-        <main
-          style={{
-            flex: 1,
-            minHeight: 0,
-            minWidth: 0,
-            backgroundColor: "#F0F7FF",
-            overflowY: "auto",
-            width: "100%",
-          }}
-        >
-          {aba === "coleta" && (
-            <ColetaDadosCompleta
+        {/* EstrategiaFinal manages its own overflow — needs overflow:hidden parent */}
+        <main style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          {abaAtiva === "estrategia_pronta" ? (
+            <EstrategiaFinal
               plan={plan}
-              onChange={updatePlan}
-              onColetaComplete={handleColetaComplete}
-            />
-          )}
-
-          {aba === "resultado" && (
-            <FinancialPlanDashboard
-              plan={plan}
+              resultados={resultados}
               clientName={clientName}
-              onEdit={() => setAba("coleta")}
-              onSave={async () => { await handleSave("completo"); }}
-              onPrint={handlePrint}
-              onAvancarEstrategia={() => setMostrarEstrategia(true)}
-              allStepsDone={true}
-              ultimoSalvo={ultimoSalvo}
+              onResultadosChange={(r) => setResultados(r)}
+              onConcluir={async () => { await handleSave("completo"); }}
             />
+          ) : (
+            <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF", width: "100%" }}>
+
+              {abaAtiva === "coleta" && (
+                <ColetaDadosCompleta
+                  plan={plan}
+                  onChange={updatePlan}
+                  onColetaComplete={handleColetaComplete}
+                />
+              )}
+
+              {abaAtiva === "liberdade_financeira" && (
+                <div style={{ padding: "28px 32px" }}>
+                  <SecaoAposentadoria
+                    plan={plan}
+                    comentario={secaoComentario}
+                    onComentarioChange={handleComentarioChange}
+                    tags={secaoTags}
+                    onTagsChange={handleTagsChange}
+                    resultadoIF={resultados.if}
+                    onResultadoIF={(r) => setResultados((prev) => ({ ...prev, if: r }))}
+                  />
+                </div>
+              )}
+
+              {abaAtiva === "asset_allocation" && (
+                <div style={{ padding: "28px 32px" }}>
+                  <SecaoAssetAllocation
+                    plan={plan}
+                    clientName={clientName}
+                    comentario={secaoComentario}
+                    onComentarioChange={handleComentarioChange}
+                    tags={secaoTags}
+                    onTagsChange={handleTagsChange}
+                    resultadoCarteira={resultados.carteira}
+                    onResultadoCarteira={(r) => setResultados((prev) => ({ ...prev, carteira: r }))}
+                    onLimparCarteira={() => {
+                      setResultados((prev) => ({ ...prev, carteira: null }));
+                      try {
+                        const salvo = localStorage.getItem(resultadosKey);
+                        if (salvo) {
+                          const parsed = JSON.parse(salvo);
+                          parsed.carteira = null;
+                          localStorage.setItem(resultadosKey, JSON.stringify(parsed));
+                        }
+                      } catch { /**/ }
+                    }}
+                  />
+                </div>
+              )}
+
+              {abaAtiva === "protecao_sucessorio" && (
+                <div style={{ padding: "28px 32px" }}>
+                  <SecaoProtecaoSucessorio
+                    plan={plan}
+                    comentario={secaoComentario}
+                    onComentarioChange={handleComentarioChange}
+                    tags={secaoTags}
+                    onTagsChange={handleTagsChange}
+                    resultadoSeguro={resultados.seguro}
+                    onResultadoSeguro={(r) => setResultados((prev) => ({ ...prev, seguro: r }))}
+                  />
+                </div>
+              )}
+
+              {abaAtiva === "planejamento_fiscal" && (
+                <div style={{ padding: "28px 32px" }}>
+                  <SecaoFiscal
+                    plan={plan}
+                    comentario={secaoComentario}
+                    onComentarioChange={handleComentarioChange}
+                    tags={secaoTags}
+                    onTagsChange={handleTagsChange}
+                    resultadoFiscal={resultados.fiscal}
+                    onResultadoFiscal={(r) => setResultados((prev) => ({ ...prev, fiscal: r }))}
+                  />
+                </div>
+              )}
+
+              {abaAtiva === "resultado" && (
+                <FinancialPlanDashboard
+                  plan={plan}
+                  clientName={clientName}
+                  onEdit={() => setAbaAtiva("coleta")}
+                  onSave={async () => { await handleSave("completo"); }}
+                  onPrint={handlePrint}
+                  onAvancarEstrategia={() => setAbaAtiva("liberdade_financeira")}
+                  allStepsDone={true}
+                  ultimoSalvo={ultimoSalvo}
+                />
+              )}
+
+            </div>
           )}
         </main>
       </div>
 
-      {printMode === "advisor" && (
-        <FinancialPlanPrintAdvisor plan={plan} clientName={clientName} />
-      )}
-      {printMode === "client" && (
-        <FinancialPlanPrintClient plan={plan} clientName={clientName} />
-      )}
+      {printMode === "advisor" && <FinancialPlanPrintAdvisor plan={plan} clientName={clientName} />}
+      {printMode === "client" && <FinancialPlanPrintClient plan={plan} clientName={clientName} />}
     </>
   );
 }
