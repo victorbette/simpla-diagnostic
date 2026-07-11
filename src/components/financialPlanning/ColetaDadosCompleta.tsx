@@ -462,36 +462,6 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
           )}
         </div>
 
-        {/* Imóveis próprios */}
-        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              checked={!!(dados.possuiImoveis ?? false)}
-              onCheckedChange={(v) => setDados("possuiImoveis", v)}
-            />
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui imóveis próprios?</p>
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Residenciais, comerciais ou rurais</p>
-            </div>
-          </div>
-          {dados.possuiImoveis && (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #DDD6FE" }}>
-              <div className={fieldCls}>
-                <Label className={labelCls}>Quantos imóveis possui?</Label>
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="Ex: 3"
-                  value={dados.quantidadeImoveis || ""}
-                  onChange={(e) => setDados("quantidadeImoveis", Math.max(1, parseInt(e.target.value, 10) || 1))}
-                  style={{ width: "100%", height: 40, padding: "0 12px", borderRadius: 8, border: "1px solid #DDD6FE", fontSize: 14, outline: "none" }}
-                />
-                <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Residenciais, comerciais ou rurais</p>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Previdência */}
         <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
