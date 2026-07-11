@@ -31,6 +31,25 @@ const CARD: React.CSSProperties = {
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
 
+const HIERARQUIA_CLASSES = [
+  {
+    id: "renda_fixa", label: "Renda Fixa", cor: "#1E40AF", corBg: "#EFF6FF", icone: "ti-building-bank",
+    subclasses: [
+      { cardId: "resgate_longo",  label: "Resgate Longo" },
+      { cardId: "resgate_rapido", label: "Resgate Rápido" },
+    ],
+  },
+  {
+    id: "renda_variavel", label: "Renda Variável", cor: "#15803D", corBg: "#F0FDF4", icone: "ti-trending-up",
+    subclasses: [
+      { cardId: "acoes",    label: "Ações" },
+      { cardId: "fiis",     label: "Fundos Imobiliários" },
+      { cardId: "exterior", label: "Exterior" },
+      { cardId: "cripto",   label: "Cripto" },
+    ],
+  },
+];
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function SecaoAssetAllocation({
@@ -176,15 +195,6 @@ export function SecaoAssetAllocation({
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
-  // Proposed-only table data
-  const dadosProposta = CARD_ORDER
-    .map((cardId) => {
-      const pctMeta = Number(rc.macroMeta[cardId]) || 0;
-      const brlMeta = (pctMeta / 100) * patrimonio;
-      return { cardId, label: CARD_META[cardId].label, cor: CARD_META[cardId].cor, pctMeta, brlMeta };
-    })
-    .filter((d) => d.pctMeta > 0);
-
   const totalAportes = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
     .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
@@ -264,50 +274,84 @@ export function SecaoAssetAllocation({
           patrimonio={rc.patrimonio}
         />
 
-        {/* Card 3 — Proposed allocation table */}
+        {/* Card 3 — Alocação Proposta por Classe (hierarchical) */}
         <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
-          {/* Header */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "10px 12px", borderBottom: "0.5px solid #E5E7EB" }}>
-            {(["CLASSE", "% PROPOSTA", "R$ PROPOSTO"] as const).map((h, i) => (
+          {/* Card header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB" }}>
+            <i className="ti ti-layout-list" style={{ fontSize: 16, color: "#2563EB" }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Alocação Proposta por Classe</span>
+          </div>
+
+          {/* Table header */}
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "8px 12px", borderBottom: "0.5px solid #E5E7EB" }}>
+            {(["CLASSE / SUBCLASSE", "%", "R$"] as const).map((h, i) => (
               <span key={h} style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: i === 0 ? "left" : "right" }}>
                 {h}
               </span>
             ))}
           </div>
 
-          {/* Rows */}
-          {dadosProposta.map((d) => (
-            <div
-              key={d.cardId}
-              style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", borderBottom: "0.5px solid #F9FAFB", alignItems: "center" }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.cor, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{d.label}</span>
+          {/* Groups */}
+          {HIERARQUIA_CLASSES.map((grupo) => {
+            const subsData = grupo.subclasses.map((sub) => ({
+              ...sub,
+              pct: Number(rc.macroMeta[sub.cardId]) || 0,
+              brl: ((Number(rc.macroMeta[sub.cardId]) || 0) / 100) * patrimonio,
+            }));
+            const totalPct = subsData.reduce((s, sub) => s + sub.pct, 0);
+            const totalBrl = subsData.reduce((s, sub) => s + sub.brl, 0);
+            if (totalPct === 0) return null;
+            const visibleSubs = subsData.filter((sub) => sub.pct > 0);
+
+            return (
+              <div key={grupo.id}>
+                {/* Group row */}
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: grupo.corBg, borderBottom: "0.5px solid #E5E7EB", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: grupo.cor, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <i className={`ti ${grupo.icone}`} style={{ fontSize: 12, color: "white" }} />
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor }}>{grupo.label}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: grupo.cor }}>{totalPct.toFixed(0)}%</span>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor, textAlign: "right" }}>
+                    {formatBRL(totalBrl)}
+                  </span>
+                </div>
+
+                {/* Subclass rows */}
+                {visibleSubs.map((sub) => (
+                  <div key={sub.cardId} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px 8px 16px", borderBottom: "0.5px solid #F9FAFB", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 12, height: 18, borderLeft: `1.5px solid ${grupo.cor}40`, borderBottom: `1.5px solid ${grupo.cor}40`, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: "#374151" }}>{sub.label}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, backgroundColor: `${grupo.cor}22`, color: grupo.cor }}>
+                        {sub.pct.toFixed(0)}%
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>
+                      {formatBRL(sub.brl)}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 99, backgroundColor: `${d.cor}33`, color: d.cor }}>
-                  {d.pctMeta.toFixed(0)}%
-                </span>
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827", textAlign: "right" }}>
-                {formatBRL(d.brlMeta)}
-              </span>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Footer */}
-          {dadosProposta.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
-                {formatBRL(patrimonio)}
-              </span>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
             </div>
-          )}
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
+              {formatBRL(patrimonio)}
+            </span>
+          </div>
         </div>
 
         {/* Card 3B — Seleção de Ativos Recomendados */}
