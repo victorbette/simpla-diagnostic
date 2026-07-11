@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,8 +17,6 @@ const TRABALHO_LABELS: Record<string, string> = {
   empresario: "Empresário / CNPJ",
   concursado: "Servidor público",
 };
-
-const OPCOES_ISENTOS = ["LCI / LCA", "Dividendos", "Lucros distribuídos", "Outros"];
 
 interface FiscalFormProps {
   value: PlanejamentoFiscal;
@@ -40,42 +36,12 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
   const rendaAnualAuto = rendaMensalFiscal * 12;
   const ajustada = value.rendaAnualAjustada ?? false;
 
-  // Auto-sync renda when not manually adjusted
   useEffect(() => {
     if (!ajustada && rendaAnualAuto > 0 && Math.abs(rendaAnualAuto - value.rendaBrutaAnual) > 1) {
       onChange({ ...value, rendaBrutaAnual: rendaAnualAuto });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dadosCliente?.rendaMensal, dadosCliente?.rendaImovelMensal, dadosCliente?.possuiImovelRenda, ajustada]);
-
-  // Rendimentos isentos helpers
-  const tiposIsentos = value.tiposRendimentosIsentos ?? [];
-  const outrosEntry = tiposIsentos.find((t) => t.startsWith("Outros"));
-  const outrosTexto = outrosEntry ? outrosEntry.replace(/^Outros:?\s*/, "") : "";
-  const temOutros = !!outrosEntry;
-
-  function toggleIsento(tipo: string, checked: boolean) {
-    if (tipo === "Outros") {
-      if (checked) {
-        set("tiposRendimentosIsentos", [...tiposIsentos.filter((t) => !t.startsWith("Outros")), "Outros"]);
-      } else {
-        set("tiposRendimentosIsentos", tiposIsentos.filter((t) => !t.startsWith("Outros")));
-      }
-    } else {
-      if (checked) {
-        set("tiposRendimentosIsentos", [...tiposIsentos.filter((t) => t !== tipo), tipo]);
-      } else {
-        set("tiposRendimentosIsentos", tiposIsentos.filter((t) => t !== tipo));
-      }
-    }
-  }
-
-  function setOutrosTexto(txt: string) {
-    set("tiposRendimentosIsentos", [
-      ...tiposIsentos.filter((t) => !t.startsWith("Outros")),
-      txt ? `Outros: ${txt}` : "Outros",
-    ]);
-  }
 
   const isAutoTrabalho = dadosCliente?.tipoTrabalho != null && dadosCliente.tipoTrabalho.length > 0;
 
@@ -172,85 +138,6 @@ export function FiscalForm({ value, onChange, dadosCliente }: FiscalFormProps) {
         ) : (
           <div />
         )}
-      </div>
-
-      {/* Switches */}
-      <div style={{ border: "1px solid #BFDBFE", borderRadius: 10, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
-
-        {/* Tem empresa */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              id="fis-empresa"
-              checked={value.temEmpresa}
-              onCheckedChange={(v) => {
-                if (!v) onChange({ ...value, temEmpresa: false, nomeEmpresa: "", recebeProlabore: false, recebeDividendos: false });
-                else set("temEmpresa", true);
-              }}
-            />
-            <Label htmlFor="fis-empresa" className="text-[13px] cursor-pointer">Tem empresa (CNPJ)?</Label>
-          </div>
-          {value.temEmpresa && (
-            <div style={{ marginLeft: 44, marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
-              <Label className="text-[12px] text-[#6B7280]">Nome / CNPJ da empresa (opcional)</Label>
-              <Input
-                value={value.nomeEmpresa ?? ""}
-                onChange={(e) => set("nomeEmpresa", e.target.value)}
-                placeholder="Ex: Empresa XYZ / 12.345.678/0001-99"
-                className="border-[#BFDBFE]"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Rendimentos isentos */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              id="fis-isentos"
-              checked={value.temRendimentosIsentos}
-              onCheckedChange={(v) => {
-                if (!v) onChange({ ...value, temRendimentosIsentos: false, tiposRendimentosIsentos: [] });
-                else set("temRendimentosIsentos", true);
-              }}
-            />
-            <div>
-              <Label htmlFor="fis-isentos" className="text-[13px] cursor-pointer">Tem rendimentos isentos?</Label>
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>LCI / LCA, Dividendos, Lucros e outros</p>
-            </div>
-          </div>
-          {value.temRendimentosIsentos && (
-            <div style={{ marginLeft: 44, marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-              {OPCOES_ISENTOS.map((tipo) => {
-                const isOutros = tipo === "Outros";
-                const checked = isOutros ? temOutros : tiposIsentos.includes(tipo);
-                return (
-                  <div key={tipo}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, color: "#111827" }}>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => toggleIsento(tipo, e.target.checked)}
-                        style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#2563EB" }}
-                      />
-                      {tipo}
-                    </label>
-                    {isOutros && temOutros && (
-                      <div style={{ marginLeft: 24, marginTop: 6 }}>
-                        <Input
-                          value={outrosTexto}
-                          onChange={(e) => setOutrosTexto(e.target.value)}
-                          placeholder="Descreva o tipo de rendimento isento"
-                          className="border-[#BFDBFE]"
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
