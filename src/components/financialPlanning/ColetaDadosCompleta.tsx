@@ -178,7 +178,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
                 <SelectItem value="solteiro">Solteiro(a)</SelectItem>
                 <SelectItem value="casado">Casado(a)</SelectItem>
                 <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                <SelectItem value="viuvo">Viúво(a)</SelectItem>
                 <SelectItem value="uniao_estavel">União estável</SelectItem>
               </SelectContent>
             </Select>
@@ -632,7 +632,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
       </SecaoCard>
 
       {/* ─── SEÇÃO 6: Planejamento Fiscal ─── */}
-      <SecaoCard color="#B45309" Icon={FileText} title="Planejamento Fiscal" subtitle="Eficiência tributária, PGBL/VGBL e declaração de IR">
+      <SecaoCard color="#B45309" Icon={FileText} title="Planejamento Tributário" subtitle="Eficiência tributária, PGBL/VGBL e declaração de IR">
         <FiscalForm
           value={plan.fiscal}
           onChange={(v) => onChange({ fiscal: v })}
