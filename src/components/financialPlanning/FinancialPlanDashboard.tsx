@@ -39,7 +39,7 @@ function calcularAliquotaITCMD(estado: string): number {
 // com ALOCACAO_PADRAO (que usa resgate_longo/resgate_rapido/exterior)
 type GruposAA = {
   "Renda Fixa": number;
-  "Ções": number;
+  "Ações": number;
   "FIIs": number;
   "Internacional": number;
   "Cripto": number;
@@ -47,7 +47,7 @@ type GruposAA = {
 
 const GRUPOS_AA_COLORS: Record<keyof GruposAA, string> = {
   "Renda Fixa":    "#1E40AF",
-  "Ções":         "#15803D",
+  "Ações":         "#15803D",
   "FIIs":          "#059669",
   "Internacional": "#B45309",
   "Cripto":        "#1D4ED8",
@@ -58,7 +58,7 @@ function getMetaAA(perfil: string): GruposAA | null {
   if (!m) return null;
   return {
     "Renda Fixa":    m.resgate_longo + m.resgate_rapido,
-    "Ções":         m.acoes,
+    "Ações":         m.acoes,
     "FIIs":          m.fiis,
     "Internacional": m.exterior,
     "Cripto":        m.cripto,
@@ -70,7 +70,7 @@ function getAtualAA(a: AtivoAtual): GruposAA | null {
   if (!total) return null;
   return {
     "Renda Fixa":    (a.rendaFixa / total) * 100,
-    "Ções":         (a.acoes / total) * 100,
+    "Ações":         (a.acoes / total) * 100,
     "FIIs":          (a.fiis / total) * 100,
     "Internacional": ((a.rvGlobal + a.rfGlobal) / total) * 100,
     "Cripto":        (a.cripto / total) * 100,
@@ -391,7 +391,7 @@ export function FinancialPlanDashboard({
           { Icon: PieChart, label: "Asset Allocation",      score: scoreAA,                 color: "#2563EB", semDados: semDadosAA },
           { Icon: Sunset,   label: "Aposentadoria",           score: scoreIF,                 color: "#059669", semDados: semDadosIF },
           { Icon: Shield,   label: "Proteção e Sucessório", score: scoreProtecaoSucessorio, color: "#B91C1C", semDados: semDadosPS },
-          { Icon: Receipt,  label: "Planejamento Fiscal",   score: scoreFiscal,             color: "#B45309", semDados: semDadosFiscal },
+          { Icon: Receipt,  label: "Planejamento Tributário",   score: scoreFiscal,             color: "#B45309", semDados: semDadosFiscal },
         ] as const).map(({ Icon, label, score, color, semDados }) => {
           const nivel = nivelScore(score);
           return (
@@ -681,7 +681,7 @@ export function FinancialPlanDashboard({
 
       {/* ── BLOCO 4D: Card Fiscal ───────────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
-        <CardHeader Icon={Receipt} title="Planejamento Fiscal" score={scoreFiscal} color="#B45309" />
+        <CardHeader Icon={Receipt} title="Planejamento Tributário" score={scoreFiscal} color="#B45309" />
         <MetricGrid cols={2}>
           <Metric label="Renda Anual Bruta"      value={fmt0(rendaAnualFiscal)} />
           <Metric label="Teto PGBL (12%)"        value={fmt0(tetoPGBL)} />
@@ -746,7 +746,7 @@ export function FinancialPlanDashboard({
             <span style={{ fontSize: 16, flexShrink: 0 }}>ℹ️</span>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF", margin: "0 0 2px" }}>Tipo de declaração não informado</p>
-              <p style={{ fontSize: 12, color: "#1E3A8A", margin: 0 }}>Informe se utiliza declaração simplificada ou completa para otimizarmos o planejamento fiscal.</p>
+              <p style={{ fontSize: 12, color: "#1E3A8A", margin: 0 }}>Informe se utiliza declaração simplificada ou completa para otimizarmos o planejamento tributário.</p>
             </div>
           </div>
         )}
