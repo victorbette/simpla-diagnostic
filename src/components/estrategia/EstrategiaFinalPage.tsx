@@ -11,7 +11,7 @@ import type { EstrategiaData, AcaoItem } from "./EstrategiaInicialPage";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { formatCurrency } from "@/lib/format";
 
-// ─── Helper components ────────────────────────────────────────────────────────
+// ─── Helper components ────────────────────────────────────────────────────────────────
 
 function metricaItem(label: string, value: string, color = "#000000") {
   return (
@@ -37,7 +37,7 @@ function checklist(label: string, ok: boolean) {
   );
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// ─── Props ──────────────────────────────────────────────────────────────────────────
 
 interface Props {
   estrategia: EstrategiaData;
@@ -63,7 +63,7 @@ export function EstrategiaFinalPage({
   const [salvando, setSalvando] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
 
-  // ── Print functions ─────────────────────────────────────────────────────────
+  // ── Print functions ────────────────────────────────────────────────────────────
 
   const imprimirConsultor = () => {
     document.body.classList.add("print-consultor");
@@ -93,7 +93,7 @@ export function EstrategiaFinalPage({
     }
   };
 
-  // ── Computed values ─────────────────────────────────────────────────────────
+  // ── Computed values ────────────────────────────────────────────────────────────
 
   const resultadoIF = calcularIF(plan.planejamentoIF);
   const resultadoSuc = calcularSucessorio(plan.sucessorio);
@@ -108,7 +108,7 @@ export function EstrategiaFinalPage({
     (a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade]
   );
 
-  // ── Section card style helper ───────────────────────────────────────────────
+  // ── Section card style helper ──────────────────────────────────────────────────────
 
   function areaCard(borderColor: string, children: React.ReactNode) {
     return (
@@ -141,7 +141,7 @@ export function EstrategiaFinalPage({
         overflow: "hidden",
       }}
     >
-      {/* ── HEADER ─────────────────────────────────────────────────────────── */}
+      {/* ── HEADER ──────────────────────────────────────────────────────────────────── */}
       <div
         style={{
           height: 56,
@@ -261,7 +261,7 @@ export function EstrategiaFinalPage({
         </div>
       </div>
 
-      {/* ── SCROLLABLE CONTENT ──────────────────────────────────────────────── */}
+      {/* ── SCROLLABLE CONTENT ──────────────────────────────────────────────────────────── */}
       <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
         <div
           style={{
@@ -272,7 +272,7 @@ export function EstrategiaFinalPage({
             gap: 32,
           }}
         >
-          {/* ── CAPA ─────────────────────────────────────────────────────── */}
+          {/* ── CAPA ──────────────────────────────────────────────────────────────── */}
           <div
             style={{
               backgroundColor: "white",
@@ -375,7 +375,7 @@ export function EstrategiaFinalPage({
             )}
           </div>
 
-          {/* ── COMENTÁRIO GERAL ──────────────────────────────────────────── */}
+          {/* ── COMENTÁRIO GERAL ──────────────────────────────────────────────────────────── */}
           {estrategia.comentarioGeral && (
             <div
               style={{
@@ -409,7 +409,7 @@ export function EstrategiaFinalPage({
             </div>
           )}
 
-          {/* ── ASSET ALLOCATION ─────────────────────────────────────────── */}
+          {/* ── ASSET ALLOCATION ───────────────────────────────────────────────────────────── */}
           {areaCard(
             "#000000",
             <>
@@ -475,7 +475,7 @@ export function EstrategiaFinalPage({
             </>
           )}
 
-          {/* ── APOSENTADORIA / IF ───────────────────────────────────────── */}
+          {/* ── APOSENTADORIA / IF ──────────────────────────────────────────────────────────── */}
           {areaCard(
             "#15803D",
             <>
@@ -639,7 +639,7 @@ export function EstrategiaFinalPage({
             </>
           )}
 
-          {/* ── PROTEÇÃO E SUCESSÓRIO ─────────────────────────────────────── */}
+          {/* ── PROTEÇÃO E SUCESSÓRIO ────────────────────────────────────────────────────────── */}
           {areaCard(
             "#B91C1C",
             <>
@@ -753,7 +753,7 @@ export function EstrategiaFinalPage({
             </>
           )}
 
-          {/* ── PLANEJAMENTO FISCAL ──────────────────────────────────────── */}
+          {/* ── PLANEJAMENTO FISCAL ────────────────────────────────────────────────────────── */}
           {areaCard(
             "#2563EB",
             <>
@@ -768,7 +768,7 @@ export function EstrategiaFinalPage({
               >
                 <Receipt size={20} style={{ color: "#2563EB" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
-                  Planejamento Fiscal
+                  Planejamento Tributário
                 </span>
                 {statusBadgeLocal("fiscal", estrategia)}
               </div>
@@ -855,7 +855,7 @@ export function EstrategiaFinalPage({
             </>
           )}
 
-          {/* ── PRÓXIMOS PASSOS ──────────────────────────────────────────── */}
+          {/* ── PRÓXIMOS PASSOS ──────────────────────────────────────────────────────────── */}
           {areaCard(
             "#1E40AF",
             <>
@@ -979,7 +979,7 @@ export function EstrategiaFinalPage({
             </>
           )}
 
-          {/* ── DISCLAIMER ───────────────────────────────────────────────── */}
+          {/* ── DISCLAIMER ──────────────────────────────────────────────────────────────── */}
           <div
             style={{
               backgroundColor: "#F0F7FF",
