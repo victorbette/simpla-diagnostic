@@ -1,11 +1,11 @@
-import { ClipboardCheck, Sunset, Shield, Receipt, PieChart, Building2 } from "lucide-react";
+import { Sunset, Shield, Receipt, PieChart, Building2 } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import { ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import type { FinancialPlan, AtivoAtual } from "@/types/financialPlanning";
 import { calcularPerfilHolding } from "@/lib/holding";
 
-// ─── Props ─────────────────────────────────────────────────────────────────────
+// ─ Props ─────────────────────────────────────────────────────────────────────
 
 interface FinancialPlanDashboardProps {
   plan: FinancialPlan;
@@ -18,7 +18,7 @@ interface FinancialPlanDashboardProps {
   ultimoSalvo?: Date | null;
 }
 
-// ─── ITCMD por estado ──────────────────────────────────────────────────────────
+// ─ ITCMD por estado ─────────────────────────────────────────────────────
 
 function calcularAliquotaITCMD(estado: string): number {
   const aliquotas: Record<string, number> = {
@@ -33,13 +33,13 @@ function calcularAliquotaITCMD(estado: string): number {
   return aliquotas[estado?.toUpperCase()] ?? 0.04;
 }
 
-// ─── AA helpers ────────────────────────────────────────────────────────────────
+// ─ AA helpers ───────────────────────────────────────────────────────
 
 // Grupos consolidados para comparar AtivoAtual (que usa rendaFixa/rvGlobal)
 // com ALOCACAO_PADRAO (que usa resgate_longo/resgate_rapido/exterior)
 type GruposAA = {
   "Renda Fixa": number;
-  "Ações": number;
+  "Ções": number;
   "FIIs": number;
   "Internacional": number;
   "Cripto": number;
@@ -47,7 +47,7 @@ type GruposAA = {
 
 const GRUPOS_AA_COLORS: Record<keyof GruposAA, string> = {
   "Renda Fixa":    "#1E40AF",
-  "Ações":         "#15803D",
+  "Ções":         "#15803D",
   "FIIs":          "#059669",
   "Internacional": "#B45309",
   "Cripto":        "#1D4ED8",
@@ -58,7 +58,7 @@ function getMetaAA(perfil: string): GruposAA | null {
   if (!m) return null;
   return {
     "Renda Fixa":    m.resgate_longo + m.resgate_rapido,
-    "Ações":         m.acoes,
+    "Ções":         m.acoes,
     "FIIs":          m.fiis,
     "Internacional": m.exterior,
     "Cripto":        m.cripto,
@@ -70,14 +70,14 @@ function getAtualAA(a: AtivoAtual): GruposAA | null {
   if (!total) return null;
   return {
     "Renda Fixa":    (a.rendaFixa / total) * 100,
-    "Ações":         (a.acoes / total) * 100,
+    "Ções":         (a.acoes / total) * 100,
     "FIIs":          (a.fiis / total) * 100,
     "Internacional": ((a.rvGlobal + a.rfGlobal) / total) * 100,
     "Cripto":        (a.cripto / total) * 100,
   };
 }
 
-// ─── Gauge semicircular ────────────────────────────────────────────────────────
+// ─ Gauge semicircular ──────────────────────────────────────────────────
 
 function GaugeHeader({ score, color }: { score: number; color: string }) {
   const r = 36, cx = 44, cy = 44;
@@ -109,7 +109,7 @@ function GaugeCard({ score, color, semDados }: { score: number; color: string; s
   );
 }
 
-// ─── Score / level helpers ─────────────────────────────────────────────────────
+// ─ Score / level helpers ───────────────────────────────────────────────
 
 function nivelScore(s: number, temDados = true): { label: string; cor: string; bg: string } {
   if (!temDados) return { label: "Sem dados", cor: "#6B7280", bg: "#F3F4F6" };
@@ -118,7 +118,7 @@ function nivelScore(s: number, temDados = true): { label: string; cor: string; b
   return             { label: "Risco",    cor: "#B91C1C", bg: "#FEE2E2" };
 }
 
-// ─── UI helpers ────────────────────────────────────────────────────────────────
+// ─ UI helpers ────────────────────────────────────────────────────────────────
 
 function ScoreBadge({ score }: { score: number }) {
   const n = nivelScore(score);
@@ -173,12 +173,11 @@ function CheckRow({ ok, label, detail }: { ok: boolean; label: string; detail?: 
   );
 }
 
-// ─── Main Component ────────────────────────────────────────────────────────────
+// ─ Main Component ────────────────────────────────────────────────────────
 
 export function FinancialPlanDashboard({
   plan,
   clientName,
-  onAvancarEstrategia,
 }: FinancialPlanDashboardProps) {
   const dc       = plan.dadosCliente;
   const pif      = plan.planejamentoIF;
@@ -186,10 +185,10 @@ export function FinancialPlanDashboard({
   const suc      = plan.sucessorio;
   const fiscal   = plan.fiscal;
 
-  // ── "—" helper — mostra traço em vez de R$ 0,00 ─────────────────────────────
+  // ── "—" helper — mostra traço em vez de R$ 0,00 ────────────────────────────────────
   const fmt0 = (v: number | undefined) => (v && v > 0 ? formatCurrency(v) : "—");
 
-  // ── Renda total ──────────────────────────────────────────────────────────────
+  // ── Renda total ────────────────────────────────────────────────────────────────
   const rendaMensal      = Number(dc.rendaMensal) || 0;
   const rendaImovel      = dc.possuiImovelRenda ? (Number(dc.rendaImovelMensal) || 0) : 0;
   const rendaMensalTotal = rendaMensal + rendaImovel;
@@ -199,10 +198,10 @@ export function FinancialPlanDashboard({
   const patrimonioFinanceiro = Number(dc.patrimonioFinanceiroEstimado) || 0;
   const patrimonioTotal      = Number(dc.patrimonioTotalEstimado) || 0;
 
-  // ── Aporte ───────────────────────────────────────────────────────────────────
+  // ── Aporte ─────────────────────────────────────────────────────────────────
   const aporteMensal = Number(dc.aportesMensalMedio) || 0;
 
-  // ── Índice de Poupança CFP ───────────────────────────────────────────────────
+  // ── Índice de Poupança CFP ────────────────────────────────────────────────────
   const custoDeVidaMensal       = Number(dc.custoDeVidaMensal) || 0;
   const valorDisponivelInvestir = rendaMensalTotal - custoDeVidaMensal;
   const indicePoupancaRaw       = rendaMensalTotal > 0
@@ -211,12 +210,12 @@ export function FinancialPlanDashboard({
   const indicePoupanca          = Math.max(0, indicePoupancaRaw);
   const temDadosPoupanca        = rendaMensalTotal > 0 && custoDeVidaMensal > 0;
 
-  // ── Idade ────────────────────────────────────────────────────────────────────
+  // ── Idade ────────────────────────────────────────────────────────────────
   const idadeAtual = dc.dataNascimento
     ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
 
-  // ── IF ───────────────────────────────────────────────────────────────────────
+  // ── IF ───────────────────────────────────────────────────────────────────
   const idadeMeta     = Number(pif.idadeMeta) || 60;
   const rendaDesejada = Number(pif.rendaMensalDesejada) || 0;
 
@@ -234,7 +233,7 @@ export function FinancialPlanDashboard({
     : patrimonioFinanceiro;
   const gapIF = patrimonioNecessario - projecaoIF;
 
-  // ── Proteção ─────────────────────────────────────────────────────────────────
+  // ── Proteção ──────────────────────────────────────────────────────────────
   const numeroDependentes   = Number(protecao.dependentes) || 0;
   const anosDepend          = Math.max(1, numeroDependentes > 0 ? 15 : 10);
   const valorSeguroVida     = Number(protecao.capitalSeguradoVida) || 0;
@@ -243,7 +242,7 @@ export function FinancialPlanDashboard({
   const capitalNecessario   = rendaMensalTotal * 12 * anosDepend;
   const gapProtecao         = capitalNecessario - capitalAtual;
 
-  // ── Fiscal ───────────────────────────────────────────────────────────────────
+  // ── Fiscal ────────────────────────────────────────────────────────────────
   const rendaAnualFiscal = Number(fiscal.rendaBrutaAnual) || rendaAnualTotal;
   const tetoPGBL         = rendaAnualFiscal * 0.12;
   const saldoPrevidencia = Number(dc.saldoPrevidencia) || 0;
@@ -253,13 +252,13 @@ export function FinancialPlanDashboard({
   const possuiVGBL           = dc.possuiPrevidencia && (dc.tipoPrevidencia === "vgbl" || dc.tipoPrevidencia === "ambos");
   const temDependentesProtecao = numeroDependentes > 0;
 
-  // ── Sucessório ───────────────────────────────────────────────────────────────
+  // ── Sucessório ──────────────────────────────────────────────────────────────
   const estado          = dc.estado || "SP";
   const aliquota        = calcularAliquotaITCMD(estado);
   const itcmdEstimado   = patrimonioTotal * aliquota;
   const custoInventario = patrimonioTotal * 0.10;
 
-  // ── Asset Allocation ─────────────────────────────────────────────────────────
+  // ── Asset Allocation ───────────────────────────────────────────────────────────
   const totalCarteira = plan.ativosAtuais.total ||
     (plan.ativosAtuais.rendaFixa + plan.ativosAtuais.acoes + plan.ativosAtuais.fiis +
      plan.ativosAtuais.rvGlobal + plan.ativosAtuais.rfGlobal + plan.ativosAtuais.cripto);
@@ -275,7 +274,7 @@ export function FinancialPlanDashboard({
       ) / Object.keys(metaAA).length
     : null;
 
-  // ── Scores ───────────────────────────────────────────────────────────────────
+  // ── Scores ─────────────────────────────────────────────────────────────
 
   const scoreAA = (() => {
     if (dc.comecandoDoZero) return 50;
@@ -327,11 +326,11 @@ export function FinancialPlanDashboard({
     return s;
   })();
 
-  // ── Perfil / data ────────────────────────────────────────────────────────────
+  // ── Perfil / data ───────────────────────────────────────────────────────────
   const perfil = dc.suitabilityPerfil ?? plan.suitability?.perfil ?? null;
   const hoje   = new Date().toLocaleDateString("pt-BR");
 
-  // ── "Sem dados" flags ────────────────────────────────────────────────────────
+  // ── "Sem dados" flags ─────────────────────────────────────────────────────────
   const semDadosAA         = !dc.comecandoDoZero && !dc.suitabilityPerfil;
   const semDadosIF         = rendaDesejada === 0;
   const semDadosProtecao   = rendaMensalTotal === 0;
@@ -356,24 +355,7 @@ export function FinancialPlanDashboard({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", padding: "24px 32px", boxSizing: "border-box" }}>
 
-      {/* ── BLOCO 1: Banner ───────────────────────────────────────────────────── */}
-      <div style={{ backgroundColor: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 12, padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <ClipboardCheck style={{ width: 20, height: 20, color: "#2563EB", flexShrink: 0, marginTop: 2 }} />
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 2px" }}>Diagnóstico inicial gerado automaticamente</p>
-            <p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>Revise os resultados e avance para a Estratégia Inicial</p>
-          </div>
-        </div>
-        <button
-          onClick={onAvancarEstrategia}
-          style={{ backgroundColor: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
-        >
-          Montar Estratégia Inicial →
-        </button>
-      </div>
-
-      {/* ── BLOCO 2: Header com Score Geral ───────────────────────────────────── */}
+      {/* ── BLOCO 2: Header com Score Geral ────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <div>
@@ -403,7 +385,7 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── BLOCO 3: 4 Cards de Score ─────────────────────────────────────────── */}
+      {/* ── BLOCO 3: 4 Cards de Score ──────────────────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {([
           { Icon: PieChart, label: "Asset Allocation",      score: scoreAA,                 color: "#2563EB", semDados: semDadosAA },
@@ -432,7 +414,7 @@ export function FinancialPlanDashboard({
         })}
       </div>
 
-      {/* ── BLOCO 4A: Card Asset Allocation ───────────────────────────────────── */}
+      {/* ── BLOCO 4A: Card Asset Allocation ──────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={PieChart} title="Asset Allocation" score={scoreAA} color="#2563EB" />
 
@@ -497,7 +479,7 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4B: Card Aposentadoria ──────────────────────────────────────── */}
+      {/* ── BLOCO 4B: Card Aposentadoria ────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Sunset} title="Aposentadoria" score={scoreIF} color="#059669" />
 
@@ -564,7 +546,7 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4C: Card Proteção e Sucessório ──────────────────────────────── */}
+      {/* ── BLOCO 4C: Card Proteção e Sucessório ─────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Shield} title="Proteção e Sucessório" score={scoreProtecaoSucessorio} color="#B91C1C" />
 
@@ -697,7 +679,7 @@ export function FinancialPlanDashboard({
         )}
       </div>
 
-      {/* ── BLOCO 4D: Card Fiscal ──────────────────────────────────────────────── */}
+      {/* ── BLOCO 4D: Card Fiscal ───────────────────────────────────────────────────────────── */}
       <div style={{ backgroundColor: "white", borderRadius: 12, padding: 24, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
         <CardHeader Icon={Receipt} title="Planejamento Fiscal" score={scoreFiscal} color="#B45309" />
         <MetricGrid cols={2}>
