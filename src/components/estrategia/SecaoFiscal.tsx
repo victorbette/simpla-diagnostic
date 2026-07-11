@@ -59,7 +59,7 @@ export function SecaoFiscal({
     );
   }
 
-  // ── Tool result state ──────────────────────────────────────────────────────
+  // ── Tool result state ───────────────────────────────────────────────────────────
   const toolResult = resultadoFiscal ? (
     <>
       {/* Header */}
@@ -73,7 +73,7 @@ export function SecaoFiscal({
             letterSpacing: "0.04em",
           }}
         >
-          Planejamento Fiscal — PGBL
+          Planejamento Tributário — PGBL
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span
@@ -336,11 +336,11 @@ export function SecaoFiscal({
     </>
   ) : null;
 
-  // ── Empty state ────────────────────────────────────────────────────────────
+  // ── Empty state ────────────────────────────────────────────────────────────────
   const emptyState = (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>
-        Planejamento Fiscal — PGBL
+        Planejamento Tributário — PGBL
       </p>
 
       {/* Banner contextual da situação de previdência */}
