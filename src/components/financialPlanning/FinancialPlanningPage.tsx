@@ -20,19 +20,19 @@ import { defaultResultados } from "@/types/estrategiaResultados";
 const DARK = "#000000";
 const GOLD = "#3B82F6";
 
-// ── Abas ──────────────────────────────────────────────────────────────────────
+// ── Abas ─────────────────────────────────────────────────────────────────────────────
 
 const ABAS = [
   { id: "coleta",               label: "Coleta de Dados",       icone: "ti-clipboard-list"  },
   { id: "liberdade_financeira", label: "Liberdade Financeira",  icone: "ti-beach"            },
   { id: "asset_allocation",     label: "Asset Allocation",      icone: "ti-chart-pie"        },
   { id: "protecao_sucessorio",  label: "Proteção e Sucessório", icone: "ti-shield"           },
-  { id: "planejamento_fiscal",  label: "Planejamento Fiscal",   icone: "ti-receipt"          },
+  { id: "planejamento_fiscal",  label: "Planejamento Tributário",   icone: "ti-receipt"          },
   { id: "resultado",            label: "Resultado",             icone: "ti-chart-bar"        },
   { id: "estrategia_pronta",    label: "Estratégia Pronta",     icone: "ti-file-download"    },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────────────
 
 interface Props {
   clientId: string;
@@ -98,13 +98,13 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     }, 600);
   }, [comentarios, allTags, estrategiaKey]);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // ── Auth ────────────────────────────────────────────────────────────────────────
 
   const userEmail = user?.email ?? "";
   const userLabel = userEmail.split("@")[0] || "Consultor";
   const userInitials = userLabel.slice(0, 2).toUpperCase();
 
-  // ── Plan init ─────────────────────────────────────────────────────────────
+  // ── Plan init ──────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const init = async () => {
@@ -129,14 +129,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId]);
 
-  // ── Plan update ───────────────────────────────────────────────────────────
+  // ── Plan update ──────────────────────────────────────────────────────────────────
 
   const updatePlan = useCallback((patch: Partial<FinancialPlan>) => {
     setPlan((prev) => ({ ...prev, ...patch }));
     setDirty(true);
   }, []);
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ── Save ───────────────────────────────────────────────────────────────────────────
 
   async function handleSave(status?: FinancialPlan["status"]) {
     setSaving(true);
@@ -167,7 +167,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     onClose();
   }
 
-  // ── Coleta complete ───────────────────────────────────────────────────────
+  // ── Coleta complete ───────────────────────────────────────────────────────────
 
   function handleColetaComplete(dadosCliente: DadosCliente) {
     const newPlan: FinancialPlan = {
@@ -240,7 +240,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     setTimeout(() => { window.print(); setPrintMode(null); }, 300);
   }
 
-  // ── Per-section comentario / tags helpers ─────────────────────────────────
+  // ── Per-section comentario / tags helpers ───────────────────────────────────
 
   const secaoComentario = comentarios[abaAtiva] ?? "";
   const secaoTags = allTags[abaAtiva] ?? [];
@@ -254,7 +254,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
     [abaAtiva]
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────────────
 
   return (
     <>

@@ -184,7 +184,7 @@ export function gerarAcoes(
       id: "fis_pgbl",
       texto: `Abrir/aumentar PGBL — espaço disponível de ${formatCurrency(resultados.fiscal.espacoDisponivelMensal)}/mês`,
       prioridade: "alta",
-      area: "Planejamento Fiscal",
+      area: "Planejamento Tributário",
       areaColor: "#2563EB",
     });
     pgblAdicionado = true;
@@ -195,7 +195,7 @@ export function gerarAcoes(
         id: "fis_pgbl",
         texto: "Avaliar abertura de PGBL para diferimento fiscal",
         prioridade: "media",
-        area: "Planejamento Fiscal",
+        area: "Planejamento Tributário",
         areaColor: "#2563EB",
       });
       pgblAdicionado = true;
@@ -207,7 +207,7 @@ export function gerarAcoes(
       id: "fis_declaracao",
       texto: "Definir modelo de declaração IR (completa ou simplificada)",
       prioridade: "media",
-      area: "Planejamento Fiscal",
+      area: "Planejamento Tributário",
       areaColor: "#2563EB",
     });
   }
@@ -217,7 +217,7 @@ export function gerarAcoes(
       id: "fis_migracao",
       texto: "Avaliar migração para declaração completa",
       prioridade: "media",
-      area: "Planejamento Fiscal",
+      area: "Planejamento Tributário",
       areaColor: "#2563EB",
     });
   }
@@ -227,7 +227,7 @@ export function gerarAcoes(
       id: "fis_empresa",
       texto: "Verificar eficiência tributária da estrutura empresarial",
       prioridade: "media",
-      area: "Planejamento Fiscal",
+      area: "Planejamento Tributário",
       areaColor: "#2563EB",
     });
   }
