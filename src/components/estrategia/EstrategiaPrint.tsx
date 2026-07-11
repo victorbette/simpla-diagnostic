@@ -92,7 +92,7 @@ export function EstrategiaPrint({ plan, clientName, data, resultados: resultados
       {isConsultor && (
         <div style={{ marginBottom: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #2563EB", paddingLeft: 12 }}>
-            Planejamento Fiscal
+            Planejamento Tributário
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
             {row("Renda anual bruta", formatCurrency(plan.fiscal.rendaBrutaAnual))}

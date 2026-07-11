@@ -61,7 +61,7 @@ const SECOES: SecaoConfig[] = [
   { id: "assetAllocation",    label: "Asset Allocation",       icone: "ti-chart-pie"     },
   { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
-  { id: "fiscal",             label: "Planejamento Fiscal",    icone: "ti-receipt"       },
+  { id: "fiscal",             label: "Planejamento Tributário",    icone: "ti-receipt"       },
   { id: "estrategia_pronta",  label: "Estratégia Pronta",      icone: "ti-file-download" },
 ];
 
@@ -337,7 +337,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
   }
 
   return (
-    <div className="estrategia-inicial-root" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
       {/* Header */}
       <div className="app-main-header" style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
