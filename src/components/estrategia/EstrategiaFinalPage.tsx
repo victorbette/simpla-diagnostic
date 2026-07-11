@@ -768,7 +768,7 @@ export function EstrategiaFinalPage({
               >
                 <Receipt size={20} style={{ color: "#2563EB" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
-                  Planejamento Fiscal
+                  Planejamento Tributário
                 </span>
                 {statusBadgeLocal("fiscal", estrategia)}
               </div>
