@@ -30,7 +30,7 @@ const ESTADO_CIVIL_LABELS: Record<string, string> = {
   uniao_estavel: "União estável",
 };
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+// ─── Props ──────────────────────────────────────────────────────────────────────────
 
 interface Props {
   estrategia: EstrategiaData;
@@ -42,7 +42,7 @@ interface Props {
   onComentarioGeralChange: (v: string) => void;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Constants ──────────────────────────────────────────────────────────────────────
 
 const CLASSE_COLORS: Record<string, string> = {
   rendaFixa: "#1E40AF",
@@ -62,7 +62,7 @@ const CLASSE_LABELS: Record<string, string> = {
   cripto: "Cripto",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────────────
 
 function safeCurrency(v: number | null | undefined): string {
   if (v === null || v === undefined || isNaN(v)) return "—";
@@ -126,7 +126,7 @@ function metrica(
   );
 }
 
-// ─── PieChart with error boundary ─────────────────────────────────────────────
+// ─── PieChart with error boundary ─────────────────────────────────────────────────────
 
 interface PieSlice {
   name: string;
@@ -226,7 +226,7 @@ function allocToSlices(alloc: Record<string, number>): PieSlice[] {
   }));
 }
 
-// ─── Card wrapper ─────────────────────────────────────────────────────────────
+// ─── Card wrapper ────────────────────────────────────────────────────────────────────
 
 function AreaCard({
   children,
@@ -339,7 +339,7 @@ function Placeholder({ text }: { text: string }): React.ReactElement {
   );
 }
 
-// ─── Progress Bar ─────────────────────────────────────────────────────────────
+// ─── Progress Bar ───────────────────────────────────────────────────────────────────
 
 function ProgressBar({
   pct,
@@ -372,7 +372,7 @@ function ProgressBar({
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────────────
 
 export function SecaoRevisao({
   estrategia,
@@ -872,7 +872,7 @@ export function SecaoRevisao({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Receipt style={{ width: 20, height: 20, color: "#2563EB" }} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
-              Planejamento Fiscal
+              Planejamento Tributário
             </span>
             {statusBadge("fiscal", estrategia)}
           </div>
@@ -986,7 +986,7 @@ export function SecaoRevisao({
               )}
             </>
           ) : (
-            <Placeholder text="Calculadora de Diferimento Fiscal não utilizada — execute o planejamento fiscal" />
+            <Placeholder text="Calculadora de Diferimento Fiscal não utilizada — execute o planejamento tributário" />
           )}
 
           <CommentArea
