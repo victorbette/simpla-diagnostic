@@ -7,8 +7,8 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProjecaoIF,
-  TAXA_ACUM_ANUAL,
   TAXA_ACUM_MENSAL,
+  calcularPatrimonioNecessario,
   calcularAporteMensalNecessario,
   calcularTaxaNecessaria,
   calcularIdadeComAporte,
@@ -159,6 +159,19 @@ export function FerramentaLiberdadeFinanceira({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
 
+  // Computed independently (uses only TAXA_RET_MENSAL+rendaDesejada+idadeAposentadoria)
+  // so it can drive taxaNecessariaCalc without a circular dependency on result.
+  const taxaNecessariaCalc = useMemo(
+    () => calcularTaxaNecessaria({
+      patrimonioAtual: params.patrimonioInicial,
+      aporteMensal: params.aporteMensal,
+      patrimonioAlvo: calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria),
+      idadeAtual: params.idadeAtual,
+      idadeAlvo: params.idadeAposentadoria,
+    }),
+    [params],
+  );
+
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual: params.idadeAtual,
     idadeMeta: params.idadeAposentadoria,
@@ -166,11 +179,11 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: TAXA_ACUM_ANUAL,
+    taxaRetornoAnual: taxaNecessariaCalc,
     anoNascimento,
     mesNascimento,
     objetivos,
-  }), [params, objetivos, anoNascimento, mesNascimento]);
+  }), [params, objetivos, taxaNecessariaCalc, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
@@ -188,17 +201,6 @@ export function FerramentaLiberdadeFinanceira({
       idadeAtual: params.idadeAtual,
       idadeAlvo: params.idadeAposentadoria,
       taxaMensalReal: TAXA_ACUM_MENSAL,
-    }) : 0,
-    [result, params],
-  );
-
-  const taxaNecessariaCalc = useMemo(
-    () => result ? calcularTaxaNecessaria({
-      patrimonioAtual: params.patrimonioInicial,
-      aporteMensal: params.aporteMensal,
-      patrimonioAlvo: result.patrimonioNecessario,
-      idadeAtual: params.idadeAtual,
-      idadeAlvo: params.idadeAposentadoria,
     }) : 0,
     [result, params],
   );
@@ -442,8 +444,7 @@ export function FerramentaLiberdadeFinanceira({
               }}>
                 <i className="ti ti-info-circle" style={{ fontSize: 13, color: '#60A5FA' }} />
                 <span>
-                  Taxas utilizadas: acumulação <strong>IPCA + 6% a.a.</strong>
-                  {' · '}retirada <strong>IPCA + 4% a.a.</strong>
+                  Retirada calculada a <strong>IPCA + 4% a.a.</strong>
                   {' · '}expectativa de vida <strong>90 anos</strong>
                 </span>
               </div>
@@ -578,7 +579,7 @@ export function FerramentaLiberdadeFinanceira({
                 }} className="tabular-nums">
                   IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
                 </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>real necessária</p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>para atingir a meta</p>
               </CardContent>
             </Card>
 
