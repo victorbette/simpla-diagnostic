@@ -206,7 +206,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
+        <p style={{ color: "#000000", fontSize: 13, fontWeight: 700, margin: 0 }}>
           Objetivos de vida
         </p>
         {!showForm && (
@@ -335,8 +335,8 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
           <div
             key={o.id}
             style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-              padding: "10px 12px", borderRadius: 8,
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+              padding: "8px 10px", borderRadius: 8,
               border: `1px solid ${ativo ? "#BFDBFE" : "#E5E7EB"}`,
               backgroundColor: ativo ? "white" : "#FAFAFA",
             }}
@@ -347,7 +347,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 onClick={() => toggleAtivo(o.id)}
                 title={ativo ? "Remover da projeção" : "Incluir na projeção"}
                 style={{
-                  width: 36, height: 20, borderRadius: 999,
+                  width: 30, height: 17, borderRadius: 999,
                   backgroundColor: ativo ? "#15803D" : "#D1D5DB",
                   border: "none", cursor: "pointer", padding: 2,
                   display: "flex", alignItems: "center",
@@ -356,7 +356,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 }}
               >
                 <div style={{
-                  width: 16, height: 16, borderRadius: "50%",
+                  width: 13, height: 13, borderRadius: "50%",
                   backgroundColor: "white",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
                 }} />
@@ -375,7 +375,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <p style={{
-                    fontSize: 13, fontWeight: 600,
+                    fontSize: 12, fontWeight: 600,
                     color: ativo ? "#000000" : "#9CA3AF",
                     margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
@@ -402,7 +402,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                   lineHeight: 1, display: "flex", alignItems: "center",
                 }}
               >
-                <i className="ti ti-pencil" style={{ fontSize: 13 }} />
+                <i className="ti ti-pencil" style={{ fontSize: 12 }} />
               </button>
               <button
                 onClick={() => remove(o.id)}
@@ -413,7 +413,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                   lineHeight: 1, display: "flex", alignItems: "center",
                 }}
               >
-                <i className="ti ti-trash" style={{ fontSize: 13 }} />
+                <i className="ti ti-trash" style={{ fontSize: 12 }} />
               </button>
             </div>
           </div>

@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
@@ -129,9 +128,8 @@ export function FerramentaLiberdadeFinanceira({
   const [salvo, setSalvo] = useState(false);
 
   const CHAVE = `ferramenta_if_${clientId}`;
-  const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
 
-  const { limpar } = useFerramentaStorage(
+  useFerramentaStorage(
     CHAVE,
     { params, objetivos },
     (v) => {
@@ -260,6 +258,8 @@ export function FerramentaLiberdadeFinanceira({
     }
   };
 
+  const sliderAporteMax = Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000);
+
   if (!result) {
     return (
       <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
@@ -270,187 +270,183 @@ export function FerramentaLiberdadeFinanceira({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Persistence bar */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "8px 12px", backgroundColor: "#F0F7FF",
-        borderRadius: 8, border: "1px solid #BFDBFE",
-      }}>
-        <span style={{ fontSize: 11, color: "#3B82F6" }}>
-          {temDadosSalvos ? "● Dados salvos automaticamente" : "○ Preencha os dados abaixo"}
-        </span>
-        {temDadosSalvos && (
-          <button
-            onClick={() => { if (window.confirm("Limpar todos os dados desta análise?")) limpar(); }}
-            style={{
-              background: "transparent", border: "1px solid rgba(0,0,0,0.15)",
-              color: "#6B7280", borderRadius: 6, padding: "4px 10px",
-              fontSize: 12, cursor: "pointer",
-            }}
-          >
-            Limpar dados
-          </button>
-        )}
-      </div>
 
-      {/* ── 1. INPUTS ──────────────────────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
-        <CardContent className="pt-5 space-y-4">
-          <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
+      {/* ── 1. GRID 2 COLUNAS: Parâmetros | Objetivos ─────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+        {/* Parâmetros da Simulação */}
+        <div style={{
+          background: "white", border: "0.5px solid #E5E7EB",
+          borderRadius: 12, padding: "16px 20px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 10px" }}>
             Parâmetros da simulação
           </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
 
-          <div className="grid grid-cols-2 gap-3">
-            {/* Idade Atual — readonly */}
-            <div className="flex flex-col gap-1.5">
-              <Label style={{ color: "#6B7280" }}>Idade atual</Label>
-              <div style={{ position: "relative" }}>
+            {/* Idade Atual + Aposentadoria */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Idade atual</label>
+                <div style={{ position: "relative" }}>
+                  <Input
+                    type="number"
+                    value={params.idadeAtual}
+                    readOnly
+                    style={{
+                      borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB",
+                      color: "#000000", backgroundColor: "#EFF6FF",
+                      cursor: "not-allowed", padding: "6px 10px", fontSize: 12,
+                    }}
+                  />
+                  <span style={{
+                    position: "absolute", top: 7, right: 6,
+                    fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none",
+                  }}>✓</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
                 <Input
+                  id="lf-apos"
                   type="number"
-                  value={params.idadeAtual}
-                  readOnly
-                  style={{
-                    borderColor: "#BFDBFE",
-                    borderLeft: "3px solid #2563EB",
-                    color: "#000000",
-                    backgroundColor: "#EFF6FF",
-                    cursor: "not-allowed",
-                  }}
+                  min={params.idadeAtual + 1}
+                  max={90}
+                  value={params.idadeAposentadoria}
+                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                  style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
                 />
-                <span style={{
-                  position: "absolute", top: 8, right: 8,
-                  fontSize: 10, color: "#2563EB", fontWeight: 600,
-                  pointerEvents: "none",
-                }}>
-                  ✓ CALCULADO
-                </span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade de Aposentadoria</Label>
-              <Input
-                id="lf-apos"
-                type="number"
-                min={params.idadeAtual + 1}
-                max={90}
-                value={params.idadeAposentadoria}
-                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                style={{ borderColor: "#BFDBFE", color: "#000000" }}
+            {/* Patrimônio Financeiro */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Financeiro</label>
+                {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+                {patrimonioEditado && (
+                  <button
+                    onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    ↺ Restaurar
+                  </button>
+                )}
+              </div>
+              <CurrencyInput
+                value={params.patrimonioInicial}
+                onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+              />
+            </div>
+
+            {/* Aporte Mensal */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
+                {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
+                {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
+                  <button
+                    onClick={() => setP({ aporteMensal: aporteColeta })}
+                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    ↺ Restaurar
+                  </button>
+                )}
+              </div>
+              <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+            </div>
+
+            {/* Renda Mensal Desejada */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
+                {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+                {rendaEditada && (
+                  <button
+                    onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    ↺ Restaurar
+                  </button>
+                )}
+              </div>
+              <CurrencyInput
+                value={params.rendaDesejada}
+                onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
               />
             </div>
           </div>
+        </div>
 
-          {/* Slider: Aposentadoria */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label style={{ fontSize: 13, color: "#6B7280" }}>Ajuste rápido: Aposentadoria</label>
-              <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
-            </div>
-            <input
-              type="range"
-              min={params.idadeAtual + 5}
-              max={80}
-              step={1}
-              value={params.idadeAposentadoria}
-              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-              className="w-full"
-              style={{ accentColor: "#1E3A8A" }}
-            />
-            <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-              <span>{params.idadeAtual + 5} anos</span>
-              <span>80 anos</span>
-            </div>
-          </div>
-
-          {/* Patrimônio Financeiro */}
-          <div className="flex flex-col gap-1.5">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Label style={{ color: "#6B7280" }}>Patrimônio Financeiro</Label>
-              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-              {patrimonioEditado && (
-                <button
-                  onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
-                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺ Restaurar
-                </button>
-              )}
-            </div>
-            <CurrencyInput
-              value={params.patrimonioInicial}
-              onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
-            />
-          </div>
-
-          {/* Aporte Mensal + slider */}
-          <div className="flex flex-col gap-1.5">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
-              {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
-              {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
-                <button
-                  onClick={() => setP({ aporteMensal: aporteColeta })}
-                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺ Restaurar
-                </button>
-              )}
-            </div>
-            <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
-            <input
-              type="range"
-              min={0}
-              max={Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000)}
-              step={100}
-              value={params.aporteMensal}
-              onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
-              className="w-full"
-              style={{ accentColor: "#15803D" }}
-            />
-            <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-              <span>R$ 0</span>
-              <span>{formatCurrency(Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000))}/mês</span>
-            </div>
-          </div>
-
-          {/* Renda Mensal Desejada */}
-          <div className="flex flex-col gap-1.5">
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Label style={{ color: "#6B7280" }}>Renda mensal desejada na Aposentadoria</Label>
-              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-              {rendaEditada && (
-                <button
-                  onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
-                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺ Restaurar
-                </button>
-              )}
-            </div>
-            <CurrencyInput
-              value={params.rendaDesejada}
-              onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
-            />
-          </div>
-
-
-        </CardContent>
-      </Card>
-
-      {/* ── 2. OBJETIVOS DE VIDA ───────────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
-        <CardContent className="pt-5">
+        {/* Objetivos de Vida */}
+        <div style={{
+          background: "white", border: "0.5px solid #E5E7EB",
+          borderRadius: 12, padding: "16px 20px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        }}>
           <ListaObjetivos
             objetivos={objetivos}
             onObjetivos={setObjetivos}
             anoAtual={anoAtualCliente}
             anoMeta={anoMetaCliente}
           />
+        </div>
+      </div>
+
+      {/* ── 2. SLIDERS ──────────────────────────────────────────────────────── */}
+      <Card style={cardGreenTop}>
+        <CardContent className="pt-4 pb-4">
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+            {/* Slider: Aposentadoria */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aposentadoria</label>
+                <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
+              </div>
+              <input
+                type="range"
+                min={params.idadeAtual + 5}
+                max={80}
+                step={1}
+                value={params.idadeAposentadoria}
+                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                className="w-full"
+                style={{ accentColor: "#1E3A8A" }}
+              />
+              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                <span>{params.idadeAtual + 5} anos</span>
+                <span>80 anos</span>
+              </div>
+            </div>
+
+            {/* Slider: Aporte Mensal */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aporte mensal</label>
+                <span style={{ ...badgePctStyle, backgroundColor: "#15803D" }}>{formatCurrency(params.aporteMensal)}/mês</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={sliderAporteMax}
+                step={100}
+                value={params.aporteMensal}
+                onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
+                className="w-full"
+                style={{ accentColor: "#15803D" }}
+              />
+              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                <span>R$ 0</span>
+                <span>{formatCurrency(sliderAporteMax)}/mês</span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* ── 3. CARDS DE RESULTADO 2×2 ──────────────────────────────────────── */}
+      {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
@@ -509,7 +505,7 @@ export function FerramentaLiberdadeFinanceira({
         </Card>
       </div>
 
-      {/* ── 4. GRÁFICO ─────────────────────────────────────────────────────── */}
+      {/* ── 4. GRÁFICO ──────────────────────────────────────────────────────── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
@@ -527,7 +523,7 @@ export function FerramentaLiberdadeFinanceira({
         </CardContent>
       </Card>
 
-      {/* ── 5. ANÁLISE DE SENSIBILIDADE ────────────────────────────────────── */}
+      {/* ── 5. ANÁLISE DE SENSIBILIDADE ─────────────────────────────────────── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -625,7 +621,7 @@ export function FerramentaLiberdadeFinanceira({
         </CardContent>
       </Card>
 
-      {/* Save button */}
+      {/* ── 6. BOTÃO SALVAR ─────────────────────────────────────────────────── */}
       <style>{`@keyframes lf-spin { to { transform: rotate(360deg); } }`}</style>
       <button
         onClick={handleSalvar}
