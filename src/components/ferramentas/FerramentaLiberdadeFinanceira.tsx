@@ -501,57 +501,6 @@ export function FerramentaLiberdadeFinanceira({
 
         {/* Right: Results */}
         <div className="space-y-5">
-          {/* KPI grid — 2×2 + full-width aporte */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Patrimônio na Aposentadoria
-                </p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#000000" }} className="tabular-nums">
-                  {formatCurrency(result.patrimonioNaIF)}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Patrimônio necessário
-                </p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
-                  {formatCurrency(result.patrimonioNecessario)}
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>regra dos 4%</p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Renda sustentável
-                </p>
-                <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D" }} className="tabular-nums">
-                  {formatCurrency(result.rendaSustentavel)}/mês
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  {result.gapRenda > 0 ? "Gap de renda" : "Superávit de renda"}
-                </p>
-                <p
-                  style={{ fontSize: 18, fontWeight: 700, color: result.gapRenda > 0 ? "#B91C1C" : "#15803D" }}
-                  className="tabular-nums"
-                >
-                  {formatCurrency(Math.abs(result.gapRenda))}/mês
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Aporte necessário — full width highlight */}
           {(() => {
             const comObj = result.aporteNecessario;
@@ -618,7 +567,7 @@ export function FerramentaLiberdadeFinanceira({
             );
           })()}
 
-          {/* New 2×2 summary grid */}
+          {/* Summary grid 2×3 */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Card style={cardGreenTop}>
               <CardContent className="pt-4 pb-4">
@@ -650,7 +599,7 @@ export function FerramentaLiberdadeFinanceira({
                   Aporte Necessário
                 </p>
                 <p style={{ fontSize: 17, fontWeight: 700, color: "#1E3A8A" }} className="tabular-nums">
-                  {formatCurrency(aporteNecessarioCalc)}/mês
+                  {formatCurrency(result.aporteNecessario)}/mês
                 </p>
               </CardContent>
             </Card>
@@ -664,27 +613,33 @@ export function FerramentaLiberdadeFinanceira({
                   fontSize: 17, fontWeight: 700,
                   color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D",
                 }} className="tabular-nums">
-                  {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
+                  IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
                 </p>
                 <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>real necessária</p>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Status badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 7,
-            padding: "8px 16px", borderRadius: 999,
-            background: result.ifAlcancada ? "#DCFCE7" : "#FEF3C7",
-            border: `1px solid ${result.ifAlcancada ? "#86EFAC" : "#FDE68A"}`,
-          }}>
-            <i
-              className={`ti ${result.ifAlcancada ? "ti-check" : "ti-alert-triangle"}`}
-              style={{ fontSize: 14, color: result.ifAlcancada ? "#059669" : "#B45309" }}
-            />
-            <span style={{ fontSize: 12, fontWeight: 600, color: result.ifAlcancada ? "#059669" : "#B45309" }}>
-              {result.ifAlcancada ? "Meta atingível com o aporte atual" : "Ajuste necessário para atingir a meta"}
-            </span>
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Renda Sustentável
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "#15803D" }} className="tabular-nums">
+                  {formatCurrency(result.rendaSustentavel)}/mês
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  {result.gapRenda > 0 ? "Gap de Renda" : "Superávit de Renda"}
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: result.gapRenda > 0 ? "#B91C1C" : "#15803D" }} className="tabular-nums">
+                  {formatCurrency(Math.abs(result.gapRenda))}/mês
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {objetivos.length > 0 && (

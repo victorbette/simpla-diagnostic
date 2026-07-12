@@ -86,6 +86,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   const maxPatrimonio = Math.max(
     ...dadosFiltrados.map((p) => Number(p.patrimonio) || 0),
     ...dadosFiltrados.map((p) => Number(p.patrimonioIdeal) || 0),
+    patrimonioNecessario ?? 0,
     0,
   );
   const STEP = 500_000;
