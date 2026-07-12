@@ -30,7 +30,7 @@ export const ITENS_SUMARIO: ReadonlyArray<{ numero: number; label: string; pagin
   { numero: 5,  label: "Liberdade Financeira",  pagina: PAG.divisoriaLf },
   { numero: 6,  label: "Asset Allocation",      pagina: PAG.divisoriaAa },
   { numero: 7,  label: "Proteção e Sucessório", pagina: PAG.divisoriaPs },
-  { numero: 8,  label: "Planejamento Fiscal",   pagina: PAG.divisoriaFiscal },
+  { numero: 8,  label: "Planejamento Tributário", pagina: PAG.divisoriaFiscal },
   { numero: 9,  label: "Próximos Passos",       pagina: PAG.divisoriaAcao },
   { numero: 10, label: "Mãos à Obra",           pagina: PAG.maosAObra },
 ];

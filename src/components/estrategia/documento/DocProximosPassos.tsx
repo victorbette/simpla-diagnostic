@@ -11,7 +11,7 @@ interface Props {
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
   onResultadosChange: (r: ResultadosEstrategia) => void;
-  numPagina: number;
+  numPagina?: number;
 }
 
 const PRIO_BADGE = {
@@ -129,7 +129,7 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
   );
 }
 
-export function DocProximosPassos({ nomeCliente, plan, resultados, onResultadosChange, numPagina }: Props) {
+export function DocProximosPassos({ nomeCliente, plan, resultados, onResultadosChange, numPagina = 14 }: Props) {
   const [passos, setPassos] = useState<ProximoPasso[]>(() => {
     const saved = resultados.proximosPassos;
     if (saved && saved.length > 0) return saved;

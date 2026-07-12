@@ -367,7 +367,7 @@ export function calcularProtecao(p: ProtecaoSimplificada): ResultadoProtecao {
   return { capitalNecessario, capitalAtual, gap, percentualCoberto, recomendacoes };
 }
 
-// ─── Planejamento Fiscal ──────────────────────────────────────────────────────
+// ─── Planejamento Tributário ──────────────────────────────────────────────────
 
 export interface PlanejamentoFiscal {
   rendaBrutaAnual: number;

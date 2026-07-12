@@ -144,7 +144,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={clientName} />
         <DocProtecaoSucessorio nomeCliente={clientName} plan={plan} resultados={resultados} />
 
-        <DivisoriaSecao titulo="Planejamento Fiscal" nomeCliente={clientName} />
+        <DivisoriaSecao titulo="Planejamento Tributário" nomeCliente={clientName} />
         <DocPlanejamentoFiscal nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Plano de Ação" nomeCliente={clientName} />

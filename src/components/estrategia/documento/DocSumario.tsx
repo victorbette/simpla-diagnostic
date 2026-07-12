@@ -3,7 +3,7 @@ import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   nomeCliente: string;
-  scores: Record<string, number>;
+  scores?: Record<string, number>;
 }
 
 const ITENS_SUMARIO = [
@@ -18,7 +18,7 @@ const ITENS_SUMARIO = [
   { pagina: 9, label: "Mãos à Obra",             icone: "ti-rocket",      cor: "#1E3A8A"                     },
 ] as const;
 
-export function DocSumario({ nomeCliente, scores }: Props) {
+export function DocSumario({ nomeCliente, scores = {} }: Props) {
   return (
     <div style={PAGINA} className="doc-pagina">
       {/* Header */}

@@ -17,10 +17,10 @@ interface Props {
   nomeCliente: string;
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
-  numPagina: number;
+  numPagina?: number;
 }
 
-export function DocPlanejamentoFiscal({ nomeCliente, plan, resultados, numPagina }: Props) {
+export function DocPlanejamentoFiscal({ nomeCliente, plan, resultados, numPagina = 12 }: Props) {
   const score = useMemo(() => calcularScores(plan, resultados).fiscalScore, [plan, resultados]);
   const storKey = `doc_coment_${plan.clientId}_fiscal`;
   const [comentario, setComentario] = useState(() => localStorage.getItem(storKey) ?? "");
