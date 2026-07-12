@@ -169,8 +169,9 @@ export function FerramentaLiberdadeFinanceira({
       patrimonioAlvo: calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria),
       idadeAtual: params.idadeAtual,
       idadeAlvo: params.idadeAposentadoria,
+      objetivos,
     }),
-    [params],
+    [params, objetivos],
   );
 
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
@@ -218,10 +219,11 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioAlvo: alvo,
         idadeAtual: params.idadeAtual,
         taxaMensalReal: TAXA_ACUM_MENSAL,
+        objetivos,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params]);
+  }, [result, params, objetivos]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -235,10 +237,11 @@ export function FerramentaLiberdadeFinanceira({
         idadeAtual: params.idadeAtual,
         idadeAlvo,
         taxaMensalReal: TAXA_ACUM_MENSAL,
+        objetivos,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params]);
+  }, [result, params, objetivos]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;

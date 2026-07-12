@@ -368,6 +368,35 @@ export function calcularPatrimonioNecessario(
   return pvAnuidade(rendaMensalDesejada, TAXA_RET_MENSAL, meses);
 }
 
+// Simulates patrimônio month-by-month applying objectives at their calendar month/year.
+// Signs: aportes_financeiros = positive; all others = negative (expense).
+function projetarComObjetivos(p: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+  objetivos: ObjetivoVida[];
+  taxaMensal: number;
+}): number {
+  const hoje = new Date();
+  let anoIter = hoje.getFullYear();
+  let mesIter = hoje.getMonth() + 1; // 1-12
+  const nMeses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  let patrimonio = p.patrimonioAtual;
+  for (let m = 0; m < nMeses; m++) {
+    mesIter++;
+    if (mesIter > 12) { mesIter = 1; anoIter++; }
+    patrimonio = patrimonio * (1 + p.taxaMensal) + p.aporteMensal;
+    for (const obj of p.objetivos) {
+      if (obj.ano === anoIter && obj.mes === mesIter) {
+        const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
+        patrimonio = Math.max(0, patrimonio + sinal * obj.valorBRL);
+      }
+    }
+  }
+  return patrimonio;
+}
+
 export function calcularProjecaoComAporte(p: {
   patrimonioAtual: number;
   aporteMensal: number;
@@ -389,10 +418,21 @@ export function calcularAporteMensalNecessario(p: {
   idadeAtual: number;
   idadeAlvo: number;
   taxaMensalReal?: number;
+  objetivos?: ObjetivoVida[];
 }): number {
   const r = p.taxaMensalReal ?? TAXA_ACUM_MENSAL;
   const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
   if (meses <= 0) return 0;
+  if (p.objetivos && p.objetivos.length > 0) {
+    // Binary search: hi = patrimonioAlvo guarantees reaching the target in month 1
+    let lo = 0, hi = p.patrimonioAlvo;
+    for (let i = 0; i < 60; i++) {
+      const mid = (lo + hi) / 2;
+      if (projetarComObjetivos({ patrimonioAtual: p.patrimonioAtual, aporteMensal: mid, idadeAtual: p.idadeAtual, idadeAlvo: p.idadeAlvo, objetivos: p.objetivos, taxaMensal: r }) >= p.patrimonioAlvo) hi = mid;
+      else lo = mid;
+    }
+    return Math.max(0, hi);
+  }
   if (Math.abs(r) < 1e-10) return Math.max(0, (p.patrimonioAlvo - p.patrimonioAtual) / meses);
   const f = Math.pow(1 + r, meses);
   return Math.max(0, ((p.patrimonioAlvo - p.patrimonioAtual * f) * r) / (f - 1));
@@ -404,15 +444,19 @@ export function calcularTaxaNecessaria(p: {
   patrimonioAlvo: number;
   idadeAtual: number;
   idadeAlvo: number;
+  objetivos?: ObjetivoVida[];
 }): number {
   const TAXA_MINIMA_ANUAL = 0.03; // IPCA+3% a.a. — piso da taxa necessária
   const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
   if (meses <= 0 || p.patrimonioAlvo <= 0) return TAXA_MINIMA_ANUAL;
   function fv(ta: number): number {
-    const r = Math.pow(1 + ta, 1 / 12) - 1;
-    if (Math.abs(r) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
-    const f = Math.pow(1 + r, meses);
-    return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / r;
+    const tm = Math.pow(1 + ta, 1 / 12) - 1;
+    if (p.objetivos && p.objetivos.length > 0) {
+      return projetarComObjetivos({ patrimonioAtual: p.patrimonioAtual, aporteMensal: p.aporteMensal, idadeAtual: p.idadeAtual, idadeAlvo: p.idadeAlvo, objetivos: p.objetivos, taxaMensal: tm });
+    }
+    if (Math.abs(tm) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
+    const f = Math.pow(1 + tm, meses);
+    return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / tm;
   }
   if (fv(0) >= p.patrimonioAlvo) return TAXA_MINIMA_ANUAL;
   let lo = 0, hi = 5;
@@ -430,9 +474,29 @@ export function calcularIdadeComAporte(p: {
   patrimonioAlvo: number;
   idadeAtual: number;
   taxaMensalReal?: number;
+  objetivos?: ObjetivoVida[];
 }): number {
   const r = p.taxaMensalReal ?? TAXA_ACUM_MENSAL;
   if (p.patrimonioAtual >= p.patrimonioAlvo) return p.idadeAtual;
+  if (p.objetivos && p.objetivos.length > 0) {
+    const hoje = new Date();
+    let anoIter = hoje.getFullYear();
+    let mesIter = hoje.getMonth() + 1;
+    let pat = p.patrimonioAtual;
+    for (let m = 1; m <= 600; m++) {
+      mesIter++;
+      if (mesIter > 12) { mesIter = 1; anoIter++; }
+      pat = pat * (1 + r) + p.aporteMensal;
+      for (const obj of p.objetivos) {
+        if (obj.ano === anoIter && obj.mes === mesIter) {
+          const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
+          pat = Math.max(0, pat + sinal * obj.valorBRL);
+        }
+      }
+      if (pat >= p.patrimonioAlvo) return p.idadeAtual + m / 12;
+    }
+    return p.idadeAtual + 50;
+  }
   let pat = p.patrimonioAtual;
   for (let m = 1; m <= 600; m++) {
     pat = pat * (1 + r) + p.aporteMensal;
