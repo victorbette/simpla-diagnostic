@@ -438,7 +438,19 @@ export function FerramentaLiberdadeFinanceira({
         </CardContent>
       </Card>
 
-      {/* ── 2. CARDS DE RESULTADO 2×2 ──────────────────────────────────────── */}
+      {/* ── 2. OBJETIVOS DE VIDA ───────────────────────────────────────────── */}
+      <Card style={cardGreenTop}>
+        <CardContent className="pt-5">
+          <ListaObjetivos
+            objetivos={objetivos}
+            onObjetivos={setObjetivos}
+            anoAtual={anoAtualCliente}
+            anoMeta={anoMetaCliente}
+          />
+        </CardContent>
+      </Card>
+
+      {/* ── 3. CARDS DE RESULTADO 2×2 ──────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
@@ -497,7 +509,7 @@ export function FerramentaLiberdadeFinanceira({
         </Card>
       </div>
 
-      {/* ── 3. GRÁFICO ─────────────────────────────────────────────────────── */}
+      {/* ── 4. GRÁFICO ─────────────────────────────────────────────────────── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
@@ -511,18 +523,6 @@ export function FerramentaLiberdadeFinanceira({
             mesIF={mesIF}
             mesNascimento={mesNascimento}
             patrimonioNecessario={result.patrimonioNecessario}
-          />
-        </CardContent>
-      </Card>
-
-      {/* ── 4. OBJETIVOS DE VIDA ───────────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
-        <CardContent className="pt-5">
-          <ListaObjetivos
-            objetivos={objetivos}
-            onObjetivos={setObjetivos}
-            anoAtual={anoAtualCliente}
-            anoMeta={anoMetaCliente}
           />
         </CardContent>
       </Card>

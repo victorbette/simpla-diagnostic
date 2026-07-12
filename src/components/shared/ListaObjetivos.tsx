@@ -341,8 +341,8 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
               backgroundColor: ativo ? "white" : "#FAFAFA",
             }}
           >
-            {/* LEFT: Switch + Label */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
+            {/* LEFT: Switch */}
+            <div style={{ flexShrink: 0 }}>
               <button
                 onClick={() => toggleAtivo(o.id)}
                 title={ativo ? "Remover da projeção" : "Incluir na projeção"}
@@ -361,9 +361,6 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                   boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
                 }} />
               </button>
-              <span style={{ fontSize: 10, color: "#6B7280", textAlign: "center", lineHeight: 1.2 }}>
-                Impactar<br />projeção
-              </span>
             </div>
 
             {/* CENTER: Icon + Name + Date + Value + Badge */}
@@ -376,7 +373,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 {Icon && <Icon style={{ width: 16, height: 16, color: ativo ? cor : "#9CA3AF" }} />}
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <p style={{
                     fontSize: 13, fontWeight: 600,
                     color: ativo ? "#000000" : "#9CA3AF",
@@ -384,13 +381,6 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                   }}>
                     {o.label}
                   </p>
-                  <span style={{
-                    fontSize: 10, padding: "1px 6px", borderRadius: 999, flexShrink: 0,
-                    backgroundColor: ativo ? "#DCFCE7" : "#F3F4F6",
-                    color: ativo ? "#15803D" : "#9CA3AF",
-                  }}>
-                    {ativo ? "Incluído na projeção" : "Fora da projeção"}
-                  </span>
                 </div>
                 <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
                   {dataLabel} · {formatCurrency(o.valorBRL)}
