@@ -426,6 +426,12 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                     onTagsChange={handleTagsChange}
                     resultadoIF={resultados.if}
                     onResultadoIF={(r) => setResultados((prev) => ({ ...prev, if: r }))}
+                    onSaveCloud={async (r) => {
+                      if (plan.id) {
+                        const novaEstrategia: Record<string, unknown> = { ...resultados, if: r };
+                        await store.saveEstrategia(plan.id, novaEstrategia);
+                      }
+                    }}
                   />
                 </div>
               )}

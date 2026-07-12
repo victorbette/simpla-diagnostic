@@ -27,7 +27,7 @@ interface Props {
   planejamentoIF: PlanejamentoIF;
   dataNascimento?: string;
   dadosCliente?: DadosCliente;
-  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => void;
+  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => Promise<void>;
 }
 
 interface UIParams {
@@ -125,6 +125,8 @@ export function FerramentaLiberdadeFinanceira({
   const [rendaEditada,      setRendaEditada]       = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
   const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
 
   const CHAVE = `ferramenta_if_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
@@ -245,6 +247,18 @@ export function FerramentaLiberdadeFinanceira({
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente  = anoNascimento + params.idadeAposentadoria;
+
+  const handleSalvar = async () => {
+    if (!result) return;
+    setSalvando(true);
+    try {
+      await onSave(projecaoParams, objetivos, result);
+      setSalvo(true);
+      setTimeout(() => setSalvo(false), 2500);
+    } finally {
+      setSalvando(false);
+    }
+  };
 
   if (!result) {
     return (
@@ -612,15 +626,34 @@ export function FerramentaLiberdadeFinanceira({
       </Card>
 
       {/* Save button */}
+      <style>{`@keyframes lf-spin { to { transform: rotate(360deg); } }`}</style>
       <button
-        onClick={() => onSave(projecaoParams, objetivos, result)}
+        onClick={handleSalvar}
+        disabled={salvando}
         style={{
           width: "100%", backgroundColor: "#15803D", color: "white",
           border: "none", borderRadius: 8, padding: "12px 0",
-          fontSize: 14, fontWeight: 600, cursor: "pointer",
+          fontSize: 14, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          opacity: salvando ? 0.85 : 1,
         }}
       >
-        Salvar simulação
+        {salvando ? (
+          <>
+            <i className="ti ti-loader-2" style={{ fontSize: 16, display: "inline-block", animation: "lf-spin 1s linear infinite" }} />
+            Salvando…
+          </>
+        ) : salvo ? (
+          <>
+            <i className="ti ti-circle-check" style={{ fontSize: 16, color: "#86EFAC" }} />
+            Salvo!
+          </>
+        ) : (
+          <>
+            <i className="ti ti-device-floppy" style={{ fontSize: 16 }} />
+            Salvar simulação
+          </>
+        )}
       </button>
     </div>
   );

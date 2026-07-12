@@ -20,6 +20,7 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoIF: ResultadoIF | null;
   onResultadoIF: (r: ResultadoIF) => void;
+  onSaveCloud?: (r: ResultadoIF) => Promise<void>;
 }
 
 export function SecaoAposentadoria({
@@ -29,6 +30,7 @@ export function SecaoAposentadoria({
   tags,
   onTagsChange,
   onResultadoIF,
+  onSaveCloud,
 }: Props) {
   const dc = plan?.dadosCliente ?? {} as typeof plan.dadosCliente;
   const gastoCartao = Number(dc.gastoCartaoMensal) || 0;
@@ -46,8 +48,8 @@ export function SecaoAposentadoria({
         planejamentoIF={plan.planejamentoIF}
         dataNascimento={plan.dadosCliente.dataNascimento}
         dadosCliente={plan.dadosCliente}
-        onSave={(params, objetivos, result) => {
-          onResultadoIF({
+        onSave={async (params, objetivos, result) => {
+          const r: ResultadoIF = {
             patrimonioAposentadoria: result.patrimonioNaIF,
             rendaSustentavel: result.rendaSustentavel,
             gapRenda: result.gapRenda,
@@ -69,7 +71,9 @@ export function SecaoAposentadoria({
             mesInicioRetirada: result.mesInicioRetirada,
             dataCalculo: new Date().toISOString(),
             savedAt: new Date().toISOString(),
-          });
+          };
+          onResultadoIF(r);
+          await onSaveCloud?.(r);
         }}
       />
 
