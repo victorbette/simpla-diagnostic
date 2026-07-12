@@ -420,18 +420,7 @@ export function FerramentaLiberdadeFinanceira({
             />
           </div>
 
-          {/* Rates note */}
-          <div style={{
-            fontSize: 11, color: "#9CA3AF", background: "#F8FAFF",
-            border: "0.5px solid #BFDBFE", borderRadius: 8, padding: "10px 14px",
-            display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <i className="ti ti-info-circle" style={{ fontSize: 13, color: "#60A5FA" }} />
-            <span>
-              Retirada calculada a <strong>IPCA + 4% a.a.</strong>
-              {" · "}expectativa de vida <strong>90 anos</strong>
-            </span>
-          </div>
+
         </CardContent>
       </Card>
 
