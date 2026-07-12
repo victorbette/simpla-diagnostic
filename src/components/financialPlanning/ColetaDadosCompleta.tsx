@@ -631,7 +631,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         />
       </SecaoCard>
 
-      {/* ─── SEÇÃO 6: Planejamento Fiscal ─── */}
+      {/* ─── SEÇÃO 6: Planejamento Tributário ─── */}
       <SecaoCard color="#B45309" Icon={FileText} title="Planejamento Tributário" subtitle="Eficiência tributária, PGBL/VGBL e declaração de IR">
         <FiscalForm
           value={plan.fiscal}

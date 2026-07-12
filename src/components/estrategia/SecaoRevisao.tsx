@@ -866,7 +866,7 @@ export function SecaoRevisao({
         </CardBody>
       </AreaCard>
 
-      {/* Card 4: Planejamento Fiscal */}
+      {/* Card 4: Planejamento Tributário */}
       <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

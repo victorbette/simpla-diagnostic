@@ -65,7 +65,7 @@ export function calcularScores(
     psScore = Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }
 
-  // Planejamento Fiscal
+  // Planejamento Tributário
   let fiscalScore = 50;
   if (resultados.fiscal) {
     fiscalScore = resultados.fiscal.aproveitandoTeto
