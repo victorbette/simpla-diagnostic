@@ -7,7 +7,8 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProjecaoIF,
-  calcularTaxaReal,
+  TAXA_ACUM_ANUAL,
+  TAXA_ACUM_MENSAL,
   calcularAporteMensalNecessario,
   calcularTaxaNecessaria,
   calcularIdadeComAporte,
@@ -36,8 +37,6 @@ interface UIParams {
   patrimonioInicial: number;
   aporteMensal: number;
   rendaDesejada: number;
-  rentabilidadeAnual: number; // nominal, decimal
-  inflacaoAnual: number;      // decimal
 }
 
 const cardGreenTop: React.CSSProperties = {
@@ -120,8 +119,6 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial:   patrimonioColeta || planejamentoIF.patrimonioAtual,
     aporteMensal:        aporteColeta     || planejamentoIF.aporteMensal,
     rendaDesejada:       rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
-    rentabilidadeAnual:  planejamentoIF.taxaRetornoAnual / 100,
-    inflacaoAnual:       planejamentoIF.inflacaoAnual / 100,
   };
 
   const [params, setParams] = useState<UIParams>(initialParams);
@@ -162,8 +159,6 @@ export function FerramentaLiberdadeFinanceira({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
 
-  const taxaRetornoReal = calcularTaxaReal(params.rentabilidadeAnual, params.inflacaoAnual);
-
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual: params.idadeAtual,
     idadeMeta: params.idadeAposentadoria,
@@ -171,11 +166,11 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: taxaRetornoReal,
+    taxaRetornoAnual: TAXA_ACUM_ANUAL,
     anoNascimento,
     mesNascimento,
     objetivos,
-  }), [params, objetivos, taxaRetornoReal, anoNascimento, mesNascimento]);
+  }), [params, objetivos, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
@@ -192,9 +187,9 @@ export function FerramentaLiberdadeFinanceira({
       patrimonioAlvo: result.patrimonioNecessario,
       idadeAtual: params.idadeAtual,
       idadeAlvo: params.idadeAposentadoria,
-      taxaMensalReal: taxaRetornoReal,
+      taxaMensalReal: TAXA_ACUM_MENSAL,
     }) : 0,
-    [result, params, taxaRetornoReal],
+    [result, params],
   );
 
   const taxaNecessariaCalc = useMemo(
@@ -219,11 +214,11 @@ export function FerramentaLiberdadeFinanceira({
         aporteMensal: aporte,
         patrimonioAlvo: alvo,
         idadeAtual: params.idadeAtual,
-        taxaMensalReal: taxaRetornoReal,
+        taxaMensalReal: TAXA_ACUM_MENSAL,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, taxaRetornoReal]);
+  }, [result, params]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -236,11 +231,11 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioAlvo: alvo,
         idadeAtual: params.idadeAtual,
         idadeAlvo,
-        taxaMensalReal: taxaRetornoReal,
+        taxaMensalReal: TAXA_ACUM_MENSAL,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, taxaRetornoReal]);
+  }, [result, params]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
@@ -433,56 +428,24 @@ export function FerramentaLiberdadeFinanceira({
                 />
               </div>
 
-              {/* Nominal return slider */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <Label style={{ color: "#6B7280" }}>Rentabilidade nominal anual</Label>
-                  <span style={badgePctStyle}>{formatNumber(params.rentabilidadeAnual * 100, 1)}%</span>
-                </div>
-                <input
-                  type="range" min={3} max={15} step={0.5}
-                  value={params.rentabilidadeAnual * 100}
-                  onChange={(e) => setP({ rentabilidadeAnual: Number(e.target.value) / 100 })}
-                  className="w-full"
-                  style={{ accentColor: "#000000" }}
-                />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  <span>3% (conservador)</span><span>15% (arrojado)</span>
-                </div>
-              </div>
-
-              {/* Inflation slider */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Label style={{ color: "#6B7280" }}>Inflação anual</Label>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      → real: {formatNumber(taxaRetornoReal * 100, 1)}%
-                    </span>
-                  </div>
-                  <span style={badgePctStyle}>{formatNumber(params.inflacaoAnual * 100, 1)}%</span>
-                </div>
-                <input
-                  type="range" min={0} max={10} step={0.5}
-                  value={params.inflacaoAnual * 100}
-                  onChange={(e) => setP({ inflacaoAnual: Number(e.target.value) / 100 })}
-                  className="w-full"
-                  style={{ accentColor: "#000000" }}
-                />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  <span>0%</span><span>10%</span>
-                </div>
-              </div>
-
-              {/* Withdrawal rate note */}
+              {/* Rates info note */}
               <div style={{
-                display: "flex", alignItems: "center", gap: 8,
-                fontSize: 12, color: "#2563EB",
-                backgroundColor: "#EFF6FF", borderRadius: 8,
-                border: "1px solid #BFDBFE", padding: "8px 12px",
+                fontSize: 11,
+                color: '#9CA3AF',
+                background: '#F8FAFF',
+                border: '0.5px solid #BFDBFE',
+                borderRadius: 8,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
               }}>
-                <span style={{ fontSize: 16, lineHeight: 1 }}>ℹ</span>
-                <span>Na aposentadoria é adotada a taxa de <strong>4% a.a. real</strong> — padrão conservador para carteiras de retirada</span>
+                <i className="ti ti-info-circle" style={{ fontSize: 13, color: '#60A5FA' }} />
+                <span>
+                  Taxas utilizadas: acumulação <strong>IPCA + 6% a.a.</strong>
+                  {' · '}retirada <strong>IPCA + 4% a.a.</strong>
+                  {' · '}expectativa de vida <strong>90 anos</strong>
+                </span>
               </div>
             </CardContent>
           </Card>
