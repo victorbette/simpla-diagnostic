@@ -405,22 +405,23 @@ export function calcularTaxaNecessaria(p: {
   idadeAtual: number;
   idadeAlvo: number;
 }): number {
+  const TAXA_MINIMA_ANUAL = 0.03; // IPCA+3% a.a. — piso da taxa necessária
   const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
-  if (meses <= 0 || p.patrimonioAlvo <= 0) return 0;
+  if (meses <= 0 || p.patrimonioAlvo <= 0) return TAXA_MINIMA_ANUAL;
   function fv(ta: number): number {
     const r = Math.pow(1 + ta, 1 / 12) - 1;
     if (Math.abs(r) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
     const f = Math.pow(1 + r, meses);
     return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / r;
   }
-  if (fv(0) >= p.patrimonioAlvo) return 0;
+  if (fv(0) >= p.patrimonioAlvo) return TAXA_MINIMA_ANUAL;
   let lo = 0, hi = 5;
   for (let i = 0; i < 60; i++) {
     const mid = (lo + hi) / 2;
     if (fv(mid) >= p.patrimonioAlvo) hi = mid;
     else lo = mid;
   }
-  return hi;
+  return Math.max(hi, TAXA_MINIMA_ANUAL);
 }
 
 export function calcularIdadeComAporte(p: {
