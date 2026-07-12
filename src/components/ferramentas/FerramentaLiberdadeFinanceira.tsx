@@ -7,6 +7,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProjecaoIF,
+  TAXA_ACUM_ANUAL,
   TAXA_ACUM_MENSAL,
   calcularPatrimonioNecessario,
   calcularAporteMensalNecessario,
@@ -179,11 +180,11 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: taxaNecessariaCalc,
+    taxaRetornoAnual: TAXA_ACUM_ANUAL,
     anoNascimento,
     mesNascimento,
     objetivos,
-  }), [params, objetivos, taxaNecessariaCalc, anoNascimento, mesNascimento]);
+  }), [params, objetivos, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
