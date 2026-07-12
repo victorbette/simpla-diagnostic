@@ -50,4 +50,5 @@ export interface ObjetivoVida {
   mes: number;    // 1-12
   ano: number;    // calendar year
   valorBRL: number;
+  ativo?: boolean; // undefined = active (backwards compatible)
 }

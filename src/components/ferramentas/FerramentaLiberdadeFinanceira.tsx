@@ -22,8 +22,6 @@ import { OBJETIVO_META } from "@/types/objetivos";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 
-const MESES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-
 interface Props {
   clientId: string;
   planejamentoIF: PlanejamentoIF;
@@ -77,7 +75,7 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
   return null;
 }
 
-/** Step 7 — migrate objectives saved in old format ({ nome, valor, idadeRealizacao }) */
+/** Migrate objectives saved in old format ({ nome, valor, idadeRealizacao }) */
 function migrateObjetivo(
   o: Record<string, unknown>,
   anoNascimento: number,
@@ -115,11 +113,11 @@ export function FerramentaLiberdadeFinanceira({
   const rendaDesejadaColeta = Number(planejamentoIF.rendaMensalDesejada)         || 0;
 
   const initialParams: UIParams = {
-    idadeAtual:          idadeAtualCalculada,
-    idadeAposentadoria:  planejamentoIF.idadeMeta,
-    patrimonioInicial:   patrimonioColeta || planejamentoIF.patrimonioAtual,
-    aporteMensal:        aporteColeta     || planejamentoIF.aporteMensal,
-    rendaDesejada:       rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
+    idadeAtual:         idadeAtualCalculada,
+    idadeAposentadoria: planejamentoIF.idadeMeta,
+    patrimonioInicial:  patrimonioColeta || planejamentoIF.patrimonioAtual,
+    aporteMensal:       aporteColeta     || planejamentoIF.aporteMensal,
+    rendaDesejada:      rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
   };
 
   const [params, setParams] = useState<UIParams>(initialParams);
@@ -135,7 +133,6 @@ export function FerramentaLiberdadeFinanceira({
     CHAVE,
     { params, objetivos },
     (v) => {
-      // Always override idadeAtual with current calculated value (birth date may have changed)
       if (v.params) setParams({ ...initialParams, ...v.params, idadeAtual: idadeAtualCalculada });
       if (v.objetivos) {
         const migrados = (v.objetivos as unknown as Record<string, unknown>[])
@@ -153,39 +150,41 @@ export function FerramentaLiberdadeFinanceira({
   useEffect(() => {
     setParams((prev) => ({
       ...prev,
-      idadeAtual:       idadeAtualCalculada,
+      idadeAtual:        idadeAtualCalculada,
       patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
       rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
 
-  // Computed independently (uses only TAXA_RET_MENSAL+rendaDesejada+idadeAposentadoria)
-  // so it can drive taxaNecessariaCalc without a circular dependency on result.
+  // Only objectives with ativo !== false impact the projection
+  const objetivosAtivos = useMemo(() => objetivos.filter(o => o.ativo !== false), [objetivos]);
+
+  // Computed independently so taxaNecessariaCalc has no circular dep on result
   const taxaNecessariaCalc = useMemo(
     () => calcularTaxaNecessaria({
       patrimonioAtual: params.patrimonioInicial,
-      aporteMensal: params.aporteMensal,
-      patrimonioAlvo: calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria),
-      idadeAtual: params.idadeAtual,
-      idadeAlvo: params.idadeAposentadoria,
-      objetivos,
+      aporteMensal:    params.aporteMensal,
+      patrimonioAlvo:  calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria),
+      idadeAtual:      params.idadeAtual,
+      idadeAlvo:       params.idadeAposentadoria,
+      objetivos:       objetivosAtivos,
     }),
-    [params, objetivos],
+    [params, objetivosAtivos],
   );
 
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
-    idadeAtual: params.idadeAtual,
-    idadeMeta: params.idadeAposentadoria,
-    idadeMaxima: 100,
-    patrimonioInicial: params.patrimonioInicial,
-    aporteMensal: params.aporteMensal,
-    rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: TAXA_ACUM_ANUAL,
+    idadeAtual:           params.idadeAtual,
+    idadeMeta:            params.idadeAposentadoria,
+    idadeMaxima:          100,
+    patrimonioInicial:    params.patrimonioInicial,
+    aporteMensal:         params.aporteMensal,
+    rendaMensalDesejada:  params.rendaDesejada,
+    taxaRetornoAnual:     TAXA_ACUM_ANUAL,
     anoNascimento,
     mesNascimento,
-    objetivos,
-  }), [params, objetivos, anoNascimento, mesNascimento]);
+    objetivos:            objetivosAtivos,
+  }), [params, objetivosAtivos, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
@@ -199,10 +198,10 @@ export function FerramentaLiberdadeFinanceira({
   const aporteNecessarioCalc = useMemo(
     () => result ? calcularAporteMensalNecessario({
       patrimonioAtual: params.patrimonioInicial,
-      patrimonioAlvo: result.patrimonioNecessario,
-      idadeAtual: params.idadeAtual,
-      idadeAlvo: params.idadeAposentadoria,
-      taxaMensalReal: TAXA_ACUM_MENSAL,
+      patrimonioAlvo:  result.patrimonioNecessario,
+      idadeAtual:      params.idadeAtual,
+      idadeAlvo:       params.idadeAposentadoria,
+      taxaMensalReal:  TAXA_ACUM_MENSAL,
     }) : 0,
     [result, params],
   );
@@ -215,15 +214,15 @@ export function FerramentaLiberdadeFinanceira({
       const aporte = Math.max(0, Math.round(base * (1 + pct) / 100) * 100);
       const idadeResult = calcularIdadeComAporte({
         patrimonioAtual: params.patrimonioInicial,
-        aporteMensal: aporte,
-        patrimonioAlvo: alvo,
-        idadeAtual: params.idadeAtual,
-        taxaMensalReal: TAXA_ACUM_MENSAL,
-        objetivos,
+        aporteMensal:    aporte,
+        patrimonioAlvo:  alvo,
+        idadeAtual:      params.idadeAtual,
+        taxaMensalReal:  TAXA_ACUM_MENSAL,
+        objetivos:       objetivosAtivos,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, objetivos]);
+  }, [result, params, objetivosAtivos]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -233,19 +232,19 @@ export function FerramentaLiberdadeFinanceira({
       const idadeAlvo = Math.max(params.idadeAtual + 1, base + delta);
       const aporte = calcularAporteMensalNecessario({
         patrimonioAtual: params.patrimonioInicial,
-        patrimonioAlvo: alvo,
-        idadeAtual: params.idadeAtual,
+        patrimonioAlvo:  alvo,
+        idadeAtual:      params.idadeAtual,
         idadeAlvo,
-        taxaMensalReal: TAXA_ACUM_MENSAL,
-        objetivos,
+        taxaMensalReal:  TAXA_ACUM_MENSAL,
+        objetivos:       objetivosAtivos,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, objetivos]);
+  }, [result, params, objetivosAtivos]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
-  const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
+  const anoMetaCliente  = anoNascimento + params.idadeAposentadoria;
 
   if (!result) {
     return (
@@ -280,301 +279,222 @@ export function FerramentaLiberdadeFinanceira({
         )}
       </div>
 
-      {/* Top row: params + results */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: Inputs */}
-        <div className="space-y-5">
-          <Card style={cardGreenTop}>
-            <CardContent className="pt-5 space-y-4">
-              <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
-                Parâmetros da simulação
-              </p>
+      {/* ── 1. INPUTS ──────────────────────────────────────────────────────── */}
+      <Card style={cardGreenTop}>
+        <CardContent className="pt-5 space-y-4">
+          <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, margin: 0 }}>
+            Parâmetros da simulação
+          </p>
 
-              <div className="grid grid-cols-2 gap-3">
-                {/* Idade Atual — readonly, calculated from birth date */}
-                <div className="flex flex-col gap-1.5">
-                  <Label style={{ color: "#6B7280" }}>Idade atual</Label>
-                  <div style={{ position: "relative" }}>
-                    <Input
-                      type="number"
-                      value={params.idadeAtual}
-                      readOnly
-                      style={{
-                        borderColor: "#BFDBFE",
-                        borderLeft: "3px solid #2563EB",
-                        color: "#000000",
-                        backgroundColor: "#EFF6FF",
-                        cursor: "not-allowed",
-                      }}
-                    />
-                    <span style={{
-                      position: "absolute", top: 8, right: 8,
-                      fontSize: 10, color: "#2563EB", fontWeight: 600,
-                      pointerEvents: "none",
-                    }}>
-                      ✓ CALCULADO
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade de Aposentadoria</Label>
-                  <Input id="lf-apos" type="number" min={params.idadeAtual + 1} max={90}
-                    value={params.idadeAposentadoria}
-                    onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                    style={{ borderColor: "#BFDBFE", color: "#000000" }} />
-                </div>
-              </div>
-
-              {/* Slider: Idade de Aposentadoria */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label style={{ fontSize: 13, color: "#6B7280" }}>Ajuste rápido: Aposentadoria</label>
-                  <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
-                </div>
-                <input
-                  type="range"
-                  min={params.idadeAtual + 5}
-                  max={80}
-                  step={1}
-                  value={params.idadeAposentadoria}
-                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                  className="w-full"
-                  style={{ accentColor: "#1E3A8A" }}
-                />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  <span>{params.idadeAtual + 5} anos</span>
-                  <span>80 anos</span>
-                </div>
-              </div>
-
-              {/* Patrimônio Financeiro */}
-              <div className="flex flex-col gap-1.5">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Label style={{ color: "#6B7280" }}>Patrimônio Financeiro</Label>
-                  {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                  {patrimonioEditado && (
-                    <button
-                      onClick={() => {
-                        setP({ patrimonioInicial: patrimonioColeta });
-                        setPatrimonioEditado(false);
-                      }}
-                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    >
-                      ↺ Restaurar
-                    </button>
-                  )}
-                </div>
-                <CurrencyInput
-                  value={params.patrimonioInicial}
-                  onChange={(v) => {
-                    setP({ patrimonioInicial: v });
-                    setPatrimonioEditado(v !== patrimonioColeta);
+          <div className="grid grid-cols-2 gap-3">
+            {/* Idade Atual — readonly */}
+            <div className="flex flex-col gap-1.5">
+              <Label style={{ color: "#6B7280" }}>Idade atual</Label>
+              <div style={{ position: "relative" }}>
+                <Input
+                  type="number"
+                  value={params.idadeAtual}
+                  readOnly
+                  style={{
+                    borderColor: "#BFDBFE",
+                    borderLeft: "3px solid #2563EB",
+                    color: "#000000",
+                    backgroundColor: "#EFF6FF",
+                    cursor: "not-allowed",
                   }}
                 />
-              </div>
-
-              {/* Aporte Mensal */}
-              <div className="flex flex-col gap-1.5">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
-                  {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
-                  {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
-                    <button
-                      onClick={() => setP({ aporteMensal: aporteColeta })}
-                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    >
-                      ↺ Restaurar
-                    </button>
-                  )}
-                </div>
-                <CurrencyInput
-                  value={params.aporteMensal}
-                  onChange={(v) => setP({ aporteMensal: v })}
-                />
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000)}
-                  step={100}
-                  value={params.aporteMensal}
-                  onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
-                  className="w-full"
-                  style={{ accentColor: "#15803D" }}
-                />
-                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
-                  <span>R$ 0</span>
-                  <span>{formatCurrency(Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000))}/mês</span>
-                </div>
-              </div>
-
-              {/* Renda Mensal Desejada */}
-              <div className="flex flex-col gap-1.5">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Label style={{ color: "#6B7280" }}>Renda mensal desejada na Aposentadoria</Label>
-                  {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                  {rendaEditada && (
-                    <button
-                      onClick={() => {
-                        setP({ rendaDesejada: rendaDesejadaColeta });
-                        setRendaEditada(false);
-                      }}
-                      style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    >
-                      ↺ Restaurar
-                    </button>
-                  )}
-                </div>
-                <CurrencyInput
-                  value={params.rendaDesejada}
-                  onChange={(v) => {
-                    setP({ rendaDesejada: v });
-                    setRendaEditada(v !== rendaDesejadaColeta);
-                  }}
-                />
-              </div>
-
-              {/* Rates info note */}
-              <div style={{
-                fontSize: 11,
-                color: '#9CA3AF',
-                background: '#F8FAFF',
-                border: '0.5px solid #BFDBFE',
-                borderRadius: 8,
-                padding: '10px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}>
-                <i className="ti ti-info-circle" style={{ fontSize: 13, color: '#60A5FA' }} />
-                <span>
-                  Retirada calculada a <strong>IPCA + 4% a.a.</strong>
-                  {' · '}expectativa de vida <strong>90 anos</strong>
+                <span style={{
+                  position: "absolute", top: 8, right: 8,
+                  fontSize: 10, color: "#2563EB", fontWeight: 600,
+                  pointerEvents: "none",
+                }}>
+                  ✓ CALCULADO
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card style={cardGreenTop}>
-            <CardContent className="pt-5">
-              <ListaObjetivos
-                objetivos={objetivos}
-                onObjetivos={setObjetivos}
-                anoAtual={anoAtualCliente}
-                anoMeta={anoMetaCliente}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lf-apos" style={{ color: "#6B7280" }}>Idade de Aposentadoria</Label>
+              <Input
+                id="lf-apos"
+                type="number"
+                min={params.idadeAtual + 1}
+                max={90}
+                value={params.idadeAposentadoria}
+                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                style={{ borderColor: "#BFDBFE", color: "#000000" }}
               />
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Right: Results */}
-        <div className="space-y-5">
-          {/* Status badge */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          {/* Slider: Aposentadoria */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label style={{ fontSize: 13, color: "#6B7280" }}>Ajuste rápido: Aposentadoria</label>
+              <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
+            </div>
+            <input
+              type="range"
+              min={params.idadeAtual + 5}
+              max={80}
+              step={1}
+              value={params.idadeAposentadoria}
+              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+              className="w-full"
+              style={{ accentColor: "#1E3A8A" }}
+            />
+            <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+              <span>{params.idadeAtual + 5} anos</span>
+              <span>80 anos</span>
+            </div>
+          </div>
+
+          {/* Patrimônio Financeiro */}
+          <div className="flex flex-col gap-1.5">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Label style={{ color: "#6B7280" }}>Patrimônio Financeiro</Label>
+              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {patrimonioEditado && (
+                <button
+                  onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={params.patrimonioInicial}
+              onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+            />
+          </div>
+
+          {/* Aporte Mensal + slider */}
+          <div className="flex flex-col gap-1.5">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Label style={{ color: "#6B7280" }}>Aporte mensal</Label>
+              {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
+              {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
+                <button
+                  onClick={() => setP({ aporteMensal: aporteColeta })}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
+            </div>
+            <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+            <input
+              type="range"
+              min={0}
+              max={Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000)}
+              step={100}
+              value={params.aporteMensal}
+              onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
+              className="w-full"
+              style={{ accentColor: "#15803D" }}
+            />
+            <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+              <span>R$ 0</span>
+              <span>{formatCurrency(Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000))}/mês</span>
+            </div>
+          </div>
+
+          {/* Renda Mensal Desejada */}
+          <div className="flex flex-col gap-1.5">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Label style={{ color: "#6B7280" }}>Renda mensal desejada na Aposentadoria</Label>
+              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {rendaEditada && (
+                <button
+                  onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={params.rendaDesejada}
+              onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+            />
+          </div>
+
+          {/* Rates note */}
+          <div style={{
+            fontSize: 11, color: "#9CA3AF", background: "#F8FAFF",
+            border: "0.5px solid #BFDBFE", borderRadius: 8, padding: "10px 14px",
+            display: "flex", alignItems: "center", gap: 8,
+          }}>
+            <i className="ti ti-info-circle" style={{ fontSize: 13, color: "#60A5FA" }} />
+            <span>
+              Retirada calculada a <strong>IPCA + 4% a.a.</strong>
+              {" · "}expectativa de vida <strong>90 anos</strong>
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── 2. CARDS DE RESULTADO 2×2 ──────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <Card style={cardGreenTop}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+              Patrimônio Necessário
+            </p>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
+              {formatCurrency(result.patrimonioNecessario)}
+            </p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>regra dos 4%</p>
+          </CardContent>
+        </Card>
+
+        <Card style={cardGreenTop}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+              Projeção Atual
+            </p>
+            <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
+              {formatCurrency(result.patrimonioNaIF)}
+            </p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
+          </CardContent>
+        </Card>
+
+        <Card style={cardGreenTop}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+              Taxa Necessária
+            </p>
+            <p style={{
+              fontSize: 17, fontWeight: 700,
+              color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D",
+            }} className="tabular-nums">
+              IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
+            </p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>para atingir a meta</p>
+          </CardContent>
+        </Card>
+
+        <Card style={cardGreenTop}>
+          <CardContent className="pt-4 pb-4">
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 8 }}>
+              Situação
+            </p>
             <span style={{
+              display: "inline-block",
               backgroundColor: result.ifAlcancada ? "#DCFCE7" : "#FEE2E2",
               color: result.ifAlcancada ? "#15803D" : "#B91C1C",
               border: `1px solid ${result.ifAlcancada ? "#A8C8AB" : "#C8A8A8"}`,
-              borderRadius: 8,
-              padding: "5px 12px", fontSize: 12, fontWeight: 600,
+              borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 600,
             }}>
-              {result.ifAlcancada ? "Aposentadoria alcançada ✓" : "Meta não atingida com aportes atuais"}
+              {result.ifAlcancada ? "Aposentadoria alcançada ✓" : "Meta não atingida"}
             </span>
-          </div>
-
-          {/* Summary grid 2×2 */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Patrimônio Necessário
-                </p>
-                <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
-                  {formatCurrency(result.patrimonioNecessario)}
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>regra dos 4%</p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Projeção Atual
-                </p>
-                <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
-                  {formatCurrency(result.patrimonioNaIF)}
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Taxa Necessária
-                </p>
-                <p style={{
-                  fontSize: 17, fontWeight: 700,
-                  color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D",
-                }} className="tabular-nums">
-                  IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>para atingir a meta</p>
-              </CardContent>
-            </Card>
-
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4 pb-4">
-                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-                  Renda Sustentável
-                </p>
-                <p style={{ fontSize: 17, fontWeight: 700, color: "#15803D" }} className="tabular-nums">
-                  {formatCurrency(result.rendaSustentavel)}/mês
-                </p>
-              </CardContent>
-            </Card>
-
-          </div>
-
-          {objetivos.length > 0 && (
-            <Card style={cardGreenTop}>
-              <CardContent className="pt-4">
-                <p style={{ color: "#000000", fontSize: 15, fontWeight: 700, marginBottom: 10 }}>
-                  Impacto dos objetivos
-                </p>
-                <div className="space-y-1.5">
-                  {objetivos.map((o) => (
-                    <div key={o.id} className="flex justify-between text-sm border-b pb-1.5 last:border-0">
-                      <span style={{ color: "#6B7280" }}>
-                        {o.label} ({MESES_ABREV[o.mes - 1]}/{o.ano})
-                      </span>
-                      <span
-                        className="tabular-nums font-medium"
-                        style={{ color: o.tipo !== "aportes_financeiros" ? "#B91C1C" : "#15803D" }}
-                      >
-                        {o.tipo !== "aportes_financeiros" ? "−" : "+"}{formatCurrency(o.valorBRL)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <button
-            onClick={() => onSave(projecaoParams, objetivos, result)}
-            style={{
-              width: "100%", backgroundColor: "#15803D", color: "white",
-              border: "none", borderRadius: 8, padding: "12px 0",
-              fontSize: 14, fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            Salvar simulação
-          </button>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Full-width chart */}
+      {/* ── 3. GRÁFICO ─────────────────────────────────────────────────────── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
@@ -583,7 +503,7 @@ export function FerramentaLiberdadeFinanceira({
           <GraficoIF
             projecao={result.projecao}
             curvaIdeal={result.curvaIdeal}
-            objetivos={objetivos}
+            objetivos={objetivosAtivos}
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
@@ -592,7 +512,19 @@ export function FerramentaLiberdadeFinanceira({
         </CardContent>
       </Card>
 
-      {/* Sensitivity table */}
+      {/* ── 4. OBJETIVOS DE VIDA ───────────────────────────────────────────── */}
+      <Card style={cardGreenTop}>
+        <CardContent className="pt-5">
+          <ListaObjetivos
+            objetivos={objetivos}
+            onObjetivos={setObjetivos}
+            anoAtual={anoAtualCliente}
+            anoMeta={anoMetaCliente}
+          />
+        </CardContent>
+      </Card>
+
+      {/* ── 5. ANÁLISE DE SENSIBILIDADE ────────────────────────────────────── */}
       <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
@@ -610,10 +542,7 @@ export function FerramentaLiberdadeFinanceira({
                     color: sensTab === tab ? "#2563EB" : "#9CA3AF",
                     background: sensTab === tab ? "#DBEAFE" : "transparent",
                     border: sensTab === tab ? "0.5px solid #BFDBFE" : "0.5px solid #E5E7EB",
-                    borderRadius: 6,
-                    padding: "4px 12px",
-                    cursor: "pointer",
-                    fontFamily: "inherit",
+                    borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "inherit",
                   }}
                 >
                   {tab === "aporte" ? "Variando o Aporte" : "Variando o Prazo"}
@@ -692,6 +621,18 @@ export function FerramentaLiberdadeFinanceira({
           )}
         </CardContent>
       </Card>
+
+      {/* Save button */}
+      <button
+        onClick={() => onSave(projecaoParams, objetivos, result)}
+        style={{
+          width: "100%", backgroundColor: "#15803D", color: "white",
+          border: "none", borderRadius: 8, padding: "12px 0",
+          fontSize: 14, fontWeight: 600, cursor: "pointer",
+        }}
+      >
+        Salvar simulação
+      </button>
     </div>
   );
 }
