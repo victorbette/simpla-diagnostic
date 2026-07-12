@@ -8,6 +8,9 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProjecaoIF,
   calcularTaxaReal,
+  calcularAporteMensalNecessario,
+  calcularTaxaNecessaria,
+  calcularIdadeComAporte,
   type ProjecaoIFParams,
   type ProjecaoIFResult,
 } from "@/lib/financialFreedomCalc";
@@ -125,6 +128,7 @@ export function FerramentaLiberdadeFinanceira({
   const [patrimonioEditado, setPatrimonioEditado] = useState(false);
   const [rendaEditada,      setRendaEditada]       = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
+  const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
 
   const CHAVE = `ferramenta_if_${clientId}`;
   const temDadosSalvos = localStorage.getItem(CHAVE) !== null;
@@ -181,6 +185,62 @@ export function FerramentaLiberdadeFinanceira({
       return null;
     }
   }, [projecaoParams]);
+
+  const aporteNecessarioCalc = useMemo(
+    () => result ? calcularAporteMensalNecessario({
+      patrimonioAtual: params.patrimonioInicial,
+      patrimonioAlvo: result.patrimonioNecessario,
+      idadeAtual: params.idadeAtual,
+      idadeAlvo: params.idadeAposentadoria,
+      taxaMensalReal: taxaRetornoReal,
+    }) : 0,
+    [result, params, taxaRetornoReal],
+  );
+
+  const taxaNecessariaCalc = useMemo(
+    () => result ? calcularTaxaNecessaria({
+      patrimonioAtual: params.patrimonioInicial,
+      aporteMensal: params.aporteMensal,
+      patrimonioAlvo: result.patrimonioNecessario,
+      idadeAtual: params.idadeAtual,
+      idadeAlvo: params.idadeAposentadoria,
+    }) : 0,
+    [result, params],
+  );
+
+  const sensAporteScenarios = useMemo(() => {
+    if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
+    const base = params.aporteMensal;
+    const alvo = result.patrimonioNecessario;
+    return [-0.4, -0.2, 0, 0.2, 0.4].map(pct => {
+      const aporte = Math.max(0, Math.round(base * (1 + pct) / 100) * 100);
+      const idadeResult = calcularIdadeComAporte({
+        patrimonioAtual: params.patrimonioInicial,
+        aporteMensal: aporte,
+        patrimonioAlvo: alvo,
+        idadeAtual: params.idadeAtual,
+        taxaMensalReal: taxaRetornoReal,
+      });
+      return { pct, aporte, idadeResult };
+    });
+  }, [result, params, taxaRetornoReal]);
+
+  const sensPrazoScenarios = useMemo(() => {
+    if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
+    const base = params.idadeAposentadoria;
+    const alvo = result.patrimonioNecessario;
+    return [-4, -2, 0, 2, 4].map(delta => {
+      const idadeAlvo = Math.max(params.idadeAtual + 1, base + delta);
+      const aporte = calcularAporteMensalNecessario({
+        patrimonioAtual: params.patrimonioInicial,
+        patrimonioAlvo: alvo,
+        idadeAtual: params.idadeAtual,
+        idadeAlvo,
+        taxaMensalReal: taxaRetornoReal,
+      });
+      return { delta, idadeAlvo, aporte };
+    });
+  }, [result, params, taxaRetornoReal]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
@@ -265,6 +325,28 @@ export function FerramentaLiberdadeFinanceira({
                 </div>
               </div>
 
+              {/* Slider: Idade de Aposentadoria */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label style={{ fontSize: 13, color: "#6B7280" }}>Ajuste rápido: Aposentadoria</label>
+                  <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
+                </div>
+                <input
+                  type="range"
+                  min={params.idadeAtual + 5}
+                  max={80}
+                  step={1}
+                  value={params.idadeAposentadoria}
+                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                  className="w-full"
+                  style={{ accentColor: "#1E3A8A" }}
+                />
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+                  <span>{params.idadeAtual + 5} anos</span>
+                  <span>80 anos</span>
+                </div>
+              </div>
+
               {/* Patrimônio Financeiro */}
               <div className="flex flex-col gap-1.5">
                 <div style={{ display: "flex", alignItems: "center" }}>
@@ -309,6 +391,20 @@ export function FerramentaLiberdadeFinanceira({
                   value={params.aporteMensal}
                   onChange={(v) => setP({ aporteMensal: v })}
                 />
+                <input
+                  type="range"
+                  min={0}
+                  max={Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000)}
+                  step={100}
+                  value={params.aporteMensal}
+                  onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
+                  className="w-full"
+                  style={{ accentColor: "#15803D" }}
+                />
+                <div className="flex justify-between" style={{ fontSize: 11, color: "#9CA3AF" }}>
+                  <span>R$ 0</span>
+                  <span>{formatCurrency(Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000))}/mês</span>
+                </div>
               </div>
 
               {/* Renda Mensal Desejada */}
@@ -522,6 +618,75 @@ export function FerramentaLiberdadeFinanceira({
             );
           })()}
 
+          {/* New 2×2 summary grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Patrimônio Necessário
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
+                  {formatCurrency(result.patrimonioNecessario)}
+                </p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>regra dos 4%</p>
+              </CardContent>
+            </Card>
+
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Projeção Atual
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
+                  {formatCurrency(result.patrimonioNaIF)}
+                </p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
+              </CardContent>
+            </Card>
+
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Aporte Necessário
+                </p>
+                <p style={{ fontSize: 17, fontWeight: 700, color: "#1E3A8A" }} className="tabular-nums">
+                  {formatCurrency(aporteNecessarioCalc)}/mês
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card style={cardGreenTop}>
+              <CardContent className="pt-4 pb-4">
+                <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+                  Taxa Necessária
+                </p>
+                <p style={{
+                  fontSize: 17, fontWeight: 700,
+                  color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D",
+                }} className="tabular-nums">
+                  {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
+                </p>
+                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>real necessária</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Status badge */}
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 7,
+            padding: "8px 16px", borderRadius: 999,
+            background: result.ifAlcancada ? "#DCFCE7" : "#FEF3C7",
+            border: `1px solid ${result.ifAlcancada ? "#86EFAC" : "#FDE68A"}`,
+          }}>
+            <i
+              className={`ti ${result.ifAlcancada ? "ti-check" : "ti-alert-triangle"}`}
+              style={{ fontSize: 14, color: result.ifAlcancada ? "#059669" : "#B45309" }}
+            />
+            <span style={{ fontSize: 12, fontWeight: 600, color: result.ifAlcancada ? "#059669" : "#B45309" }}>
+              {result.ifAlcancada ? "Meta atingível com o aporte atual" : "Ajuste necessário para atingir a meta"}
+            </span>
+          </div>
+
           {objetivos.length > 0 && (
             <Card style={cardGreenTop}>
               <CardContent className="pt-4">
@@ -573,7 +738,109 @@ export function FerramentaLiberdadeFinanceira({
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
+            patrimonioNecessario={result.patrimonioNecessario}
           />
+        </CardContent>
+      </Card>
+
+      {/* Sensitivity table */}
+      <Card style={cardGreenTop}>
+        <CardContent className="pt-5">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <p style={{ color: "#000000", fontSize: 15, fontWeight: 700, margin: 0 }}>
+              Análise de Sensibilidade
+            </p>
+            <div style={{ display: "flex", gap: 4 }}>
+              {(["aporte", "prazo"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setSensTab(tab)}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: sensTab === tab ? 600 : 400,
+                    color: sensTab === tab ? "#2563EB" : "#9CA3AF",
+                    background: sensTab === tab ? "#DBEAFE" : "transparent",
+                    border: sensTab === tab ? "0.5px solid #BFDBFE" : "0.5px solid #E5E7EB",
+                    borderRadius: 6,
+                    padding: "4px 12px",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {tab === "aporte" ? "Variando o Aporte" : "Variando o Prazo"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {sensTab === "aporte" && (
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6 }}>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Variação</span>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Aporte Mensal</span>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Aposentadoria</span>
+              </div>
+              {sensAporteScenarios.map(({ pct, aporte, idadeResult }) => {
+                const isBase = pct === 0;
+                const atingiu = idadeResult <= params.idadeAposentadoria + 0.1;
+                return (
+                  <div
+                    key={pct}
+                    style={{
+                      display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                      padding: "7px 6px", borderBottom: "0.5px solid #F3F4F6",
+                      background: isBase ? "#F0F7FF" : "transparent",
+                      borderRadius: isBase ? 6 : 0,
+                    }}
+                  >
+                    <span style={{ fontSize: 12, color: isBase ? "#2563EB" : "#374151", fontWeight: isBase ? 600 : 400 }}>
+                      {pct === 0 ? "Atual" : pct > 0 ? `+${Math.round(pct * 100)}%` : `${Math.round(pct * 100)}%`}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#374151" }} className="tabular-nums">{formatCurrency(aporte)}/mês</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: atingiu ? "#059669" : "#B91C1C" }} className="tabular-nums">
+                      {idadeResult >= params.idadeAtual + 49.9 ? ">50 anos" : `${Math.floor(idadeResult)} anos`}
+                    </span>
+                  </div>
+                );
+              })}
+              <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8, fontStyle: "italic" }}>
+                Idade estimada para atingir o patrimônio necessário com cada aporte.
+              </p>
+            </div>
+          )}
+
+          {sensTab === "prazo" && (
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6 }}>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Variação</span>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Aposentadoria</span>
+                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>Aporte Necessário</span>
+              </div>
+              {sensPrazoScenarios.map(({ delta, idadeAlvo, aporte }) => {
+                const isBase = delta === 0;
+                return (
+                  <div
+                    key={delta}
+                    style={{
+                      display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                      padding: "7px 6px", borderBottom: "0.5px solid #F3F4F6",
+                      background: isBase ? "#F0F7FF" : "transparent",
+                      borderRadius: isBase ? 6 : 0,
+                    }}
+                  >
+                    <span style={{ fontSize: 12, color: isBase ? "#2563EB" : "#374151", fontWeight: isBase ? 600 : 400 }}>
+                      {delta === 0 ? "Atual" : delta > 0 ? `+${delta} anos` : `${delta} anos`}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#374151" }} className="tabular-nums">{idadeAlvo} anos</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#1E3A8A" }} className="tabular-nums">{formatCurrency(aporte)}/mês</span>
+                  </div>
+                );
+              })}
+              <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8, fontStyle: "italic" }}>
+                Aporte mensal necessário para cada data-alvo de aposentadoria.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

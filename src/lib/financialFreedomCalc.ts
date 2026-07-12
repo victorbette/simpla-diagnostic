@@ -355,3 +355,87 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     mesInicioRetirada,
   };
 }
+
+// ─── Sensitivity / simplified calc helpers ────────────────────────────────────
+
+const _TAXA_ACUM_MENSAL = Math.pow(1 + 0.06, 1 / 12) - 1;
+
+export function calcularPatrimonioNecessario(
+  rendaMensalDesejada: number,
+  idadeAposentadoria: number,
+): number {
+  const meses = Math.max(0, (IDADE_FIM_AMARELA - idadeAposentadoria) * 12);
+  return pvAnuidade(rendaMensalDesejada, TAXA_RETIRADA_MENSAL, meses);
+}
+
+export function calcularProjecaoComAporte(p: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+  taxaMensalReal?: number;
+}): number {
+  const r = p.taxaMensalReal ?? _TAXA_ACUM_MENSAL;
+  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  if (meses <= 0) return p.patrimonioAtual;
+  if (Math.abs(r) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
+  const f = Math.pow(1 + r, meses);
+  return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / r;
+}
+
+export function calcularAporteMensalNecessario(p: {
+  patrimonioAtual: number;
+  patrimonioAlvo: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+  taxaMensalReal?: number;
+}): number {
+  const r = p.taxaMensalReal ?? _TAXA_ACUM_MENSAL;
+  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  if (meses <= 0) return 0;
+  if (Math.abs(r) < 1e-10) return Math.max(0, (p.patrimonioAlvo - p.patrimonioAtual) / meses);
+  const f = Math.pow(1 + r, meses);
+  return Math.max(0, ((p.patrimonioAlvo - p.patrimonioAtual * f) * r) / (f - 1));
+}
+
+export function calcularTaxaNecessaria(p: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  patrimonioAlvo: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+}): number {
+  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  if (meses <= 0 || p.patrimonioAlvo <= 0) return 0;
+  function fv(ta: number): number {
+    const r = Math.pow(1 + ta, 1 / 12) - 1;
+    if (Math.abs(r) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
+    const f = Math.pow(1 + r, meses);
+    return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / r;
+  }
+  if (fv(0) >= p.patrimonioAlvo) return 0;
+  let lo = 0, hi = 5;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (fv(mid) >= p.patrimonioAlvo) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+export function calcularIdadeComAporte(p: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  patrimonioAlvo: number;
+  idadeAtual: number;
+  taxaMensalReal?: number;
+}): number {
+  const r = p.taxaMensalReal ?? _TAXA_ACUM_MENSAL;
+  if (p.patrimonioAtual >= p.patrimonioAlvo) return p.idadeAtual;
+  let pat = p.patrimonioAtual;
+  for (let m = 1; m <= 600; m++) {
+    pat = pat * (1 + r) + p.aporteMensal;
+    if (pat >= p.patrimonioAlvo) return p.idadeAtual + m / 12;
+  }
+  return p.idadeAtual + 50;
+}

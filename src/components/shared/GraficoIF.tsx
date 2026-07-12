@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
@@ -30,9 +30,11 @@ interface Props {
   mesIF?: number;
   /** Birth month 1-12 */
   mesNascimento?: number;
+  /** Dashed horizontal reference line at this Y value */
+  patrimonioNecessario?: number;
 }
 
-export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF }: Props) {
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF, patrimonioNecessario }: Props) {
   // ── Hooks (must be before any early return) ──────────────────────────────────
   const [mostrarProjetado, setMostrarProjetado] = useState(true);
   const [mostrarIdeal, setMostrarIdeal] = useState(true);
@@ -334,6 +336,16 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
               connectNulls={false}
               isAnimationActive={false}
               name="Aposentadoria Ideal"
+            />
+          )}
+
+          {/* Linha de referência: patrimônio necessário */}
+          {patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
+            <ReferenceLine
+              y={patrimonioNecessario}
+              stroke="#059669"
+              strokeDasharray="6 3"
+              strokeWidth={1.5}
             />
           )}
 
