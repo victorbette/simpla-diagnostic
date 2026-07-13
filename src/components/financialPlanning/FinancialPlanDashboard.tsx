@@ -100,8 +100,6 @@ function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
           <text x={CX} y={CY + 8} textAnchor="middle" fontSize={10} fill="#9CA3AF">
             /100
           </text>
-          <text x={8}     y={CY + 4} fontSize={9} fill="#9CA3AF" textAnchor="middle">0</text>
-          <text x={W - 8} y={CY + 4} fontSize={9} fill="#9CA3AF" textAnchor="middle">100</text>
         </svg>
       </div>
 
@@ -147,14 +145,7 @@ export function FinancialPlanDashboard({
   })();
 
   // ── Score Proteção ────────────────────────────────────────────────────────
-  const scoreProtecao = (() => {
-    if (!seguroSalvo) return 0;
-    const capitalNecessario = seguroSalvo.totalNeed ?? 0;
-    const capitalAtual = seguroSalvo.totalCoverage ?? 0;
-    if (!capitalNecessario) return 0;
-    if (capitalAtual >= capitalNecessario) return 100;
-    return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
-  })();
+  const scoreProtecao = seguroSalvo?.scoreProtecao ?? 0;
 
   // ── Score Tributário ──────────────────────────────────────────────────────
   const scoreTributario = (() => {
