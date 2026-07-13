@@ -23,33 +23,6 @@ const CARD: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-// ── Gauge SVG ─────────────────────────────────────────────────────────────────
-
-function Gauge({ score, color }: { score: number; color: string }) {
-  const r = 44, cx = 56, cy = 52;
-  const circ = Math.PI * r;
-  const filled = (Math.min(100, Math.max(0, score)) / 100) * circ;
-  return (
-    <svg width="112" height="60" viewBox="0 0 112 60">
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke="#BFDBFE" strokeWidth="9" strokeLinecap="round"
-      />
-      <path
-        d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-        fill="none" stroke={color} strokeWidth="9" strokeLinecap="round"
-        strokeDasharray={`${filled} ${circ}`}
-      />
-      <text x={cx} y={cy - 6} textAnchor="middle" fontSize="15" fontWeight="800" fill={color}>
-        {Math.round(score)}
-      </text>
-      <text x={cx} y={cy + 6} textAnchor="middle" fontSize="9" fill="#9CA3AF">
-        /100
-      </text>
-    </svg>
-  );
-}
-
 // ── Horizontal bar ─────────────────────────────────────────────────────────────
 
 function NeedBar({ label, need, coverage, total }: { label: string; need: number; coverage: number; total: number }) {
@@ -87,12 +60,6 @@ export function SecaoProtecaoSucessorio({
   onResultadoSeguro,
 }: Props) {
   const rs = resultadoSeguro;
-  const scoreColor = rs
-    ? rs.scoreProtecao >= 70 ? "#15803D" : rs.scoreProtecao >= 40 ? "#2563EB" : "#B91C1C"
-    : "#B91C1C";
-  const coveragePct = rs && rs.totalNeed > 0
-    ? Math.min(100, Math.round((rs.totalCoverage / rs.totalNeed) * 100))
-    : 100;
   const pieCoverage = rs
     ? [
         { name: "Coberto", value: rs.totalCoverage, color: "#15803D" },
@@ -193,118 +160,6 @@ export function SecaoProtecaoSucessorio({
       {/* Summary cards — shown after analysis is saved */}
       {rs && (
         <>
-          {/* Status header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#15803D",
-                backgroundColor: "#DCFCE7",
-                border: "1px solid #A7C9AB",
-                borderRadius: 999,
-                padding: "4px 12px",
-              }}
-            >
-              ✓ Análise realizada
-            </span>
-            <span
-              style={{
-                fontSize: 11,
-                color: "#6B7280",
-                backgroundColor: "#F0F7FF",
-                border: "1px solid #BFDBFE",
-                borderRadius: 999,
-                padding: "2px 10px",
-              }}
-            >
-              {new Date(rs.dataCalculo).toLocaleDateString("pt-BR")}
-            </span>
-          </div>
-
-          {/* Card 1 — Score + cobertura principal */}
-          <div style={CARD}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              Score de Proteção
-            </p>
-            <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                <Gauge score={rs.scoreProtecao} color={scoreColor} />
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "2px 10px",
-                    borderRadius: 999,
-                    backgroundColor: rs.scoreProtecao >= 70 ? "#DCFCE7" : rs.scoreProtecao >= 40 ? "#EFF6FF" : "#FEE2E2",
-                    color: scoreColor,
-                    border: `1px solid ${scoreColor}50`,
-                  }}
-                >
-                  {rs.scoreProtecao >= 70 ? "Bem protegido" : rs.scoreProtecao >= 40 ? "Proteção parcial" : "Subprotegido"}
-                </span>
-              </div>
-              <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-                <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Necessário</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: "#000000", margin: 0 }}>{formatCurrency(rs.totalNeed)}</p>
-                </div>
-                <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Capital Segurado</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(rs.totalCoverage)}</p>
-                </div>
-                <div style={{ backgroundColor: rs.gap > 0 ? "#FEE2E2" : "#DCFCE7", borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 11, color: rs.gap > 0 ? "#B91C1C" : "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Gap de Cobertura</p>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: rs.gap > 0 ? "#B91C1C" : "#15803D", margin: 0 }}>{formatCurrency(rs.gap)}</p>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6B7280", marginBottom: 6 }}>
-                <span>Cobertura atual</span>
-                <span style={{ fontWeight: 700, color: scoreColor }}>{coveragePct}%</span>
-              </div>
-              <div style={{ height: 10, backgroundColor: "#F0F7FF", borderRadius: 5, overflow: "hidden", border: "1px solid #BFDBFE" }}>
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${coveragePct}%`,
-                    backgroundColor: scoreColor,
-                    borderRadius: 5,
-                    transition: "width 0.4s",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-              {[
-                { label: "Seguro de vida", ok: rs.temSeguroVida },
-                { label: "Invalidez", ok: rs.temSeguroInvalidez },
-                { label: "Cobertura ≥ 80%", ok: rs.scoreProtecao >= 80 },
-              ].map(({ label, ok }) => (
-                <span
-                  key={label}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    padding: "3px 12px",
-                    borderRadius: 999,
-                    backgroundColor: ok ? "#DCFCE7" : "#FEE2E2",
-                    color: ok ? "#15803D" : "#B91C1C",
-                    border: `1px solid ${ok ? "#86EFAC" : "#C9A0A0"}`,
-                  }}
-                >
-                  {ok ? "✓" : "✗"} {label}
-                </span>
-              ))}
-            </div>
-          </div>
-
           {/* Card 2 — Donut + breakdown */}
           <div style={CARD}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
