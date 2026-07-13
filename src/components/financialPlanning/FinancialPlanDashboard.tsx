@@ -60,10 +60,11 @@ export function FinancialPlanDashboard({
   // ── Score Proteção ────────────────────────────────────────────────────────
   const scoreProtecao = (() => {
     if (!seguroSalvo) return 0;
-    const { totalNeed, totalCoverage } = seguroSalvo;
-    if (!totalNeed) return 0;
-    if (totalCoverage >= totalNeed) return 100;
-    return Math.round((totalCoverage / totalNeed) * 100);
+    const capitalNecessario = seguroSalvo.totalNeed ?? 0;
+    const capitalAtual = seguroSalvo.totalCoverage ?? 0;
+    if (!capitalNecessario) return 0;
+    if (capitalAtual >= capitalNecessario) return 100;
+    return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
   })();
 
   // ── Score Tributário ──────────────────────────────────────────────────────
@@ -106,23 +107,23 @@ export function FinancialPlanDashboard({
 
   // ── Dados para o radar ─────────────────────────────────────────────────────
   const dadosRadar = [
-    { area: "Aposentadoria",    score: scoreAposentadoria },
-    { area: "Asset Allocation", score: scoreAA },
-    { area: "Proteção",         score: scoreProtecao },
-    { area: "Tributário",       score: scoreTributario },
+    { area: "Liberdade Financeira", score: scoreAposentadoria },
+    { area: "Asset Allocation",     score: scoreAA },
+    { area: "Proteção",             score: scoreProtecao },
+    { area: "Tributário",           score: scoreTributario },
   ];
 
   // ── Textos analíticos por área ─────────────────────────────────────────────
 
   const textoAposentadoria = (() => {
     if (!ifSalvo) {
-      return "Simulação de aposentadoria ainda não realizada. Acesse a aba Liberdade Financeira para configurar sua projeção patrimonial.";
+      return "Simulação de liberdade financeira ainda não realizada. Acesse a aba Liberdade Financeira para configurar sua projeção patrimonial.";
     }
     const { patrimonioAposentadoria: projecao, patrimonioNecessario: meta, rendaMensalDesejada: renda, idadeMeta: idadeAlvo } = ifSalvo;
     if (projecao >= meta) {
-      return `Com o aporte atual, sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, superando o patrimônio necessário de ${formatCurrency(meta)} para sustentar uma renda de ${formatCurrency(renda)}/mês. Sua meta de aposentadoria está no caminho certo.`;
+      return `Com o aporte atual, sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, superando o patrimônio necessário de ${formatCurrency(meta)} para sustentar uma renda de ${formatCurrency(renda)}/mês. Sua meta de liberdade financeira está no caminho certo.`;
     }
-    return `Sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, abaixo do necessário ${formatCurrency(meta)} para uma renda mensal de ${formatCurrency(renda)}. Para alcançar a meta, é necessário aumentar aportes ou ajustar a estratégia de investimentos.`;
+    return `Sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, abaixo do necessário ${formatCurrency(meta)} para uma renda mensal de ${formatCurrency(renda)}. Para alcançar a meta de liberdade financeira, é necessário aumentar aportes ou ajustar a estratégia de investimentos.`;
   })();
 
   const textoAA = (() => {
@@ -141,11 +142,13 @@ export function FinancialPlanDashboard({
     if (!seguroSalvo) {
       return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear suas necessidades de cobertura.";
     }
-    const { totalNeed: capNec, totalCoverage: capAt, gap } = seguroSalvo;
-    if (capAt >= capNec) {
-      return `Sua cobertura de ${formatCurrency(capAt)} é adequada para proteger sua família. O capital necessário estimado é de ${formatCurrency(capNec)}.`;
+    const capitalNecessario = seguroSalvo.totalNeed ?? 0;
+    const capitalAtual = seguroSalvo.totalCoverage ?? 0;
+    const gap = seguroSalvo.gap ?? Math.max(0, capitalNecessario - capitalAtual);
+    if (capitalAtual >= capitalNecessario) {
+      return `Sua cobertura de ${formatCurrency(capitalAtual)} é adequada para proteger sua família. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}.`;
     }
-    return `Foi identificado um gap de proteção de ${formatCurrency(gap)}. Sua cobertura atual de ${formatCurrency(capAt)} é inferior ao capital necessário de ${formatCurrency(capNec)} para proteger sua família.`;
+    return `Foi identificado um gap de proteção de ${formatCurrency(gap)}. Sua cobertura atual de ${formatCurrency(capitalAtual)} é inferior ao capital necessário de ${formatCurrency(capitalNecessario)} para proteger sua família.`;
   })();
 
   const textoTributario = (() => {
@@ -162,14 +165,14 @@ export function FinancialPlanDashboard({
   // ── Definição dos cards ────────────────────────────────────────────────────
 
   const areaCards = [
-    { icone: "ti-sunset",    nome: "Aposentadoria",          score: scoreAposentadoria, temDados: !!ifSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",   score: scoreAposentadoria, temDados: !!ifSalvo },
     { icone: "ti-chart-pie", nome: "Asset Allocation",       score: scoreAA,            temDados: !!carteiraSalva },
     { icone: "ti-shield",    nome: "Proteção e Sucessório",  score: scoreProtecao,      temDados: !!seguroSalvo },
     { icone: "ti-receipt",   nome: "Tributário",             score: scoreTributario,    temDados: !!fiscalSalvo },
   ];
 
   const textCards = [
-    { icone: "ti-sunset",    nome: "Aposentadoria",             texto: textoAposentadoria, score: scoreAposentadoria, temDados: !!ifSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textoAposentadoria, score: scoreAposentadoria, temDados: !!ifSalvo },
     { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textoAA,            score: scoreAA,            temDados: !!carteiraSalva },
     { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textoProtecao,      score: scoreProtecao,      temDados: !!seguroSalvo },
     { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textoTributario,    score: scoreTributario,    temDados: !!fiscalSalvo },
@@ -217,12 +220,12 @@ export function FinancialPlanDashboard({
           <p style={{ fontSize: 12, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
             Visão Geral por Área
           </p>
-          <ResponsiveContainer width="100%" height={320}>
-            <RadarChart data={dadosRadar} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+          <ResponsiveContainer width="100%" height={420}>
+            <RadarChart data={dadosRadar} margin={{ top: 30, right: 60, bottom: 30, left: 60 }}>
               <PolarGrid stroke="#E5E7EB" gridType="polygon" />
               <PolarAngleAxis
                 dataKey="area"
-                tick={{ fontSize: 12, fill: "#374151", fontWeight: 500 }}
+                tick={{ fontSize: 13, fill: "#374151", fontWeight: 600 }}
               />
               <PolarRadiusAxis
                 angle={90}
