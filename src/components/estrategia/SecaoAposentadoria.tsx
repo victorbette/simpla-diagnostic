@@ -1,7 +1,6 @@
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
-import { CardGestaoMilhas } from "@/components/estrategia/CardGestaoMilhas";
 
 const AVAILABLE_TAGS = ["IF", "Aposentadoria", "Aportes", "Previdência", "PGBL"];
 
@@ -32,10 +31,6 @@ export function SecaoAposentadoria({
   onResultadoIF,
   onSaveCloud,
 }: Props) {
-  const dc = plan?.dadosCliente ?? {} as typeof plan.dadosCliente;
-  const gastoCartao = Number(dc.gastoCartaoMensal) || 0;
-  const mostrarMilhas = gastoCartao >= 25000;
-
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
@@ -76,16 +71,6 @@ export function SecaoAposentadoria({
           await onSaveCloud?.(r);
         }}
       />
-
-      {mostrarMilhas && (
-        <CardGestaoMilhas
-          gastoCartaoMensal={gastoCartao}
-          fazViagensNacionais={dc.fazViagensNacionais ?? false}
-          viagensNacionaisQtdAnual={dc.viagensNacionaisQtdAnual ?? 0}
-          fazViagensInternacionais={dc.fazViagensInternacionais ?? false}
-          viagensInternacionaisQtdAnual={dc.viagensInternacionaisQtdAnual ?? 0}
-        />
-      )}
 
       {/* Card comentário */}
       <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>

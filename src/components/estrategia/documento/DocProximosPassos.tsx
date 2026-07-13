@@ -25,6 +25,7 @@ const AREAS = [
   "Liberdade Financeira",
   "Proteção e Sucessório",
   "Planejamento Tributário",
+  "Viagens e Milhas",
   "Geral",
 ];
 
@@ -55,6 +56,17 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
 
   if (!plan.sucessorio.possuiTestamento && plan.sucessorio.patrimonioTotal > 500_000) {
     passos.push({ id: crypto.randomUUID(), descricao: "Elaborar testamento para planejamento sucessório", prioridade: "media", dataPrevisao: "", area: "Proteção e Sucessório" });
+  }
+
+  const gastoCartao = Number(plan?.dadosCliente?.gastoCartaoMensal) || 0;
+  if (gastoCartao >= 25000) {
+    passos.push({
+      id: crypto.randomUUID(),
+      descricao: `Agendar reunião para apresentar programa de gestão de milhas aéreas — gasto familiar de ${gastoCartao.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês no cartão`,
+      prioridade: "media" as const,
+      dataPrevisao: "",
+      area: "Viagens e Milhas",
+    });
   }
 
   passos.push({ id: crypto.randomUUID(), descricao: "Agendar próxima reunião de revisão da estratégia", prioridade: "baixa", dataPrevisao: "", area: "Geral" });
