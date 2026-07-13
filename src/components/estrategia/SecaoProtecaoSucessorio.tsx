@@ -129,32 +129,7 @@ export function SecaoProtecaoSucessorio({
         clientId={plan.clientId}
         protecao={plan.protecao}
         dadosCliente={plan.dadosCliente}
-        onSave={(insuranceData, result) => {
-          const score = result.totalNeed > 0
-            ? Math.round(Math.min(100, (result.totalCoverage / result.totalNeed) * 100))
-            : 100;
-          onResultadoSeguro({
-            totalNeed: result.totalNeed,
-            totalCoverage: result.totalCoverage,
-            gap: result.gap,
-            scoreProtecao: score,
-            temSeguroVida: insuranceData.policies.length > 0,
-            temSeguroInvalidez: insuranceData.livingPolicies.some((p) => p.type === "disability"),
-            immediateTotal: result.immediateTotal,
-            ongoingTotal: result.ongoingTotal,
-            educationTotal: result.educationTotal,
-            lifestyleTotal: result.lifestyleTotal,
-            inventoryCost: result.inventoryCost,
-            disabilityTotal: result.disabilityTotal,
-            disabilityGap: result.disabilityGap,
-            disabilityCoverage: result.disabilityCoverage,
-            criticalIllnessTotal: result.criticalIllnessTotal,
-            criticalIllnessGap: result.criticalIllnessGap,
-            criticalIllnessCoverage: result.criticalIllnessCoverage,
-            dataCalculo: new Date().toISOString(),
-            savedAt: new Date().toISOString(),
-          });
-        }}
+        onResultadoSeguro={onResultadoSeguro}
       />
 
       {/* Summary cards — shown after analysis is saved */}

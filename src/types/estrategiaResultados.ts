@@ -60,6 +60,13 @@ export interface ResultadoIF {
 }
 
 export interface ResultadoSeguro {
+  // Campos canônicos (novos)
+  capitalNecessario: number;
+  capitalAtual: number;
+  capitalImediato: number;
+  capitalContinuo: number;
+  capitalFilhos: number;
+  // Aliases legados (retrocompatibilidade)
   totalNeed: number;
   totalCoverage: number;
   gap: number;

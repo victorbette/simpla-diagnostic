@@ -222,8 +222,8 @@ export function FinancialPlanDashboard({
     if (!seguroSalvo) {
       return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear suas necessidades de cobertura.";
     }
-    const capitalNecessario = seguroSalvo.totalNeed ?? 0;
-    const capitalAtual = seguroSalvo.totalCoverage ?? 0;
+    const capitalNecessario = seguroSalvo.capitalNecessario ?? seguroSalvo.totalNeed ?? 0;
+    const capitalAtual = seguroSalvo.capitalAtual ?? seguroSalvo.totalCoverage ?? 0;
     const gap = seguroSalvo.gap ?? Math.max(0, capitalNecessario - capitalAtual);
     if (capitalAtual >= capitalNecessario) {
       return `Sua cobertura de ${formatCurrency(capitalAtual)} é adequada para proteger sua família. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}.`;

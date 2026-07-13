@@ -142,6 +142,11 @@ function mockResultados(): ResultadosEstrategia {
       savedAt: agora,
     },
     seguro: {
+      capitalNecessario: 1_890_000,
+      capitalAtual: 500_000,
+      capitalImediato: 250_000,
+      capitalContinuo: 1_200_000,
+      capitalFilhos: 340_000,
       totalNeed: 1_890_000,
       totalCoverage: 500_000,
       gap: 1_390_000,
