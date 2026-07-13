@@ -500,6 +500,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                   onAvancarEstrategia={() => setAbaAtiva("liberdade_financeira")}
                   allStepsDone={true}
                   ultimoSalvo={ultimoSalvo}
+                  resultados={resultados}
                 />
               )}
 
