@@ -2,6 +2,7 @@ import {
   RadarChart, Radar, PolarGrid,
   PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip,
+  PieChart, Pie, Cell,
 } from "recharts";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
@@ -31,6 +32,73 @@ function nivelScore(score: number): { label: string; cor: string; bg: string } {
   if (score <= 60)  return { label: "Atenção",       cor: "#B45309", bg: "#FEF3C7" };
   if (score <= 80)  return { label: "Adequado",      cor: "#2563EB", bg: "#DBEAFE" };
   return              { label: "Excelente",     cor: "#15803D", bg: "#DCFCE7" };
+}
+
+// ─ Gauge Semicircular ─────────────────────────────────────────────────────────
+
+interface GaugeProps {
+  score: number;
+  label: string;
+  icone: string;
+  nivel: { label: string; cor: string; bg: string };
+}
+
+function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
+  const dados = [
+    { value: score,       fill: nivel.cor },
+    { value: 100 - score, fill: "#F3F4F6" },
+    { value: 100,         fill: "transparent" },
+  ];
+  return (
+    <div style={{
+      background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
+      padding: "16px", display: "flex", flexDirection: "column",
+      alignItems: "center", textAlign: "center",
+    }}>
+      <div style={{ position: "relative", height: 100 }}>
+        <PieChart width={160} height={100}>
+          <Pie
+            data={dados}
+            cx={80}
+            cy={95}
+            startAngle={180}
+            endAngle={0}
+            innerRadius={55}
+            outerRadius={75}
+            dataKey="value"
+            strokeWidth={0}
+          >
+            {dados.map((entry, i) => (
+              <Cell key={i} fill={entry.fill} />
+            ))}
+          </Pie>
+        </PieChart>
+        <div style={{
+          position: "absolute", bottom: 4, left: "50%",
+          transform: "translateX(-50%)", textAlign: "center",
+        }}>
+          <div style={{
+            fontSize: 22, fontWeight: 800,
+            color: score > 0 ? nivel.cor : "#9CA3AF",
+            lineHeight: 1,
+          }}>
+            {score > 0 ? score : "—"}
+          </div>
+          <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1 }}>/100</div>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+        <i className={`ti ${icone}`} style={{ fontSize: 14, color: nivel.cor }} />
+        <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{label}</span>
+      </div>
+      <span style={{
+        fontSize: 10, fontWeight: 600, color: nivel.cor, background: nivel.bg,
+        padding: "2px 10px", borderRadius: 99, marginTop: 6,
+      }}>
+        {nivel.label}
+      </span>
+    </div>
+  );
 }
 
 // ─ Main Component ────────────────────────────────────────────────────────────
@@ -113,6 +181,14 @@ export function FinancialPlanDashboard({
     { area: "Tributário",           score: scoreTributario },
   ];
 
+  // ── Gauges ─────────────────────────────────────────────────────────────────
+  const gauges = [
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreAposentadoria, temDados: !!ifSalvo },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scoreAA,            temDados: !!carteiraSalva },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao,      temDados: !!seguroSalvo },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario,    temDados: !!fiscalSalvo },
+  ];
+
   // ── Textos analíticos por área ─────────────────────────────────────────────
 
   const textoAposentadoria = (() => {
@@ -162,15 +238,6 @@ export function FinancialPlanDashboard({
     return "Não foi identificada oportunidade de diferimento fiscal com os dados informados. Verifique o tipo de declaração e a renda na calculadora tributária.";
   })();
 
-  // ── Definição dos cards ────────────────────────────────────────────────────
-
-  const areaCards = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",   score: scoreAposentadoria, temDados: !!ifSalvo },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",       score: scoreAA,            temDados: !!carteiraSalva },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório",  score: scoreProtecao,      temDados: !!seguroSalvo },
-    { icone: "ti-receipt",   nome: "Tributário",             score: scoreTributario,    temDados: !!fiscalSalvo },
-  ];
-
   const textCards = [
     { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textoAposentadoria, score: scoreAposentadoria, temDados: !!ifSalvo },
     { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textoAA,            score: scoreAA,            temDados: !!carteiraSalva },
@@ -212,102 +279,61 @@ export function FinancialPlanDashboard({
         </div>
       </div>
 
-      {/* ── RADAR + SCORES COMPACTOS ─────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      {/* ── RADAR EM TEIA (largura total) ────────────────────────────────────── */}
+      <div style={{ backgroundColor: "white", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
+          Visão Geral por Área
+        </p>
+        <ResponsiveContainer width="100%" height={420}>
+          <RadarChart
+            data={dadosRadar}
+            cx="50%"
+            cy="50%"
+            outerRadius="70%"
+            margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
+          >
+            <PolarGrid stroke="#E5E7EB" gridType="polygon" />
+            <PolarAngleAxis
+              dataKey="area"
+              tick={{ fontSize: 13, fill: "#374151", fontWeight: 600 }}
+            />
+            <PolarRadiusAxis
+              angle={90}
+              domain={[0, 100]}
+              tick={{ fontSize: 10, fill: "#9CA3AF" }}
+              tickCount={5}
+            />
+            <Radar
+              name="Score"
+              dataKey="score"
+              stroke="#2563EB"
+              fill="#2563EB"
+              fillOpacity={0.15}
+              strokeWidth={2}
+              dot={{ fill: "#2563EB", r: 4 }}
+            />
+            <Tooltip
+              formatter={(v: unknown) => [`${v}/100`, "Score"]}
+              contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
 
-        {/* Gráfico em teia */}
-        <div style={{ backgroundColor: "white", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
-            Visão Geral por Área
-          </p>
-          <ResponsiveContainer width="100%" height={420}>
-            <RadarChart data={dadosRadar} margin={{ top: 30, right: 60, bottom: 30, left: 60 }}>
-              <PolarGrid stroke="#E5E7EB" gridType="polygon" />
-              <PolarAngleAxis
-                dataKey="area"
-                tick={{ fontSize: 13, fill: "#374151", fontWeight: 600 }}
-              />
-              <PolarRadiusAxis
-                angle={90}
-                domain={[0, 100]}
-                tick={{ fontSize: 10, fill: "#9CA3AF" }}
-                tickCount={5}
-              />
-              <Radar
-                name="Score"
-                dataKey="score"
-                stroke="#2563EB"
-                fill="#2563EB"
-                fillOpacity={0.15}
-                strokeWidth={2}
-                dot={{ fill: "#2563EB", r: 4 }}
-              />
-              <Tooltip
-                formatter={(v: unknown) => [`${v}/100`, "Score"]}
-                contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* 4 scores compactos */}
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
-          {areaCards.map(({ icone, nome, score, temDados }) => {
-            const barColor = !temDados ? "#E5E7EB"
-              : score >= 75 ? "#15803D"
-              : score >= 50 ? "#F59E0B"
-              : score > 0   ? "#B91C1C"
-              : "#E5E7EB";
-            const textColor = !temDados ? "#9CA3AF"
-              : score >= 75 ? "#15803D"
-              : score >= 50 ? "#B45309"
-              : score > 0   ? "#B91C1C"
-              : "#9CA3AF";
-            return (
-              <div
-                key={nome}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "12px 16px", background: "white",
-                  border: "0.5px solid #E5E7EB", borderRadius: 10,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <i className={`ti ${icone}`} style={{ fontSize: 16, color: "#2563EB" }} />
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{nome}</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 80, height: 6, background: "#F3F4F6", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{
-                      width: `${temDados ? score : 0}%`, height: "100%",
-                      background: barColor, borderRadius: 99,
-                      transition: "width 600ms ease",
-                    }} />
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: textColor, minWidth: 36, textAlign: "right" }}>
-                    {temDados ? score : "—"}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-
-          {scoreGeral !== null && (
-            <div style={{
-              marginTop: 4, padding: "12px 16px",
-              background: "#F8FAFF", border: "0.5px solid #BFDBFE", borderRadius: 10,
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF" }}>Score Geral</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{scoreGeral}/100</span>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, backgroundColor: nivelGeral.bg, color: nivelGeral.cor }}>
-                  {nivelGeral.label}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+        {gauges.map(({ icone, nome, score, temDados }) => {
+          const n = nivelScore(temDados ? score : 0);
+          return (
+            <GaugeSemiCircular
+              key={nome}
+              score={temDados ? score : 0}
+              label={nome}
+              icone={icone}
+              nivel={n}
+            />
+          );
+        })}
       </div>
 
       {/* ── CARDS ANALÍTICOS POR ÁREA ─────────────────────────────────────────── */}
