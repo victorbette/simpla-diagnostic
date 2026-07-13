@@ -1,6 +1,6 @@
 import {
   Briefcase, User, Building2, BadgeCheck, Shield, TrendingUp, BarChart2, Zap,
-  DollarSign, PieChart, Sunset, FileText, Plus, X,
+  DollarSign, PieChart, Plus, X,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,8 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "./AtivoForm";
-import { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
-import { FiscalForm } from "./FiscalForm";
-import type { FinancialPlan, DadosCliente, PerfilRisco, PlanejamentoIF } from "@/types/financialPlanning";
-import { formatCurrency, calcularIdade } from "@/lib/format";
+import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
+import { calcularIdade } from "@/lib/format";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -82,31 +80,11 @@ function SecaoCard({
   );
 }
 
-function AutoField({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{label}</span>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ display: "flex", flex: 1, height: 40, alignItems: "center", padding: "0 12px", borderRadius: 8, border: "1px solid #BFDBFE", borderLeft: "3px solid #3B82F6", backgroundColor: "#EAF0F5", fontSize: 14, fontWeight: 600, color: "#1E40AF" }}>
-          {value || "—"}
-        </div>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "#1E40AF", backgroundColor: "#EAF0F5", border: "1px solid #A8C4D8", borderRadius: 4, padding: "2px 6px", whiteSpace: "nowrap" }}>
-          AUTO
-        </span>
-      </div>
-      {hint && <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{hint}</p>}
-    </div>
-  );
-}
-
 export function ColetaDadosCompleta({ plan, onChange }: Props) {
   const dados = plan.dadosCliente;
 
   const setDados = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
     onChange({ dadosCliente: { ...dados, [key]: val } });
-
-  const setIF = <K extends keyof PlanejamentoIF>(key: K, val: PlanejamentoIF[K]) =>
-    onChange({ planejamentoIF: { ...plan.planejamentoIF, [key]: val } });
 
   const filhos = dados.filhos ?? [];
 
@@ -115,29 +93,8 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
 
   const calculatedAge = dados.dataNascimento ? calcularIdade(dados.dataNascimento) : null;
 
-  // Previdência checkbox helpers
-  const isPGBL = dados.tipoPrevidencia === "pgbl" || dados.tipoPrevidencia === "ambos";
-  const isVGBL = dados.tipoPrevidencia === "vgbl" || dados.tipoPrevidencia === "ambos";
-
-  const togglePGBL = (checked: boolean) => {
-    if (checked && isVGBL) setDados("tipoPrevidencia", "ambos");
-    else if (checked) setDados("tipoPrevidencia", "pgbl");
-    else if (isVGBL) setDados("tipoPrevidencia", "vgbl");
-    else setDados("tipoPrevidencia", null);
-  };
-
-  const toggleVGBL = (checked: boolean) => {
-    if (checked && isPGBL) setDados("tipoPrevidencia", "ambos");
-    else if (checked) setDados("tipoPrevidencia", "vgbl");
-    else if (isPGBL) setDados("tipoPrevidencia", "pgbl");
-    else setDados("tipoPrevidencia", null);
-  };
-
-
   const labelCls = "text-[13px] font-medium text-[#111827]";
   const fieldCls = "flex flex-col gap-1.5";
-
-  const anosRestantes = Math.max(0, plan.planejamentoIF.idadeMeta - (calculatedAge ?? plan.planejamentoIF.idadeAtual));
 
   return (
     <div style={{ padding: "24px 32px", width: "100%", boxSizing: "border-box" }}>
@@ -358,7 +315,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
       </SecaoCard>
 
       {/* ─── SEÇÃO 2: Situação Financeira ─── */}
-      <SecaoCard color="#15803D" Icon={DollarSign} title="Situação Financeira" subtitle="Patrimônio, renda, fluxo mensal e hábitos financeiros">
+      <SecaoCard color="#15803D" Icon={DollarSign} title="Situação Financeira e Patrimonial" subtitle="Patrimônio, renda, fluxo mensal e hábitos financeiros">
 
         {/* 6 currency fields */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -462,50 +419,6 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
           )}
         </div>
 
-        {/* Previdência */}
-        <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              checked={!!(dados.possuiPrevidencia ?? false)}
-              onCheckedChange={(v) => setDados("possuiPrevidencia", v)}
-            />
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui previdência privada (PGBL/VGBL)?</p>
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Plano de previdência complementar</p>
-            </div>
-          </div>
-          {dados.possuiPrevidencia && (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE", display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#6B7280", margin: "0 0 8px" }}>Tipo de plano</p>
-                <div style={{ display: "flex", gap: 12 }}>
-                  {(["pgbl", "vgbl"] as const).map((tipo) => {
-                    const checked = tipo === "pgbl" ? isPGBL : isVGBL;
-                    const toggle = tipo === "pgbl" ? togglePGBL : toggleVGBL;
-                    return (
-                      <label key={tipo} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => toggle(e.target.checked)}
-                          style={{ width: 16, height: 16, cursor: "pointer", accentColor: "#2563EB" }}
-                        />
-                        {tipo.toUpperCase()}
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className={fieldCls}>
-                <Label className={labelCls}>Saldo atual da previdência</Label>
-                <CurrencyInput
-                  value={dados.saldoPrevidencia ?? 0}
-                  onChange={(v) => setDados("saldoPrevidencia", v)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
       </SecaoCard>
 
       {/* ─── SEÇÃO 3: Investimentos ─── */}
@@ -554,91 +467,6 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
         </div>
       </SecaoCard>
 
-      {/* ─── SEÇÃO 4: Aposentadoria ─── */}
-      <SecaoCard color="#059669" Icon={Sunset} title="Aposentadoria" subtitle="Parâmetros para planejamento de independência financeira">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-
-          {calculatedAge ? (
-            <AutoField label="Idade atual" value={`${calculatedAge} anos`} hint="Calculado da data de nascimento" />
-          ) : (
-            <div className={fieldCls}>
-              <Label className={labelCls}>Idade atual</Label>
-              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe a data de nascimento</p>
-            </div>
-          )}
-
-          <div className={fieldCls}>
-            <Label className={labelCls}>Idade meta de aposentadoria</Label>
-            <Input
-              type="number"
-              min={calculatedAge ? calculatedAge + 1 : 20}
-              max={100}
-              value={plan.planejamentoIF.idadeMeta}
-              onChange={(e) => setIF("idadeMeta", Number(e.target.value))}
-              className="border-[#BFDBFE]"
-            />
-            {anosRestantes > 0 && (
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{anosRestantes} anos restantes</p>
-            )}
-          </div>
-
-          {dados.rendaMensal > 0 ? (
-            <AutoField label="Renda mensal atual" value={formatCurrency(dados.rendaMensal)} hint="Da situação financeira" />
-          ) : (
-            <div className={fieldCls}>
-              <Label className={labelCls}>Renda mensal atual</Label>
-              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
-            </div>
-          )}
-
-          <div className={fieldCls}>
-            <Label className={labelCls}>Renda mensal desejada na Aposentadoria</Label>
-            <CurrencyInput
-              value={plan.planejamentoIF.rendaMensalDesejada}
-              onChange={(v) => setIF("rendaMensalDesejada", v)}
-            />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Quanto o cliente quer receber/mês na Aposentadoria</p>
-          </div>
-
-          {dados.patrimonioFinanceiroEstimado > 0 ? (
-            <AutoField label="Patrimônio financeiro atual" value={formatCurrency(dados.patrimonioFinanceiroEstimado)} hint="Da situação financeira" />
-          ) : (
-            <div className={fieldCls}>
-              <Label className={labelCls}>Patrimônio financeiro atual</Label>
-              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
-            </div>
-          )}
-
-          {dados.aportesMensalMedio > 0 ? (
-            <AutoField label="Aporte mensal médio" value={formatCurrency(dados.aportesMensalMedio)} hint="Da situação financeira" />
-          ) : (
-            <div className={fieldCls}>
-              <Label className={labelCls}>Aporte mensal médio</Label>
-              <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>Informe na Situação Financeira</p>
-            </div>
-          )}
-        </div>
-      </SecaoCard>
-
-      {/* ─── SEÇÃO 5: Proteção e Sucessório ─── */}
-      <SecaoCard color="#B91C1C" Icon={Shield} title="Proteção e Sucessório" subtitle="Seguros, proteção patrimonial e planejamento sucessório">
-        <ProtecaoSucessorioForm
-          protecao={plan.protecao}
-          onProtecaoChange={(v) => onChange({ protecao: v })}
-          sucessorio={plan.sucessorio}
-          onSucessorioChange={(v) => onChange({ sucessorio: v })}
-          dadosCliente={dados}
-        />
-      </SecaoCard>
-
-      {/* ─── SEÇÃO 6: Planejamento Tributário ─── */}
-      <SecaoCard color="#B45309" Icon={FileText} title="Planejamento Tributário" subtitle="Eficiência tributária, PGBL/VGBL e declaração de IR">
-        <FiscalForm
-          value={plan.fiscal}
-          onChange={(v) => onChange({ fiscal: v })}
-          dadosCliente={dados}
-        />
-      </SecaoCard>
 
     </div>
   );
