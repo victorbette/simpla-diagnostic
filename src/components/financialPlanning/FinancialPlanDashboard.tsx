@@ -1,9 +1,3 @@
-import {
-  RadarChart, Radar, PolarGrid,
-  PolarAngleAxis, PolarRadiusAxis,
-  ResponsiveContainer, Tooltip,
-  PieChart, Pie, Cell,
-} from "recharts";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import { CARD_ORDER } from "@/lib/carteira/types";
@@ -34,7 +28,7 @@ function nivelScore(score: number): { label: string; cor: string; bg: string } {
   return              { label: "Excelente",     cor: "#15803D", bg: "#DCFCE7" };
 }
 
-// ─ Gauge Semicircular ─────────────────────────────────────────────────────────
+// ─ Gauge Semicircular SVG ─────────────────────────────────────────────────────
 
 interface GaugeProps {
   score: number;
@@ -44,53 +38,80 @@ interface GaugeProps {
 }
 
 function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
-  const dados = [
-    { value: score,       fill: nivel.cor },
-    { value: 100 - score, fill: "#F3F4F6" },
-    { value: 100,         fill: "transparent" },
-  ];
+  const W = 160;
+  const H = 90;
+  const CX = W / 2;
+  const CY = H;
+  const R_EXT = 72;
+  const R_INT = 52;
+
+  const graus = 180 - (score / 100) * 180;
+  const rad = (graus * Math.PI) / 180;
+
+  const xFim    = CX + R_EXT * Math.cos(rad);
+  const yFim    = CY - R_EXT * Math.sin(rad);
+  const xFimInt = CX + R_INT * Math.cos(rad);
+  const yFimInt = CY - R_INT * Math.sin(rad);
+
+  const largeArc = score > 50 ? 1 : 0;
+
+  const pathFundo =
+    `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY} ` +
+    `L ${CX + R_INT} ${CY} A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY} Z`;
+
+  const pathPreenchido = score > 0
+    ? `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 ${largeArc} 1 ${xFim} ${yFim} ` +
+      `L ${xFimInt} ${yFimInt} A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY} Z`
+    : "";
+
   return (
     <div style={{
-      background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-      padding: "16px", display: "flex", flexDirection: "column",
-      alignItems: "center", textAlign: "center",
+      background: "white",
+      border: "0.5px solid #E5E7EB",
+      borderRadius: 12,
+      padding: "20px 16px 16px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
     }}>
-      <div style={{ position: "relative", height: 100 }}>
-        <PieChart width={160} height={100}>
-          <Pie
-            data={dados}
-            cx={80}
-            cy={95}
-            startAngle={180}
-            endAngle={0}
-            innerRadius={55}
-            outerRadius={75}
-            dataKey="value"
-            strokeWidth={0}
+      <div style={{ position: "relative" }}>
+        <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`}>
+          <path d={pathFundo} fill="#F3F4F6" />
+          {score > 0 && <path d={pathPreenchido} fill={nivel.cor} opacity={0.9} />}
+          <line
+            x1={CX}
+            y1={CY}
+            x2={CX + (R_EXT - 2) * Math.cos(rad)}
+            y2={CY - (R_EXT - 2) * Math.sin(rad)}
+            stroke="white"
+            strokeWidth={2}
+            opacity={score > 0 ? 1 : 0}
+          />
+          <text
+            x={CX}
+            y={CY - 8}
+            textAnchor="middle"
+            fontSize={24}
+            fontWeight={800}
+            fill={score > 0 ? nivel.cor : "#9CA3AF"}
           >
-            {dados.map((entry, i) => (
-              <Cell key={i} fill={entry.fill} />
-            ))}
-          </Pie>
-        </PieChart>
-        <div style={{
-          position: "absolute", bottom: 4, left: "50%",
-          transform: "translateX(-50%)", textAlign: "center",
-        }}>
-          <div style={{
-            fontSize: 22, fontWeight: 800,
-            color: score > 0 ? nivel.cor : "#9CA3AF",
-            lineHeight: 1,
-          }}>
             {score > 0 ? score : "—"}
-          </div>
-          <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1 }}>/100</div>
-        </div>
+          </text>
+          <text x={CX} y={CY + 8} textAnchor="middle" fontSize={10} fill="#9CA3AF">
+            /100
+          </text>
+          <text x={8}     y={CY + 4} fontSize={9} fill="#9CA3AF" textAnchor="middle">0</text>
+          <text x={W - 8} y={CY + 4} fontSize={9} fill="#9CA3AF" textAnchor="middle">100</text>
+        </svg>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
-        <i className={`ti ${icone}`} style={{ fontSize: 14, color: nivel.cor }} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{label}</span>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+        <i className={`ti ${icone}`} style={{ fontSize: 13, color: nivel.cor }} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "center" }}>
+          {label}
+        </span>
       </div>
+
       <span style={{
         fontSize: 10, fontWeight: 600, color: nivel.cor, background: nivel.bg,
         padding: "2px 10px", borderRadius: 99, marginTop: 6,
@@ -172,14 +193,6 @@ export function FinancialPlanDashboard({
   const nivelGeral = nivelScore(scoreGeral ?? 0);
   const hoje = new Date().toLocaleDateString("pt-BR");
   const perfil = dc.suitabilityPerfil;
-
-  // ── Dados para o radar ─────────────────────────────────────────────────────
-  const dadosRadar = [
-    { area: "Liberdade Financeira", score: scoreAposentadoria },
-    { area: "Asset Allocation",     score: scoreAA },
-    { area: "Proteção",             score: scoreProtecao },
-    { area: "Tributário",           score: scoreTributario },
-  ];
 
   // ── Gauges ─────────────────────────────────────────────────────────────────
   const gauges = [
@@ -277,47 +290,6 @@ export function FinancialPlanDashboard({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ── RADAR EM TEIA (largura total) ────────────────────────────────────── */}
-      <div style={{ backgroundColor: "white", borderRadius: 12, padding: "20px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "0.5px solid #E5E7EB" }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>
-          Visão Geral por Área
-        </p>
-        <ResponsiveContainer width="100%" height={420}>
-          <RadarChart
-            data={dadosRadar}
-            cx="50%"
-            cy="50%"
-            outerRadius="70%"
-            margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
-          >
-            <PolarGrid stroke="#E5E7EB" gridType="polygon" />
-            <PolarAngleAxis
-              dataKey="area"
-              tick={{ fontSize: 13, fill: "#374151", fontWeight: 600 }}
-            />
-            <PolarRadiusAxis
-              angle={90}
-              domain={[0, 100]}
-              tick={{ fontSize: 10, fill: "#9CA3AF" }}
-              tickCount={5}
-            />
-            <Radar
-              name="Score"
-              dataKey="score"
-              stroke="#2563EB"
-              fill="#2563EB"
-              fillOpacity={0.15}
-              strokeWidth={2}
-              dot={{ fill: "#2563EB", r: 4 }}
-            />
-            <Tooltip
-              formatter={(v: unknown) => [`${v}/100`, "Score"]}
-              contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
-            />
-          </RadarChart>
-        </ResponsiveContainer>
       </div>
 
       {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
