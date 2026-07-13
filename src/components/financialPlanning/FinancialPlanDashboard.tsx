@@ -1,10 +1,8 @@
-import { Sunset, Shield, Receipt, PieChart, Building2 } from "lucide-react";
+import { Sunset, Shield, Receipt, PieChart } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import { ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import type { FinancialPlan, AtivoAtual } from "@/types/financialPlanning";
-import { calcularPerfilHolding } from "@/lib/holding";
-
 // ─ Props ─────────────────────────────────────────────────────────────────────
 
 interface FinancialPlanDashboardProps {
@@ -617,64 +615,6 @@ export function FinancialPlanDashboard({
               </>
             )}
 
-            {/* Sub-seção: Holding */}
-            {(() => {
-              const holding = calcularPerfilHolding(
-                { ...dc, temEmpresa: fiscal.temEmpresa },
-                suc,
-              );
-              if (!holding.recomendada) {
-                return holding.score < 100 ? (
-                  <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 12 }}>
-                    Holding não indicada no momento
-                  </p>
-                ) : null;
-              }
-              const barColor = holding.score > 70 ? "#15803D" : "#F59E0B";
-              return (
-                <div style={{ marginTop: 16, backgroundColor: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "14px 16px" }}>
-                  {/* Header */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <Building2 size={16} style={{ color: "#2563EB", flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF" }}>Análise de Holding</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, backgroundColor: "#DBEAFE", color: "#1E40AF", borderRadius: 999, padding: "2px 8px" }}>
-                      Recomendado
-                    </span>
-                  </div>
-                  {/* Barra */}
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
-                      <span>Adequação ao perfil</span>
-                      <span style={{ fontWeight: 700, color: barColor }}>{holding.score}%</span>
-                    </div>
-                    <div style={{ height: 6, backgroundColor: "#E5E7EB", borderRadius: 3, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${holding.score}%`, backgroundColor: barColor, borderRadius: 3 }} />
-                    </div>
-                  </div>
-                  {/* Motivos */}
-                  <ul style={{ margin: "0 0 8px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-                    {holding.motivos.map((m) => (
-                      <li key={m} style={{ fontSize: 12, color: "#15803D", display: "flex", gap: 6 }}>
-                        <span>✓</span><span>{m}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {/* Alertas */}
-                  {holding.alertas.length > 0 && (
-                    <ul style={{ margin: "0 0 8px", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-                      {holding.alertas.map((a) => (
-                        <li key={a} style={{ fontSize: 12, color: "#92400E", display: "flex", gap: 6 }}>
-                          <span>⚠</span><span>{a}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <p style={{ fontSize: 12, color: "#2563EB", margin: 0, fontWeight: 500 }}>
-                    Aprofundar análise na Estratégia Inicial →
-                  </p>
-                </div>
-              );
-            })()}
           </>
         )}
       </div>

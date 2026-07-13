@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { calcularIF, calcularProtecao, calcularFiscal } from "@/types/financialPlanning";
-import { calcularPerfilHolding } from "@/lib/holding";
+import { detectarSeguroRC } from "@/lib/seguroRC";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia, ProximoPasso } from "@/types/estrategiaResultados";
 import { PAGINA, HEADER_PAGINA, TITULO_SECAO, LABEL_METRICA } from "@/lib/documentoStyles";
@@ -49,9 +49,16 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
     passos.push({ id: crypto.randomUUID(), descricao: "Abrir ou aumentar contribuição PGBL para aproveitar benefício fiscal", prioridade: "media", dataPrevisao: "", area: "Planejamento Tributário" });
   }
 
-  const holding = calcularPerfilHolding({ ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa }, plan.sucessorio);
-  if (holding.recomendada && !plan.sucessorio.possuiHolding) {
-    passos.push({ id: crypto.randomUUID(), descricao: "Avaliar constituição de holding patrimonial com assessoria jurídica especializada", prioridade: "alta", dataPrevisao: "", area: "Proteção e Sucessório" });
+  const profissao = plan?.dadosCliente?.profissao ?? "";
+  const infoRC = detectarSeguroRC(profissao);
+  if (infoRC.recomendado) {
+    passos.push({
+      id: crypto.randomUUID(),
+      descricao: `Analisar necessidade de Seguro de Responsabilidade Civil Profissional — ${profissao} tem exposição a processos por erros profissionais`,
+      prioridade: "media" as const,
+      dataPrevisao: "",
+      area: "Proteção e Sucessório",
+    });
   }
 
   if (!plan.sucessorio.possuiTestamento && plan.sucessorio.patrimonioTotal > 500_000) {

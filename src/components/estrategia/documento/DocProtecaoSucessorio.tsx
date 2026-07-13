@@ -2,7 +2,6 @@ import { formatCurrency } from "@/lib/format";
 import { calcularSucessorio } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { calcularPerfilHolding } from "@/lib/holding";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, VALOR_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PAG, TOTAL_PAGINAS } from "@/lib/documentoPaginas";
 import { PaginaDoc } from "./PaginaDoc";
@@ -65,11 +64,6 @@ export function DocProtecaoSucessorio({ nomeCliente, plan, resultados }: Props) 
   const pp = plan.protecao;
   const ps = plan.sucessorio;
   const resultadoSuc = calcularSucessorio(ps);
-  const holdingPerfil = calcularPerfilHolding(
-    { ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa },
-    ps,
-  );
-  const holdingRecomendada = holdingPerfil.recomendada && !ps.possuiHolding;
   const seguro = resultados.seguro;
 
   return (
@@ -158,62 +152,6 @@ export function DocProtecaoSucessorio({ nomeCliente, plan, resultados }: Props) 
           </p>
         </div>
       </div>
-
-      {holdingRecomendada && (
-        <div
-          className="doc-card"
-          style={{
-            background: DOC.blueSoft,
-            border: `1px solid ${DOC.blueBorder}`,
-            borderRadius: 10,
-            padding: "14px 18px",
-            marginBottom: 12,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              marginBottom: 8,
-            }}
-          >
-            <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, color: DOC.navy }}>
-              Holding Patrimonial Recomendada
-            </p>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: DOC.blue, whiteSpace: "nowrap" }}>
-              Adequação: {holdingPerfil.score}%
-            </span>
-          </div>
-          <div
-            style={{
-              height: 6,
-              borderRadius: 4,
-              background: "white",
-              border: `1px solid ${DOC.blueBorder}`,
-              overflow: "hidden",
-              marginBottom: 10,
-            }}
-          >
-            <div
-              style={{
-                width: `${Math.min(100, holdingPerfil.score)}%`,
-                height: "100%",
-                background: DOC.blue,
-                borderRadius: 4,
-              }}
-            />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {holdingPerfil.motivos.slice(0, 3).map((m) => (
-              <span key={m} style={{ fontSize: 11.5, color: DOC.navyInk }}>
-                ✓ {m}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="doc-card" style={{ ...CARD, padding: "6px 16px" }}>
         <LinhaCheck ok={ps.possuiTestamento} label="Testamento" direita={ps.possuiTestamento ? "Elaborado" : "Não elaborado"} />

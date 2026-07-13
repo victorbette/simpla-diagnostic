@@ -28,7 +28,6 @@ export function detectarOportunidades(
     if (!plan) continue;
 
     const dc  = (plan.dados_cliente  as Record<string, unknown>) ?? {};
-    const suc = (plan.sucessorio     as Record<string, unknown>) ?? {};
     const est = (plan.estrategia_inicial as Record<string, unknown>) ?? {};
 
     const filhos    = (dc.filhos as unknown[]) ?? [];
@@ -116,18 +115,6 @@ export function detectarOportunidades(
         titulo: "Potencial de aquisição imobiliária",
         descricao: `Renda de ${fmtBRL(rendaMensal)}/mês com capacidade de crédito imobiliário.`,
         prioridade: rendaMensal > 20000 ? "alta" : "media",
-        origem: "Coleta de Dados › Situação Financeira",
-      });
-    }
-
-    const qtdImoveis = Number(dc.quantidadeImoveis) || 0;
-    if (qtdImoveis >= 2 && !suc.possuiHolding) {
-      push({
-        id: `${cliente.id}_holding_imoveis`,
-        tipo: "imoveis",
-        titulo: "Holding patrimonial para imóveis",
-        descricao: `${qtdImoveis} imóveis próprios sem estrutura de holding. Oportunidade de proteção e planejamento sucessório.`,
-        prioridade: "alta",
         origem: "Coleta de Dados › Situação Financeira",
       });
     }

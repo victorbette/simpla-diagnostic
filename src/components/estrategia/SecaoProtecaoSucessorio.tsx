@@ -3,10 +3,6 @@ import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
 import type { ResultadoSeguro } from "@/types/estrategiaResultados";
-import { calcularPerfilHolding } from "@/lib/holding";
-import { CardHolding } from "./CardHolding";
-import { detectarSeguroRC } from "@/lib/seguroRC";
-import { CardSeguroRC } from "./CardSeguroRC";
 
 interface Props {
   plan: FinancialPlan;
@@ -18,7 +14,7 @@ interface Props {
   onResultadoSeguro: (r: ResultadoSeguro) => void;
 }
 
-const AVAILABLE_TAGS = ["Seguro de Vida", "Invalidez", "Holding", "ITCMD", "Testamento"];
+const AVAILABLE_TAGS = ["Seguro de Vida", "Invalidez", "ITCMD", "Testamento"];
 
 const CARD: React.CSSProperties = {
   backgroundColor: "white",
@@ -90,13 +86,6 @@ export function SecaoProtecaoSucessorio({
   resultadoSeguro,
   onResultadoSeguro,
 }: Props) {
-  const holdingPerfil = calcularPerfilHolding(
-    { ...plan.dadosCliente, temEmpresa: plan.fiscal.temEmpresa },
-    plan.sucessorio,
-  );
-
-  const infoRC = detectarSeguroRC(plan?.dadosCliente?.profissao ?? "");
-
   const rs = resultadoSeguro;
   const scoreColor = rs
     ? rs.scoreProtecao >= 70 ? "#15803D" : rs.scoreProtecao >= 40 ? "#2563EB" : "#B91C1C"
@@ -462,22 +451,6 @@ export function SecaoProtecaoSucessorio({
             </div>
           )}
         </>
-      )}
-
-      {/* RC — rendered when profession is mapped */}
-      {infoRC.recomendado && <CardSeguroRC info={infoRC} />}
-
-      {/* Holding — rendered when profile recommends it */}
-      {holdingPerfil.recomendada && (
-        <CardHolding
-          temEmpresa={plan.fiscal.temEmpresa}
-          maisDeUmaEmpresa={plan.sucessorio.maisDeUmaEmpresa ?? false}
-          possuiSocios={plan.sucessorio.possuiSocios ?? false}
-          filhos={plan.dadosCliente.filhos}
-          quantidadeImoveis={plan.dadosCliente.quantidadeImoveis ?? 0}
-          score={holdingPerfil.score}
-          motivos={holdingPerfil.motivos}
-        />
       )}
 
       {commentCard}

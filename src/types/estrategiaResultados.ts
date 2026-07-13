@@ -123,7 +123,6 @@ export interface ResultadosEstrategia {
   if: ResultadoIF | null;
   seguro: ResultadoSeguro | null;
   fiscal: ResultadoFiscal | null;
-  holding?: { observacoes: string };
   acoesConcluidas?: Record<string, boolean>;
   proximosPassos?: ProximoPasso[];
   estrategiaFinal?: EstrategiaFinalComentarios;
