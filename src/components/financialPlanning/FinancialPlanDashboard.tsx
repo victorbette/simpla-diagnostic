@@ -1,6 +1,5 @@
 import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
-import { CARD_ORDER } from "@/lib/carteira/types";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
@@ -138,36 +137,60 @@ export function FinancialPlanDashboard({
   // ── Score Aposentadoria ──────────────────────────────────────────────────
   const scoreAposentadoria = (() => {
     if (!ifSalvo) return 0;
-    const { patrimonioNecessario, patrimonioAposentadoria } = ifSalvo;
+    const patrimonioNecessario  = Number(ifSalvo.patrimonioNecessario)  || 0;
+    const patrimonioAposentadoria = Number(ifSalvo.patrimonioAposentadoria) || 0;
     if (!patrimonioNecessario) return 0;
-    if (patrimonioAposentadoria >= patrimonioNecessario) return 100;
-    return Math.round((patrimonioAposentadoria / patrimonioNecessario) * 100);
+    return Math.min(100, Math.round((patrimonioAposentadoria / patrimonioNecessario) * 100));
   })();
 
-  // ── Score Proteção ────────────────────────────────────────────────────────
-  const scoreProtecao = seguroSalvo?.scoreProtecao ?? 0;
+  // ── Score Proteção (recomputa de capitalNecessario/capitalAtual) ──────────
+  const scoreProtecao = (() => {
+    if (!seguroSalvo) return 0;
+    const capitalNecessario =
+      Number(seguroSalvo.capitalNecessario) ||
+      Number(seguroSalvo.totalNeed)         ||
+      0;
+    const capitalAtual =
+      Number(seguroSalvo.capitalAtual)   ||
+      Number(seguroSalvo.totalCoverage)  ||
+      0;
+    if (capitalNecessario > 0) {
+      return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
+    }
+    return seguroSalvo.scoreProtecao ?? 0;
+  })();
 
   // ── Score Tributário ──────────────────────────────────────────────────────
   const scoreTributario = (() => {
     if (!fiscalSalvo) return 0;
-    const { economiaAnual, tetoPGBLAnual, aporteAnual } = fiscalSalvo;
-    if (tetoPGBLAnual === 0) return 50;
-    if (economiaAnual > 0) {
-      const aproveitamento = Math.min(aporteAnual / tetoPGBLAnual, 1) * 100;
-      return Math.round(aproveitamento);
+    const tetoPGBLAnual = Number(fiscalSalvo.tetoPGBLAnual) || 0;
+    const economiaAnual = Number(fiscalSalvo.economiaAnual) || 0;
+    const aporteAnual   = Number(fiscalSalvo.aporteAnual)   || 0;
+    if (tetoPGBLAnual > 0) {
+      return Math.min(100, Math.round((aporteAnual / tetoPGBLAnual) * 100));
     }
-    return 20;
+    return economiaAnual > 0 ? 50 : 0;
   })();
 
   // ── Score Asset Allocation ────────────────────────────────────────────────
   const scoreAA = (() => {
     if (!carteiraSalva) return 0;
-    const { macroAtual, macroMeta } = carteiraSalva;
-    if (!macroAtual || !macroMeta || Object.keys(macroAtual).length === 0) return 0;
-    const desvios = CARD_ORDER.map((id) => Math.abs((macroAtual[id] ?? 0) - (macroMeta[id] ?? 0)));
+    const macroAtual = carteiraSalva.macroAtual ?? {};
+    const macroMeta  = carteiraSalva.macroMeta  ?? {};
+    const ids = Object.keys(macroMeta);
+    if (!ids.length || !Object.keys(macroAtual).length) return 0;
+    const desvios = ids.map(id =>
+      Math.abs((Number(macroAtual[id]) || 0) - (Number(macroMeta[id]) || 0))
+    );
     const desvioMedio = desvios.reduce((s, d) => s + d, 0) / desvios.length;
     return Math.max(0, Math.round(100 - desvioMedio * 3));
   })();
+
+  // ── Debug temporário ─────────────────────────────────────────────────────
+  console.log('[Resultado] resultados completo:', JSON.stringify(resultados, null, 2));
+  console.log('[Resultado] seguro:', seguroSalvo);
+  console.log('[Resultado] scoreProtecao:', scoreProtecao);
+  console.log('[Resultado] scoreAposentadoria:', scoreAposentadoria, '| scoreAA:', scoreAA, '| scoreTributario:', scoreTributario);
 
   // ── Score Geral ───────────────────────────────────────────────────────────
   const scoresAtivos = [
@@ -211,8 +234,11 @@ export function FinancialPlanDashboard({
       return "Análise de carteira ainda não realizada. Acesse a aba Asset Allocation para registrar seus investimentos e definir a alocação ideal.";
     }
     const { patrimonio, macroAtual, macroMeta } = carteiraSalva;
-    const desvios = CARD_ORDER.map((id) => Math.abs((macroAtual[id] ?? 0) - (macroMeta[id] ?? 0)));
-    const desvioMedio = desvios.reduce((s, d) => s + d, 0) / desvios.length;
+    const ids = Object.keys(macroMeta ?? {});
+    const desvioMedio = ids.length
+      ? ids.map(id => Math.abs((Number(macroAtual[id]) || 0) - (Number(macroMeta[id]) || 0)))
+          .reduce((s, d) => s + d, 0) / ids.length
+      : 0;
     const alinhado = desvioMedio < 5;
     const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
     return `Patrimônio financeiro atual de ${formatCurrency(patrimonio)}, com perfil ${perfilLabel}. A alocação proposta segue o padrão Simpla Invest para o seu perfil. ${alinhado ? "Carteira alinhada com a meta." : "Há desvios na alocação atual que podem ser corrigidos com o plano de ação definido."}`;
