@@ -20,7 +20,7 @@ interface FinancialPlanDashboardProps {
 // ─ Nível por score ─────────────────────────────────────────────────────────
 
 function nivelScore(score: number): { label: string; cor: string; bg: string } {
-  if (score === 0)  return { label: "Não analisado", cor: "#9CA3AF", bg: "#F3F4F6" };
+  if (score < 0)   return { label: "Não analisado", cor: "#9CA3AF", bg: "#F3F4F6" };
   if (score <= 40)  return { label: "Em risco",      cor: "#B91C1C", bg: "#FEE2E2" };
   if (score <= 60)  return { label: "Atenção",       cor: "#B45309", bg: "#FEF3C7" };
   if (score <= 80)  return { label: "Adequado",      cor: "#2563EB", bg: "#DBEAFE" };
@@ -92,9 +92,9 @@ function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
             textAnchor="middle"
             fontSize={24}
             fontWeight={800}
-            fill={score > 0 ? nivel.cor : "#9CA3AF"}
+            fill={score < 0 ? "#9CA3AF" : nivel.cor}
           >
-            {score > 0 ? score : "—"}
+            {score < 0 ? "—" : score}
           </text>
           <text x={CX} y={CY + 8} textAnchor="middle" fontSize={10} fill="#9CA3AF">
             /100
@@ -134,25 +134,25 @@ export function FinancialPlanDashboard({
   const fiscalSalvo   = resultados.fiscal;
   const carteiraSalva = resultados.carteira;
 
-  // ── Score Aposentadoria ──────────────────────────────────────────────────
+  // ── Score Aposentadoria (-1 = não analisado) ─────────────────────────────
   const scoreAposentadoria = (() => {
-    if (!ifSalvo) return 0;
-    const patrimonioNecessario  = Number(ifSalvo.patrimonioNecessario)  || 0;
+    if (!ifSalvo) return -1;
+    const patrimonioNecessario    = Number(ifSalvo.patrimonioNecessario)    || 0;
     const patrimonioAposentadoria = Number(ifSalvo.patrimonioAposentadoria) || 0;
-    if (!patrimonioNecessario) return 0;
+    if (!patrimonioNecessario) return -1;
     return Math.min(100, Math.round((patrimonioAposentadoria / patrimonioNecessario) * 100));
   })();
 
-  // ── Score Proteção (recomputa de capitalNecessario/capitalAtual) ──────────
+  // ── Score Proteção (-1 = não analisado, 0 = 0% de cobertura) ────────────
   const scoreProtecao = (() => {
-    if (!seguroSalvo) return 0;
+    if (!seguroSalvo) return -1;
     const capitalNecessario =
       Number(seguroSalvo.capitalNecessario) ||
       Number(seguroSalvo.totalNeed)         ||
       0;
     const capitalAtual =
-      Number(seguroSalvo.capitalAtual)   ||
-      Number(seguroSalvo.totalCoverage)  ||
+      Number(seguroSalvo.capitalAtual)  ||
+      Number(seguroSalvo.totalCoverage) ||
       0;
     if (capitalNecessario > 0) {
       return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
@@ -160,25 +160,25 @@ export function FinancialPlanDashboard({
     return seguroSalvo.scoreProtecao ?? 0;
   })();
 
-  // ── Score Tributário ──────────────────────────────────────────────────────
+  // ── Score Tributário (-1 = não analisado) ────────────────────────────────
   const scoreTributario = (() => {
-    if (!fiscalSalvo) return 0;
+    if (!fiscalSalvo) return -1;
     const tetoPGBLAnual = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const economiaAnual = Number(fiscalSalvo.economiaAnual) || 0;
     const aporteAnual   = Number(fiscalSalvo.aporteAnual)   || 0;
     if (tetoPGBLAnual > 0) {
       return Math.min(100, Math.round((aporteAnual / tetoPGBLAnual) * 100));
     }
-    return economiaAnual > 0 ? 50 : 0;
+    return economiaAnual > 0 ? 50 : -1;
   })();
 
-  // ── Score Asset Allocation ────────────────────────────────────────────────
+  // ── Score Asset Allocation (-1 = não analisado) ───────────────────────────
   const scoreAA = (() => {
-    if (!carteiraSalva) return 0;
+    if (!carteiraSalva) return -1;
     const macroAtual = carteiraSalva.macroAtual ?? {};
     const macroMeta  = carteiraSalva.macroMeta  ?? {};
     const ids = Object.keys(macroMeta);
-    if (!ids.length || !Object.keys(macroAtual).length) return 0;
+    if (!ids.length || !Object.keys(macroAtual).length) return -1;
     const desvios = ids.map(id =>
       Math.abs((Number(macroAtual[id]) || 0) - (Number(macroMeta[id]) || 0))
     );
@@ -186,34 +186,24 @@ export function FinancialPlanDashboard({
     return Math.max(0, Math.round(100 - desvioMedio * 3));
   })();
 
-  // ── Debug temporário ─────────────────────────────────────────────────────
-  console.log('[Resultado] resultados completo:', JSON.stringify(resultados, null, 2));
-  console.log('[Resultado] seguro:', seguroSalvo);
-  console.log('[Resultado] scoreProtecao:', scoreProtecao);
-  console.log('[Resultado] scoreAposentadoria:', scoreAposentadoria, '| scoreAA:', scoreAA, '| scoreTributario:', scoreTributario);
-
-  // ── Score Geral ───────────────────────────────────────────────────────────
-  const scoresAtivos = [
-    ifSalvo       ? scoreAposentadoria : null,
-    carteiraSalva ? scoreAA            : null,
-    seguroSalvo   ? scoreProtecao      : null,
-    fiscalSalvo   ? scoreTributario    : null,
-  ].filter((s): s is number => s !== null);
+  // ── Score Geral (ignora áreas não analisadas) ─────────────────────────────
+  const scoresAtivos = [scoreAposentadoria, scoreAA, scoreProtecao, scoreTributario]
+    .filter(s => s >= 0);
 
   const scoreGeral = scoresAtivos.length > 0
     ? Math.round(scoresAtivos.reduce((a, v) => a + v, 0) / scoresAtivos.length)
     : null;
 
-  const nivelGeral = nivelScore(scoreGeral ?? 0);
+  const nivelGeral = nivelScore(scoreGeral ?? -1);
   const hoje = new Date().toLocaleDateString("pt-BR");
   const perfil = dc.suitabilityPerfil;
 
   // ── Gauges ─────────────────────────────────────────────────────────────────
   const gauges = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreAposentadoria, temDados: !!ifSalvo },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scoreAA,            temDados: !!carteiraSalva },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao,      temDados: !!seguroSalvo },
-    { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario,    temDados: !!fiscalSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreAposentadoria },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scoreAA            },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao      },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario    },
   ];
 
   // ── Textos analíticos por área ─────────────────────────────────────────────
@@ -269,10 +259,10 @@ export function FinancialPlanDashboard({
   })();
 
   const textCards = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textoAposentadoria, score: scoreAposentadoria, temDados: !!ifSalvo },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textoAA,            score: scoreAA,            temDados: !!carteiraSalva },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textoProtecao,      score: scoreProtecao,      temDados: !!seguroSalvo },
-    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textoTributario,    score: scoreTributario,    temDados: !!fiscalSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textoAposentadoria, score: scoreAposentadoria },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textoAA,            score: scoreAA            },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textoProtecao,      score: scoreProtecao      },
+    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textoTributario,    score: scoreTributario    },
   ];
 
   return (
@@ -311,12 +301,12 @@ export function FinancialPlanDashboard({
 
       {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-        {gauges.map(({ icone, nome, score, temDados }) => {
-          const n = nivelScore(temDados ? score : 0);
+        {gauges.map(({ icone, nome, score }) => {
+          const n = nivelScore(score);
           return (
             <GaugeSemiCircular
               key={nome}
-              score={temDados ? score : 0}
+              score={score}
               label={nome}
               icone={icone}
               nivel={n}
@@ -326,8 +316,8 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── CARDS ANALÍTICOS POR ÁREA ─────────────────────────────────────────── */}
-      {textCards.map(({ icone, nome, texto, score, temDados }) => {
-        const n = nivelScore(temDados ? score : 0);
+      {textCards.map(({ icone, nome, texto, score }) => {
+        const n = nivelScore(score);
         return (
           <div
             key={nome}
