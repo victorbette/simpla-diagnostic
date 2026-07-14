@@ -50,13 +50,19 @@ function movEfetivo(item: PlanoAcaoItem): number {
   return item.movimentacaoBRL;
 }
 
-function foiEditado(item: PlanoAcaoItem): boolean {
+function exigeObservacao(item: PlanoAcaoItem): boolean {
+  // Caso 1: valor de movimentação editado manualmente
   if (item.acao === "aportar" || item.acao === "novo") {
-    return item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL;
+    if (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL) return true;
   }
-  if (item.acao === "resgatar_parcial") {
-    return item.valorResgateBRL !== undefined && item.valorResgateBRL !== Math.abs(item.movimentacaoBRL);
+  // Caso 2: manter com desvio > 5% em relação à meta
+  if (item.acao === "manter") {
+    const desvio = Math.abs((item.valorAtualBRL ?? 0) - (item.valorMetaBRL ?? 0));
+    const pctDesvio = (item.valorMetaBRL ?? 0) > 0 ? (desvio / item.valorMetaBRL) * 100 : 0;
+    if (pctDesvio > 5) return true;
   }
+  // Caso 3: resgatar parcialmente — sempre exige justificativa
+  if (item.acao === "resgatar_parcial") return true;
   return false;
 }
 
@@ -224,9 +230,10 @@ export function Etapa3PlanoAcao({
 
             {groupItems.map((item) => {
               const isMovEditable = item.acao === "aportar" || item.acao === "novo";
-              const editado = foiEditado(item);
+              const movEditado = isMovEditable && item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL;
+              const exige = exigeObservacao(item);
               const efetivo = movEfetivo(item);
-              const obsNeedsFill = editado && !item.observacao;
+              const obsNeedsFill = exige && !item.observacao?.trim();
 
               return (
                 <div
@@ -237,7 +244,7 @@ export function Etapa3PlanoAcao({
                 >
                   <div style={{ display: "grid", gridTemplateColumns: COLS, gap: 8, padding: "8px 14px", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                         <span style={{
                           backgroundColor: TIPO_CONFIG[item.acao].bg,
                           color: TIPO_CONFIG[item.acao].color,
@@ -246,6 +253,12 @@ export function Etapa3PlanoAcao({
                           {TIPO_CONFIG[item.acao].label}
                         </span>
                         <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                        {obsNeedsFill && (
+                          <span style={{
+                            fontSize: 10, color: "#B91C1C", background: "#FEE2E2",
+                            padding: "1px 6px", borderRadius: 99, flexShrink: 0,
+                          }}>⚠ pendente</span>
+                        )}
                       </div>
                       {item.segmento && (
                         <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
@@ -291,7 +304,7 @@ export function Etapa3PlanoAcao({
                         }}>
                           {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
                         </span>
-                        <span style={{ fontSize: 10, color: editado ? "#B45309" : "#D1D5DB" }} title={editado ? "Valor editado" : "Editar"}>✎</span>
+                        <span style={{ fontSize: 10, color: movEditado ? "#B45309" : "#D1D5DB" }} title={movEditado ? "Valor editado" : "Editar"}>✎</span>
                       </div>
                     ) : (
                       <span style={{
@@ -320,9 +333,9 @@ export function Etapa3PlanoAcao({
                     <input
                       value={item.observacao}
                       onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                      placeholder={obsNeedsFill ? "obrigatório ↑" : "observação..."}
+                      placeholder={obsNeedsFill ? "obrigatório..." : "observação..."}
                       style={{
-                        border: `1px solid ${editado ? (item.observacao ? "#15803D" : "#B91C1C") : "#BFDBFE"}`,
+                        border: `1px solid ${exige ? (item.observacao?.trim() ? "#15803D" : "#B91C1C") : "#BFDBFE"}`,
                         borderRadius: 6, padding: "3px 6px",
                         fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
                         width: "100%", boxSizing: "border-box",
@@ -341,7 +354,7 @@ export function Etapa3PlanoAcao({
                   </div>
 
                   {item.acao === "resgatar_parcial" && (
-                    <div style={{ padding: "0 14px 10px" }}>
+                    <div style={{ padding: "0 14px 8px" }}>
                       <div style={{
                         display: "flex", alignItems: "center", gap: 8,
                         padding: "8px 10px",
@@ -379,6 +392,51 @@ export function Etapa3PlanoAcao({
                         <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" }}>
                           de {formatBRL(item.valorAtualBRL)}
                         </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Observação obrigatória contextual */}
+                  {exige && (
+                    <div style={{ padding: "0 14px 10px" }}>
+                      <div style={{
+                        display: "flex", flexDirection: "column", gap: 6,
+                        padding: "8px 10px",
+                        background: item.observacao?.trim() ? "#F0FDF4" : "#FFFBEB",
+                        border: `0.5px solid ${item.observacao?.trim() ? "#BBF7D0" : "#FDE68A"}`,
+                        borderRadius: 6,
+                      }}>
+                        <div style={{ fontSize: 10, color: "#B45309" }}>
+                          {item.acao === "manter" && "Ativo mantido fora da alocação ideal — "}
+                          {item.acao === "resgatar_parcial" && "Resgate parcial — "}
+                          {(item.acao === "aportar" || item.acao === "novo") && item.movimentacaoEditada !== undefined && "Valor alterado — "}
+                          observação obrigatória
+                        </div>
+                        <input
+                          type="text"
+                          value={item.observacao ?? ""}
+                          onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                          placeholder={
+                            item.acao === "manter"
+                              ? "Ex: Cliente prefere não movimentar agora..."
+                              : item.acao === "resgatar_parcial"
+                              ? "Ex: Resgate parcial por necessidade de liquidez..."
+                              : "Motivo da alteração do valor sugerido..."
+                          }
+                          style={{
+                            width: "100%",
+                            border: item.observacao?.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",
+                            borderRadius: 6, padding: "6px 10px", fontSize: 12,
+                            color: "#374151",
+                            background: item.observacao?.trim() ? "#F0FDF4" : "#FFF5F5",
+                            boxSizing: "border-box", outline: "none",
+                          }}
+                        />
+                        {!item.observacao?.trim() && (
+                          <div style={{ fontSize: 10, color: "#B91C1C" }}>
+                            Preencha a observação para continuar
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

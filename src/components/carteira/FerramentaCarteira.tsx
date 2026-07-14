@@ -391,18 +391,24 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
           const alocacaoFaltando = totalAlocadoPct < 99.9;
 
-          const itensEditadosSemObs = etapa === 3
+          const itensExigemObservacao = etapa === 3
             ? planoAcao.filter((item) => {
-                const editado = (item.acao === "aportar" || item.acao === "novo")
-                  ? (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL)
-                  : item.acao === "resgatar_parcial"
-                  ? (item.valorResgateBRL !== undefined && item.valorResgateBRL !== Math.abs(item.movimentacaoBRL))
-                  : false;
-                return editado && !item.observacao;
+                if (item.acao === "aportar" || item.acao === "novo") {
+                  if (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL) {
+                    return !item.observacao?.trim();
+                  }
+                }
+                if (item.acao === "manter") {
+                  const desvio = Math.abs((item.valorAtualBRL ?? 0) - (item.valorMetaBRL ?? 0));
+                  const pctDesvio = (item.valorMetaBRL ?? 0) > 0 ? (desvio / item.valorMetaBRL) * 100 : 0;
+                  if (pctDesvio > 5) return !item.observacao?.trim();
+                }
+                if (item.acao === "resgatar_parcial") return !item.observacao?.trim();
+                return false;
               })
             : [];
 
-          const podeAvancar = etapa === 2 ? alocacaoCompleta : etapa === 3 ? itensEditadosSemObs.length === 0 : true;
+          const podeAvancar = etapa === 2 ? alocacaoCompleta : etapa === 3 ? itensExigemObservacao.length === 0 : true;
 
           return (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -435,7 +441,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
               )}
               {etapa === 3 && !podeAvancar && (
                 <div style={{ fontSize: 11, color: "#B91C1C", textAlign: "right" }}>
-                  {itensEditadosSemObs.length} item(s) editado(s) sem observação
+                  {itensExigemObservacao.length} ativo(s) aguardam observação do consultor
                 </div>
               )}
             </div>
