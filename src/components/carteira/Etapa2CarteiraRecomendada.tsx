@@ -3,6 +3,7 @@ import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
+import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
 
 interface Props {
   ativos: Ativo[];
@@ -96,6 +97,17 @@ export function Etapa2CarteiraRecomendada({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+
+      {/* ── RECOMENDAÇÃO SIMPLA (planilha de alocação) ── */}
+      <PainelRecomendacaoSimpla
+        clientProfile={clientProfile}
+        patrimonioMeta={patrimonioMeta}
+        temAtivosRecomendados={ativos.length > 0}
+        onAplicar={(meta, novosAtivos) => {
+          onAlocacaoMeta(meta);
+          onAtivos(novosAtivos);
+        }}
+      />
 
       {/* ── CARD ALOCAÇÃO META ── */}
       <div style={{ backgroundColor: "white", border: "0.5px solid #BFDBFE", borderRadius: 12, padding: 20, marginBottom: 4 }}>

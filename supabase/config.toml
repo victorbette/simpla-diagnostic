@@ -1,0 +1,7 @@
+# Config mínima para deploy de Edge Functions via CLI (supabase functions deploy).
+project_id = "simpla-diagnostic"
+
+[functions.sync-allocation]
+# Gateway exige JWT válido (anon ou usuário). A função ainda valida por conta
+# própria: usuário autenticado OU header x-cron-secret (invocação agendada).
+verify_jwt = true

@@ -1,0 +1,5758 @@
+{
+ "categorias": [
+  "Renda Fixa pós curta",
+  "Renda fixa pós longa",
+  "IPCA Curto",
+  "IPCA Longo",
+  "Infra IPCA",
+  "Infra CDI",
+  "Prefixado",
+  "Ações",
+  "FIIs",
+  "Exterior",
+  "Bitcoin"
+ ],
+ "faixas": [
+  {
+   "nome": "100 mil a 149,9 mil",
+   "min": 100000.0,
+   "max_ref": "149.900"
+  },
+  {
+   "nome": "150 mil a 349,9 mil",
+   "min": 150000.0,
+   "max_ref": "349.900"
+  },
+  {
+   "nome": "350 mil a 999,9 mil",
+   "min": 350000.0,
+   "max_ref": "999.900"
+  },
+  {
+   "nome": "1 milhão a 4,9 milhões",
+   "min": 1000000.0,
+   "max_ref": "4.900.000"
+  },
+  {
+   "nome": "5 milhões a 9,9 milhões",
+   "min": 5000000.0,
+   "max_ref": "9.900.000"
+  },
+  {
+   "nome": "Mais de 10 milhões",
+   "min": 10000000.0,
+   "max_ref": "-"
+  }
+ ],
+ "matriz_alocacao": [
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.35,
+    "Renda fixa pós longa": 0.45,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.05,
+    "FIIs": 0.05,
+    "Exterior": 0.05,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.35,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.1,
+    "FIIs": 0.1,
+    "Exterior": 0.1,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.2,
+    "Renda fixa pós longa": 0.3,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.15,
+    "FIIs": 0.15,
+    "Exterior": 0.15,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.35,
+    "Renda fixa pós longa": 0.45,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.0375,
+    "FIIs": 0.0375,
+    "Exterior": 0.075,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.35,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.075,
+    "FIIs": 0.075,
+    "Exterior": 0.15,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.2,
+    "Renda fixa pós longa": 0.3,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.1,
+    "FIIs": 0.1,
+    "Exterior": 0.25,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.55,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.03,
+    "FIIs": 0.03,
+    "Exterior": 0.04,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.45,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.0,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.06,
+    "FIIs": 0.06,
+    "Exterior": 0.08,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.35,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.025,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.085,
+    "FIIs": 0.075,
+    "Exterior": 0.1,
+    "Bitcoin": 0.015
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.2,
+    "Renda fixa pós longa": 0.3,
+    "IPCA Curto": 0.05,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.025,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.12,
+    "FIIs": 0.085,
+    "Exterior": 0.15,
+    "Bitcoin": 0.02
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.32,
+    "Renda fixa pós longa": 0.5,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.02,
+    "FIIs": 0.02,
+    "Exterior": 0.1,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.5,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.025,
+    "FIIs": 0.025,
+    "Exterior": 0.11,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.28,
+    "Renda fixa pós longa": 0.4,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.04,
+    "FIIs": 0.03,
+    "Exterior": 0.15,
+    "Bitcoin": 0.01
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.38,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.04,
+    "FIIs": 0.03,
+    "Exterior": 0.2,
+    "Bitcoin": 0.01
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.52,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.02,
+    "FIIs": 0.02,
+    "Exterior": 0.1,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.52,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.02,
+    "FIIs": 0.02,
+    "Exterior": 0.15,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.44,
+    "IPCA Curto": 0.025,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.03,
+    "FIIs": 0.025,
+    "Exterior": 0.15,
+    "Bitcoin": 0.01
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.38,
+    "IPCA Curto": 0.025,
+    "IPCA Longo": 0.05,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.035,
+    "FIIs": 0.025,
+    "Exterior": 0.2,
+    "Bitcoin": 0.015
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "Mais de 10 milhões",
+   "perfil": "Conservador",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.3,
+    "Renda fixa pós longa": 0.51,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.015,
+    "FIIs": 0.015,
+    "Exterior": 0.12,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "Mais de 10 milhões",
+   "perfil": "Conservador Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.275,
+    "Renda fixa pós longa": 0.495,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.0,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.02,
+    "FIIs": 0.02,
+    "Exterior": 0.15,
+    "Bitcoin": 0.0
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "Mais de 10 milhões",
+   "perfil": "Moderado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.275,
+    "Renda fixa pós longa": 0.42,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.03,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.03,
+    "FIIs": 0.03,
+    "Exterior": 0.17,
+    "Bitcoin": 0.005
+   },
+   "soma": 1.0
+  },
+  {
+   "faixa": "Mais de 10 milhões",
+   "perfil": "Arrojado",
+   "alocacao": {
+    "Renda Fixa pós curta": 0.25,
+    "Renda fixa pós longa": 0.39,
+    "IPCA Curto": 0.02,
+    "IPCA Longo": 0.03,
+    "Infra IPCA": 0.02,
+    "Infra CDI": 0.0,
+    "Prefixado": 0.0,
+    "Ações": 0.04,
+    "FIIs": 0.04,
+    "Exterior": 0.2,
+    "Bitcoin": 0.01
+   },
+   "soma": 1.0
+  }
+ ],
+ "precos_recomendacoes": [
+  {
+   "ativo": "SAUD3",
+   "classe": "Ações",
+   "preco_teto": 15.0,
+   "preco_hoje": 15.25,
+   "recomendacao": "Aguardar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "KLBN4",
+   "classe": "Ações",
+   "preco_teto": 5.5,
+   "preco_hoje": 3.49,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "ALOS3",
+   "classe": "Ações",
+   "preco_teto": 31.0,
+   "preco_hoje": 28.11,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "BBAS3",
+   "classe": "Ações",
+   "preco_teto": 32.0,
+   "preco_hoje": 20.24,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "BBSE3",
+   "classe": "Ações",
+   "preco_teto": 39.0,
+   "preco_hoje": 40.28,
+   "recomendacao": "Aguardar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "FIQE3",
+   "classe": "Ações",
+   "preco_teto": 6.6,
+   "preco_hoje": 5.86,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "CSUD3",
+   "classe": "Ações",
+   "preco_teto": 20.0,
+   "preco_hoje": 14.04,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "SLCE3",
+   "classe": "Ações",
+   "preco_teto": 18.5,
+   "preco_hoje": 13.87,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "TTEN3",
+   "classe": "Ações",
+   "preco_teto": 18.0,
+   "preco_hoje": 15.45,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "SEER3",
+   "classe": "Ações",
+   "preco_teto": 15.0,
+   "preco_hoje": 12.02,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "SIMH3",
+   "classe": "Ações",
+   "preco_teto": 13.0,
+   "preco_hoje": 7.93,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "EZTC3",
+   "classe": "Ações",
+   "preco_teto": 19.0,
+   "preco_hoje": 13,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "VAMO3",
+   "classe": "Ações",
+   "preco_teto": 7.5,
+   "preco_hoje": 3.02,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "CSAN3",
+   "classe": "Ações",
+   "preco_teto": 9.0,
+   "preco_hoje": 3.9,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "HGLG11",
+   "classe": "FIIs",
+   "preco_teto": 160.0,
+   "preco_hoje": 148.09,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "BTLG11",
+   "classe": "FIIs",
+   "preco_teto": 110.0,
+   "preco_hoje": 102.6,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "HGRU11",
+   "classe": "FIIs",
+   "preco_teto": 130.0,
+   "preco_hoje": 128.71,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "TRXF11",
+   "classe": "FIIs",
+   "preco_teto": 115.0,
+   "preco_hoje": 90.91,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "PVBI11",
+   "classe": "FIIs",
+   "preco_teto": 70.0,
+   "preco_hoje": 72.9,
+   "recomendacao": "Aguardar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "TEPP11",
+   "classe": "FIIs",
+   "preco_teto": 9.0,
+   "preco_hoje": 7.84,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "PMLL11",
+   "classe": "FIIs",
+   "preco_teto": 110.0,
+   "preco_hoje": 100.91,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "XPML11",
+   "classe": "FIIs",
+   "preco_teto": 108.0,
+   "preco_hoje": 105.99,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "AFHI11",
+   "classe": "FIIs",
+   "preco_teto": 96.0,
+   "preco_hoje": 95.32,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "HGCR11",
+   "classe": "FIIs",
+   "preco_teto": 95.0,
+   "preco_hoje": 92.5,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "PCIP11",
+   "classe": "FIIs",
+   "preco_teto": 90.0,
+   "preco_hoje": 75.77,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "RBRR11",
+   "classe": "FIIs",
+   "preco_teto": 90.0,
+   "preco_hoje": 77.39,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  },
+  {
+   "ativo": "PSEC11",
+   "classe": "FIIs",
+   "preco_teto": 65.0,
+   "preco_hoje": 55.77,
+   "recomendacao": "Comprar",
+   "prefixo": "BVMF:"
+  }
+ ],
+ "blocos_produtos": [
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "100-149",
+   "linhas": [
+    10,
+    17
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda fixa pós longa",
+   "aba": "100-149",
+   "linhas": [
+    22,
+    29
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Curto",
+   "aba": "100-149",
+   "linhas": [
+    34,
+    41
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Longo",
+   "aba": "100-149",
+   "linhas": [
+    46,
+    53
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra IPCA",
+   "aba": "100-149",
+   "linhas": [
+    58,
+    65
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra CDI",
+   "aba": "100-149",
+   "linhas": [
+    70,
+    77
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Prefixado",
+   "aba": "100-149",
+   "linhas": [
+    82,
+    89
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Ações",
+   "aba": "100-149",
+   "linhas": [
+    94,
+    101
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "FIIs",
+   "aba": "100-149",
+   "linhas": [
+    106,
+    113
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Exterior",
+   "aba": "100-149",
+   "linhas": [
+    118,
+    125
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Bitcoin",
+   "aba": "100-149",
+   "linhas": [
+    130,
+    137
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "100-149",
+   "linhas": [
+    145,
+    152
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "100-149",
+   "linhas": [
+    157,
+    164
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "100-149",
+   "linhas": [
+    169,
+    176
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "100-149",
+   "linhas": [
+    181,
+    188
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "100-149",
+   "linhas": [
+    193,
+    200
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra CDI",
+   "aba": "100-149",
+   "linhas": [
+    205,
+    212
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Prefixado",
+   "aba": "100-149",
+   "linhas": [
+    217,
+    224
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Ações",
+   "aba": "100-149",
+   "linhas": [
+    229,
+    236
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "FIIs",
+   "aba": "100-149",
+   "linhas": [
+    241,
+    248
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Exterior",
+   "aba": "100-149",
+   "linhas": [
+    253,
+    260
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Bitcoin",
+   "aba": "100-149",
+   "linhas": [
+    265,
+    272
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "100-149",
+   "linhas": [
+    280,
+    287
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "100-149",
+   "linhas": [
+    292,
+    299
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Curto",
+   "aba": "100-149",
+   "linhas": [
+    304,
+    311
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Longo",
+   "aba": "100-149",
+   "linhas": [
+    316,
+    323
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra IPCA",
+   "aba": "100-149",
+   "linhas": [
+    328,
+    335
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra CDI",
+   "aba": "100-149",
+   "linhas": [
+    340,
+    347
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Prefixado",
+   "aba": "100-149",
+   "linhas": [
+    352,
+    359
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Ações",
+   "aba": "100-149",
+   "linhas": [
+    364,
+    371
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "FIIs",
+   "aba": "100-149",
+   "linhas": [
+    376,
+    383
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Exterior",
+   "aba": "100-149",
+   "linhas": [
+    388,
+    395
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "100 mil a 149,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Bitcoin",
+   "aba": "100-149",
+   "linhas": [
+    400,
+    407
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "150-349",
+   "linhas": [
+    10,
+    17
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda fixa pós longa",
+   "aba": "150-349",
+   "linhas": [
+    22,
+    29
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Curto",
+   "aba": "150-349",
+   "linhas": [
+    34,
+    41
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Longo",
+   "aba": "150-349",
+   "linhas": [
+    46,
+    53
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra IPCA",
+   "aba": "150-349",
+   "linhas": [
+    58,
+    65
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra CDI",
+   "aba": "150-349",
+   "linhas": [
+    70,
+    77
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Prefixado",
+   "aba": "150-349",
+   "linhas": [
+    82,
+    89
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Ações",
+   "aba": "150-349",
+   "linhas": [
+    94,
+    101
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "FIIs",
+   "aba": "150-349",
+   "linhas": [
+    106,
+    113
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Exterior",
+   "aba": "150-349",
+   "linhas": [
+    118,
+    125
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Bitcoin",
+   "aba": "150-349",
+   "linhas": [
+    130,
+    137
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "150-349",
+   "linhas": [
+    145,
+    152
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "150-349",
+   "linhas": [
+    157,
+    164
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "150-349",
+   "linhas": [
+    169,
+    176
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "150-349",
+   "linhas": [
+    181,
+    188
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "150-349",
+   "linhas": [
+    193,
+    200
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra CDI",
+   "aba": "150-349",
+   "linhas": [
+    205,
+    212
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Prefixado",
+   "aba": "150-349",
+   "linhas": [
+    217,
+    224
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Ações",
+   "aba": "150-349",
+   "linhas": [
+    229,
+    236
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "FIIs",
+   "aba": "150-349",
+   "linhas": [
+    241,
+    248
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Exterior",
+   "aba": "150-349",
+   "linhas": [
+    253,
+    260
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "NASD11",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Bitcoin",
+   "aba": "150-349",
+   "linhas": [
+    265,
+    272
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "150-349",
+   "linhas": [
+    280,
+    287
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "150-349",
+   "linhas": [
+    292,
+    299
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Curto",
+   "aba": "150-349",
+   "linhas": [
+    304,
+    311
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Longo",
+   "aba": "150-349",
+   "linhas": [
+    316,
+    323
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra IPCA",
+   "aba": "150-349",
+   "linhas": [
+    328,
+    335
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra CDI",
+   "aba": "150-349",
+   "linhas": [
+    340,
+    347
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Prefixado",
+   "aba": "150-349",
+   "linhas": [
+    352,
+    359
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Ações",
+   "aba": "150-349",
+   "linhas": [
+    364,
+    371
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "FIIs",
+   "aba": "150-349",
+   "linhas": [
+    376,
+    383
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Exterior",
+   "aba": "150-349",
+   "linhas": [
+    388,
+    395
+   ],
+   "produtos": [
+    {
+     "nome": "GPUS11",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "NASD11",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "150 mil a 349,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Bitcoin",
+   "aba": "150-349",
+   "linhas": [
+    400,
+    407
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "350-999",
+   "linhas": [
+    10,
+    25
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro RF",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Renda fixa pós longa",
+   "aba": "350-999",
+   "linhas": [
+    30,
+    45
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Curto",
+   "aba": "350-999",
+   "linhas": [
+    50,
+    65
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "IPCA Longo",
+   "aba": "350-999",
+   "linhas": [
+    70,
+    85
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra IPCA",
+   "aba": "350-999",
+   "linhas": [
+    90,
+    105
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Infra CDI",
+   "aba": "350-999",
+   "linhas": [
+    110,
+    125
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Prefixado",
+   "aba": "350-999",
+   "linhas": [
+    130,
+    145
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Ações",
+   "aba": "350-999",
+   "linhas": [
+    150,
+    165
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "FIIs",
+   "aba": "350-999",
+   "linhas": [
+    170,
+    185
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1666666667,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Exterior",
+   "aba": "350-999",
+   "linhas": [
+    190,
+    205
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador",
+   "categoria": "Bitcoin",
+   "aba": "350-999",
+   "linhas": [
+    210,
+    225
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "350-999",
+   "linhas": [
+    233,
+    248
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro RF",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "350-999",
+   "linhas": [
+    253,
+    268
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "350-999",
+   "linhas": [
+    273,
+    288
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "350-999",
+   "linhas": [
+    293,
+    308
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "350-999",
+   "linhas": [
+    313,
+    328
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra CDI",
+   "aba": "350-999",
+   "linhas": [
+    333,
+    348
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Prefixado",
+   "aba": "350-999",
+   "linhas": [
+    353,
+    368
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Ações",
+   "aba": "350-999",
+   "linhas": [
+    373,
+    388
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.25,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "FIIs",
+   "aba": "350-999",
+   "linhas": [
+    393,
+    408
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Exterior",
+   "aba": "350-999",
+   "linhas": [
+    413,
+    428
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Conservador Moderado",
+   "categoria": "Bitcoin",
+   "aba": "350-999",
+   "linhas": [
+    433,
+    448
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "350-999",
+   "linhas": [
+    456,
+    471
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "350-999",
+   "linhas": [
+    476,
+    491
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "350-999",
+   "linhas": [
+    496,
+    511
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "350-999",
+   "linhas": [
+    516,
+    531
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA + 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "350-999",
+   "linhas": [
+    536,
+    551
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Infra CDI",
+   "aba": "350-999",
+   "linhas": [
+    556,
+    571
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Prefixado",
+   "aba": "350-999",
+   "linhas": [
+    576,
+    591
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Ações",
+   "aba": "350-999",
+   "linhas": [
+    596,
+    611
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "FIIs",
+   "aba": "350-999",
+   "linhas": [
+    616,
+    631
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Exterior",
+   "aba": "350-999",
+   "linhas": [
+    636,
+    651
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Moderado",
+   "categoria": "Bitcoin",
+   "aba": "350-999",
+   "linhas": [
+    656,
+    671
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "350-999",
+   "linhas": [
+    679,
+    694
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "350-999",
+   "linhas": [
+    699,
+    714
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Pioneiro",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Curto",
+   "aba": "350-999",
+   "linhas": [
+    719,
+    734
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Longo",
+   "aba": "350-999",
+   "linhas": [
+    739,
+    754
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA + 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra IPCA",
+   "aba": "350-999",
+   "linhas": [
+    759,
+    774
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Infra CDI",
+   "aba": "350-999",
+   "linhas": [
+    779,
+    794
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Prefixado",
+   "aba": "350-999",
+   "linhas": [
+    799,
+    814
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Ações",
+   "aba": "350-999",
+   "linhas": [
+    819,
+    834
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "FIIs",
+   "aba": "350-999",
+   "linhas": [
+    839,
+    854
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Exterior",
+   "aba": "350-999",
+   "linhas": [
+    859,
+    874
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.3333333333,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "350 mil a 999,9 mil",
+   "perfil": "Arrojado",
+   "categoria": "Bitcoin",
+   "aba": "350-999",
+   "linhas": [
+    879,
+    894
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "1M-4,9M",
+   "linhas": [
+    10,
+    25
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro RF",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.25,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Renda fixa pós longa",
+   "aba": "1M-4,9M",
+   "linhas": [
+    30,
+    45
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "IPCA Curto",
+   "aba": "1M-4,9M",
+   "linhas": [
+    50,
+    65
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "IPCA Longo",
+   "aba": "1M-4,9M",
+   "linhas": [
+    70,
+    85
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Infra IPCA",
+   "aba": "1M-4,9M",
+   "linhas": [
+    90,
+    105
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Infra CDI",
+   "aba": "1M-4,9M",
+   "linhas": [
+    110,
+    125
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Prefixado",
+   "aba": "1M-4,9M",
+   "linhas": [
+    130,
+    145
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Ações",
+   "aba": "1M-4,9M",
+   "linhas": [
+    150,
+    165
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "FIIs",
+   "aba": "1M-4,9M",
+   "linhas": [
+    170,
+    185
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Exterior",
+   "aba": "1M-4,9M",
+   "linhas": [
+    190,
+    205
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund   ",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Bitcoin",
+   "aba": "1M-4,9M",
+   "linhas": [
+    210,
+    225
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "1M-4,9M",
+   "linhas": [
+    233,
+    248
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "1M-4,9M",
+   "linhas": [
+    253,
+    268
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "1M-4,9M",
+   "linhas": [
+    273,
+    288
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "1M-4,9M",
+   "linhas": [
+    293,
+    308
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "1M-4,9M",
+   "linhas": [
+    313,
+    328
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra CDI",
+   "aba": "1M-4,9M",
+   "linhas": [
+    333,
+    348
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Prefixado",
+   "aba": "1M-4,9M",
+   "linhas": [
+    353,
+    368
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Ações",
+   "aba": "1M-4,9M",
+   "linhas": [
+    373,
+    388
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.2,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "FIIs",
+   "aba": "1M-4,9M",
+   "linhas": [
+    393,
+    408
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Exterior",
+   "aba": "1M-4,9M",
+   "linhas": [
+    413,
+    428
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Bitcoin",
+   "aba": "1M-4,9M",
+   "linhas": [
+    433,
+    448
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "1M-4,9M",
+   "linhas": [
+    456,
+    471
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "1M-4,9M",
+   "linhas": [
+    476,
+    491
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "1M-4,9M",
+   "linhas": [
+    496,
+    511
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "1M-4,9M",
+   "linhas": [
+    516,
+    531
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "1M-4,9M",
+   "linhas": [
+    536,
+    551
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Infra CDI",
+   "aba": "1M-4,9M",
+   "linhas": [
+    556,
+    571
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Prefixado",
+   "aba": "1M-4,9M",
+   "linhas": [
+    576,
+    591
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Ações",
+   "aba": "1M-4,9M",
+   "linhas": [
+    596,
+    611
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.1428571429,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "FIIs",
+   "aba": "1M-4,9M",
+   "linhas": [
+    616,
+    631
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1111111111,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Exterior",
+   "aba": "1M-4,9M",
+   "linhas": [
+    636,
+    651
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Bitcoin",
+   "aba": "1M-4,9M",
+   "linhas": [
+    656,
+    671
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "1M-4,9M",
+   "linhas": [
+    679,
+    694
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "1M-4,9M",
+   "linhas": [
+    699,
+    714
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Curto",
+   "aba": "1M-4,9M",
+   "linhas": [
+    719,
+    734
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Longo",
+   "aba": "1M-4,9M",
+   "linhas": [
+    739,
+    754
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Infra IPCA",
+   "aba": "1M-4,9M",
+   "linhas": [
+    759,
+    774
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Infra CDI",
+   "aba": "1M-4,9M",
+   "linhas": [
+    779,
+    794
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Prefixado",
+   "aba": "1M-4,9M",
+   "linhas": [
+    799,
+    814
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Ações",
+   "aba": "1M-4,9M",
+   "linhas": [
+    819,
+    834
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "FIIs",
+   "aba": "1M-4,9M",
+   "linhas": [
+    839,
+    854
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Exterior",
+   "aba": "1M-4,9M",
+   "linhas": [
+    859,
+    874
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "1 milhão a 4,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Bitcoin",
+   "aba": "1M-4,9M",
+   "linhas": [
+    879,
+    894
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "5M-9,9M",
+   "linhas": [
+    10,
+    25
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Renda fixa pós longa",
+   "aba": "5M-9,9M",
+   "linhas": [
+    30,
+    45
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "IPCA Curto",
+   "aba": "5M-9,9M",
+   "linhas": [
+    50,
+    65
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "IPCA Longo",
+   "aba": "5M-9,9M",
+   "linhas": [
+    70,
+    85
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Infra IPCA",
+   "aba": "5M-9,9M",
+   "linhas": [
+    90,
+    105
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "Absolute Hidra IPCA",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Infra CDI",
+   "aba": "5M-9,9M",
+   "linhas": [
+    110,
+    125
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Prefixado",
+   "aba": "5M-9,9M",
+   "linhas": [
+    130,
+    145
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Ações",
+   "aba": "5M-9,9M",
+   "linhas": [
+    150,
+    165
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "FIIs",
+   "aba": "5M-9,9M",
+   "linhas": [
+    170,
+    185
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Exterior",
+   "aba": "5M-9,9M",
+   "linhas": [
+    190,
+    205
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador",
+   "categoria": "Bitcoin",
+   "aba": "5M-9,9M",
+   "linhas": [
+    210,
+    225
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "5M-9,9M",
+   "linhas": [
+    233,
+    248
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "5M-9,9M",
+   "linhas": [
+    253,
+    268
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "5M-9,9M",
+   "linhas": [
+    273,
+    288
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "5M-9,9M",
+   "linhas": [
+    293,
+    308
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "5M-9,9M",
+   "linhas": [
+    313,
+    328
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "Absolute Hidra IPCA",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Infra CDI",
+   "aba": "5M-9,9M",
+   "linhas": [
+    333,
+    348
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Prefixado",
+   "aba": "5M-9,9M",
+   "linhas": [
+    353,
+    368
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Ações",
+   "aba": "5M-9,9M",
+   "linhas": [
+    373,
+    388
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.125,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "FIIs",
+   "aba": "5M-9,9M",
+   "linhas": [
+    393,
+    408
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.1,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Exterior",
+   "aba": "5M-9,9M",
+   "linhas": [
+    413,
+    428
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Conservador Moderado",
+   "categoria": "Bitcoin",
+   "aba": "5M-9,9M",
+   "linhas": [
+    433,
+    448
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "5M-9,9M",
+   "linhas": [
+    456,
+    471
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "5M-9,9M",
+   "linhas": [
+    476,
+    491
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "IPCA Curto",
+   "aba": "5M-9,9M",
+   "linhas": [
+    496,
+    511
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "IPCA Longo",
+   "aba": "5M-9,9M",
+   "linhas": [
+    516,
+    531
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Infra IPCA",
+   "aba": "5M-9,9M",
+   "linhas": [
+    536,
+    551
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "Absolute Hidra IPCA",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Infra CDI",
+   "aba": "5M-9,9M",
+   "linhas": [
+    556,
+    571
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Prefixado",
+   "aba": "5M-9,9M",
+   "linhas": [
+    576,
+    591
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Ações",
+   "aba": "5M-9,9M",
+   "linhas": [
+    596,
+    611
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SIMH3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "EZTC3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "VAMO3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSAN3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "FIIs",
+   "aba": "5M-9,9M",
+   "linhas": [
+    616,
+    631
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PCIP11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PSEC11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PVBI11",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Exterior",
+   "aba": "5M-9,9M",
+   "linhas": [
+    636,
+    651
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Moderado",
+   "categoria": "Bitcoin",
+   "aba": "5M-9,9M",
+   "linhas": [
+    656,
+    671
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Renda Fixa pós curta",
+   "aba": "5M-9,9M",
+   "linhas": [
+    679,
+    694
+   ],
+   "produtos": [
+    {
+     "nome": "Match DI",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Porto Seguro Ref",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mapfre Confianza",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Tesouro Selic",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Renda fixa pós longa",
+   "aba": "5M-9,9M",
+   "linhas": [
+    699,
+    714
+   ],
+   "produtos": [
+    {
+     "nome": "Solis Antares",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "V8 cash platinum",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Rubi",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "Artesanal D+2",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    },
+    {
+     "nome": "More MCA",
+     "pct_na_categoria": 0.2,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Curto",
+   "aba": "5M-9,9M",
+   "linhas": [
+    719,
+    734
+   ],
+   "produtos": [
+    {
+     "nome": "SFIX",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "IPCA Longo",
+   "aba": "5M-9,9M",
+   "linhas": [
+    739,
+    754
+   ],
+   "produtos": [
+    {
+     "nome": "Tesouro IPCA 2050",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Infra IPCA",
+   "aba": "5M-9,9M",
+   "linhas": [
+    759,
+    774
+   ],
+   "produtos": [
+    {
+     "nome": "Sparta Deb",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    },
+    {
+     "nome": "Absolute Hidra IPCA",
+     "pct_na_categoria": 0.5,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Infra CDI",
+   "aba": "5M-9,9M",
+   "linhas": [
+    779,
+    794
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Prefixado",
+   "aba": "5M-9,9M",
+   "linhas": [
+    799,
+    814
+   ],
+   "produtos": []
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Ações",
+   "aba": "5M-9,9M",
+   "linhas": [
+    819,
+    834
+   ],
+   "produtos": [
+    {
+     "nome": "SAUD3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "KLBN4",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "ALOS3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBAS3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "BBSE3",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    },
+    {
+     "nome": "FIQE3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSUD3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SLCE3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TTEN3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SEER3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "SIMH3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "EZTC3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "VAMO3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "CSAN3",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "FIIs",
+   "aba": "5M-9,9M",
+   "linhas": [
+    839,
+    854
+   ],
+   "produtos": [
+    {
+     "nome": "BTLG11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TEPP11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "XPML11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "AFHI11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGRU11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "RBRR11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "TRXF11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGCR11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PMLL11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "HGLG11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PCIP11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PSEC11",
+     "pct_na_categoria": 0.08333333333,
+     "recomendacao": "Comprar"
+    },
+    {
+     "nome": "PVBI11",
+     "pct_na_categoria": 0,
+     "recomendacao": "Aguardar"
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Exterior",
+   "aba": "5M-9,9M",
+   "linhas": [
+    859,
+    874
+   ],
+   "produtos": [
+    {
+     "nome": "VUAA",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "QQQM",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJJ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "IJS",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "VNQ",
+     "pct_na_categoria": 0.06,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 1",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 2",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 3",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    },
+    {
+     "nome": "Mutual fund 4",
+     "pct_na_categoria": 0.175,
+     "recomendacao": null
+    }
+   ]
+  },
+  {
+   "faixa": "5 milhões a 9,9 milhões",
+   "perfil": "Arrojado",
+   "categoria": "Bitcoin",
+   "aba": "5M-9,9M",
+   "linhas": [
+    879,
+    894
+   ],
+   "produtos": [
+    {
+     "nome": "HODL11",
+     "pct_na_categoria": 1,
+     "recomendacao": null
+    }
+   ]
+  }
+ ]
+}
