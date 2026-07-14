@@ -68,7 +68,7 @@ Teste manual: botão **"Sincronizar planilha"** no painel Recomendação Simpla
 
 ```bash
 curl -X POST "https://<ref>.supabase.co/functions/v1/sync-allocation" \
-  -H "Authorization: Bearer <anon key>" \
+  -H "Authorization: Bearer <publishable key (sb_publishable_...)>" \
   -H "x-cron-secret: <CRON_SECRET>"
 ```
 
@@ -88,7 +88,7 @@ select cron.schedule(
   select net.http_post(
     url     := 'https://<ref>.supabase.co/functions/v1/sync-allocation',
     headers := jsonb_build_object(
-      'Authorization', 'Bearer <anon key>',
+      'Authorization', 'Bearer <publishable key (sb_publishable_...)>',
       'x-cron-secret', '<CRON_SECRET>',
       'Content-Type', 'application/json'
     ),
