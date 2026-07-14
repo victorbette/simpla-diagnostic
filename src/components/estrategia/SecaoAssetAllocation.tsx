@@ -79,8 +79,8 @@ export function SecaoAssetAllocation({
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
     const totalAportes = (r.planoAcao ?? [])
-      .filter((i) => (i.acao === "aportar" || i.acao === "novo") && i.movimentacaoBRL > 0)
-      .reduce((s, i) => s + i.movimentacaoBRL, 0);
+      .filter((i) => (i.acao === "aportar" || i.acao === "novo"))
+      .reduce((s, i) => s + (i.movimentacaoEditada ?? i.movimentacaoBRL), 0);
     const totalResgates = (r.planoAcao ?? [])
       .filter((i) => i.acao === "resgatar_parcial" || i.acao === "resgatar_total")
       .reduce((s, i) => {
@@ -107,6 +107,7 @@ export function SecaoAssetAllocation({
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
+        movimentacaoEditada: i.movimentacaoEditada,
         valorResgateBRL: i.valorResgateBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
@@ -196,8 +197,8 @@ export function SecaoAssetAllocation({
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   const totalAportes = (rc.planoAcao ?? [])
-    .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
-    .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
+    .filter((i) => { const a = i.acao ?? i.tipo; return a === "aportar" || a === "novo"; })
+    .reduce((s, i) => s + (i.movimentacaoEditada ?? i.movimentacaoBRL ?? 0), 0);
   const totalResgates = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return a === "resgatar_parcial" || a === "resgatar_total"; })
     .reduce((s, i) => {
@@ -365,7 +366,7 @@ export function SecaoAssetAllocation({
               switch (acao) {
                 case "novo":
                 case "aportar":
-                  valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoBRL ?? 0);
+                  valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0);
                   break;
                 case "manter":
                   valorFinal = item.valorAtualBRL ?? 0;
@@ -455,12 +456,10 @@ export function SecaoAssetAllocation({
                   } else if (acao === "resgatar_total") {
                     movTexto = "−" + formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
                     movCor = "#B91C1C";
-                  } else if ((item.movimentacaoBRL ?? 0) > 0) {
-                    movTexto = "+" + formatBRL(item.movimentacaoBRL ?? 0);
-                    movCor = "#15803D";
                   } else {
-                    movTexto = formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
-                    movCor = "#111827";
+                    const mov = item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0;
+                    movTexto = mov > 0 ? "+" + formatBRL(mov) : formatBRL(Math.abs(mov));
+                    movCor = mov > 0 ? "#15803D" : "#111827";
                   }
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
@@ -479,7 +478,50 @@ export function SecaoAssetAllocation({
           )}
         </div>
 
-        {/* Card 5 — Comment */}
+        {/* Card 5 — Observações do Plano de Ação */}
+        {(() => {
+          const itensComObs = (rc.planoAcao ?? []).filter((i) => i.observacao && i.observacao.trim());
+          if (itensComObs.length === 0) return null;
+          return (
+            <div style={CARD}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Observações do Plano de Ação
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {itensComObs.map((item) => {
+                  const acao = item.acao ?? item.tipo ?? "";
+                  const badge =
+                    acao === "novo"             ? { label: "✦ Novo",             bg: "#DBEAFE", color: "#1E40AF" } :
+                    acao === "aportar"          ? { label: "↑ Aportar",          bg: "#DCFCE7", color: "#15803D" } :
+                    acao === "manter"           ? { label: "→ Manter",           bg: "#F3F4F6", color: "#6B7280" } :
+                    acao === "resgatar_parcial" ? { label: "↓ Resgatar Parcial", bg: "#FEF3C7", color: "#B45309" } :
+                    acao === "resgatar_total"   ? { label: "↓ Resgatar Total",   bg: "#FEE2E2", color: "#B91C1C" } :
+                                                  { label: acao || "—",          bg: "#F3F4F6", color: "#6B7280" };
+                  return (
+                    <div key={item.id} style={{ padding: "10px 12px", backgroundColor: "#F8FAFC", borderRadius: 8, border: "0.5px solid #E5E7EB" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color, flexShrink: 0 }}>{badge.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                        {item.prioridade && (
+                          <span style={{
+                            fontSize: 10, padding: "1px 6px", borderRadius: 999, flexShrink: 0,
+                            backgroundColor: item.prioridade === "alta" ? "#FEE2E2" : item.prioridade === "media" ? "#FEF3C7" : "#F0F7FF",
+                            color: item.prioridade === "alta" ? "#B91C1C" : item.prioridade === "media" ? "#B45309" : "#6B7280",
+                          }}>
+                            {item.prioridade === "alta" ? "Alta" : item.prioridade === "media" ? "Média" : "Baixa"}
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 12, color: "#374151", margin: 0, lineHeight: 1.5 }}>{item.observacao}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Card 6 — Comment */}
         {commentCard}
       </div>
 

@@ -82,6 +82,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     valorAtualBRL: Number(p.valorAtualBRL) || 0,
     valorMetaBRL: Number(p.valorMetaBRL) || 0,
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,
+    movimentacaoEditada: p.movimentacaoEditada != null ? Number(p.movimentacaoEditada) : undefined,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
   };
@@ -179,10 +180,11 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           );
           if (existente) {
             return {
-              ...itemNovo,                       // recalculated financials
-              acao: existente.acao,              // consultant's action choice
-              observacao: existente.observacao,  // consultant's notes
-              prioridade: existente.prioridade,  // consultant's priority
+              ...itemNovo,                                           // recalculated financials
+              acao: existente.acao,                                  // consultant's action choice
+              observacao: existente.observacao,                      // consultant's notes
+              prioridade: existente.prioridade,                      // consultant's priority
+              movimentacaoEditada: existente.movimentacaoEditada,    // consultant's edited movimentação
             };
           }
           return itemNovo; // newly added asset — use defaults
@@ -388,14 +390,26 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           const totalAlocadoBRL = (totalAlocadoPct / 100) * patrimonioMeta;
           const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
           const alocacaoFaltando = totalAlocadoPct < 99.9;
-          const podeAvancar = etapa !== 2 || alocacaoCompleta;
+
+          const itensEditadosSemObs = etapa === 3
+            ? planoAcao.filter((item) => {
+                const editado = (item.acao === "aportar" || item.acao === "novo")
+                  ? (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL)
+                  : item.acao === "resgatar_parcial"
+                  ? (item.valorResgateBRL !== undefined && item.valorResgateBRL !== Math.abs(item.movimentacaoBRL))
+                  : false;
+                return editado && !item.observacao;
+              })
+            : [];
+
+          const podeAvancar = etapa === 2 ? alocacaoCompleta : etapa === 3 ? itensEditadosSemObs.length === 0 : true;
 
           return (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
               <button
                 onClick={() => { if (podeAvancar) handleNext(); }}
                 disabled={!podeAvancar}
-                title={!podeAvancar ? "Aloque 100% do patrimônio antes de avançar" : ""}
+                title={!podeAvancar ? (etapa === 2 ? "Aloque 100% do patrimônio antes de avançar" : "Preencha a observação dos itens editados") : ""}
                 style={{
                   display: "flex", alignItems: "center", gap: 4,
                   backgroundColor: podeAvancar ? "#2563EB" : "#9CA3AF",
@@ -417,6 +431,11 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
                     ? `Aloque mais ${formatBRL(Math.abs(diferencaBRL))} para continuar`
                     : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
                   }
+                </div>
+              )}
+              {etapa === 3 && !podeAvancar && (
+                <div style={{ fontSize: 11, color: "#B91C1C", textAlign: "right" }}>
+                  {itensEditadosSemObs.length} item(s) editado(s) sem observação
                 </div>
               )}
             </div>

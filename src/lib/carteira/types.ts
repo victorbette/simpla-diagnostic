@@ -26,6 +26,7 @@ export interface PlanoAcaoItem {
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
+  movimentacaoEditada?: number;
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
   valorResgateBRL?: number;

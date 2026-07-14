@@ -43,11 +43,30 @@ function parseBRL(text: string): number {
   return isNaN(n) ? 0 : n;
 }
 
+function movEfetivo(item: PlanoAcaoItem): number {
+  if (item.acao === "aportar" || item.acao === "novo") {
+    return item.movimentacaoEditada ?? item.movimentacaoBRL;
+  }
+  return item.movimentacaoBRL;
+}
+
+function foiEditado(item: PlanoAcaoItem): boolean {
+  if (item.acao === "aportar" || item.acao === "novo") {
+    return item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL;
+  }
+  if (item.acao === "resgatar_parcial") {
+    return item.valorResgateBRL !== undefined && item.valorResgateBRL !== Math.abs(item.movimentacaoBRL);
+  }
+  return false;
+}
+
 export function Etapa3PlanoAcao({
   planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio, aporteDisponivel,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [editingValues, setEditingValues] = useState<Record<string, string>>({});
+  const [editandoMovId, setEditandoMovId] = useState<string | null>(null);
+  const [editandoMovVal, setEditandoMovVal] = useState<string>("");
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -56,12 +75,19 @@ export function Etapa3PlanoAcao({
       if (patch.acao === "manter") {
         next.movimentacaoBRL = 0;
         next.valorResgateBRL = undefined;
+        next.movimentacaoEditada = undefined;
       } else if (patch.acao === "resgatar_parcial") {
         if (p.acao === "manter") {
           next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
         }
         if (next.valorResgateBRL === undefined) {
           next.valorResgateBRL = Math.abs(next.movimentacaoBRL);
+        }
+        next.movimentacaoEditada = undefined;
+      } else if (patch.acao === "resgatar_total") {
+        next.movimentacaoEditada = undefined;
+        if (p.acao === "manter") {
+          next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
         }
       } else if (patch.acao !== undefined && p.acao === "manter") {
         next.movimentacaoBRL = Math.round((p.valorMetaBRL - p.valorAtualBRL) * 100) / 100;
@@ -72,10 +98,10 @@ export function Etapa3PlanoAcao({
 
   const { totalAportes, totalResgates, saldoLiquido, nMovs } = useMemo(() => {
     const ap = planoAcao
-      .filter((p) => p.acao !== "manter" && p.movimentacaoBRL > 0)
-      .reduce((s, p) => s + p.movimentacaoBRL, 0);
+      .filter((p) => p.acao === "aportar" || p.acao === "novo")
+      .reduce((s, p) => s + movEfetivo(p), 0);
     const re = planoAcao
-      .filter((p) => p.acao !== "manter" && p.movimentacaoBRL < 0)
+      .filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total")
       .reduce((s, p) => {
         if (p.acao === "resgatar_parcial" && p.valorResgateBRL !== undefined) {
           return s + p.valorResgateBRL;
@@ -164,7 +190,7 @@ export function Etapa3PlanoAcao({
       {cardsComItens.map((cardId) => {
         const meta = CARD_META[cardId];
         const groupItems = filtrados.filter((p) => p.card === cardId);
-        const groupTotal = groupItems.reduce((s, p) => s + p.movimentacaoBRL, 0);
+        const groupTotal = groupItems.reduce((s, p) => s + movEfetivo(p) * (p.acao === "resgatar_parcial" || p.acao === "resgatar_total" ? -1 : 1), 0);
 
         return (
           <div key={cardId} style={{ border: "1px solid #BFDBFE", borderRadius: 8, overflow: "hidden", backgroundColor: "white" }}>
@@ -196,123 +222,169 @@ export function Etapa3PlanoAcao({
               ))}
             </div>
 
-            {groupItems.map((item) => (
-              <div
-                key={item.id}
-                style={{ borderTop: "1px solid #F3F4F6" }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
-              >
-                <div style={{ display: "grid", gridTemplateColumns: COLS, gap: 8, padding: "8px 14px", alignItems: "center" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <span style={{
-                        backgroundColor: TIPO_CONFIG[item.acao].bg,
-                        color: TIPO_CONFIG[item.acao].color,
-                        fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
-                      }}>
-                        {TIPO_CONFIG[item.acao].label}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+            {groupItems.map((item) => {
+              const isMovEditable = item.acao === "aportar" || item.acao === "novo";
+              const editado = foiEditado(item);
+              const efetivo = movEfetivo(item);
+              const obsNeedsFill = editado && !item.observacao;
+
+              return (
+                <div
+                  key={item.id}
+                  style={{ borderTop: "1px solid #F3F4F6" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                >
+                  <div style={{ display: "grid", gridTemplateColumns: COLS, gap: 8, padding: "8px 14px", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{
+                          backgroundColor: TIPO_CONFIG[item.acao].bg,
+                          color: TIPO_CONFIG[item.acao].color,
+                          fontSize: 10, borderRadius: 4, padding: "1px 5px", flexShrink: 0,
+                        }}>
+                          {TIPO_CONFIG[item.acao].label}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                      </div>
+                      {item.segmento && (
+                        <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
+                      )}
                     </div>
-                    {item.segmento && (
-                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
-                    )}
-                  </div>
 
-                  <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
-                  <span style={{ fontSize: 12, color: "#6B7280" }}>
-                    {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
-                  </span>
+                    <span style={{ fontSize: 12, color: "#6B7280" }}>{formatBRL(item.valorAtualBRL)}</span>
+                    <span style={{ fontSize: 12, color: "#6B7280" }}>
+                      {item.acao === "manter" ? formatBRL(item.valorAtualBRL) : formatBRL(item.valorMetaBRL)}
+                    </span>
 
-                  <span style={{
-                    fontSize: 12, fontWeight: 600,
-                    color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
-                  }}>
-                    {item.acao === "manter" || item.movimentacaoBRL === 0
-                      ? formatBRL(0)
-                      : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
-                    }
-                  </span>
-
-                  <select
-                    value={item.acao}
-                    onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
-                    style={selectStyle}
-                  >
-                    <option value="manter">Manter</option>
-                    <option value="aportar">Aportar</option>
-                    <option value="resgatar_parcial">Resgatar parcialmente</option>
-                    <option value="resgatar_total">Resgatar tudo</option>
-                    <option value="novo">Novo</option>
-                  </select>
-
-                  <input
-                    value={item.observacao}
-                    onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                    placeholder="observação..."
-                    style={{
-                      border: "1px solid #BFDBFE", borderRadius: 6, padding: "3px 6px",
-                      fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
-                      width: "100%", boxSizing: "border-box",
-                    }}
-                  />
-
-                  <select
-                    value={item.prioridade ?? "baixa"}
-                    onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
-                    style={selectStyle}
-                  >
-                    <option value="alta">Alta</option>
-                    <option value="media">Média</option>
-                    <option value="baixa">Baixa</option>
-                  </select>
-                </div>
-
-                {item.acao === "resgatar_parcial" && (
-                  <div style={{ padding: "0 14px 10px" }}>
-                    <div style={{
-                      display: "flex", alignItems: "center", gap: 8,
-                      padding: "8px 10px",
-                      background: "#FFF5F5",
-                      border: "0.5px solid #FECACA",
-                      borderRadius: 6,
-                    }}>
-                      <span style={{ fontSize: 11, color: "#B91C1C", whiteSpace: "nowrap" }}>
-                        Valor a resgatar:
-                      </span>
+                    {/* Movimentação — click-to-edit for aportar/novo */}
+                    {isMovEditable && editandoMovId === item.id ? (
                       <input
                         type="text"
-                        value={editingValues[item.id] ?? formatInputBRL(item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))}
-                        onChange={(e) => setEditingValues((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                        onBlur={(e) => {
-                          const valor = parseBRL(e.target.value);
-                          const valorValido = Math.min(Math.max(0, valor), item.valorAtualBRL);
-                          updateItem(item.id, { valorResgateBRL: valorValido });
-                          setEditingValues((prev) => { const next = { ...prev }; delete next[item.id]; return next; });
+                        autoFocus
+                        value={editandoMovVal}
+                        onChange={(e) => setEditandoMovVal(e.target.value)}
+                        onBlur={() => {
+                          const valor = Math.max(0, parseBRL(editandoMovVal));
+                          updateItem(item.id, { movimentacaoEditada: valor });
+                          setEditandoMovId(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.currentTarget.blur();
+                          if (e.key === "Escape") setEditandoMovId(null);
                         }}
                         style={{
-                          flex: 1,
-                          border: "1px solid #FECACA",
-                          borderRadius: 4,
-                          padding: "4px 8px",
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: "#B91C1C",
-                          textAlign: "right",
-                          background: "white",
-                          outline: "none",
+                          border: "1px solid #BFDBFE", borderRadius: 4, padding: "3px 6px",
+                          fontSize: 12, fontWeight: 600, color: "#15803D",
+                          width: "100%", boxSizing: "border-box", outline: "none",
                         }}
-                        placeholder={formatInputBRL(Math.abs(item.movimentacaoBRL))}
                       />
-                      <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" }}>
-                        de {formatBRL(item.valorAtualBRL)}
+                    ) : isMovEditable ? (
+                      <div
+                        title="Clique para editar"
+                        onClick={() => { setEditandoMovId(item.id); setEditandoMovVal(formatInputBRL(efetivo)); }}
+                        style={{ display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }}
+                      >
+                        <span style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: efetivo > 0 ? "#15803D" : "#9CA3AF",
+                        }}>
+                          {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
+                        </span>
+                        <span style={{ fontSize: 10, color: editado ? "#B45309" : "#D1D5DB" }} title={editado ? "Valor editado" : "Editar"}>✎</span>
+                      </div>
+                    ) : (
+                      <span style={{
+                        fontSize: 12, fontWeight: 600,
+                        color: item.acao === "manter" ? "#9CA3AF" : item.movimentacaoBRL > 0 ? "#15803D" : item.movimentacaoBRL < 0 ? "#B91C1C" : "#9CA3AF",
+                      }}>
+                        {item.acao === "manter" || item.movimentacaoBRL === 0
+                          ? formatBRL(0)
+                          : `${item.movimentacaoBRL > 0 ? "+" : "−"}${formatBRL(Math.abs(item.movimentacaoBRL))}`
+                        }
                       </span>
-                    </div>
+                    )}
+
+                    <select
+                      value={item.acao}
+                      onChange={(e) => updateItem(item.id, { acao: e.target.value as PlanoAcaoItem["acao"] })}
+                      style={selectStyle}
+                    >
+                      <option value="manter">Manter</option>
+                      <option value="aportar">Aportar</option>
+                      <option value="resgatar_parcial">Resgatar parcialmente</option>
+                      <option value="resgatar_total">Resgatar tudo</option>
+                      <option value="novo">Novo</option>
+                    </select>
+
+                    <input
+                      value={item.observacao}
+                      onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                      placeholder={obsNeedsFill ? "obrigatório ↑" : "observação..."}
+                      style={{
+                        border: `1px solid ${editado ? (item.observacao ? "#15803D" : "#B91C1C") : "#BFDBFE"}`,
+                        borderRadius: 6, padding: "3px 6px",
+                        fontSize: 12, backgroundColor: "white", color: "#111827", outline: "none",
+                        width: "100%", boxSizing: "border-box",
+                      }}
+                    />
+
+                    <select
+                      value={item.prioridade ?? "baixa"}
+                      onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
+                      style={selectStyle}
+                    >
+                      <option value="alta">Alta</option>
+                      <option value="media">Média</option>
+                      <option value="baixa">Baixa</option>
+                    </select>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {item.acao === "resgatar_parcial" && (
+                    <div style={{ padding: "0 14px 10px" }}>
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "8px 10px",
+                        background: "#FFF5F5",
+                        border: "0.5px solid #FECACA",
+                        borderRadius: 6,
+                      }}>
+                        <span style={{ fontSize: 11, color: "#B91C1C", whiteSpace: "nowrap" }}>
+                          Valor a resgatar:
+                        </span>
+                        <input
+                          type="text"
+                          value={editingValues[item.id] ?? formatInputBRL(item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))}
+                          onChange={(e) => setEditingValues((prev) => ({ ...prev, [item.id]: e.target.value }))}
+                          onBlur={(e) => {
+                            const valor = parseBRL(e.target.value);
+                            const valorValido = Math.min(Math.max(0, valor), item.valorAtualBRL);
+                            updateItem(item.id, { valorResgateBRL: valorValido });
+                            setEditingValues((prev) => { const next = { ...prev }; delete next[item.id]; return next; });
+                          }}
+                          style={{
+                            flex: 1,
+                            border: "1px solid #FECACA",
+                            borderRadius: 4,
+                            padding: "4px 8px",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            color: "#B91C1C",
+                            textAlign: "right",
+                            background: "white",
+                            outline: "none",
+                          }}
+                          placeholder={formatInputBRL(Math.abs(item.movimentacaoBRL))}
+                        />
+                        <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" }}>
+                          de {formatBRL(item.valorAtualBRL)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       })}
