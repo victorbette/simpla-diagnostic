@@ -44,24 +44,39 @@ function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
   const R_EXT = 72;
   const R_INT = 52;
 
-  const graus = 180 - (score / 100) * 180;
+  // Clamp para cálculos SVG (score=-1 = "não analisado", não afeta geometria)
+  const scoreClamped = Math.max(0, Math.min(100, score));
+  const graus = 180 - (scoreClamped / 100) * 180;
   const rad = (graus * Math.PI) / 180;
 
-  const xFim    = CX + R_EXT * Math.cos(rad);
-  const yFim    = CY - R_EXT * Math.sin(rad);
+  const xFimExt = CX + R_EXT * Math.cos(rad);
+  const yFimExt = CY - R_EXT * Math.sin(rad);
   const xFimInt = CX + R_INT * Math.cos(rad);
   const yFimInt = CY - R_INT * Math.sin(rad);
 
-  const largeArc = score > 50 ? 1 : 0;
+  // largeArc sempre 0: o arco preenchido nunca ultrapassa 180°
+  const pathFundo = [
+    `M ${CX - R_EXT} ${CY}`,
+    `A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY}`,
+    `L ${CX + R_INT} ${CY}`,
+    `A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY}`,
+    "Z",
+  ].join(" ");
 
-  const pathFundo =
-    `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY} ` +
-    `L ${CX + R_INT} ${CY} A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY} Z`;
-
-  const pathPreenchido = score > 0
-    ? `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 ${largeArc} 1 ${xFim} ${yFim} ` +
-      `L ${xFimInt} ${yFimInt} A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY} Z`
+  const pathPreenchido = scoreClamped > 0
+    ? [
+        `M ${CX - R_EXT} ${CY}`,
+        `A ${R_EXT} ${R_EXT} 0 0 1 ${xFimExt} ${yFimExt}`,
+        `L ${xFimInt} ${yFimInt}`,
+        `A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY}`,
+        "Z",
+      ].join(" ")
     : "";
+
+  // Ponteiro no centro da espessura do anel
+  const rMid = (R_INT + R_EXT) / 2;
+  const pxFim = CX + rMid * Math.cos(rad);
+  const pyFim = CY - rMid * Math.sin(rad);
 
   return (
     <div style={{
@@ -74,29 +89,33 @@ function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
       alignItems: "center",
     }}>
       <div style={{ position: "relative" }}>
-        <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`}>
+        <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`} style={{ overflow: "visible" }}>
           <path d={pathFundo} fill="#F3F4F6" />
-          {score > 0 && <path d={pathPreenchido} fill={nivel.cor} opacity={0.9} />}
-          <line
-            x1={CX}
-            y1={CY}
-            x2={CX + (R_EXT - 2) * Math.cos(rad)}
-            y2={CY - (R_EXT - 2) * Math.sin(rad)}
-            stroke="white"
-            strokeWidth={2}
-            opacity={score > 0 ? 1 : 0}
-          />
+          {score >= 0 && scoreClamped > 0 && (
+            <path d={pathPreenchido} fill={nivel.cor} opacity={0.9} />
+          )}
+          {score >= 0 && scoreClamped > 0 && (
+            <line
+              x1={CX}
+              y1={CY}
+              x2={pxFim}
+              y2={pyFim}
+              stroke="white"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+          )}
           <text
             x={CX}
-            y={CY - 8}
+            y={CY - 10}
             textAnchor="middle"
-            fontSize={24}
+            fontSize={22}
             fontWeight={800}
             fill={score < 0 ? "#9CA3AF" : nivel.cor}
           >
-            {score < 0 ? "—" : score}
+            {score < 0 ? "—" : scoreClamped}
           </text>
-          <text x={CX} y={CY + 8} textAnchor="middle" fontSize={10} fill="#9CA3AF">
+          <text x={CX} y={CY + 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">
             /100
           </text>
         </svg>
@@ -243,10 +262,10 @@ export function FinancialPlanDashboard({
       : 0;
     const gap = Math.max(0, patrimonioNecessarioScore - projecaoScore);
     if (patrimonioNecessarioScore > 0 && projecaoScore >= patrimonioNecessarioScore) {
-      return `Com patrimônio atual de ${formatCurrency(patrimonioAtual)} e aportes mensais de ${formatCurrency(aporteMensalColeta)}, projetando IPCA+4,5% a.a. ao longo de ${anosRestantes} anos, o patrimônio estimado aos ${idadeMeta} anos é de ${formatCurrency(projecaoScore)} — ${pct}% da meta de ${formatCurrency(patrimonioNecessarioScore)} para sustentar ${formatCurrency(rendaDesejada)}/mês. A liberdade financeira está no caminho certo.`;
+      return `Com patrimônio atual de ${formatCurrency(patrimonioAtual)} e aportes mensais de ${formatCurrency(aporteMensalColeta)}, o patrimônio projetado aos ${idadeMeta} anos (em ${anosRestantes} anos) é de ${formatCurrency(projecaoScore)} — ${pct}% da meta de ${formatCurrency(patrimonioNecessarioScore)} para sustentar ${formatCurrency(rendaDesejada)}/mês. A liberdade financeira está no caminho certo.`;
     }
     if (patrimonioNecessarioScore > 0) {
-      return `Com patrimônio atual de ${formatCurrency(patrimonioAtual)} e aportes de ${formatCurrency(aporteMensalColeta)}/mês a IPCA+4,5% a.a., a projeção aos ${idadeMeta} anos é de ${formatCurrency(projecaoScore)} — ${pct}% dos ${formatCurrency(patrimonioNecessarioScore)} necessários para ${formatCurrency(rendaDesejada)}/mês. Há um gap de ${formatCurrency(gap)}: considere aumentar aportes, postergar a meta de idade ou redimensionar a renda desejada.`;
+      return `Com patrimônio atual de ${formatCurrency(patrimonioAtual)} e aportes de ${formatCurrency(aporteMensalColeta)}/mês, a projeção aos ${idadeMeta} anos é de ${formatCurrency(projecaoScore)} — ${pct}% dos ${formatCurrency(patrimonioNecessarioScore)} necessários para ${formatCurrency(rendaDesejada)}/mês. Há um gap de ${formatCurrency(gap)}: considere aumentar aportes, postergar a meta de idade ou redimensionar a renda desejada.`;
     }
     const projecao = ifSalvo.patrimonioAposentadoria;
     const meta     = ifSalvo.patrimonioNecessario;
