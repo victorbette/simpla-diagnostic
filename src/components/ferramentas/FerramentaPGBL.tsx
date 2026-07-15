@@ -25,6 +25,7 @@ export interface SavedPGBLResult {
   inputDependentes?: number;
   inputInssAnual?: number;
   inputAporteMensalPGBL?: number;
+  inputSaldoPrevidencia?: number;
 }
 
 interface Props {
@@ -80,6 +81,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const despesas     = useCurrencyInput(savedResult?.inputDespesas ?? 0);
   const inss         = useCurrencyInput(savedResult?.inputInssAnual ?? inssAnualCalc);
   const aporteMensal = useCurrencyInput(savedResult?.inputAporteMensalPGBL ?? (temPGBL ? 0 : tetoPGBL / 12));
+  const saldoAtual   = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? saldoPrevidencia);
   const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? numDependentes));
   const [salvo, setSalvo] = useState(false);
 
@@ -88,6 +90,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
     renda.set(rendaAnualBruta);
     inss.set(inssAnualCalc);
     aporteMensal.set(temPGBL ? 0 : rendaAnualBruta * 0.12 / 12);
+    saldoAtual.set(saldoPrevidencia);
     setDependentes(String(numDependentes));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -113,9 +116,9 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       economiaAnual:   sim.economia,
       nAnos,
       idadeAtual,
-      saldoInicial:    saldoPrevidencia,
+      saldoInicial:    saldoAtual.value,
     });
-  }, [sim, nAnos, idadeAtual, saldoPrevidencia]);
+  }, [sim, nAnos, idadeAtual, saldoAtual.value]);
 
   const ultimoPonto = projecao[projecao.length - 1];
   const diferencaFinal = ultimoPonto ? ultimoPonto.comPGBL - ultimoPonto.semPGBL : 0;
@@ -125,6 +128,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const aproveitamentoPct = tetoPGBLLive > 0
     ? Math.min(100, Math.round((aporteAnualPGBL / tetoPGBLLive) * 100))
     : 0;
+  const excedenteAnual   = tetoPGBLLive > 0 ? Math.max(0, aporteAnualPGBL - tetoPGBLLive) : 0;
+  const espacoDisponivel = tetoPGBLLive > 0 ? Math.max(0, tetoPGBLLive - aporteAnualPGBL) : 0;
 
   function handleSave() {
     if (!sim || !onSave) return;
@@ -144,6 +149,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       inputDependentes:       Math.max(0, parseInt(dependentes) || 0),
       inputInssAnual:         inss.value,
       inputAporteMensalPGBL:  aporteMensal.value,
+      inputSaldoPrevidencia:  saldoAtual.value,
     });
     setSalvo(true);
     setTimeout(() => {
@@ -331,6 +337,28 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
 
           <div style={{ gridColumn: "span 2" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <span style={labelStyle}>Saldo Atual na Previdência (R$)</span>
+              {saldoPrevidencia > 0 && (
+                <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF", flexShrink: 0 }}>
+                  Da coleta
+                </span>
+              )}
+            </div>
+            <input
+              type="text"
+              value={saldoAtual.display}
+              onChange={saldoAtual.onChange}
+              onBlur={saldoAtual.onBlur}
+              placeholder="0,00"
+              style={inputStyle}
+            />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
+              Saldo acumulado em previdência (usado na projeção patrimonial)
+            </p>
+          </div>
+
+          <div style={{ gridColumn: "span 2" }}>
             <span style={labelStyle}>Aporte Mensal em Previdência (PGBL) (R$)</span>
             <input
               type="text"
@@ -354,14 +382,36 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                 </span>
               </div>
             )}
-            {aporteAnualPGBL > tetoPGBLLive && tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
+            {excedenteAnual > 0 && tipoDeclaracao !== "simplificada" && (
               <p style={{ fontSize: 11, color: "#B91C1C", margin: "4px 0 0" }}>
                 Aporte acima do teto dedutível ({formatBRL(tetoPGBLLive / 12)}/mês)
+              </p>
+            )}
+            {tipoDeclaracao === "completa" && espacoDisponivel > 0 && (
+              <p style={{ fontSize: 11, color: "#15803D", margin: "4px 0 0" }}>
+                Espaço disponível para deduzir: {formatBRL(espacoDisponivel / 12)}/mês
               </p>
             )}
           </div>
 
         </div>
+
+        {excedenteAnual > 0 && tipoDeclaracao === "completa" && (
+          <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
+              <strong>Considere VGBL para o excedente:</strong> Você está aportando {formatBRL(excedenteAnual / 12)}/mês acima do teto dedutível de 12% da renda bruta. O excedente não gera benefício fiscal no PGBL — o VGBL pode ser uma alternativa para manter a previdência sem comprometer a dedução.
+            </p>
+          </div>
+        )}
+        {excedenteAnual > 0 && tipoDeclaracao === "simplificada" && (
+          <div style={{ marginTop: 12, background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
+              <strong>Atenção: PGBL sem benefício na simplificada:</strong> Na declaração simplificada, o PGBL não gera dedução fiscal. Além disso, o aporte de {formatBRL(excedenteAnual / 12)}/mês está acima do teto de 12% da renda bruta. O VGBL pode ser mais adequado ao seu perfil.
+            </p>
+          </div>
+        )}
       </div>
 
       {sim && (
