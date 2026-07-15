@@ -134,6 +134,12 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const ultimoPonto = projecao[projecao.length - 1];
   const diferencaFinal = ultimoPonto ? ultimoPonto.comPGBL - ultimoPonto.semPGBL : 0;
 
+  const aporteAnualPGBL = aporteMensal.value * 12;
+  const tetoPGBLLive    = sim?.tetoPGBL ?? 0;
+  const aproveitamentoPct = tetoPGBLLive > 0
+    ? Math.min(100, Math.round((aporteAnualPGBL / tetoPGBLLive) * 100))
+    : 0;
+
   function handleSave() {
     if (!sim || !onSave) return;
     onSave({
@@ -336,6 +342,37 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
               {isINSSCalculado ? `Teto 2026: ${formatBRL(TETO_INSS_2026 * 12)}/ano` : "Informe o INSS pago"}
             </p>
+          </div>
+
+          <div style={{ gridColumn: "span 2" }}>
+            <span style={labelStyle}>Aporte Mensal em Previdência (PGBL) (R$)</span>
+            <input
+              type="text"
+              value={aporteMensal.display}
+              onChange={aporteMensal.onChange}
+              onBlur={aporteMensal.onBlur}
+              placeholder="0,00"
+              style={inputStyle}
+            />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
+              Valor que contribui mensalmente ao PGBL
+            </p>
+            {tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
+                <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
+                <span style={{
+                  fontWeight: 600,
+                  color: aproveitamentoPct >= 80 ? "#15803D" : aproveitamentoPct >= 50 ? "#B45309" : "#B91C1C",
+                }}>
+                  {aproveitamentoPct}% aproveitado
+                </span>
+              </div>
+            )}
+            {aporteAnualPGBL > tetoPGBLLive && tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
+              <p style={{ fontSize: 11, color: "#B91C1C", margin: "4px 0 0" }}>
+                Aporte acima do teto dedutível ({formatBRL(tetoPGBLLive / 12)}/mês)
+              </p>
+            )}
           </div>
 
         </div>

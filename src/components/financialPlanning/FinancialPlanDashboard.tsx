@@ -197,21 +197,34 @@ export function FinancialPlanDashboard({
   })();
 
   // ── Tributário — variáveis compartilhadas para score e texto ─────────────
-  const tipoDeclaracaoFiscal: string = fiscalSalvo?.tipoDeclaracao ?? plan.fiscal.tipoDeclaracao;
-  const rendaAnualFiscal    = Number(fiscalSalvo?.rendaAnual)    || 0;
-  const tetoPGBLFiscal      = Number(fiscalSalvo?.tetoPGBLAnual) || 0;
-  const aporteAnualFiscal   = Number(fiscalSalvo?.aporteAnual)   || 0;
-  const economiaAnualFiscal = Number(fiscalSalvo?.economiaAnual) || 0;
+  const tipoDeclaracaoFiscal: string   = fiscalSalvo?.tipoDeclaracao ?? plan.fiscal.tipoDeclaracao;
+  const rendaAnualFiscal               = Number(fiscalSalvo?.rendaAnual)           || 0;
+  const tetoPGBLFiscal                 = Number(fiscalSalvo?.tetoPGBLAnual)        || 0;
+  const aporteAnualFiscal              = Number(fiscalSalvo?.aporteAnual)          || 0;
+  const economiaAnualFiscal            = Number(fiscalSalvo?.economiaAnual)        || 0;
+  const numDepsFiscal                  = Number(fiscalSalvo?.inputDependentes)     || 0;
+  const aporteMensalPGBLFiscal         = Number(fiscalSalvo?.inputAporteMensalPGBL) || 0;
 
   // ── Score Tributário (-1 = não analisado) ────────────────────────────────
   const scoreTributario = (() => {
     if (!fiscalSalvo) return -1;
     let pts = 0;
+    // Critério 1: tipo de declaração definido (20pts)
     if (tipoDeclaracaoFiscal !== "nao_sei") pts += 20;
-    if (tipoDeclaracaoFiscal === "completa") pts += 30;
-    else if (tipoDeclaracaoFiscal === "simplificada") pts += 15;
-    if (tipoDeclaracaoFiscal !== "simplificada" && tetoPGBLFiscal > 0) {
-      pts += Math.min(50, Math.round((aporteAnualFiscal / tetoPGBLFiscal) * 50));
+    // Critério 2: adequação do modelo (30pts)
+    if (tipoDeclaracaoFiscal === "completa") {
+      pts += (rendaAnualFiscal > 40000 || numDepsFiscal > 0) ? 30 : 10;
+    } else if (tipoDeclaracaoFiscal === "simplificada") {
+      pts += (rendaAnualFiscal <= 40000 && numDepsFiscal === 0) ? 30 : 15;
+    }
+    // Critério 3: aproveitamento PGBL (50pts)
+    if (tipoDeclaracaoFiscal === "completa") {
+      const aprovPct = tetoPGBLFiscal > 0
+        ? Math.min(100, Math.round((aporteAnualFiscal / tetoPGBLFiscal) * 100))
+        : 0;
+      pts += Math.round(aprovPct * 0.5);
+    } else if (tipoDeclaracaoFiscal === "simplificada") {
+      pts += 25;
     }
     return Math.min(100, pts);
   })();
@@ -323,7 +336,13 @@ export function FinancialPlanDashboard({
       const pctAproveitamento = tetoPGBLFiscal > 0
         ? Math.round((aporteAnualFiscal / tetoPGBLFiscal) * 100)
         : 0;
+      if (aporteMensalPGBLFiscal > 0) {
+        return `Declaração completa. Aportando ${formatCurrency(aporteMensalPGBLFiscal)}/mês em PGBL (${formatCurrency(aporteAnualFiscal)}/ano), aproveitando ${pctAproveitamento}% do teto de ${formatCurrency(tetoPGBLFiscal)}/ano (12% da renda bruta de ${formatCurrency(rendaAnualFiscal)}), a economia fiscal estimada é de ${formatCurrency(economiaAnualFiscal)}/ano — ${formatCurrency(economiaAnualFiscal / 12)}/mês. Reinvestindo a restituição no próprio PGBL, o efeito composto amplifica ainda mais o benefício ao longo do tempo.`;
+      }
       return `Declaração completa. Com aporte de ${formatCurrency(aporteAnualFiscal)}/ano no PGBL (${formatCurrency(aporteAnualFiscal / 12)}/mês), aproveitando ${pctAproveitamento}% do teto de ${formatCurrency(tetoPGBLFiscal)}/ano (12% da renda bruta de ${formatCurrency(rendaAnualFiscal)}), a economia fiscal estimada é de ${formatCurrency(economiaAnualFiscal)}/ano — ${formatCurrency(economiaAnualFiscal / 12)}/mês. Ao reinvestir a restituição no próprio PGBL, o efeito composto amplifica ainda mais o benefício ao longo do tempo.`;
+    }
+    if (aporteMensalPGBLFiscal === 0 && tetoPGBLFiscal > 0) {
+      return `Declaração completa identificada. Nenhum aporte em PGBL informado. Há espaço para deduzir até ${formatCurrency(tetoPGBLFiscal / 12)}/mês (${formatCurrency(tetoPGBLFiscal)}/ano) e potencialmente economizar no IR.`;
     }
     return `Declaração completa identificada. Não foi apurada economia fiscal com os dados informados — verifique se o aporte no PGBL foi preenchido e se a renda bruta anual de ${formatCurrency(rendaAnualFiscal)} está correta na calculadora tributária.`;
   })();
