@@ -51,6 +51,7 @@ export function SecaoFiscal({
       <FerramentaPGBL
         plan={plan}
         savedResult={resultadoFiscal ? {
+          tipoDeclaracao:         resultadoFiscal.tipoDeclaracao,
           rendaAnual:             resultadoFiscal.rendaAnual,
           tetoPGBLAnual:          resultadoFiscal.tetoPGBLAnual,
           aporteAnual:            resultadoFiscal.aporteAnual,
@@ -68,6 +69,7 @@ export function SecaoFiscal({
         } : null}
         onSave={(r) => {
           onResultadoFiscal({
+            tipoDeclaracao:         r.tipoDeclaracao,
             rendaAnual:             r.rendaAnual,
             tetoPGBLAnual:          r.tetoPGBLAnual,
             aporteAnual:            r.aporteAnual,

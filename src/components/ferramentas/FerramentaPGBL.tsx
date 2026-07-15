@@ -10,6 +10,7 @@ import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simular
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 
 export interface SavedPGBLResult {
+  tipoDeclaracao?: string;
   rendaAnual: number;
   tetoPGBLAnual: number;
   aporteAnual: number;
@@ -72,7 +73,9 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const semPrevidencia = !possuiPrevidencia;
   const tetoPGBL = rendaAnualBruta * 0.12;
 
-  const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(fiscal?.tipoDeclaracao ?? "nao_sei");
+  const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(
+    savedResult?.tipoDeclaracao ?? fiscal?.tipoDeclaracao ?? "nao_sei"
+  );
 
   const renda        = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? rendaAnualBruta);
   const irrf         = useCurrencyInput(savedResult?.inputIrrf ?? 0);
@@ -134,6 +137,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   function handleSave() {
     if (!sim || !onSave) return;
     onSave({
+      tipoDeclaracao,
       rendaAnual:             renda.value,
       tetoPGBLAnual:          sim.tetoPGBL,
       aporteAnual:            sim.aporteEfetivo,

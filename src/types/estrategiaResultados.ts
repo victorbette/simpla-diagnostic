@@ -90,6 +90,7 @@ export interface ResultadoSeguro {
 }
 
 export interface ResultadoFiscal {
+  tipoDeclaracao?: string;
   rendaAnual: number;
   tetoPGBLAnual: number;
   aporteAnual: number;
