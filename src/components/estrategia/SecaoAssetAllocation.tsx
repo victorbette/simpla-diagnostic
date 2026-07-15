@@ -206,8 +206,6 @@ export function SecaoAssetAllocation({
       if (a === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
       return s + Math.abs(i.movimentacaoBRL ?? 0);
     }, 0);
-  const saldoLiquido = totalAportes - totalResgates;
-
   const actionItems = rc.planoAcao ?? [];
 
   const groupedByCard: Record<string, typeof actionItems> = {};
@@ -224,48 +222,13 @@ export function SecaoAssetAllocation({
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Section header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#15803D", backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB", borderRadius: 999, padding: "4px 12px" }}>
-              ✓ Carteira definida
-            </span>
-            <span style={{ fontSize: 11, color: "#6B7280", backgroundColor: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 999, padding: "2px 10px" }}>
-              {new Date(rc.dataCalculo).toLocaleDateString("pt-BR")}
-            </span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <button
             onClick={() => setCarteiraOpen(true)}
             style={{ fontSize: 12, fontWeight: 600, color: "#000000", backgroundColor: "transparent", border: "1px solid #000000", borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}
           >
             Editar carteira →
           </button>
-        </div>
-
-        {/* Card 1 — Visão Geral */}
-        <div style={CARD}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Visão Geral</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#1E3A8A", margin: 0 }}>{formatCurrency(patrimonio)}</p>
-            </div>
-            <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(totalAportes)}</p>
-            </div>
-            <div style={{ backgroundColor: totalResgates > 0 ? "#FEE2E2" : "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: totalResgates > 0 ? "#B91C1C" : "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: totalResgates > 0 ? "#B91C1C" : "#9CA3AF", margin: 0 }}>{formatCurrency(totalResgates)}</p>
-            </div>
-          </div>
-          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, backgroundColor: saldoLiquido >= 0 ? "#DCFCE7" : "#FEE2E2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", textTransform: "uppercase" }}>
-              Saldo Líquido (Aportes − Resgates)
-            </span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C" }}>
-              {saldoLiquido >= 0 ? "+" : ""}{formatCurrency(saldoLiquido)}
-            </span>
-          </div>
         </div>
 
         {/* Card 2 — Alocação Atual × Proposta */}

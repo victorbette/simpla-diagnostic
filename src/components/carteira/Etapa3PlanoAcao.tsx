@@ -51,19 +51,30 @@ function movEfetivo(item: PlanoAcaoItem): number {
 }
 
 function exigeObservacao(item: PlanoAcaoItem): boolean {
-  // Caso 1: valor de movimentação editado manualmente
-  if (item.acao === "aportar" || item.acao === "novo") {
-    if (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL) return true;
-  }
-  // Caso 2: manter com desvio > 5% em relação à meta
-  if (item.acao === "manter") {
-    const desvio = Math.abs((item.valorAtualBRL ?? 0) - (item.valorMetaBRL ?? 0));
-    const pctDesvio = (item.valorMetaBRL ?? 0) > 0 ? (desvio / item.valorMetaBRL) * 100 : 0;
-    if (pctDesvio > 5) return true;
-  }
-  // Caso 3: resgatar parcialmente — sempre exige justificativa
+  const foiEditado =
+    item.movimentacaoEditada !== undefined &&
+    item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
+  if (foiEditado) return true;
   if (item.acao === "resgatar_parcial") return true;
+  if (item.acao === "manter") {
+    const valAtual = item.valorAtualBRL ?? 0;
+    const valMeta  = item.valorMetaBRL  ?? 0;
+    if (valMeta === 0 && valAtual > 0) return true;
+    if (valMeta > 0) {
+      const pctDesvio = Math.abs(valAtual - valMeta) / valMeta * 100;
+      if (pctDesvio > 5) return true;
+    }
+  }
   return false;
+}
+
+function placeholderObservacao(item: PlanoAcaoItem): string {
+  if (item.acao === "manter") {
+    if ((item.valorMetaBRL ?? 0) === 0) return "Ativo não consta na carteira recomendada — justifique a manutenção...";
+    return "Justifique por que está mantendo o ativo fora da alocação ideal...";
+  }
+  if (item.acao === "resgatar_parcial") return "Justifique o resgate parcial em vez do total recomendado...";
+  return "Motivo da alteração do valor sugerido...";
 }
 
 export function Etapa3PlanoAcao({
@@ -407,7 +418,7 @@ export function Etapa3PlanoAcao({
                         borderRadius: 6,
                       }}>
                         <div style={{ fontSize: 10, color: "#B45309" }}>
-                          {item.acao === "manter" && "Ativo mantido fora da alocação ideal — "}
+                          {item.acao === "manter" && ((item.valorMetaBRL ?? 0) === 0 ? "Ativo fora da carteira recomendada — " : "Ativo mantido fora da alocação ideal — ")}
                           {item.acao === "resgatar_parcial" && "Resgate parcial — "}
                           {(item.acao === "aportar" || item.acao === "novo") && item.movimentacaoEditada !== undefined && "Valor alterado — "}
                           observação obrigatória
@@ -416,13 +427,7 @@ export function Etapa3PlanoAcao({
                           type="text"
                           value={item.observacao ?? ""}
                           onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
-                          placeholder={
-                            item.acao === "manter"
-                              ? "Ex: Cliente prefere não movimentar agora..."
-                              : item.acao === "resgatar_parcial"
-                              ? "Ex: Resgate parcial por necessidade de liquidez..."
-                              : "Motivo da alteração do valor sugerido..."
-                          }
+                          placeholder={placeholderObservacao(item)}
                           style={{
                             width: "100%",
                             border: item.observacao?.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",

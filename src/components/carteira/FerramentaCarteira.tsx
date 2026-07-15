@@ -399,9 +399,13 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
                   }
                 }
                 if (item.acao === "manter") {
-                  const desvio = Math.abs((item.valorAtualBRL ?? 0) - (item.valorMetaBRL ?? 0));
-                  const pctDesvio = (item.valorMetaBRL ?? 0) > 0 ? (desvio / item.valorMetaBRL) * 100 : 0;
-                  if (pctDesvio > 5) return !item.observacao?.trim();
+                  const valAtual = item.valorAtualBRL ?? 0;
+                  const valMeta = item.valorMetaBRL ?? 0;
+                  if (valMeta === 0 && valAtual > 0) return !item.observacao?.trim();
+                  if (valMeta > 0) {
+                    const pctDesvio = Math.abs(valAtual - valMeta) / valMeta * 100;
+                    if (pctDesvio > 5) return !item.observacao?.trim();
+                  }
                 }
                 if (item.acao === "resgatar_parcial") return !item.observacao?.trim();
                 return false;
