@@ -15,6 +15,7 @@ export const formatInputBRL = (v: number) => {
 };
 
 export const DEDUCAO_DEPENDENTE = 2275.08;
+export const DESCONTO_SIMPLIFICADO_ANUAL = 16754.34;
 
 // Tabela progressiva anual IRPF 2026
 const faixasAnuais = [

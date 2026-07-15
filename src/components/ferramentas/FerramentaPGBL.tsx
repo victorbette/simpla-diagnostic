@@ -36,7 +36,7 @@ interface Props {
 
 const TIPOS_DECLARACAO = [
   { id: "completa",     label: "Completa",     descricao: "Deduz dependentes, saúde, educação", icone: "ti-file-certificate" },
-  { id: "simplificada", label: "Simplificada", descricao: "Desconto padrão de R$ 16.754/ano",   icone: "ti-file-minus"       },
+  { id: "simplificada", label: "Simplificada", descricao: "Desconto automático de R$ 16.754,34/ano",   icone: "ti-file-minus"       },
   { id: "nao_sei",      label: "Não sei",      descricao: "Consultor vai orientar",              icone: "ti-help-circle"      },
 ];
 
@@ -95,25 +95,27 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
     if (renda.value <= 0) return null;
     const aporteAnual = aporteMensal.value > 0 ? aporteMensal.value * 12 : undefined;
     return simularDeclaracaoIRPF({
-      rendaBruta:  renda.value,
-      irrf:        irrf.value,
-      despesas:    despesas.value,
-      dependentes: Math.max(0, parseInt(dependentes) || 0),
-      inss:        inss.value,
+      rendaBruta:     renda.value,
+      irrf:           irrf.value,
+      despesas:       despesas.value,
+      dependentes:    Math.max(0, parseInt(dependentes) || 0),
+      inss:           inss.value,
       aporteAnual,
+      tipoDeclaracao,
     });
-  }, [renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value]);
+  }, [renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value, tipoDeclaracao]);
 
   const simTeto = useMemo(() => {
     if (!temPGBL || renda.value <= 0 || aporteMensal.value <= 0) return null;
     return simularDeclaracaoIRPF({
-      rendaBruta:  renda.value,
-      irrf:        irrf.value,
-      despesas:    despesas.value,
-      dependentes: Math.max(0, parseInt(dependentes) || 0),
-      inss:        inss.value,
+      rendaBruta:     renda.value,
+      irrf:           irrf.value,
+      despesas:       despesas.value,
+      dependentes:    Math.max(0, parseInt(dependentes) || 0),
+      inss:           inss.value,
+      tipoDeclaracao,
     });
-  }, [temPGBL, renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value]);
+  }, [temPGBL, renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value, tipoDeclaracao]);
 
   const projecao = useMemo(() => {
     if (!sim || sim.economia <= 0) return [];
@@ -247,6 +249,23 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             );
           })}
         </div>
+
+        {tipoDeclaracao === "simplificada" && (
+          <div style={{ marginTop: 12, background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
+              Na declaração simplificada, o PGBL <strong>não gera dedução fiscal</strong>. O resultado abaixo mostra o IR com desconto automático de R$ 16.754,34 — sem benefício PGBL.
+            </p>
+          </div>
+        )}
+        {tipoDeclaracao === "nao_sei" && (
+          <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+            <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
+              Tipo não definido — mostrando estimativa com <strong>deduções da declaração completa</strong>. O consultor vai orientar na escolha do modelo mais vantajoso.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── CARD 2: Dados da Declaração ───────────────────────────────────── */}
@@ -324,12 +343,14 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={cardStyle("")}>
             {cardHeader("ti-balance", "Resultado")}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: tipoDeclaracao === "simplificada" ? "1fr" : "1fr 1fr", gap: 16 }}>
               {/* Sem PGBL */}
               <div style={{ background: "#FFF5F5", border: "0.5px solid #FECACA", borderRadius: 10, padding: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
                   <i className="ti ti-trending-up" style={{ fontSize: 16, color: "#B91C1C" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>Sem PGBL</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>
+                    {tipoDeclaracao === "simplificada" ? "Declaração Simplificada" : "Sem PGBL"}
+                  </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
                   {metricBlock("Base de Cálculo",  formatBRL(sim.baseSemPGBL))}
@@ -339,19 +360,21 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                 {resultCard(sim.resultadoSem)}
               </div>
 
-              {/* Com PGBL */}
-              <div style={{ background: "#F0FDF4", border: "0.5px solid #BBF7D0", borderRadius: 10, padding: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                  <i className="ti ti-trending-down" style={{ fontSize: 16, color: "#15803D" }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>Com PGBL</span>
+              {/* Com PGBL — oculto na simplificada */}
+              {tipoDeclaracao !== "simplificada" && (
+                <div style={{ background: "#F0FDF4", border: "0.5px solid #BBF7D0", borderRadius: 10, padding: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                    <i className="ti ti-trending-down" style={{ fontSize: 16, color: "#15803D" }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>Com PGBL</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                    {metricBlock("Nova Base",             formatBRL(sim.baseComPGBL))}
+                    {metricBlock("Novo Imposto",           formatBRL(sim.irComPGBL), "#15803D")}
+                    {metricBlock("Nova Alíquota Efetiva",  sim.aliqEfetivaCom.toFixed(2) + "%")}
+                  </div>
+                  {resultCard(sim.resultadoCom)}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                  {metricBlock("Nova Base",             formatBRL(sim.baseComPGBL))}
-                  {metricBlock("Novo Imposto",           formatBRL(sim.irComPGBL), "#15803D")}
-                  {metricBlock("Nova Alíquota Efetiva",  sim.aliqEfetivaCom.toFixed(2) + "%")}
-                </div>
-                {resultCard(sim.resultadoCom)}
-              </div>
+              )}
             </div>
 
             {sim.economia > 0 && (
