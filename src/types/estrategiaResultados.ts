@@ -85,6 +85,8 @@ export interface ResultadoSeguro {
   criticalIllnessTotal: number;
   criticalIllnessGap: number;
   criticalIllnessCoverage: number;
+  capitalCoberturasVida?: number;
+  dadosFormulario?: Record<string, unknown>;
   dataCalculo: string;
   savedAt: string;
 }

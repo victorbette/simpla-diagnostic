@@ -294,6 +294,7 @@ export function FerramentaSeguro({ protecao, clientId, dadosCliente, onResultado
         capitalImediato: totalImediato,
         capitalContinuo: subtotalContinuo,
         capitalFilhos: totalFilhos,
+        capitalCoberturasVida: totalCoberturasVida,
         totalNeed: capitalNecessario,
         totalCoverage: capitalAtual,
         gap,
@@ -311,6 +312,7 @@ export function FerramentaSeguro({ protecao, clientId, dadosCliente, onResultado
         criticalIllnessTotal: data.capitalDoencaGrave,
         criticalIllnessGap: data.capitalDoencaGrave,
         criticalIllnessCoverage: 0,
+        dadosFormulario: data as unknown as Record<string, unknown>,
         dataCalculo: new Date().toISOString(),
         savedAt: new Date().toISOString(),
       });

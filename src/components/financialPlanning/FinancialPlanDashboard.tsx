@@ -189,7 +189,14 @@ export function FinancialPlanDashboard({
     const capitalAtual =
       Number(seguroSalvo.capitalAtual)  ||
       Number(seguroSalvo.totalCoverage) ||
-      0;
+      (() => {
+        const df = seguroSalvo.dadosFormulario;
+        return df
+          ? (Number(df.seguroVidaAtual) || 0) +
+            (Number(df.seguroInvalidezAtual) || 0) +
+            (Number(df.outrosSeguroAtual) || 0)
+          : 0;
+      })();
     if (capitalNecessario > 0) {
       return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
     }
@@ -312,14 +319,30 @@ export function FinancialPlanDashboard({
     if (!seguroSalvo) {
       return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear sua necessidade de cobertura de vida, invalidez e doenças graves e identificar eventuais gaps.";
     }
-    const capitalNecessario = seguroSalvo.capitalNecessario ?? seguroSalvo.totalNeed ?? 0;
-    const capitalAtual = seguroSalvo.capitalAtual ?? seguroSalvo.totalCoverage ?? 0;
-    const gap = seguroSalvo.gap ?? Math.max(0, capitalNecessario - capitalAtual);
-    const scoreP = seguroSalvo.scoreProtecao;
-    if (capitalAtual >= capitalNecessario) {
-      return `Cobertura atual de ${formatCurrency(capitalAtual)} é adequada para o capital necessário estimado de ${formatCurrency(capitalNecessario)}. A proteção cobre risco de morte, invalidez e doenças graves conforme o perfil familiar. Score de proteção: ${scoreP}/100. Revise as apólices periodicamente para manter a cobertura alinhada com mudanças patrimoniais e familiares.`;
+    const capitalNecessario = Number(seguroSalvo.capitalNecessario) || Number(seguroSalvo.totalNeed) || 0;
+    const capitalAtualLocal =
+      Number(seguroSalvo.capitalAtual) ||
+      Number(seguroSalvo.totalCoverage) ||
+      (() => {
+        const df = seguroSalvo.dadosFormulario;
+        return df
+          ? (Number(df.seguroVidaAtual) || 0) +
+            (Number(df.seguroInvalidezAtual) || 0) +
+            (Number(df.outrosSeguroAtual) || 0)
+          : 0;
+      })();
+    const gap = Math.max(0, capitalNecessario - capitalAtualLocal);
+    const totalImediato = Number(seguroSalvo.capitalImediato) || Number(seguroSalvo.immediateTotal) || 0;
+    const subtotalContinuo = Number(seguroSalvo.capitalContinuo) || Number(seguroSalvo.ongoingTotal) || 0;
+    const totalCoberturasVida = Number(seguroSalvo.capitalCoberturasVida) || Math.max(0, capitalNecessario - totalImediato - subtotalContinuo);
+    if (capitalAtualLocal === 0 && capitalNecessario > 0) {
+      return `Nenhuma apólice de seguro foi informada. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Recomendamos avaliar a contratação de seguro de vida para proteger sua família.`;
     }
-    return `Gap de proteção identificado: cobertura atual de ${formatCurrency(capitalAtual)} é inferior ao capital necessário de ${formatCurrency(capitalNecessario)} — déficit de ${formatCurrency(gap)}. Em caso de sinistro, a família ficaria exposta a uma insuficiência de recursos. Avalie a contratação ou revisão de seguros de vida, invalidez e/ou doenças graves para fechar esse gap.`;
+    if (capitalAtualLocal >= capitalNecessario) {
+      return `Sua cobertura atual de ${formatCurrency(capitalAtualLocal)} (entre seguro de vida e demais apólices) é adequada para o capital necessário estimado de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Mantenha suas apólices em dia e revise anualmente.`;
+    }
+    const pct = Math.round((capitalAtualLocal / capitalNecessario) * 100);
+    return `Sua cobertura atual de ${formatCurrency(capitalAtualLocal)} cobre ${pct}% do capital necessário de ${formatCurrency(capitalNecessario)}. O gap identificado é de ${formatCurrency(gap)}. Avalie a contratação de seguro adicional para proteger adequadamente sua família.`;
   })();
 
   const textoTributario = (() => {
