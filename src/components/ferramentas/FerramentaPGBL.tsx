@@ -69,8 +69,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const tipoPrevidencia   = dc?.tipoPrevidencia ?? null;
   const saldoPrevidencia  = Number(dc?.saldoPrevidencia) || 0;
   const temPGBL  = possuiPrevidencia && (tipoPrevidencia === "pgbl" || tipoPrevidencia === "ambos");
-  const temVGBL  = possuiPrevidencia && (tipoPrevidencia === "vgbl" || tipoPrevidencia === "ambos");
-  const semPrevidencia = !possuiPrevidencia;
   const tetoPGBL = rendaAnualBruta * 0.12;
 
   const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(
@@ -107,18 +105,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       tipoDeclaracao,
     });
   }, [renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value, tipoDeclaracao]);
-
-  const simTeto = useMemo(() => {
-    if (!temPGBL || renda.value <= 0 || aporteMensal.value <= 0) return null;
-    return simularDeclaracaoIRPF({
-      rendaBruta:     renda.value,
-      irrf:           irrf.value,
-      despesas:       despesas.value,
-      dependentes:    Math.max(0, parseInt(dependentes) || 0),
-      inss:           inss.value,
-      tipoDeclaracao,
-    });
-  }, [temPGBL, renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value, tipoDeclaracao]);
 
   const projecao = useMemo(() => {
     if (!sim || sim.economia <= 0) return [];
@@ -418,42 +404,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               )}
             </div>
 
-            {sim.economia > 0 && (
-              <div style={{ marginTop: 16, backgroundColor: "#DCFCE7", border: "0.5px solid #86EFAC", borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "flex-start", gap: 12 }}>
-                <i className="ti ti-bolt" style={{ fontSize: 24, color: "#15803D", flexShrink: 0, marginTop: 2 }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 10, fontWeight: 700, color: "#15803D", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
-                    Economia Tributária Gerada
-                  </p>
-                  <p style={{ fontSize: 28, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(sim.economia)}</p>
-                  <p style={{ fontSize: 13, color: "#15803D", margin: "2px 0 8px" }}>
-                    por ano · {formatBRL(sim.economia / 12)}/mês
-                  </p>
-                  <div style={{ borderTop: "1px solid #BBF7D0", paddingTop: 8 }}>
-                    {temPGBL && (
-                      <p style={{ fontSize: 12, color: "#14532D", margin: 0, lineHeight: 1.6 }}>
-                        {aporteMensal.value > 0
-                          ? <>Com o PGBL atual ({formatBRL(aporteMensal.value)}/mês), sua economia fiscal é de <strong>{formatBRL(sim.economia)}/ano</strong>.{simTeto && simTeto.economia > sim.economia && <> Aumentando para o teto de <strong>{formatBRL(simTeto.tetoPGBL / 12)}/mês</strong>, a economia seria de <strong>{formatBRL(simTeto.economia)}/ano</strong>.</>}</>
-                          : <>Com PGBL no teto de <strong>{formatBRL(sim.tetoPGBL / 12)}/mês</strong>, sua economia fiscal seria de <strong>{formatBRL(sim.economia)}/ano</strong>. Informe o aporte atual acima para ver sua situação específica.</>
-                        }
-                      </p>
-                    )}
-                    {temVGBL && !temPGBL && (
-                      <p style={{ fontSize: 12, color: "#14532D", margin: 0, lineHeight: 1.6 }}>
-                        Abrindo um PGBL de <strong>{formatBRL(aporteMensal.value)}/mês</strong>,
-                        você passaria a economizar <strong>{formatBRL(sim.economia)}/ano</strong> no IR — sem precisar resgatar o VGBL existente.
-                      </p>
-                    )}
-                    {semPrevidencia && (
-                      <p style={{ fontSize: 12, color: "#14532D", margin: 0, lineHeight: 1.6 }}>
-                        Aportando <strong>{formatBRL(aporteMensal.value)}/mês</strong> em PGBL,
-                        você economizaria <strong>{formatBRL(sim.economia)}/ano</strong> no IR e ainda constrói patrimônio para aposentadoria.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* ── CARD 5: Gráfico Comparativo ──────────────────────────────── */}
