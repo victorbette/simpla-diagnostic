@@ -29,7 +29,7 @@ const ABAS = [
   { id: "protecao_sucessorio",  label: "Proteção e Sucessório", icone: "ti-shield"           },
   { id: "planejamento_fiscal",  label: "Planejamento Tributário",   icone: "ti-receipt"          },
   { id: "resultado",            label: "Resultado",             icone: "ti-chart-bar"        },
-  { id: "estrategia_pronta",    label: "Estratégia Pronta",     icone: "ti-file-download"    },
+  { id: "estrategia_pronta",    label: "Financial Planning",    icone: "ti-file-download"    },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────────────

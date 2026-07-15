@@ -45,7 +45,7 @@ export function EstrategiaPrint({ plan, clientName, data, resultados: resultados
       {/* Capa */}
       <div style={{ marginBottom: 40, paddingBottom: 32, borderBottom: "3px solid #3B82F6" }}>
         {data.logoBase64 && <img src={data.logoBase64} alt="Logo" style={{ height: 48, marginBottom: 16, objectFit: "contain" }} />}
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#000000", margin: "0 0 8px" }}>Estratégia Inicial</h1>
+        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#000000", margin: "0 0 8px" }}>Financial Planning</h1>
         <h2 style={{ fontSize: 20, fontWeight: 400, color: "#111827", margin: "0 0 4px" }}>{clientName}</h2>
         <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>{hoje} · {data.nomeConsultor}</p>
         {data.apresentacao && <p style={{ fontSize: 14, color: "#111827", marginTop: 16, lineHeight: 1.6 }}>{data.apresentacao}</p>}

@@ -78,7 +78,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <i className="ti ti-file-text" style={{ color: "#2563EB", fontSize: 18 }} aria-hidden="true" />
           <span style={{ fontSize: 14, fontWeight: 500, color: "#111827" }}>
-            Estratégia Inicial Pronta
+            Financial Planning
           </span>
           <span style={{ fontSize: 12, color: "#9CA3AF" }}>· {clientName}</span>
         </div>

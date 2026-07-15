@@ -288,7 +288,7 @@ function ClientCard({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onNewEstrategia}>
                 <FileBarChart className="mr-2 h-4 w-4" />
-                Estratégia Inicial
+                Financial Planning
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onGeneratePdf}>
                 <FileBarChart className="mr-2 h-4 w-4" />

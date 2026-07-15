@@ -26,7 +26,7 @@ export function DocSumario({ nomeCliente, scores = {} }: Props) {
         <div>
           <span style={TITULO_SECAO}>Sumário</span>
           <p style={{ margin: "4px 0 0", fontSize: 12, color: "#6B7280" }}>
-            Estratégia Inicial · {nomeCliente}
+            Financial Planning · {nomeCliente}
           </p>
         </div>
         <img src="/logo-si.svg" height={24} alt="Simpla Invest" style={{ opacity: 0.6, objectFit: "contain" }} />

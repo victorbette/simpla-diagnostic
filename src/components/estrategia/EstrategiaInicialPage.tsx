@@ -62,7 +62,7 @@ const SECOES: SecaoConfig[] = [
   { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
   { id: "fiscal",             label: "Planejamento Tributário",    icone: "ti-receipt"       },
-  { id: "estrategia_pronta",  label: "Estratégia Pronta",      icone: "ti-file-download" },
+  { id: "estrategia_pronta",  label: "Financial Planning",     icone: "ti-file-download" },
 ];
 
 // ─── Helper: generate initial actions ─────────────────────────────────────────
@@ -356,7 +356,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             </span>
           </div>
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14 }}> › </span>
-          <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial · {clientName}</span>
+          <span style={{ color: "white", fontSize: 14 }}>Financial Planning · {clientName}</span>
           <button
             onClick={onClose}
             style={{ color: "#93C5FD", fontSize: 13, background: "none", border: "none", cursor: "pointer", padding: "2px 8px", marginLeft: 4 }}
