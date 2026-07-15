@@ -205,20 +205,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
     );
   }
 
-  const aporteAnualEstimado = aporteMensal.value > 0
-    ? aporteMensal.value * 12
-    : (saldoPrevidencia > 0 ? Math.min(saldoPrevidencia * 0.1, tetoPGBL) : 0);
-  const percentAproveitamento = tetoPGBL > 0
-    ? Math.min(100, (aporteAnualEstimado / tetoPGBL) * 100)
-    : 0;
-
-  const aporteLabel = temPGBL ? "Aporte Mensal PGBL Atual (R$)" : "Aporte Mensal PGBL Simulado (R$)";
-  const aporteHint  = temPGBL
-    ? "Informe o valor que já contribui mensalmente"
-    : semPrevidencia
-      ? "Sugestão: aproveitar o teto disponível"
-      : "Simule quanto aportaria em um novo PGBL";
-
   const dadosGrafico = sim ? [
     { label: "IR sem PGBL", valor: sim.irSemPGBL, fill: "#B91C1C", bg: "#FEE2E2" },
     { label: "IR com PGBL", valor: sim.irComPGBL, fill: "#2563EB", bg: "#DBEAFE" },
@@ -261,124 +247,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             );
           })}
         </div>
-      </div>
-
-      {/* ── BANNER: Situação Atual da Previdência ─────────────────────────── */}
-      <div style={cardStyle("#2563EB")}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <i className="ti ti-piggy-bank" style={{ fontSize: 18, color: "#2563EB" }} />
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Situação Atual da Previdência</span>
-        </div>
-
-        {temPGBL && temVGBL && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 12 }}>
-              <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 6 }}>PGBL</p>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#DCFCE7", color: "#15803D" }}>Possui</span>
-              </div>
-              <div style={{ backgroundColor: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 6 }}>VGBL</p>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#F3F4F6", color: "#6B7280" }}>Possui</span>
-              </div>
-              {metricBlock("Saldo Total", formatBRL(saldoPrevidencia))}
-            </div>
-            <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "12px 14px" }}>
-              <p style={{ fontSize: 13, color: "#14532D", margin: 0 }}>
-                Você possui ambos os tipos de previdência. Apenas o PGBL gera dedução no IR.
-                A simulação abaixo considera apenas o benefício do PGBL.
-              </p>
-            </div>
-          </>
-        )}
-
-        {temPGBL && !temVGBL && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
-              <div style={{ backgroundColor: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 6 }}>Tipo</p>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#DCFCE7", color: "#15803D" }}>PGBL</span>
-              </div>
-              {metricBlock("Saldo Atual", formatBRL(saldoPrevidencia))}
-              {metricBlock("Teto PGBL", `${formatBRL(tetoPGBL)}/ano`)}
-            </div>
-            <div style={{ background: "#DCFCE7", border: "1px solid #BBF7D0", borderRadius: 8, padding: "12px 14px" }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <i className="ti ti-circle-check" style={{ fontSize: 16, color: "#15803D", marginTop: 1, flexShrink: 0 }} />
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 13, color: "#14532D", margin: "0 0 4px" }}>Você já possui PGBL — ótima decisão!</p>
-                  <p style={{ fontSize: 12, color: "#14532D", margin: 0 }}>
-                    Verifique abaixo se está aproveitando o limite máximo de dedução disponível ({formatBRL(tetoPGBL / 12)}/mês).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {temVGBL && !temPGBL && (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-              <div style={{ backgroundColor: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 6 }}>Tipo</p>
-                <span style={{ fontSize: 13, fontWeight: 700, padding: "2px 8px", borderRadius: 999, backgroundColor: "#FEF3C7", color: "#B45309" }}>VGBL</span>
-              </div>
-              {metricBlock("Saldo Atual", formatBRL(saldoPrevidencia))}
-            </div>
-            <div style={{ background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: "#92400E", marginBottom: 6 }}>
-                <i className="ti ti-alert-triangle" style={{ marginRight: 6 }} />
-                VGBL não gera dedução no Imposto de Renda
-              </div>
-              <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.6 }}>
-                {tipoDeclaracao === "completa"
-                  ? <>O VGBL é adequado para declaração simplificada, mas você utiliza a declaração completa. Isso significa que está perdendo a oportunidade de deduzir até <strong>{formatBRL(tetoPGBL)}</strong> por ano ({formatBRL(tetoPGBL / 12)}/mês) da base de cálculo do IR.</>
-                  : <>O VGBL não permite dedução na base de cálculo do IR. Com a declaração completa, seria possível deduzir até <strong>{formatBRL(tetoPGBL)}</strong> por ano abrindo um PGBL.</>
-                }
-              </p>
-            </div>
-            <div style={{ background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8, padding: "12px 16px" }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: "#1E40AF", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                <i className="ti ti-bulb" style={{ color: "#2563EB" }} />
-                O que fazer?
-              </div>
-              <ol style={{ color: "#1E40AF", fontSize: 12, paddingLeft: 20, margin: 0, lineHeight: 1.9 }}>
-                <li>Avaliar abertura de um PGBL adicional</li>
-                <li>Manter o VGBL existente (já está rendendo)</li>
-                <li>Direcionar novos aportes para o PGBL</li>
-                <li>Limite disponível para dedução: <strong>{formatBRL(tetoPGBL / 12)}/mês</strong></li>
-              </ol>
-            </div>
-          </>
-        )}
-
-        {semPrevidencia && (
-          <div style={{ background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "16px" }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "#1E40AF", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-              <i className="ti ti-bulb" style={{ color: "#2563EB" }} />
-              Oportunidade identificada
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-              <div style={{ backgroundColor: "#DBEAFE", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 4 }}>Limite disponível</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF", margin: 0 }}>{formatBRL(tetoPGBL)}</p>
-                <p style={{ fontSize: 11, color: "#3B82F6", margin: "2px 0 0" }}>/ano</p>
-              </div>
-              <div style={{ backgroundColor: "#DBEAFE", border: "1px solid #BFDBFE", borderRadius: 8, padding: "12px 14px" }}>
-                <p style={{ ...labelStyle, marginBottom: 4 }}>Economia estimada/ano</p>
-                <p style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF", margin: 0 }}>{formatBRL(tetoPGBL * 0.275)}</p>
-                <p style={{ fontSize: 11, color: "#3B82F6", margin: "2px 0 0" }}>se na faixa 27,5%</p>
-              </div>
-            </div>
-            <p style={{ fontSize: 12, color: "#1E40AF", margin: "0 0 8px", lineHeight: 1.6 }}>
-              Você ainda não possui previdência privada. Com a declaração completa, é possível deduzir
-              até <strong>{formatBRL(tetoPGBL / 12)}/mês</strong> em PGBL, gerando uma economia fiscal significativa no IR.
-            </p>
-            <p style={{ fontSize: 12, fontWeight: 600, color: "#2563EB", margin: 0 }}>
-              Simule abaixo o impacto do PGBL no seu IR →
-            </p>
-          </div>
-        )}
       </div>
 
       {/* ── CARD 2: Dados da Declaração ───────────────────────────────────── */}
@@ -448,41 +316,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
 
         </div>
-      </div>
-
-      {/* ── CARD 3: Simulação PGBL ────────────────────────────────────────── */}
-      <div style={cardStyle("")}>
-        {cardHeader("ti-calculator", "Simulação PGBL")}
-
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-            <span style={labelStyle}>{aporteLabel}</span>
-            {!temPGBL && rendaAnualBruta > 0 && (
-              <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DCFCE7", color: "#15803D", flexShrink: 0 }}>
-                Sugestão
-              </span>
-            )}
-          </div>
-          <input type="text" value={aporteMensal.display} onChange={aporteMensal.onChange} onBlur={aporteMensal.onBlur} placeholder="0,00" style={inputStyle} />
-          <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{aporteHint}</p>
-        </div>
-
-        {tetoPGBL > 0 && (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 11, color: "#6B7280" }}>
-                {aporteMensal.value > 0 ? "Aproveitamento do teto PGBL" : "Aproveitamento estimado do teto PGBL"}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#15803D" }}>{percentAproveitamento.toFixed(0)}%</span>
-            </div>
-            <div style={{ background: "#E5E7EB", borderRadius: 999, height: 8 }}>
-              <div style={{ background: "#15803D", width: `${percentAproveitamento}%`, borderRadius: 999, height: "100%", transition: "width 0.3s" }} />
-            </div>
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
-              Teto: {formatBRL(tetoPGBL)}/ano · {formatBRL(tetoPGBL / 12)}/mês
-            </p>
-          </div>
-        )}
       </div>
 
       {sim && (
