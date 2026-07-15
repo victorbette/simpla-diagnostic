@@ -51,6 +51,7 @@ function movEfetivo(item: PlanoAcaoItem): number {
 }
 
 function exigeObservacao(item: PlanoAcaoItem): boolean {
+  if (item.acao === "novo") return true;
   const foiEditado =
     item.movimentacaoEditada !== undefined &&
     item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
@@ -69,6 +70,7 @@ function exigeObservacao(item: PlanoAcaoItem): boolean {
 }
 
 function placeholderObservacao(item: PlanoAcaoItem): string {
+  if (item.acao === "novo") return "Justifique a inclusão deste ativo na carteira recomendada...";
   if (item.acao === "manter") {
     if ((item.valorMetaBRL ?? 0) === 0) return "Ativo não consta na carteira recomendada — justifique a manutenção...";
     return "Justifique por que está mantendo o ativo fora da alocação ideal...";
@@ -420,7 +422,8 @@ export function Etapa3PlanoAcao({
                         <div style={{ fontSize: 10, color: "#B45309" }}>
                           {item.acao === "manter" && ((item.valorMetaBRL ?? 0) === 0 ? "Ativo fora da carteira recomendada — " : "Ativo mantido fora da alocação ideal — ")}
                           {item.acao === "resgatar_parcial" && "Resgate parcial — "}
-                          {(item.acao === "aportar" || item.acao === "novo") && item.movimentacaoEditada !== undefined && "Valor alterado — "}
+                          {item.acao === "novo" && "Ativo novo na recomendada — "}
+                          {item.acao === "aportar" && item.movimentacaoEditada !== undefined && "Valor alterado — "}
                           observação obrigatória
                         </div>
                         <input

@@ -456,6 +456,32 @@ export function CarteiraCard({
             >
               <Trash2 size={13} />
             </button>
+            {modo === "recomendada" && ativo.adicionadoManualmente && (
+              <div style={{ gridColumn: "1 / -1", paddingBottom: 4 }}>
+                <input
+                  type="text"
+                  value={ativo.observacao ?? ""}
+                  onChange={(e) => onChange(ativo.id, { observacao: e.target.value })}
+                  placeholder="Justifique a inclusão deste ativo não previsto na recomendação..."
+                  style={{
+                    width: "100%",
+                    border: ativo.observacao?.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",
+                    borderRadius: 6,
+                    padding: "6px 10px",
+                    fontSize: 12,
+                    color: "#374151",
+                    background: ativo.observacao?.trim() ? "#F0FDF4" : "#FFF5F5",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                />
+                {!ativo.observacao?.trim() && (
+                  <div style={{ fontSize: 10, color: "#B91C1C", marginTop: 2 }}>
+                    Observação obrigatória para ativos adicionados manualmente
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}

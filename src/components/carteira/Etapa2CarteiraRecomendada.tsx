@@ -67,7 +67,7 @@ export function Etapa2CarteiraRecomendada({
   }
 
   function handleAdd(cardId: CardId) {
-    onAtivos([...ativos, makeNovoAtivo(cardId)]);
+    onAtivos([...ativos, { ...makeNovoAtivo(cardId), adicionadoManualmente: true }]);
   }
 
   function handleRemove(id: string) {

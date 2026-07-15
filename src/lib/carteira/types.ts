@@ -15,6 +15,8 @@ export interface Ativo {
   valorBRL: number;
   quantidade?: number;    // cotas/ações (RV only)
   cotacaoAtual?: number;  // preço unitário — BRL para BR, USD para exterior/cripto
+  adicionadoManualmente?: boolean;
+  observacao?: string;
 }
 
 export interface PlanoAcaoItem {

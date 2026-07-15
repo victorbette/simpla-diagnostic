@@ -62,6 +62,8 @@ function migrateAtivo(a: any): Ativo {
     valorBRL: Number(a.valorBRL) || 0,
     quantidade: a.quantidade != null ? Number(a.quantidade) : undefined,
     cotacaoAtual: a.cotacaoAtual != null ? Number(a.cotacaoAtual) : undefined,
+    adicionadoManualmente: a.adicionadoManualmente ? true : undefined,
+    observacao: a.observacao ? String(a.observacao) : undefined,
   };
 }
 
@@ -168,8 +170,13 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
       setPlanoAcao((prev) => {
         if (prev.length === 0) {
-          // First time entering step 3 — use generated plan
-          return novoPlano;
+          return novoPlano.map((item) => {
+            if (item.acao !== "novo") return item;
+            const ativo = ativosRecomendados.find(
+              (a) => a.nome.trim().toLowerCase() === item.nomeAtivo.trim().toLowerCase() && a.card === item.card
+            );
+            return ativo?.observacao ? { ...item, observacao: ativo.observacao } : item;
+          });
         }
         // Merge: recalculated values + preserved consultant edits
         return novoPlano.map((itemNovo) => {
@@ -187,7 +194,14 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
               movimentacaoEditada: existente.movimentacaoEditada,    // consultant's edited movimentação
             };
           }
-          return itemNovo; // newly added asset — use defaults
+          // newly added asset — propagate observacao from Etapa 2
+          if (itemNovo.acao === "novo") {
+            const ativo = ativosRecomendados.find(
+              (a) => a.nome.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() && a.card === itemNovo.card
+            );
+            if (ativo?.observacao) return { ...itemNovo, observacao: ativo.observacao };
+          }
+          return itemNovo;
         });
       });
     }
@@ -391,9 +405,14 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
           const alocacaoFaltando = totalAlocadoPct < 99.9;
 
+          const ativosManuaisSemObs = etapa === 2
+            ? ativosRecomendados.filter((a) => a.adicionadoManualmente && !a.observacao?.trim())
+            : [];
+
           const itensExigemObservacao = etapa === 3
             ? planoAcao.filter((item) => {
-                if (item.acao === "aportar" || item.acao === "novo") {
+                if (item.acao === "novo") return !item.observacao?.trim();
+                if (item.acao === "aportar") {
                   if (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL) {
                     return !item.observacao?.trim();
                   }
@@ -412,7 +431,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
               })
             : [];
 
-          const podeAvancar = etapa === 2 ? alocacaoCompleta : etapa === 3 ? itensExigemObservacao.length === 0 : true;
+          const podeAvancar = etapa === 2
+            ? alocacaoCompleta && ativosManuaisSemObs.length === 0
+            : etapa === 3 ? itensExigemObservacao.length === 0 : true;
 
           return (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -439,7 +460,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
                 <div style={{ fontSize: 11, color: "#B45309", textAlign: "right" }}>
                   {alocacaoFaltando
                     ? `Aloque mais ${formatBRL(Math.abs(diferencaBRL))} para continuar`
-                    : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
+                    : ativosManuaisSemObs.length > 0
+                      ? `${ativosManuaisSemObs.length} ativo(s) manual(is) sem observação`
+                      : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
                   }
                 </div>
               )}
