@@ -58,9 +58,14 @@ export function Etapa2CarteiraRecomendada({
   const alocacaoExcede   = totalAlocado > 100.1;
   const alocacaoFalta    = totalAlocado < 99.9;
 
+  const ativosManuaisSemObservacao = ativos.filter(
+    (a) => a.adicionadoManualmente === true && !a.observacao?.trim()
+  );
+  const podeAvancar = alocacaoCompleta && ativosManuaisSemObservacao.length === 0;
+
   useEffect(() => {
-    onAlocacaoChange?.(alocacaoCompleta);
-  }, [alocacaoCompleta, onAlocacaoChange]);
+    onAlocacaoChange?.(podeAvancar);
+  }, [podeAvancar, onAlocacaoChange]);
 
   function setPct(cardId: CardId, val: number) {
     onAlocacaoMeta({ ...alocacaoMeta, [cardId]: Math.max(0, Math.min(100, val)) });
@@ -214,10 +219,25 @@ export function Etapa2CarteiraRecomendada({
             </div>
           </div>
           <div style={{ marginTop: 10 }}>
-            {alocacaoCompleta && (
+            {podeAvancar && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#15803D" }}>
                 <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
                 100% alocado — carteira recomendada completa
+              </div>
+            )}
+            {alocacaoCompleta && ativosManuaisSemObservacao.length > 0 && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "#FEE2E2", border: "0.5px solid #FCA5A5",
+                borderRadius: 8, padding: "8px 12px",
+                fontSize: 12, color: "#B91C1C",
+              }}>
+                <i className="ti ti-alert-circle" style={{ fontSize: 14, flexShrink: 0 }} />
+                <span>
+                  {ativosManuaisSemObservacao.length === 1
+                    ? "1 ativo adicionado manualmente precisa de observação antes de avançar."
+                    : `${ativosManuaisSemObservacao.length} ativos adicionados manualmente precisam de observação antes de avançar.`}
+                </span>
               </div>
             )}
             {alocacaoFalta && (
