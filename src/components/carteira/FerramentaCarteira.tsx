@@ -87,6 +87,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     movimentacaoEditada: p.movimentacaoEditada != null ? Number(p.movimentacaoEditada) : undefined,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
+    adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
   };
 }
 
@@ -179,7 +180,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           });
         }
         // Merge: recalculated values + preserved consultant edits
-        return novoPlano.map((itemNovo) => {
+        const merged = novoPlano.map((itemNovo) => {
           const existente = prev.find(
             (e) =>
               e.nomeAtivo.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() &&
@@ -203,6 +204,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           }
           return itemNovo;
         });
+        // Preserve manually-added items from previous plan
+        const manuaisPrev = prev.filter((p) => p.adicionadoManualmente === true);
+        return [...merged, ...manuaisPrev];
       });
     }
     setEtapa(n);
@@ -411,22 +415,21 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
           const itensExigemObservacao = etapa === 3
             ? planoAcao.filter((item) => {
-                if (item.acao === "novo") return !item.observacao?.trim();
-                if (item.acao === "aportar") {
-                  if (item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL) {
-                    return !item.observacao?.trim();
-                  }
-                }
-                if (item.acao === "manter") {
-                  const valAtual = item.valorAtualBRL ?? 0;
-                  const valMeta = item.valorMetaBRL ?? 0;
-                  if (valMeta === 0 && valAtual > 0) return !item.observacao?.trim();
-                  if (valMeta > 0) {
-                    const pctDesvio = Math.abs(valAtual - valMeta) / valMeta * 100;
-                    if (pctDesvio > 5) return !item.observacao?.trim();
-                  }
-                }
+                if (item.adicionadoManualmente === true) return !item.observacao?.trim();
+                const foiEditado =
+                  item.movimentacaoEditada !== undefined &&
+                  item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
+                if (foiEditado) return !item.observacao?.trim();
                 if (item.acao === "resgatar_parcial") return !item.observacao?.trim();
+                if (item.acao === "manter") {
+                  const valMeta = item.valorMetaBRL ?? 0;
+                  if (valMeta === 0) return !item.observacao?.trim();
+                  const valAtual = item.valorAtualBRL ?? 0;
+                  if (valMeta > 0) {
+                    const desvio = Math.abs(valAtual - valMeta) / valMeta * 100;
+                    if (desvio > 5) return !item.observacao?.trim();
+                  }
+                }
                 return false;
               })
             : [];

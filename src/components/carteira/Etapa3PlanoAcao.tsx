@@ -105,6 +105,15 @@ export function Etapa3PlanoAcao({
     setNovoAtivo({ nome: "", card: "", segmento: "", valorBRL: 0, observacao: "" });
   }
 
+  const [editandoManualId, setEditandoManualId] = useState<string | null>(null);
+  const [editandoManual, setEditandoManual] = useState({
+    nome: "",
+    card: "",
+    segmento: "",
+    valorBRL: 0,
+    observacao: "",
+  });
+
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
       if (p.id !== id) return p;
@@ -260,6 +269,115 @@ export function Etapa3PlanoAcao({
             </div>
 
             {groupItems.map((item) => {
+              // ── Modo edição inline para ativos manuais ──
+              if (editandoManualId === item.id) {
+                const camposEditOk =
+                  editandoManual.nome.trim() !== "" &&
+                  editandoManual.card !== "" &&
+                  editandoManual.observacao.trim() !== "" &&
+                  editandoManual.valorBRL > 0;
+                return (
+                  <div key={item.id} style={{ borderTop: "1px solid #F3F4F6", padding: 12, background: "#F8FAFF" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#2563EB", marginBottom: 10 }}>
+                      Editando: {item.nomeAtivo}
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      <div>
+                        <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 3 }}>Classe</label>
+                        <select
+                          value={editandoManual.card}
+                          onChange={(e) => setEditandoManual((p) => ({ ...p, card: e.target.value }))}
+                          style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", fontSize: 12, backgroundColor: "white", outline: "none", boxSizing: "border-box" as const }}
+                        >
+                          <option value="">Selecionar...</option>
+                          {CARD_ORDER.map((id) => (
+                            <option key={id} value={id}>{CARD_META[id].label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 3 }}>Nome do ativo</label>
+                        <input
+                          type="text"
+                          value={editandoManual.nome}
+                          onChange={(e) => setEditandoManual((p) => ({ ...p, nome: e.target.value }))}
+                          style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", fontSize: 12, outline: "none", boxSizing: "border-box" as const }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 3 }}>Valor a aportar (R$)</label>
+                        <CurrencyInput
+                          value={editandoManual.valorBRL}
+                          onChange={(v) => setEditandoManual((p) => ({ ...p, valorBRL: v }))}
+                          placeholder="R$ 0,00"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 3 }}>Segmento</label>
+                        <input
+                          type="text"
+                          value={editandoManual.segmento}
+                          onChange={(e) => setEditandoManual((p) => ({ ...p, segmento: e.target.value }))}
+                          placeholder="Ex: Petróleo, Inflação, ETF..."
+                          style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 6, padding: "6px 10px", fontSize: 12, outline: "none", boxSizing: "border-box" as const }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 10 }}>
+                      <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 3 }}>Justificativa (obrigatória)</label>
+                      <input
+                        type="text"
+                        value={editandoManual.observacao}
+                        onChange={(e) => setEditandoManual((p) => ({ ...p, observacao: e.target.value }))}
+                        placeholder="Justifique a inclusão deste ativo fora da alocação recomendada..."
+                        style={{
+                          width: "100%",
+                          border: editandoManual.observacao.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",
+                          borderRadius: 6, padding: "6px 10px", fontSize: 12,
+                          background: editandoManual.observacao.trim() ? "#F0FDF4" : "#FFF5F5",
+                          outline: "none", boxSizing: "border-box" as const,
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
+                      <button
+                        onClick={() => setEditandoManualId(null)}
+                        style={{ fontSize: 12, color: "#6B7280", background: "white", border: "1px solid #E5E7EB", borderRadius: 6, padding: "5px 12px", cursor: "pointer" }}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        disabled={!camposEditOk}
+                        onClick={() => {
+                          if (!camposEditOk) return;
+                          onPlanoAcao(planoAcao.map((i) =>
+                            i.id === editandoManualId
+                              ? {
+                                  ...i,
+                                  nomeAtivo: editandoManual.nome,
+                                  card: editandoManual.card as CardId,
+                                  segmento: editandoManual.segmento,
+                                  movimentacaoBRL: editandoManual.valorBRL,
+                                  observacao: editandoManual.observacao,
+                                }
+                              : i
+                          ));
+                          setEditandoManualId(null);
+                        }}
+                        style={{
+                          fontSize: 12, fontWeight: 600, color: "white",
+                          background: camposEditOk ? "#2563EB" : "#9CA3AF",
+                          border: "none", borderRadius: 6, padding: "5px 14px",
+                          cursor: camposEditOk ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        Salvar
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+
               const isMovEditable = item.acao === "aportar" || item.acao === "novo";
               const movEditado = isMovEditable && item.movimentacaoEditada !== undefined && item.movimentacaoEditada !== item.movimentacaoBRL;
               const exige = exigeObservacao(item);
@@ -284,6 +402,13 @@ export function Etapa3PlanoAcao({
                           {TIPO_CONFIG[item.acao].label}
                         </span>
                         <span style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                        {item.adicionadoManualmente && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 600, color: "#7C3AED",
+                            background: "#F5F3FF", padding: "1px 6px",
+                            borderRadius: 99, flexShrink: 0,
+                          }}>MANUAL</span>
+                        )}
                         {obsNeedsFill && (
                           <span style={{
                             fontSize: 10, color: "#B91C1C", background: "#FEE2E2",
@@ -373,15 +498,51 @@ export function Etapa3PlanoAcao({
                       }}
                     />
 
-                    <select
-                      value={item.prioridade ?? "baixa"}
-                      onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
-                      style={selectStyle}
-                    >
-                      <option value="alta">Alta</option>
-                      <option value="media">Média</option>
-                      <option value="baixa">Baixa</option>
-                    </select>
+                    {item.adicionadoManualmente ? (
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button
+                          onClick={() => {
+                            setEditandoManualId(item.id);
+                            setEditandoManual({
+                              nome: item.nomeAtivo,
+                              card: item.card,
+                              segmento: item.segmento,
+                              valorBRL: item.movimentacaoBRL,
+                              observacao: item.observacao ?? "",
+                            });
+                          }}
+                          title="Editar"
+                          style={{
+                            background: "none", border: "1px solid #E5E7EB",
+                            borderRadius: 6, padding: "4px 8px",
+                            cursor: "pointer", color: "#6B7280",
+                          }}
+                        >
+                          <i className="ti ti-pencil" style={{ fontSize: 13 }} />
+                        </button>
+                        <button
+                          onClick={() => onPlanoAcao(planoAcao.filter((i) => i.id !== item.id))}
+                          title="Excluir"
+                          style={{
+                            background: "none", border: "1px solid #FCA5A5",
+                            borderRadius: 6, padding: "4px 8px",
+                            cursor: "pointer", color: "#B91C1C",
+                          }}
+                        >
+                          <i className="ti ti-trash" style={{ fontSize: 13 }} />
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={item.prioridade ?? "baixa"}
+                        onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
+                        style={selectStyle}
+                      >
+                        <option value="alta">Alta</option>
+                        <option value="media">Média</option>
+                        <option value="baixa">Baixa</option>
+                      </select>
+                    )}
                   </div>
 
                   {item.acao === "resgatar_parcial" && (
