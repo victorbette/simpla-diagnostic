@@ -88,6 +88,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
     adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
+    valorResgateBRL: p.valorResgateBRL != null ? Number(p.valorResgateBRL) : undefined,
   };
 }
 
@@ -193,6 +194,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
               observacao: existente.observacao,                      // consultant's notes
               prioridade: existente.prioridade,                      // consultant's priority
               movimentacaoEditada: existente.movimentacaoEditada,    // consultant's edited movimentação
+              valorResgateBRL: existente.valorResgateBRL,            // consultant's partial resgate amount
             };
           }
           // newly added asset — propagate observacao from Etapa 2
