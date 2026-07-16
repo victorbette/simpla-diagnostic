@@ -1,13 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
-import type { ProtecaoSimplificada, DadosCliente } from "@/types/financialPlanning";
-import type { ResultadoSeguro } from "@/types/estrategiaResultados";
-import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
+import type { FinancialPlan } from "@/types/financialPlanning";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface Filho {
+interface FilhoForm {
   id: string;
   nome: string;
   idadeAtual: number;
@@ -15,36 +13,34 @@ interface Filho {
   custoMensal: number;
 }
 
-interface SeguroFormData {
-  // Imediato
+interface FormData {
   dividas: number;
   despesasFinais: number;
   mesesEmergencia: number;
   outrosImediatos: number;
-  // Contínuo
   despesasMensais: number;
   rendaConjuge: number;
   temPrevidencia: boolean;
   rendaPrevidencia: number;
   anosSuporte: number;
-  filhos: Filho[];
-  // Coberturas em Vida
+  filhos: FilhoForm[];
   capitalInvalidez: number;
   capitalDoencaGrave: number;
-  // Cobertura Atual
   seguroVidaAtual: number;
   seguroInvalidezAtual: number;
   outrosSeguroAtual: number;
 }
 
-// ── Props ──────────────────────────────────────────────────────────────────
-
 interface Props {
-  protecao: ProtecaoSimplificada;
-  clientId: string;
-  dadosCliente?: DadosCliente;
-  onResultadoSeguro: (r: ResultadoSeguro) => void;
+  plan: FinancialPlan;
+  resultados: Record<string, unknown>;
+  onResultadosChange?: (r: Record<string, unknown>) => void;
+  clientId?: string;
 }
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function genId(): string { return Math.random().toString(36).slice(2, 10); }
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
@@ -53,6 +49,7 @@ const CARD: React.CSSProperties = {
   border: "0.5px solid #E5E7EB",
   borderRadius: 12,
   padding: "20px 24px",
+  marginBottom: 16,
 };
 
 const CARD_HEADER: React.CSSProperties = {
@@ -75,65 +72,28 @@ const CARD_ICON: React.CSSProperties = {
   flexShrink: 0,
 };
 
-const FIELD_LABEL: React.CSSProperties = {
+const LABEL: React.CSSProperties = {
   fontSize: 11,
   color: "#6B7280",
   fontWeight: 600,
-  textTransform: "uppercase",
+  textTransform: "uppercase" as const,
   letterSpacing: "0.04em",
   marginBottom: 4,
   display: "block",
 };
 
-const INPUT: React.CSSProperties = {
+const FIELD_WRAP: React.CSSProperties = { display: "flex", flexDirection: "column" };
+
+const NUMBER_INPUT: React.CSSProperties = {
   border: "1px solid #E5E7EB",
   borderRadius: 8,
   padding: "8px 12px",
   fontSize: 13,
   width: "100%",
-  boxSizing: "border-box",
+  boxSizing: "border-box" as const,
   fontFamily: "inherit",
   outline: "none",
   color: "#111827",
-};
-
-const ADD_BTN: React.CSSProperties = {
-  border: "1px solid #E5E7EB",
-  color: "#374151",
-  backgroundColor: "transparent",
-  borderRadius: 8,
-  padding: "5px 12px",
-  fontSize: 12,
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  gap: 4,
-};
-
-const REMOVE_BTN: React.CSSProperties = {
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  color: "#9CA3AF",
-  padding: "4px",
-  lineHeight: 1,
-  flexShrink: 0,
-};
-
-const BADGE_COLETA: React.CSSProperties = {
-  fontSize: 10,
-  color: "#1E40AF",
-  backgroundColor: "#DBEAFE",
-  padding: "1px 6px",
-  borderRadius: 99,
-  marginLeft: 6,
-  fontWeight: 600,
-};
-
-const HINT: React.CSSProperties = {
-  fontSize: 11,
-  color: "#9CA3AF",
-  margin: "3px 0 0",
 };
 
 const SUBTOTAL: React.CSSProperties = {
@@ -147,174 +107,143 @@ const SUBTOTAL: React.CSSProperties = {
   alignItems: "center",
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function genId() { return Math.random().toString(36).slice(2); }
-
-function buildInitialData(protecao: ProtecaoSimplificada, dadosCliente?: DadosCliente): SeguroFormData {
-  return {
-    dividas: 0,
-    despesasFinais: 15000,
-    mesesEmergencia: 6,
-    outrosImediatos: 0,
-    despesasMensais: Number(dadosCliente?.custoDeVidaMensal) || protecao.rendaMensal || 0,
-    rendaConjuge: 0,
-    temPrevidencia: dadosCliente?.possuiPrevidencia ?? false,
-    rendaPrevidencia: 0,
-    anosSuporte: 20,
-    filhos: (dadosCliente?.filhos ?? []).map(f => ({
-      id: genId(),
-      nome: f.nome,
-      idadeAtual: f.idade,
-      idadeIndependencia: 25,
-      custoMensal: 0,
-    })),
-    capitalInvalidez: 0,
-    capitalDoencaGrave: 0,
-    seguroVidaAtual: protecao.possuiSeguroVida ? protecao.capitalSeguradoVida : 0,
-    seguroInvalidezAtual: protecao.possuiSeguroInvalidez ? protecao.capitalSeguradoInvalidez : 0,
-    outrosSeguroAtual: 0,
-  };
-}
-
 // ── Main component ──────────────────────────────────────────────────────────
 
-export function FerramentaSeguro({ protecao, clientId, dadosCliente, onResultadoSeguro }: Props) {
-  const CHAVE = `ferramenta_seguro_v3_${clientId}`;
-  const initialData = buildInitialData(protecao, dadosCliente);
+export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const seguroSalvo: any = resultados?.seguro ?? {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const df: any = seguroSalvo?.dadosFormulario ?? {};
+  const dc = plan?.dadosCliente ?? {};
 
-  const [data, setData] = useState<SeguroFormData>(() => buildInitialData(protecao, dadosCliente));
+  const [data, setData] = useState<FormData>(() => {
+    const initialFilhos: FilhoForm[] = Array.isArray(df.filhos)
+      ? (df.filhos as FilhoForm[])
+      : (dc.filhos ?? []).map((f) => ({
+          id: genId(),
+          nome: f.nome ?? "",
+          idadeAtual: 0,
+          idadeIndependencia: 25,
+          custoMensal: 0,
+        }));
+    return {
+      dividas:          Number(df.dividas)         || 0,
+      despesasFinais:   Number(df.despesasFinais)  || 0,
+      mesesEmergencia:  Number(df.mesesEmergencia) || 6,
+      outrosImediatos:  Number(df.outrosImediatos) || 0,
+      despesasMensais:  Number(df.despesasMensais) || Number(dc.custoDeVidaMensal) || 0,
+      rendaConjuge:     Number(df.rendaConjuge)    || 0,
+      temPrevidencia:   Boolean(df.temPrevidencia),
+      rendaPrevidencia: Number(df.rendaPrevidencia) || 0,
+      anosSuporte:      Number(df.anosSuporte)     || 20,
+      filhos:           initialFilhos,
+      capitalInvalidez:    Number(df.capitalInvalidez)    || 0,
+      capitalDoencaGrave:  Number(df.capitalDoencaGrave)  || 0,
+      seguroVidaAtual:     Number(df.seguroVidaAtual)     || 0,
+      seguroInvalidezAtual: Number(df.seguroInvalidezAtual) || 0,
+      outrosSeguroAtual:   Number(df.outrosSeguroAtual)   || 0,
+    };
+  });
+
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
 
-  useFerramentaStorage(CHAVE, data, (restored) => setData(restored), initialData);
+  function upd(fields: Partial<FormData>) { setData(prev => ({ ...prev, ...fields })); }
 
-  // Sync temPrevidencia quando coleta muda
-  const possuiPrevidenciaColeta = dadosCliente?.possuiPrevidencia ?? false;
-  useEffect(() => {
-    setData(prev => ({ ...prev, temPrevidencia: possuiPrevidenciaColeta }));
-  }, [possuiPrevidenciaColeta]);
+  // ── Cálculos ──────────────────────────────────────────────────────────────
 
-  function upd(patch: Partial<SeguroFormData>) { setData(d => ({ ...d, ...patch })); }
-
-  // ── Cálculos em tempo real ────────────────────────────────────────────────
-
-  const {
-    totalImediato,
-    totalContinuo,
-    totalFilhos,
-    subtotalContinuo,
-    totalCoberturasVida,
-    capitalNecessario,
-    capitalAtual,
-    gap,
-  } = useMemo(() => {
+  const calc = useMemo(() => {
     const totalImediato =
-      (Number(data.dividas) || 0) +
+      (Number(data.dividas)        || 0) +
       (Number(data.despesasFinais) || 0) +
       (Number(data.despesasMensais) || 0) * (Number(data.mesesEmergencia) || 6) +
       (Number(data.outrosImediatos) || 0);
 
     const rendaLiquida = Math.max(0,
-      (Number(data.despesasMensais) || 0) -
-      (Number(data.rendaConjuge) || 0) -
+      (Number(data.despesasMensais)  || 0) -
+      (Number(data.rendaConjuge)     || 0) -
       (data.temPrevidencia ? (Number(data.rendaPrevidencia) || 0) : 0)
     );
     const totalContinuo = rendaLiquida * 12 * (Number(data.anosSuporte) || 20);
 
-    const totalFilhos = (data.filhos ?? []).reduce((s, f) => {
-      const anos = Math.max(0,
-        (Number(f.idadeIndependencia) || 25) - (Number(f.idadeAtual) || 0)
-      );
+    const totalFilhos = data.filhos.reduce((s, f) => {
+      const anos = Math.max(0, (Number(f.idadeIndependencia) || 25) - (Number(f.idadeAtual) || 0));
       return s + (Number(f.custoMensal) || 0) * 12 * anos;
     }, 0);
 
-    const subtotalContinuo = totalContinuo + totalFilhos;
-
-    const totalCoberturasVida =
-      (Number(data.capitalInvalidez) || 0) +
-      (Number(data.capitalDoencaGrave) || 0);
-
-    const capitalNecessario = totalImediato + subtotalContinuo + totalCoberturasVida;
-
+    const subtotalContinuo    = totalContinuo + totalFilhos;
+    const totalCoberturasVida = (Number(data.capitalInvalidez) || 0) + (Number(data.capitalDoencaGrave) || 0);
+    const capitalNecessario   = totalImediato + subtotalContinuo + totalCoberturasVida;
     const capitalAtual =
-      (Number(data.seguroVidaAtual) || 0) +
+      (Number(data.seguroVidaAtual)      || 0) +
       (Number(data.seguroInvalidezAtual) || 0) +
-      (Number(data.outrosSeguroAtual) || 0);
-
-    const gap = Math.max(0, capitalNecessario - capitalAtual);
+      (Number(data.outrosSeguroAtual)    || 0);
+    const gap         = Math.max(0, capitalNecessario - capitalAtual);
+    const coberturaPct = capitalNecessario > 0
+      ? Math.min(100, Math.round(capitalAtual / capitalNecessario * 100))
+      : 0;
 
     return {
       totalImediato, totalContinuo, totalFilhos,
       subtotalContinuo, totalCoberturasVida,
-      capitalNecessario, capitalAtual, gap,
+      capitalNecessario, capitalAtual, gap, coberturaPct,
     };
   }, [data]);
 
-  const scoreCalculado = capitalNecessario > 0
-    ? Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100))
-    : 0;
-  const adequado = capitalAtual >= capitalNecessario;
-
-  // ── CRUD filhos ──────────────────────────────────────────────────────────
+  // ── Filhos ────────────────────────────────────────────────────────────────
 
   function addFilho() {
-    upd({ filhos: [...data.filhos, { id: genId(), nome: "", idadeAtual: 5, idadeIndependencia: 25, custoMensal: 0 }] });
+    upd({ filhos: [...data.filhos, { id: genId(), nome: "", idadeAtual: 0, idadeIndependencia: 25, custoMensal: 0 }] });
   }
   function removeFilho(id: string) { upd({ filhos: data.filhos.filter(f => f.id !== id) }); }
-  function updateFilho(id: string, patch: Partial<Filho>) {
+  function updateFilho(id: string, patch: Partial<FilhoForm>) {
     upd({ filhos: data.filhos.map(f => f.id === id ? { ...f, ...patch } : f) });
   }
 
-  // ── Filhos da coleta ─────────────────────────────────────────────────────
-
-  const filhosColeta = dadosCliente?.filhos ?? [];
-  const filhosNaoImportados = filhosColeta.filter(fc => !data.filhos.some(f => f.nome === fc.nome));
-
-  function importarFilhosDaColeta() {
-    upd({
-      filhos: filhosColeta.map(f => ({
-        id: genId(),
-        nome: f.nome,
-        idadeAtual: f.idade,
-        idadeIndependencia: 25,
-        custoMensal: 0,
-      })),
-    });
-  }
-
-  // ── Save ─────────────────────────────────────────────────────────────────
+  // ── Salvar ────────────────────────────────────────────────────────────────
 
   async function handleSalvar() {
     setSalvando(true);
     try {
-      onResultadoSeguro({
-        capitalNecessario,
-        capitalAtual,
-        capitalImediato: totalImediato,
-        capitalContinuo: subtotalContinuo,
-        capitalFilhos: totalFilhos,
-        capitalCoberturasVida: totalCoberturasVida,
-        totalNeed: capitalNecessario,
-        totalCoverage: capitalAtual,
-        gap,
-        scoreProtecao: scoreCalculado,
-        temSeguroVida: data.seguroVidaAtual > 0,
-        temSeguroInvalidez: data.seguroInvalidezAtual > 0,
-        immediateTotal: totalImediato,
-        ongoingTotal: totalContinuo,
-        educationTotal: totalFilhos,
-        lifestyleTotal: 0,
-        inventoryCost: 0,
-        disabilityTotal: data.capitalInvalidez,
-        disabilityGap: Math.max(0, data.capitalInvalidez - data.seguroInvalidezAtual),
-        disabilityCoverage: Math.min(data.capitalInvalidez, data.seguroInvalidezAtual),
-        criticalIllnessTotal: data.capitalDoencaGrave,
-        criticalIllnessGap: data.capitalDoencaGrave,
-        criticalIllnessCoverage: 0,
-        dadosFormulario: data as unknown as Record<string, unknown>,
-        dataCalculo: new Date().toISOString(),
-        savedAt: new Date().toISOString(),
+      const scoreProtecao = calc.capitalNecessario > 0
+        ? Math.min(100, Math.round(calc.capitalAtual / calc.capitalNecessario * 100))
+        : 0;
+      await onResultadosChange?.({
+        ...resultados,
+        seguro: {
+          // Campos canônicos
+          capitalNecessario:   calc.capitalNecessario,
+          capitalAtual:        calc.capitalAtual,
+          gap:                 calc.gap,
+          totalImediato:       calc.totalImediato,
+          subtotalContinuo:    calc.subtotalContinuo,
+          totalCoberturasVida: calc.totalCoberturasVida,
+          dadosFormulario:     data,
+          dataUltimoSalvamento: new Date().toISOString(),
+          // Aliases legados (SecaoProtecaoSucessorio e Dashboard)
+          totalNeed:     calc.capitalNecessario,
+          totalCoverage: calc.capitalAtual,
+          scoreProtecao,
+          capitalImediato:      calc.totalImediato,
+          capitalContinuo:      calc.subtotalContinuo,
+          capitalCoberturasVida: calc.totalCoberturasVida,
+          capitalFilhos:        calc.totalFilhos,
+          temSeguroVida:        data.seguroVidaAtual > 0,
+          temSeguroInvalidez:   data.seguroInvalidezAtual > 0,
+          immediateTotal:       calc.totalImediato,
+          ongoingTotal:         calc.totalContinuo,
+          educationTotal:       calc.totalFilhos,
+          lifestyleTotal:       0,
+          inventoryCost:        0,
+          disabilityTotal:      data.capitalInvalidez,
+          disabilityGap:        Math.max(0, data.capitalInvalidez - data.seguroInvalidezAtual),
+          disabilityCoverage:   Math.min(data.capitalInvalidez, data.seguroInvalidezAtual),
+          criticalIllnessTotal:    data.capitalDoencaGrave,
+          criticalIllnessGap:      data.capitalDoencaGrave,
+          criticalIllnessCoverage: 0,
+          dataCalculo: new Date().toISOString(),
+          savedAt:     new Date().toISOString(),
+        },
       });
       setSalvo(true);
       setTimeout(() => setSalvo(false), 2500);
@@ -323,314 +252,392 @@ export function FerramentaSeguro({ protecao, clientId, dadosCliente, onResultado
     }
   }
 
-  const custoDeVidaColeta = Number(dadosCliente?.custoDeVidaMensal) || 0;
-  const reservaEmergenciaCalc = (Number(data.despesasMensais) || 0) * (Number(data.mesesEmergencia) || 6);
+  const adequado = calc.capitalAtual >= calc.capitalNecessario && calc.capitalNecessario > 0;
+  const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* ── Card 1: Necessidades Imediatas ──────────────────────────────── */}
+      {/* ── CARD 1 — Necessidades Imediatas ─────────────────────────────── */}
       <div style={CARD}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}><i className="ti ti-alert-circle" style={{ fontSize: 17, color: "#2563EB" }} /></div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Imediatas</span>
+          <div style={CARD_ICON}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 18, color: "#2563EB" }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Imediatas</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Capital necessário logo após o sinistro</p>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={FIELD_LABEL}>Dívidas e Financiamentos (R$)</label>
-            <CurrencyInput value={data.dividas} onChange={v => upd({ dividas: v })} />
-            <p style={HINT}>Saldo devedor de empréstimos, financiamentos, cartões</p>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Dívidas e Financiamentos</label>
+            <CurrencyInput value={data.dividas} onChange={(v) => upd({ dividas: v })} />
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Despesas Finais (R$)</label>
-            <CurrencyInput value={data.despesasFinais} onChange={v => upd({ despesasFinais: v })} />
-            <p style={HINT}>Funeral, inventário, custos legais</p>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Despesas Finais (funeral, inventário)</label>
+            <CurrencyInput value={data.despesasFinais} onChange={(v) => upd({ despesasFinais: v })} />
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Reserva de Emergência (meses)</label>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Meses de Emergência</label>
             <input
-              type="number" min={1} max={24} value={data.mesesEmergencia}
-              onChange={e => upd({ mesesEmergencia: Number(e.target.value) })}
-              style={INPUT}
+              type="number"
+              min={1}
+              max={24}
+              value={data.mesesEmergencia}
+              onChange={(e) => upd({ mesesEmergencia: Math.max(1, Math.min(24, Number(e.target.value) || 6)) })}
+              style={NUMBER_INPUT}
             />
-            {reservaEmergenciaCalc > 0 && (
-              <p style={HINT}>= {formatCurrency(reservaEmergenciaCalc)} ({data.mesesEmergencia} × despesas mensais)</p>
-            )}
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+              Reserva: {formatCurrency((Number(data.despesasMensais) || 0) * (Number(data.mesesEmergencia) || 6))}
+            </span>
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Outros Gastos Imediatos (R$)</label>
-            <CurrencyInput value={data.outrosImediatos} onChange={v => upd({ outrosImediatos: v })} />
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Outros Gastos Imediatos</label>
+            <CurrencyInput value={data.outrosImediatos} onChange={(v) => upd({ outrosImediatos: v })} />
           </div>
         </div>
 
         <div style={SUBTOTAL}>
-          <span style={{ fontSize: 12, color: "#6B7280" }}>Total imediato</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(totalImediato)}</span>
+          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Subtotal Imediato</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalImediato)}</span>
         </div>
       </div>
 
-      {/* ── Card 2: Necessidades Contínuas ──────────────────────────────── */}
+      {/* ── CARD 2 — Necessidades Contínuas ─────────────────────────────── */}
       <div style={CARD}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}><i className="ti ti-users" style={{ fontSize: 17, color: "#2563EB" }} /></div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Contínuas</span>
+          <div style={CARD_ICON}>
+            <i className="ti ti-users" style={{ fontSize: 18, color: "#2563EB" }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Contínuas</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Renda necessária para manter o padrão de vida da família</p>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-              <label style={{ ...FIELD_LABEL, margin: 0 }}>
-                Despesas Mensais da Família (R$)
-                {custoDeVidaColeta > 0 && <span style={BADGE_COLETA}>Da coleta</span>}
-              </label>
-              {custoDeVidaColeta > 0 && data.despesasMensais !== custoDeVidaColeta && (
-                <button
-                  onClick={() => upd({ despesasMensais: custoDeVidaColeta })}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#2563EB", fontSize: 11, fontWeight: 600, padding: 0 }}
-                >
-                  ↺ Restaurar
-                </button>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>
+              Despesas Mensais da Família
+              {custoDeVidaColeta > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600 }}>
+                  Da coleta
+                </span>
               )}
-            </div>
-            <CurrencyInput value={data.despesasMensais} onChange={v => upd({ despesasMensais: v })} />
+            </label>
+            <CurrencyInput value={data.despesasMensais} onChange={(v) => upd({ despesasMensais: v })} />
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Renda Mensal do Cônjuge (R$)</label>
-            <CurrencyInput value={data.rendaConjuge} onChange={v => upd({ rendaConjuge: v })} />
-            <p style={HINT}>Desconta das necessidades mensais</p>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Renda do Cônjuge (desconta)</label>
+            <CurrencyInput value={data.rendaConjuge} onChange={(v) => upd({ rendaConjuge: v })} />
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Período de Suporte (anos)</label>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Período de Suporte (anos)</label>
             <input
-              type="number" min={1} max={50} value={data.anosSuporte}
-              onChange={e => upd({ anosSuporte: Number(e.target.value) })}
-              style={INPUT}
+              type="number"
+              min={1}
+              max={50}
+              value={data.anosSuporte}
+              onChange={(e) => upd({ anosSuporte: Math.max(1, Number(e.target.value) || 20) })}
+              style={NUMBER_INPUT}
             />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={{ ...LABEL, display: "flex", alignItems: "center", gap: 8 }}>
+              Possui Previdência?
+              <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={data.temPrevidencia}
+                  onChange={(e) => upd({ temPrevidencia: e.target.checked })}
+                />
+                <span style={{ fontSize: 11, color: "#374151", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>Sim</span>
+              </label>
+            </label>
+            {data.temPrevidencia && (
+              <CurrencyInput
+                value={data.rendaPrevidencia}
+                onChange={(v) => upd({ rendaPrevidencia: v })}
+                placeholder="Renda mensal da previdência"
+              />
+            )}
           </div>
         </div>
 
-        {/* Previdência */}
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
-            <span
-              onClick={() => upd({ temPrevidencia: !data.temPrevidencia })}
-              style={{ width: 36, height: 20, borderRadius: 10, backgroundColor: data.temPrevidencia ? "#2563EB" : "#D1D5DB", position: "relative", cursor: "pointer", flexShrink: 0, transition: "background 0.2s", display: "inline-block" }}
-            >
-              <span style={{ position: "absolute", top: 2, left: data.temPrevidencia ? 18 : 2, width: 16, height: 16, borderRadius: "50%", backgroundColor: "white", transition: "left 0.2s" }} />
-            </span>
-            <span style={{ fontSize: 13, color: "#374151" }}>
-              Possui Previdência (PGBL/VGBL)?
-              {possuiPrevidenciaColeta && <span style={BADGE_COLETA}>Da coleta</span>}
-            </span>
-          </label>
-          {data.temPrevidencia && (
-            <div style={{ marginTop: 8, marginLeft: 44, maxWidth: 240 }}>
-              <label style={FIELD_LABEL}>Renda Mensal da Previdência (R$)</label>
-              <CurrencyInput value={data.rendaPrevidencia} onChange={v => upd({ rendaPrevidencia: v })} />
-            </div>
-          )}
+        <div style={SUBTOTAL}>
+          <span style={{ fontSize: 12, color: "#6B7280" }}>
+            Renda líquida: {formatCurrency(
+              Math.max(0, (Number(data.despesasMensais) || 0) - (Number(data.rendaConjuge) || 0) - (data.temPrevidencia ? (Number(data.rendaPrevidencia) || 0) : 0))
+            )}/mês × 12 × {data.anosSuporte} anos
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalContinuo)}</span>
         </div>
 
         {/* Filhos */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ ...FIELD_LABEL, margin: 0 }}>Filhos dependentes</span>
-            <button onClick={addFilho} style={ADD_BTN}>
-              <i className="ti ti-plus" style={{ fontSize: 12 }} /> Adicionar
+        <div style={{ marginTop: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#374151" }}>Filhos</span>
+            <button
+              onClick={addFilho}
+              style={{
+                border: "1px solid #E5E7EB", color: "#374151", backgroundColor: "transparent",
+                borderRadius: 8, padding: "4px 10px", fontSize: 12, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 4,
+              }}
+            >
+              <i className="ti ti-plus" style={{ fontSize: 12 }} /> Adicionar filho
             </button>
           </div>
-          {filhosNaoImportados.length > 0 && (
-            <div style={{ fontSize: 12, color: "#B45309", backgroundColor: "#FEF3C7", padding: "8px 12px", borderRadius: 8, marginBottom: 8 }}>
-              <strong>{filhosNaoImportados.length} filho(s)</strong> da coleta não importados.{" "}
+
+          {data.filhos.length === 0 && (
+            <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>Nenhum filho cadastrado.</p>
+          )}
+
+          {data.filhos.map((f) => (
+            <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 1fr auto", gap: 8, alignItems: "end", marginBottom: 8 }}>
+              <div style={FIELD_WRAP}>
+                <label style={LABEL}>Nome</label>
+                <input
+                  type="text"
+                  value={f.nome}
+                  onChange={(e) => updateFilho(f.id, { nome: e.target.value })}
+                  style={NUMBER_INPUT}
+                  placeholder="Nome"
+                />
+              </div>
+              <div style={FIELD_WRAP}>
+                <label style={LABEL}>Idade</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  value={f.idadeAtual}
+                  onChange={(e) => updateFilho(f.id, { idadeAtual: Number(e.target.value) || 0 })}
+                  style={NUMBER_INPUT}
+                />
+              </div>
+              <div style={FIELD_WRAP}>
+                <label style={LABEL}>Indep.</label>
+                <input
+                  type="number"
+                  min={18}
+                  max={40}
+                  value={f.idadeIndependencia}
+                  onChange={(e) => updateFilho(f.id, { idadeIndependencia: Number(e.target.value) || 25 })}
+                  style={NUMBER_INPUT}
+                />
+              </div>
+              <div style={FIELD_WRAP}>
+                <label style={LABEL}>Custo/mês</label>
+                <CurrencyInput value={f.custoMensal} onChange={(v) => updateFilho(f.id, { custoMensal: v })} />
+              </div>
               <button
-                onClick={importarFilhosDaColeta}
-                style={{ marginLeft: 4, color: "#B45309", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 12 }}
+                onClick={() => removeFilho(f.id)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: "8px 4px", lineHeight: 1, alignSelf: "center", marginTop: 14 }}
               >
-                Importar →
+                <i className="ti ti-trash" style={{ fontSize: 16 }} />
               </button>
             </div>
-          )}
-          {data.filhos.map(f => (
-            <div key={f.id} style={{ border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <input
-                  placeholder="Nome do filho"
-                  value={f.nome}
-                  onChange={e => updateFilho(f.id, { nome: e.target.value })}
-                  style={{ ...INPUT, flex: 1 }}
-                />
-                <button onClick={() => removeFilho(f.id)} style={REMOVE_BTN}>
-                  <i className="ti ti-trash" style={{ fontSize: 14 }} />
-                </button>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <div>
-                  <label style={FIELD_LABEL}>Idade atual</label>
-                  <input type="number" min={0} max={40} value={f.idadeAtual} onChange={e => updateFilho(f.id, { idadeAtual: Number(e.target.value) })} style={INPUT} />
-                </div>
-                <div>
-                  <label style={FIELD_LABEL}>Idade independência</label>
-                  <input type="number" min={f.idadeAtual + 1} max={40} value={f.idadeIndependencia} onChange={e => updateFilho(f.id, { idadeIndependencia: Number(e.target.value) })} style={INPUT} />
-                </div>
-                <div>
-                  <label style={FIELD_LABEL}>Custo mensal (R$)</label>
-                  <CurrencyInput value={f.custoMensal} onChange={v => updateFilho(f.id, { custoMensal: v })} />
-                </div>
-              </div>
-            </div>
           ))}
-          {data.filhos.length === 0 && <p style={{ fontSize: 12, color: "#9CA3AF", margin: 0 }}>Nenhum filho cadastrado.</p>}
+
+          {calc.totalFilhos > 0 && (
+            <div style={{ ...SUBTOTAL, marginTop: 8 }}>
+              <span style={{ fontSize: 12, color: "#6B7280" }}>Subtotal filhos</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalFilhos)}</span>
+            </div>
+          )}
         </div>
 
-        <div style={SUBTOTAL}>
-          <span style={{ fontSize: 12, color: "#6B7280" }}>Total contínuo + filhos</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(subtotalContinuo)}</span>
+        <div style={{ ...SUBTOTAL, marginTop: 12, backgroundColor: "#F0F7FF" }}>
+          <span style={{ fontSize: 12, color: "#1E40AF", fontWeight: 600 }}>Subtotal Contínuo (contínuo + filhos)</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#1E40AF" }}>{formatCurrency(calc.subtotalContinuo)}</span>
         </div>
       </div>
 
-      {/* ── Card 3: Coberturas em Vida ──────────────────────────────────── */}
+      {/* ── CARD 3 — Coberturas em Vida ──────────────────────────────────── */}
       <div style={CARD}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}><i className="ti ti-heart" style={{ fontSize: 17, color: "#2563EB" }} /></div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Coberturas em Vida</span>
+          <div style={CARD_ICON}>
+            <i className="ti ti-heart" style={{ fontSize: 18, color: "#2563EB" }} />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Coberturas em Vida</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Proteção contra invalidez e doenças graves</p>
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={FIELD_LABEL}>Capital para Invalidez Total (R$)</label>
-            <CurrencyInput value={data.capitalInvalidez} onChange={v => upd({ capitalInvalidez: v })} />
-            <p style={HINT}>Capital único em caso de invalidez permanente total</p>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Capital para Invalidez Total</label>
+            <CurrencyInput value={data.capitalInvalidez} onChange={(v) => upd({ capitalInvalidez: v })} />
           </div>
-          <div>
-            <label style={FIELD_LABEL}>Capital para Doenças Graves (R$)</label>
-            <CurrencyInput value={data.capitalDoencaGrave} onChange={v => upd({ capitalDoencaGrave: v })} />
-            <p style={HINT}>Diagnóstico de câncer, AVC, infarto, etc.</p>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Capital para Doenças Graves</label>
+            <CurrencyInput value={data.capitalDoencaGrave} onChange={(v) => upd({ capitalDoencaGrave: v })} />
           </div>
         </div>
 
         <div style={SUBTOTAL}>
-          <span style={{ fontSize: 12, color: "#6B7280" }}>Total coberturas em vida</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(totalCoberturasVida)}</span>
+          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Subtotal Coberturas em Vida</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
         </div>
       </div>
 
-      {/* ── Card 4: Cobertura Atual ──────────────────────────────────────── */}
+      {/* ── CARD 4 — Cobertura Atual ─────────────────────────────────────── */}
       <div style={CARD}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}><i className="ti ti-shield-check" style={{ fontSize: 17, color: "#2563EB" }} /></div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Cobertura Atual</span>
-        </div>
-        <p style={{ fontSize: 12, color: "#6B7280", margin: "-8px 0 14px" }}>Informe os seguros que o cliente já possui</p>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          <div>
-            <label style={FIELD_LABEL}>
-              Seguro de Vida Atual (R$)
-              {protecao.possuiSeguroVida && <span style={BADGE_COLETA}>Da coleta</span>}
-            </label>
-            <CurrencyInput value={data.seguroVidaAtual} onChange={v => upd({ seguroVidaAtual: v })} />
+          <div style={CARD_ICON}>
+            <i className="ti ti-shield-check" style={{ fontSize: 18, color: "#2563EB" }} />
           </div>
           <div>
-            <label style={FIELD_LABEL}>
-              Seguro de Invalidez Atual (R$)
-              {protecao.possuiSeguroInvalidez && <span style={BADGE_COLETA}>Da coleta</span>}
-            </label>
-            <CurrencyInput value={data.seguroInvalidezAtual} onChange={v => upd({ seguroInvalidezAtual: v })} />
-          </div>
-          <div>
-            <label style={FIELD_LABEL}>Outros Seguros (R$)</label>
-            <CurrencyInput value={data.outrosSeguroAtual} onChange={v => upd({ outrosSeguroAtual: v })} />
-            <p style={HINT}>Seguro empresarial, grupo...</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Cobertura Atual (Apólices)</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Seguros já contratados pelo cliente</p>
           </div>
         </div>
 
-        <div style={{ ...SUBTOTAL, backgroundColor: "#DCFCE7", border: "0.5px solid #A7C9AB" }}>
-          <span style={{ fontSize: 12, color: "#15803D" }}>Capital atual total</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#15803D" }}>{formatCurrency(capitalAtual)}</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Seguro de Vida Atual</label>
+            <CurrencyInput value={data.seguroVidaAtual} onChange={(v) => upd({ seguroVidaAtual: v })} />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Seguro de Invalidez Atual</label>
+            <CurrencyInput value={data.seguroInvalidezAtual} onChange={(v) => upd({ seguroInvalidezAtual: v })} />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Outros Seguros (empresarial, grupo...)</label>
+            <CurrencyInput value={data.outrosSeguroAtual} onChange={(v) => upd({ outrosSeguroAtual: v })} />
+          </div>
+        </div>
+
+        <div style={SUBTOTAL}>
+          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Total de Cobertura Atual</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: calc.capitalAtual > 0 ? "#15803D" : "#6B7280" }}>
+            {formatCurrency(calc.capitalAtual)}
+          </span>
         </div>
       </div>
 
-      {/* ── Card 5: Resultado da Análise ────────────────────────────────── */}
-      <div style={CARD}>
+      {/* ── CARD 5 — Resultado ───────────────────────────────────────────── */}
+      <div style={{ ...CARD, border: adequado ? "0.5px solid #BBF7D0" : "0.5px solid #FECACA" }}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}><i className="ti ti-calculator" style={{ fontSize: 17, color: "#2563EB" }} /></div>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Resultado da Análise</span>
-        </div>
-
-        {/* Capital necessário vs atual */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-          <div style={{ backgroundColor: "#F8FAFF", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "14px 16px" }}>
-            <p style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Capital Necessário Total</p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: "#111827", margin: 0 }}>{formatCurrency(capitalNecessario)}</p>
+          <div style={{ ...CARD_ICON, backgroundColor: adequado ? "#DCFCE7" : "#FEE2E2" }}>
+            <i className="ti ti-calculator" style={{ fontSize: 18, color: adequado ? "#15803D" : "#B91C1C" }} />
           </div>
-          <div style={{ backgroundColor: adequado ? "#DCFCE7" : "#FEE2E2", border: `0.5px solid ${adequado ? "#A7C9AB" : "#C9A0A0"}`, borderRadius: 8, padding: "14px 16px" }}>
-            <p style={{ fontSize: 11, color: adequado ? "#15803D" : "#B91C1C", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>Capital Atual</p>
-            <p style={{ fontSize: 22, fontWeight: 700, color: adequado ? "#15803D" : "#B91C1C", margin: 0 }}>{formatCurrency(capitalAtual)}</p>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Resultado da Análise</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Comparativo entre necessidade e cobertura</p>
           </div>
         </div>
 
-        {/* Breakdown: 3 colunas */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
-          {([
-            { label: "Necessidades Imediatas", value: totalImediato },
-            { label: "Necessidades Contínuas", value: subtotalContinuo },
-            { label: "Coberturas em Vida",     value: totalCoberturasVida },
-          ] as const).map(({ label, value }) => (
-            <div key={label} style={{ backgroundColor: "#F8FAFF", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "10px 12px" }}>
-              <p style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 2px" }}>{label}</p>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "#374151", margin: 0 }}>{formatCurrency(value)}</p>
+        {/* Top 3 colunas */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <div style={{ backgroundColor: "#F8FAFF", borderRadius: 8, padding: "12px 14px" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+              Capital Necessário
+            </p>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.capitalNecessario)}</p>
+          </div>
+          <div style={{ backgroundColor: adequado ? "#F0FDF4" : "#FFF5F5", borderRadius: 8, padding: "12px 14px" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+              Capital Atual
+            </p>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: adequado ? "#15803D" : "#B91C1C" }}>
+              {formatCurrency(calc.capitalAtual)}
+            </p>
+          </div>
+          <div style={{ backgroundColor: "#F8FAFF", borderRadius: 8, padding: "12px 14px" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+              Cobertura
+            </p>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: adequado ? "#15803D" : "#B91C1C" }}>
+              {calc.coberturaPct}%
+            </p>
+          </div>
+        </div>
+
+        {/* Detalhamento */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+          {[
+            { label: "Necessidades Imediatas", value: calc.totalImediato },
+            { label: "Necessidades Contínuas", value: calc.subtotalContinuo },
+            { label: "Coberturas em Vida",     value: calc.totalCoberturasVida },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ backgroundColor: "#F9FAFB", borderRadius: 6, padding: "8px 10px" }}>
+              <p style={{ margin: "0 0 2px", fontSize: 10, color: "#9CA3AF" }}>{label}</p>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#374151" }}>{formatCurrency(value)}</p>
             </div>
           ))}
         </div>
 
-        {/* Gap */}
-        <div style={{ borderTop: "0.5px solid #F3F4F6", paddingTop: 14 }}>
-          {adequado ? (
-            <div style={{ backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB", borderRadius: 8, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-              <i className="ti ti-circle-check" style={{ fontSize: 22, color: "#15803D", flexShrink: 0 }} />
+        {/* Banner gap/adequado */}
+        {calc.capitalNecessario > 0 && (
+          adequado ? (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB",
+              borderRadius: 8, padding: "12px 16px",
+            }}>
+              <i className="ti ti-circle-check" style={{ fontSize: 18, color: "#15803D", flexShrink: 0 }} />
               <div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: "#15803D", margin: 0 }}>Cobertura adequada</p>
-                <p style={{ fontSize: 12, color: "#15803D", margin: "2px 0 0", opacity: 0.85 }}>O capital segurado cobre todas as necessidades identificadas.</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#15803D" }}>Cobertura adequada</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#166534" }}>
+                  Sua apólice cobre {calc.coberturaPct}% do capital necessário. Revise periodicamente.
+                </p>
               </div>
             </div>
           ) : (
-            <div style={{ backgroundColor: "#FEE2E2", border: "1px solid #C9A0A0", borderRadius: 8, padding: "14px 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <i className="ti ti-alert-triangle" style={{ fontSize: 22, color: "#B91C1C", flexShrink: 0 }} />
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#B91C1C", margin: 0 }}>Gap de Proteção</p>
-                  <p style={{ fontSize: 12, color: "#B91C1C", margin: "2px 0 0", opacity: 0.85 }}>Cobertura insuficiente — considerar contratação de seguro adicional</p>
-                </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10,
+              backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5",
+              borderRadius: 8, padding: "12px 16px",
+            }}>
+              <i className="ti ti-alert-circle" style={{ fontSize: 18, color: "#B91C1C", flexShrink: 0 }} />
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>
+                  Gap de {formatCurrency(calc.gap)}
+                </p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#991B1B" }}>
+                  A cobertura atual ({calc.coberturaPct}%) é insuficiente. Avalie a contratação de seguro adicional.
+                </p>
               </div>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#B91C1C", margin: "0 0 0 32px" }}>{formatCurrency(gap)}</p>
             </div>
-          )}
-        </div>
+          )
+        )}
       </div>
 
-      {/* ── Botão Salvar ────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      {/* ── BOTÃO SALVAR ─────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingBottom: 8 }}>
+        {salvo && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#15803D" }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 16 }} />
+            Análise salva com sucesso
+          </div>
+        )}
         <button
           onClick={handleSalvar}
-          disabled={salvando}
+          disabled={salvando || calc.capitalNecessario === 0}
           style={{
-            backgroundColor: salvo ? "#15803D" : "#2563EB",
+            backgroundColor: "#2563EB",
             color: "white",
             border: "none",
             borderRadius: 8,
-            padding: "10px 24px",
-            fontSize: 14,
+            padding: "10px 20px",
+            fontSize: 13,
             fontWeight: 600,
-            cursor: salvando ? "wait" : "pointer",
+            cursor: salvando || calc.capitalNecessario === 0 ? "not-allowed" : "pointer",
+            opacity: salvando || calc.capitalNecessario === 0 ? 0.6 : 1,
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            transition: "background-color 0.2s",
+            gap: 6,
           }}
         >
-          <i className={`ti ${salvo ? "ti-circle-check" : salvando ? "ti-loader-2" : "ti-device-floppy"}`} style={{ fontSize: 16 }} />
-          {salvo ? "Análise salva!" : salvando ? "Salvando..." : "Salvar análise"}
+          {salvando
+            ? <><i className="ti ti-loader-2" style={{ fontSize: 14 }} /> Salvando...</>
+            : <><i className="ti ti-device-floppy" style={{ fontSize: 14 }} /> Salvar análise</>
+          }
         </button>
       </div>
     </div>
