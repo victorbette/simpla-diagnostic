@@ -32,9 +32,11 @@ interface Props {
   mesNascimento?: number;
   /** Dashed horizontal reference line at this Y value */
   patrimonioNecessario?: number;
+  /** false = versão estática para o documento impresso (sem pills de zoom nem legenda clicável) */
+  interativo?: boolean;
 }
 
-export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF, patrimonioNecessario }: Props) {
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF, patrimonioNecessario, interativo = true }: Props) {
   // ── Hooks (must be before any early return) ──────────────────────────────────
   const [mostrarProjetado, setMostrarProjetado] = useState(true);
   const [mostrarIdeal, setMostrarIdeal] = useState(true);
@@ -246,6 +248,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   return (
     <div>
       {/* Pills de zoom (canto direito, acima do gráfico) */}
+      {interativo && (
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 4, marginBottom: 8 }}>
         {(["2a", "5a", "10a", "max"] as const).map(r => (
           <button
@@ -267,6 +270,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           </button>
         ))}
       </div>
+      )}
 
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={dadosFiltrados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
@@ -373,6 +377,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
       </ResponsiveContainer>
 
       {/* Legenda clicável abaixo do gráfico */}
+      {interativo && (
       <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 12 }}>
         <button
           onClick={() => setMostrarProjetado(p => !p)}
@@ -406,6 +411,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           </button>
         )}
       </div>
+      )}
     </div>
   );
 }

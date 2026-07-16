@@ -283,7 +283,7 @@ export function HomePage() {
           <div className="flex-1 flex items-center">
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <img
-                src="/logo-si.svg"
+                src="/diamond-icon-small.png"
                 alt="Simpla Invest"
                 style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
               />

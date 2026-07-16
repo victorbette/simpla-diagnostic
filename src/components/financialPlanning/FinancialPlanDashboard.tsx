@@ -1,8 +1,8 @@
-import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
-import { CARD_ORDER } from "@/lib/carteira/types";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
+import { GaugeSemiCircular, nivelScoreGauge } from "@/components/shared/GaugeSemiCircular";
+import { calcularScoresAreas, gerarTextosAreas } from "@/lib/resumoAreas";
 
 // ─ Props ─────────────────────────────────────────────────────────────────────
 
@@ -18,108 +18,6 @@ interface FinancialPlanDashboardProps {
   resultados: ResultadosEstrategia;
 }
 
-// ─ Nível por score ─────────────────────────────────────────────────────────
-
-function nivelScore(score: number): { label: string; cor: string; bg: string } {
-  if (score === 0)  return { label: "Não analisado", cor: "#9CA3AF", bg: "#F3F4F6" };
-  if (score <= 40)  return { label: "Em risco",      cor: "#B91C1C", bg: "#FEE2E2" };
-  if (score <= 60)  return { label: "Atenção",       cor: "#B45309", bg: "#FEF3C7" };
-  if (score <= 80)  return { label: "Adequado",      cor: "#2563EB", bg: "#DBEAFE" };
-  return              { label: "Excelente",     cor: "#15803D", bg: "#DCFCE7" };
-}
-
-// ─ Gauge Semicircular SVG ─────────────────────────────────────────────────────
-
-interface GaugeProps {
-  score: number;
-  label: string;
-  icone: string;
-  nivel: { label: string; cor: string; bg: string };
-}
-
-function GaugeSemiCircular({ score, label, icone, nivel }: GaugeProps) {
-  const W = 160;
-  const H = 90;
-  const CX = W / 2;
-  const CY = H;
-  const R_EXT = 72;
-  const R_INT = 52;
-
-  const graus = 180 - (score / 100) * 180;
-  const rad = (graus * Math.PI) / 180;
-
-  const xFim    = CX + R_EXT * Math.cos(rad);
-  const yFim    = CY - R_EXT * Math.sin(rad);
-  const xFimInt = CX + R_INT * Math.cos(rad);
-  const yFimInt = CY - R_INT * Math.sin(rad);
-
-  const largeArc = score > 50 ? 1 : 0;
-
-  const pathFundo =
-    `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY} ` +
-    `L ${CX + R_INT} ${CY} A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY} Z`;
-
-  const pathPreenchido = score > 0
-    ? `M ${CX - R_EXT} ${CY} A ${R_EXT} ${R_EXT} 0 ${largeArc} 1 ${xFim} ${yFim} ` +
-      `L ${xFimInt} ${yFimInt} A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY} Z`
-    : "";
-
-  return (
-    <div style={{
-      background: "white",
-      border: "0.5px solid #E5E7EB",
-      borderRadius: 12,
-      padding: "20px 16px 16px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    }}>
-      <div style={{ position: "relative" }}>
-        <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`}>
-          <path d={pathFundo} fill="#F3F4F6" />
-          {score > 0 && <path d={pathPreenchido} fill={nivel.cor} opacity={0.9} />}
-          <line
-            x1={CX}
-            y1={CY}
-            x2={CX + (R_EXT - 2) * Math.cos(rad)}
-            y2={CY - (R_EXT - 2) * Math.sin(rad)}
-            stroke="white"
-            strokeWidth={2}
-            opacity={score > 0 ? 1 : 0}
-          />
-          <text
-            x={CX}
-            y={CY - 8}
-            textAnchor="middle"
-            fontSize={24}
-            fontWeight={800}
-            fill={score > 0 ? nivel.cor : "#9CA3AF"}
-          >
-            {score > 0 ? score : "—"}
-          </text>
-          <text x={CX} y={CY + 8} textAnchor="middle" fontSize={10} fill="#9CA3AF">
-            /100
-          </text>
-        </svg>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
-        <i className={`ti ${icone}`} style={{ fontSize: 13, color: nivel.cor }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "center" }}>
-          {label}
-        </span>
-      </div>
-
-      <span style={{
-        fontSize: 10, fontWeight: 600, color: nivel.cor, background: nivel.bg,
-        padding: "2px 10px", borderRadius: 99, marginTop: 6,
-      }}>
-        {nivel.label}
-      </span>
-    </div>
-  );
-}
-
 // ─ Main Component ────────────────────────────────────────────────────────────
 
 export function FinancialPlanDashboard({
@@ -129,124 +27,27 @@ export function FinancialPlanDashboard({
 }: FinancialPlanDashboardProps) {
   const dc = plan.dadosCliente;
 
-  // ── Dados salvos das ferramentas ─────────────────────────────────────────
-  const ifSalvo       = resultados.if;
-  const seguroSalvo   = resultados.seguro;
-  const fiscalSalvo   = resultados.fiscal;
-  const carteiraSalva = resultados.carteira;
+  const scores = calcularScoresAreas(resultados);
+  const textos = gerarTextosAreas(plan, resultados);
 
-  // ── Score Aposentadoria ──────────────────────────────────────────────────
-  const scoreAposentadoria = (() => {
-    if (!ifSalvo) return 0;
-    const { patrimonioNecessario, patrimonioAposentadoria } = ifSalvo;
-    if (!patrimonioNecessario) return 0;
-    if (patrimonioAposentadoria >= patrimonioNecessario) return 100;
-    return Math.round((patrimonioAposentadoria / patrimonioNecessario) * 100);
-  })();
-
-  // ── Score Proteção ────────────────────────────────────────────────────────
-  const scoreProtecao = seguroSalvo?.scoreProtecao ?? 0;
-
-  // ── Score Tributário ──────────────────────────────────────────────────────
-  const scoreTributario = (() => {
-    if (!fiscalSalvo) return 0;
-    const { economiaAnual, tetoPGBLAnual, aporteAnual } = fiscalSalvo;
-    if (tetoPGBLAnual === 0) return 50;
-    if (economiaAnual > 0) {
-      const aproveitamento = Math.min(aporteAnual / tetoPGBLAnual, 1) * 100;
-      return Math.round(aproveitamento);
-    }
-    return 20;
-  })();
-
-  // ── Score Asset Allocation ────────────────────────────────────────────────
-  const scoreAA = (() => {
-    if (!carteiraSalva) return 0;
-    const { macroAtual, macroMeta } = carteiraSalva;
-    if (!macroAtual || !macroMeta || Object.keys(macroAtual).length === 0) return 0;
-    const desvios = CARD_ORDER.map((id) => Math.abs((macroAtual[id] ?? 0) - (macroMeta[id] ?? 0)));
-    const desvioMedio = desvios.reduce((s, d) => s + d, 0) / desvios.length;
-    return Math.max(0, Math.round(100 - desvioMedio * 3));
-  })();
-
-  // ── Score Geral ───────────────────────────────────────────────────────────
-  const scoresAtivos = [
-    ifSalvo       ? scoreAposentadoria : null,
-    carteiraSalva ? scoreAA            : null,
-    seguroSalvo   ? scoreProtecao      : null,
-    fiscalSalvo   ? scoreTributario    : null,
-  ].filter((s): s is number => s !== null);
-
-  const scoreGeral = scoresAtivos.length > 0
-    ? Math.round(scoresAtivos.reduce((a, v) => a + v, 0) / scoresAtivos.length)
-    : null;
-
-  const nivelGeral = nivelScore(scoreGeral ?? 0);
+  const scoreGeral = scores.geral;
+  const nivelGeral = nivelScoreGauge(scoreGeral ?? 0);
   const hoje = new Date().toLocaleDateString("pt-BR");
   const perfil = dc.suitabilityPerfil;
 
   // ── Gauges ─────────────────────────────────────────────────────────────────
   const gauges = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreAposentadoria, temDados: !!ifSalvo },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scoreAA,            temDados: !!carteiraSalva },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao,      temDados: !!seguroSalvo },
-    { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario,    temDados: !!fiscalSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     temDados: scores.temDados.lf },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa,     temDados: scores.temDados.aa },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     temDados: scores.temDados.ps },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, temDados: scores.temDados.fiscal },
   ];
 
-  // ── Textos analíticos por área ─────────────────────────────────────────────
-
-  const textoAposentadoria = (() => {
-    if (!ifSalvo) {
-      return "Simulação de liberdade financeira ainda não realizada. Acesse a aba Liberdade Financeira para configurar sua projeção patrimonial.";
-    }
-    const { patrimonioAposentadoria: projecao, patrimonioNecessario: meta, rendaMensalDesejada: renda, idadeMeta: idadeAlvo } = ifSalvo;
-    if (projecao >= meta) {
-      return `Com o aporte atual, sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, superando o patrimônio necessário de ${formatCurrency(meta)} para sustentar uma renda de ${formatCurrency(renda)}/mês. Sua meta de liberdade financeira está no caminho certo.`;
-    }
-    return `Sua projeção de patrimônio aos ${idadeAlvo} anos é de ${formatCurrency(projecao)}, abaixo do necessário ${formatCurrency(meta)} para uma renda mensal de ${formatCurrency(renda)}. Para alcançar a meta de liberdade financeira, é necessário aumentar aportes ou ajustar a estratégia de investimentos.`;
-  })();
-
-  const textoAA = (() => {
-    if (!carteiraSalva) {
-      return "Análise de carteira ainda não realizada. Acesse a aba Asset Allocation para registrar seus investimentos e definir a alocação ideal.";
-    }
-    const { patrimonio, macroAtual, macroMeta } = carteiraSalva;
-    const desvios = CARD_ORDER.map((id) => Math.abs((macroAtual[id] ?? 0) - (macroMeta[id] ?? 0)));
-    const desvioMedio = desvios.reduce((s, d) => s + d, 0) / desvios.length;
-    const alinhado = desvioMedio < 5;
-    const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
-    return `Patrimônio financeiro atual de ${formatCurrency(patrimonio)}, com perfil ${perfilLabel}. A alocação proposta segue o padrão Simpla Invest para o seu perfil. ${alinhado ? "Carteira alinhada com a meta." : "Há desvios na alocação atual que podem ser corrigidos com o plano de ação definido."}`;
-  })();
-
-  const textoProtecao = (() => {
-    if (!seguroSalvo) {
-      return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear suas necessidades de cobertura.";
-    }
-    const capitalNecessario = seguroSalvo.capitalNecessario ?? seguroSalvo.totalNeed ?? 0;
-    const capitalAtual = seguroSalvo.capitalAtual ?? seguroSalvo.totalCoverage ?? 0;
-    const gap = seguroSalvo.gap ?? Math.max(0, capitalNecessario - capitalAtual);
-    if (capitalAtual >= capitalNecessario) {
-      return `Sua cobertura de ${formatCurrency(capitalAtual)} é adequada para proteger sua família. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}.`;
-    }
-    return `Foi identificado um gap de proteção de ${formatCurrency(gap)}. Sua cobertura atual de ${formatCurrency(capitalAtual)} é inferior ao capital necessário de ${formatCurrency(capitalNecessario)} para proteger sua família.`;
-  })();
-
-  const textoTributario = (() => {
-    if (!fiscalSalvo) {
-      return "Análise tributária ainda não realizada. Acesse a aba Planejamento Tributário para simular o diferimento fiscal via PGBL.";
-    }
-    const { economiaAnual, tetoPGBLAnual } = fiscalSalvo;
-    if (economiaAnual > 0) {
-      return `Com a estratégia PGBL simulada, a economia fiscal estimada é de ${formatCurrency(economiaAnual)}/ano (${formatCurrency(economiaAnual / 12)}/mês). O teto disponível para dedução é de ${formatCurrency(tetoPGBLAnual)}/ano.`;
-    }
-    return "Não foi identificada oportunidade de diferimento fiscal com os dados informados. Verifique o tipo de declaração e a renda na calculadora tributária.";
-  })();
-
   const textCards = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textoAposentadoria, score: scoreAposentadoria, temDados: !!ifSalvo },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textoAA,            score: scoreAA,            temDados: !!carteiraSalva },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textoProtecao,      score: scoreProtecao,      temDados: !!seguroSalvo },
-    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textoTributario,    score: scoreTributario,    temDados: !!fiscalSalvo },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textos.lf,     score: scores.lf,     temDados: scores.temDados.lf },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textos.aa,     score: scores.aa,     temDados: scores.temDados.aa },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textos.ps,     score: scores.ps,     temDados: scores.temDados.ps },
+    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textos.fiscal, score: scores.fiscal, temDados: scores.temDados.fiscal },
   ];
 
   return (
@@ -286,7 +87,7 @@ export function FinancialPlanDashboard({
       {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {gauges.map(({ icone, nome, score, temDados }) => {
-          const n = nivelScore(temDados ? score : 0);
+          const n = nivelScoreGauge(temDados ? score : 0);
           return (
             <GaugeSemiCircular
               key={nome}
@@ -301,7 +102,7 @@ export function FinancialPlanDashboard({
 
       {/* ── CARDS ANALÍTICOS POR ÁREA ─────────────────────────────────────────── */}
       {textCards.map(({ icone, nome, texto, score, temDados }) => {
-        const n = nivelScore(temDados ? score : 0);
+        const n = nivelScoreGauge(temDados ? score : 0);
         return (
           <div
             key={nome}

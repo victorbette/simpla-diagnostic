@@ -81,33 +81,3 @@ export const LABEL_SUBSECAO = (cor: string = DOC.navy): CSSProperties => ({
   margin: "0 0 10px",
 });
 
-/* ── Backward-compat shims (componentes legados) ──────────────────────────── */
-
-export const PAGINA: CSSProperties = {
-  width: "210mm",
-  minHeight: "297mm",
-  margin: "0 auto 32px",
-  background: "white",
-  position: "relative",
-  overflow: "hidden",
-  boxSizing: "border-box",
-  padding: "40px 44px",
-  display: "flex",
-  flexDirection: "column",
-  fontFamily: DOC.fonte,
-  pageBreakAfter: "always",
-  breakAfter: "page",
-};
-
-export const HEADER_PAGINA = (borderColor: string = DOC.linha): CSSProperties => ({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  paddingBottom: 16,
-  marginBottom: 24,
-  borderBottom: `2px solid ${borderColor}`,
-});
-
-export const LABEL_METRICA: CSSProperties = LABEL_CARD;
-
-export const CARD_METRICA: CSSProperties = CARD;

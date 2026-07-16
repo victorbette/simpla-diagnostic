@@ -119,7 +119,7 @@ export function FPLayout({
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/logo-si.svg"
+              src="/diamond-icon-small.png"
               alt="Simpla Invest"
               style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
             />

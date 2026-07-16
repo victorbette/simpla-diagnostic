@@ -5,16 +5,20 @@ import { CONFIG_CONSULTOR_DEFAULT } from "@/lib/documentoConfig";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { gerarPDF } from "@/lib/gerarPDF";
 import { DocCapa } from "./documento/DocCapa";
-import { DocDisclaimer } from "./documento/DocDisclaimer";
 import { DocSumario } from "./documento/DocSumario";
-import { DocPerfilInvestidor } from "./documento/DocPerfilInvestidor";
+import { DocFinancialPlanning } from "./documento/DocFinancialPlanning";
+import { DocPontoDePartida } from "./documento/DocPontoDePartida";
 import { DivisoriaSecao } from "./documento/DivisoriaSecao";
 import { DocLiberdadeFinanceira } from "./documento/DocLiberdadeFinanceira";
 import { DocAssetAllocation } from "./documento/DocAssetAllocation";
-import { DocProtecaoSucessorio } from "./documento/DocProtecaoSucessorio";
-import { DocPlanejamentoFiscal } from "./documento/DocPlanejamentoFiscal";
-import { DocProximosPassos } from "./documento/DocProximosPassos";
+import { DocAlocacaoAtualProposta } from "./documento/DocAlocacaoAtualProposta";
+import { DocMovimentacoes } from "./documento/DocMovimentacoes";
+import { DocProtecaoSucessao } from "./documento/DocProtecaoSucessao";
+import { DocPlanejamentoTributario } from "./documento/DocPlanejamentoTributario";
+import { DocPlanoAcao } from "./documento/DocPlanoAcao";
 import { DocMaosAObra } from "./documento/DocMaosAObra";
+import { DocDisclaimer } from "./documento/DocDisclaimer";
+import { DocContracapa } from "./documento/DocContracapa";
 
 interface Props {
   plan: FinancialPlan;
@@ -23,6 +27,25 @@ interface Props {
   onFechar?: () => void;
   onResultadosChange?: (r: ResultadosEstrategia) => void;
   onConcluir?: () => Promise<void>;
+}
+
+const MESES_PT = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+
+/** Data da capa no formato "Junho / 2026". Aceita a dataGeracao persistida
+ *  em pt-BR longo ("16 de julho de 2026"); fallback: data atual. */
+function dataCapaMesAno(dataGeracao?: string): string {
+  if (dataGeracao) {
+    const m = dataGeracao.toLowerCase().match(/de\s+([a-zç]+)\s+de\s+(\d{4})/);
+    if (m && MESES_PT.includes(m[1])) {
+      return `${m[1][0].toUpperCase()}${m[1].slice(1)} / ${m[2]}`;
+    }
+  }
+  const agora = new Date();
+  const mes = MESES_PT[agora.getMonth()];
+  return `${mes[0].toUpperCase()}${mes.slice(1)} / ${agora.getFullYear()}`;
 }
 
 export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChange, onConcluir }: Props) {
@@ -42,9 +65,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
     try { localStorage.setItem("config_consultor", JSON.stringify(config)); } catch { /**/ }
   }, [config]);
 
-  const dataEstrategia =
-    resultados.estrategiaFinal?.dataGeracao ??
-    new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  const dataCapa = dataCapaMesAno(resultados.estrategiaFinal?.dataGeracao);
 
   // Nome curto do consultor para a capa (sem credenciais entre parênteses)
   const nomeConsultorCapa = config.nomeCompleto.replace(/\s*\(.*\)\s*$/, "");
@@ -121,34 +142,37 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         </button>
       </div>
 
-      {/* Documento */}
+      {/* Documento — ordem da referência v4 */}
       <div className="doc-pages-wrap" style={{ padding: "32px 16px" }}>
         <DocCapa
           nomeCliente={clientName}
-          dataEstrategia={dataEstrategia}
+          dataEstrategia={dataCapa}
           nomeConsultor={nomeConsultorCapa}
         />
 
-        <DocDisclaimer nomeCliente={clientName} config={config} onConfigChange={setConfig} />
-
         <DocSumario nomeCliente={clientName} />
 
-        <DocPerfilInvestidor nomeCliente={clientName} plan={plan} />
+        <DocFinancialPlanning nomeCliente={clientName} />
+
+        <DivisoriaSecao titulo="Ponto de Partida" nomeCliente={clientName} />
+        <DocPontoDePartida nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={clientName} />
         <DocLiberdadeFinanceira nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Asset Allocation" nomeCliente={clientName} />
         <DocAssetAllocation nomeCliente={clientName} plan={plan} resultados={resultados} />
+        <DocAlocacaoAtualProposta nomeCliente={clientName} plan={plan} resultados={resultados} />
+        <DocMovimentacoes nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={clientName} />
-        <DocProtecaoSucessorio nomeCliente={clientName} plan={plan} resultados={resultados} />
+        <DocProtecaoSucessao nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Planejamento Tributário" nomeCliente={clientName} />
-        <DocPlanejamentoFiscal nomeCliente={clientName} plan={plan} resultados={resultados} />
+        <DocPlanejamentoTributario nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DivisoriaSecao titulo="Plano de Ação" nomeCliente={clientName} />
-        <DocProximosPassos
+        <DocPlanoAcao
           nomeCliente={clientName}
           plan={plan}
           resultados={resultados}
@@ -156,6 +180,10 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         />
 
         <DocMaosAObra nomeCliente={clientName} config={config} />
+
+        <DocDisclaimer nomeCliente={clientName} config={config} onConfigChange={setConfig} />
+
+        <DocContracapa />
       </div>
     </div>
   );
