@@ -14,6 +14,7 @@ export interface PlanoAcaoItem {
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
+  movimentacaoEditada?: number;
   prioridade?: string;
   observacao?: string;
   valorResgateBRL?: number;
@@ -84,11 +85,14 @@ export interface ResultadoSeguro {
   criticalIllnessTotal: number;
   criticalIllnessGap: number;
   criticalIllnessCoverage: number;
+  capitalCoberturasVida?: number;
+  dadosFormulario?: Record<string, unknown>;
   dataCalculo: string;
   savedAt: string;
 }
 
 export interface ResultadoFiscal {
+  tipoDeclaracao?: string;
   rendaAnual: number;
   tetoPGBLAnual: number;
   aporteAnual: number;

@@ -132,7 +132,7 @@ export function ConfiguracoesPage({ onFechar }: Props) {
                 style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", resize: "vertical", fontFamily: "inherit", lineHeight: 1.6, boxSizing: "border-box" }}
               />
               <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
-                Aparece no documento de Estratégia Inicial
+                Aparece no documento de Financial Planning
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export function ConfiguracoesPage({ onFechar }: Props) {
         <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <i className="ti ti-file-description" style={{ fontSize: 18, color: "#2563EB" }} />
-            <span style={{ fontWeight: 700, fontSize: 15, color: "#111827" }}>Disclaimer — Documento de Estratégia Inicial</span>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "#111827" }}>Disclaimer — Documento de Financial Planning</span>
           </div>
           <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 16 }}>
             Este texto aparece na segunda página do documento enviado ao cliente.

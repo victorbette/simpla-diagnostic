@@ -16,17 +16,17 @@ interface Props {
 
 /** Página "Ponto de Partida" — resumo do diagnóstico das quatro áreas (referência v4 p.5) */
 export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
-  const scores = calcularScoresAreas(resultados);
+  const scores = calcularScoresAreas(plan, resultados);
   const textos = gerarTextosAreas(plan, resultados);
   const perfil = plan.dadosCliente.suitabilityPerfil;
-  const nivelGeral = nivelScoreGauge(scores.geral ?? 0);
+  const nivelGeral = nivelScoreGauge(scores.geral ?? -1);
   const dataDiagnostico = new Date().toLocaleDateString("pt-BR");
 
   const areas = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     temDados: scores.temDados.lf,     texto: textos.lf },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa,     temDados: scores.temDados.aa,     texto: textos.aa },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     temDados: scores.temDados.ps,     texto: textos.ps },
-    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, temDados: scores.temDados.fiscal, texto: textos.fiscal },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     texto: textos.lf },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa,     texto: textos.aa },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     texto: textos.ps },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, texto: textos.fiscal },
   ];
 
   return (
@@ -95,12 +95,12 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
 
       {/* 4 gauges semicirculares */}
       <div className="doc-card" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12 }}>
-        {areas.map(({ icone, nome, score, temDados }) => {
-          const n = nivelScoreGauge(temDados ? score : 0);
+        {areas.map(({ icone, nome, score }) => {
+          const n = nivelScoreGauge(score);
           return (
             <GaugeSemiCircular
               key={nome}
-              score={temDados ? score : 0}
+              score={score}
               label={nome}
               icone={icone}
               nivel={n}
@@ -112,8 +112,8 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
 
       {/* Cards analíticos por área */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-        {areas.map(({ icone, nome, score, temDados, texto }) => {
-          const n = nivelScoreGauge(temDados ? score : 0);
+        {areas.map(({ icone, nome, score, texto }) => {
+          const n = nivelScoreGauge(score);
           const nomeCard = nome === "Tributário" ? "Planejamento Tributário" : nome;
           return (
             <div

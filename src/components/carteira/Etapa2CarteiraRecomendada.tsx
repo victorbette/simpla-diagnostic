@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
-import { CARD_ORDER, CARD_META, ALOCACAO_PADRAO } from "@/lib/carteira/types";
+import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
-import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
+import { CarteiraCard } from "./CarteiraCard";
 import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
 
 interface Props {
@@ -40,10 +40,6 @@ function parseBRL(raw: string): number {
   return isNaN(v) || v < 0 ? 0 : v;
 }
 
-function totalCard(ativos: Ativo[], cardId: CardId): number {
-  return ativos.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
-}
-
 export function Etapa2CarteiraRecomendada({
   ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta,
   patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
@@ -68,23 +64,6 @@ export function Etapa2CarteiraRecomendada({
 
   function setPct(cardId: CardId, val: number) {
     onAlocacaoMeta({ ...alocacaoMeta, [cardId]: Math.max(0, Math.min(100, val)) });
-  }
-
-  function carregarPadrao() {
-    const padrao = clientProfile ? ALOCACAO_PADRAO[clientProfile] : null;
-    if (padrao) onAlocacaoMeta({ ...padrao });
-  }
-
-  function copiarAtual() {
-    const novoMeta = CARD_ORDER.reduce((acc, cardId) => ({
-      ...acc,
-      [cardId]: patrimonio > 0 ? (totalCard(ativosAtuais, cardId) / patrimonio) * 100 : 0,
-    }), {} as Record<CardId, number>);
-    onAlocacaoMeta(novoMeta);
-  }
-
-  function handleAdd(cardId: CardId) {
-    onAtivos([...ativos, makeNovoAtivo(cardId)]);
   }
 
   function handleRemove(id: string) {
@@ -152,7 +131,7 @@ export function Etapa2CarteiraRecomendada({
                 return (
                   <div key={cardId} style={{
                     display: "grid",
-                    gridTemplateColumns: "140px 1fr 62px 90px",
+                    gridTemplateColumns: "140px 1fr 72px 90px",
                     alignItems: "center",
                     gap: 10,
                     paddingLeft: 12,
@@ -176,7 +155,7 @@ export function Etapa2CarteiraRecomendada({
                     />
 
                     {/* % input */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", borderRadius: 99, background: `${grupo.cor}18`, padding: "3px 8px", gap: 0 }}>
                       <input
                         type="number"
                         min={0}
@@ -185,12 +164,12 @@ export function Etapa2CarteiraRecomendada({
                         value={pct}
                         onChange={(e) => setPct(cardId, parseFloat(e.target.value) || 0)}
                         style={{
-                          width: 44, textAlign: "right", fontSize: 12, fontWeight: 600,
-                          border: "1px solid #BFDBFE", borderRadius: 4, padding: "2px 4px",
-                          color: grupo.cor, outline: "none",
+                          width: 38, textAlign: "right", fontSize: 12, fontWeight: 700,
+                          border: "none", background: "transparent",
+                          color: grupo.cor, outline: "none", padding: 0,
                         }}
                       />
-                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>%</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: grupo.cor }}>%</span>
                     </div>
 
                     {/* R$ meta */}
@@ -204,31 +183,6 @@ export function Etapa2CarteiraRecomendada({
           );
         })}
 
-        {/* Buttons */}
-        <div style={{ display: "flex", gap: 8, marginTop: 4, paddingTop: 12, borderTop: "0.5px solid #F3F4F6" }}>
-          <button
-            onClick={carregarPadrao}
-            disabled={!clientProfile}
-            style={{
-              fontSize: 12, color: "#2563EB", background: "#EFF6FF",
-              border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "6px 12px",
-              cursor: clientProfile ? "pointer" : "default", opacity: clientProfile ? 1 : 0.4,
-            }}
-          >
-            ↺ Padrão Simpla{clientProfile ? ` (${PERFIL_LABELS[clientProfile] ?? clientProfile})` : ""}
-          </button>
-          <button
-            onClick={copiarAtual}
-            style={{
-              fontSize: 12, color: "#6B7280", background: "#F3F4F6",
-              border: "0.5px solid #E5E7EB", borderRadius: 6, padding: "6px 12px",
-              cursor: "pointer",
-            }}
-          >
-            Copiar carteira atual
-          </button>
-        </div>
-
         {/* Barra de progresso de alocação */}
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -240,14 +194,20 @@ export function Etapa2CarteiraRecomendada({
               {totalAlocado.toFixed(1)}%
             </span>
           </div>
-          <div style={{ height: 8, background: "#F3F4F6", borderRadius: 99, overflow: "hidden" }}>
-            <div style={{
-              height: "100%",
-              width: `${Math.min(totalAlocado, 100)}%`,
-              background: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#F59E0B",
-              borderRadius: 99,
-              transition: "width 300ms ease, background 300ms ease",
-            }} />
+          <div style={{
+            borderRadius: 99, padding: 3,
+            background: alocacaoCompleta ? "#DCFCE7" : alocacaoExcede ? "#FEE2E2" : "#FEF3C7",
+            border: `1px solid ${alocacaoCompleta ? "#BBF7D0" : alocacaoExcede ? "#FECACA" : "#FDE68A"}`,
+          }}>
+            <div style={{ height: 6, background: "#E5E7EB", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${Math.min(totalAlocado, 100)}%`,
+                background: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#F59E0B",
+                borderRadius: 99,
+                transition: "width 300ms ease, background 300ms ease",
+              }} />
+            </div>
           </div>
           <div style={{ marginTop: 10 }}>
             {alocacaoCompleta && (
@@ -366,7 +326,6 @@ export function Etapa2CarteiraRecomendada({
           ativosAtuaisRef={ativosAtuais}
           usdBrl={usdBrl}
           onUsdBrlChange={onUsdBrlChange}
-          onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}
         />

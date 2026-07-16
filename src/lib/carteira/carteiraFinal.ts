@@ -19,7 +19,7 @@ export function montarCarteiraFinal(
       switch (acao) {
         case "novo":
         case "aportar":
-          valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoBRL ?? 0);
+          valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0);
           break;
         case "manter":
           valorFinal = item.valorAtualBRL ?? 0;

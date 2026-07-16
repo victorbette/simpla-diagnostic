@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaPGBL } from "@/components/ferramentas/FerramentaPGBL";
 import type { ResultadoFiscal } from "@/types/estrategiaResultados";
@@ -34,18 +33,6 @@ export function SecaoFiscal({
 }: Props) {
   const [lastEdit, setLastEdit] = useState("");
 
-  // Dados da coleta para o contexto
-  const dc = plan.dadosCliente;
-  const rendaAnualDC =
-    (Number(dc.rendaMensal) || 0) * 12 +
-    (dc.possuiImovelRenda ? (Number(dc.rendaImovelMensal) || 0) * 12 : 0);
-  const tetoPGBLDC = rendaAnualDC * 0.12;
-  // Usa 27,5% como estimativa máxima — a calculadora dará o valor exato
-  const economiaPotencialDC = tetoPGBLDC * 0.275;
-  const temPGBL = dc.possuiPrevidencia && (dc.tipoPrevidencia === "pgbl" || dc.tipoPrevidencia === "ambos");
-  const temVGBL = dc.possuiPrevidencia && (dc.tipoPrevidencia === "vgbl" || dc.tipoPrevidencia === "ambos");
-  const tipoDecl = plan.fiscal.tipoDeclaracao;
-
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
@@ -59,73 +46,12 @@ export function SecaoFiscal({
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Card contextual — sempre visível */}
-      <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>
-            Planejamento Tributário — PGBL
-          </p>
-
-          {/* Banner contextual da situação de previdência */}
-          {temPGBL && (
-            <div style={{ background: "#DCFCE7", border: "0.5px solid #86EFAC", borderLeft: "4px solid #15803D", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <i className="ti ti-circle-check" style={{ color: "#15803D", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-              <p style={{ fontSize: 12, color: "#14532D", margin: 0, lineHeight: 1.5 }}>
-                Cliente possui <strong>PGBL</strong>. Use a calculadora para verificar o aproveitamento do teto e a economia real.
-              </p>
-            </div>
-          )}
-          {temVGBL && !temPGBL && tipoDecl === "completa" && (
-            <div style={{ background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-              <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
-                Cliente possui <strong>VGBL com declaração completa</strong> — VGBL não deduz no IR. Há espaço para abrir um PGBL e aproveitar o teto de {formatCurrency(tetoPGBLDC)}/ano.
-              </p>
-            </div>
-          )}
-          {!dc.possuiPrevidencia && rendaAnualDC > 0 && (
-            <div style={{ background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
-              <i className="ti ti-bulb" style={{ color: "#2563EB", fontSize: 15, marginTop: 1, flexShrink: 0 }} />
-              <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
-                Cliente <strong>sem previdência privada</strong>. Potencial de economia de até {formatCurrency(economiaPotencialDC)}/ano com PGBL na declaração completa.
-              </p>
-            </div>
-          )}
-
-          {/* Métricas contextuais */}
-          {rendaAnualDC > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              {[
-                { label: "Renda anual", value: formatCurrency(rendaAnualDC) },
-                { label: "Teto PGBL (12%)", value: formatCurrency(tetoPGBLDC) + "/ano" },
-                { label: "Economia potencial", value: formatCurrency(economiaPotencialDC) + "/ano" },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ backgroundColor: "#F8FAFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: "10px 12px" }}>
-                  <p style={{ fontSize: 10, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 3px" }}>{label}</p>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>{value}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tipo de declaração */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 12, color: "#6B7280" }}>Declaração:</span>
-            <span style={{
-              fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
-              backgroundColor: tipoDecl === "completa" ? "#DCFCE7" : tipoDecl === "simplificada" ? "#FEF3C7" : "#F3F4F6",
-              color: tipoDecl === "completa" ? "#15803D" : tipoDecl === "simplificada" ? "#B45309" : "#6B7280",
-            }}>
-              {tipoDecl === "completa" ? "Completa" : tipoDecl === "simplificada" ? "Simplificada" : "Não informado"}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* FerramentaPGBL inline */}
       <FerramentaPGBL
         plan={plan}
         savedResult={resultadoFiscal ? {
+          tipoDeclaracao:         resultadoFiscal.tipoDeclaracao,
           rendaAnual:             resultadoFiscal.rendaAnual,
           tetoPGBLAnual:          resultadoFiscal.tetoPGBLAnual,
           aporteAnual:            resultadoFiscal.aporteAnual,
@@ -143,6 +69,7 @@ export function SecaoFiscal({
         } : null}
         onSave={(r) => {
           onResultadoFiscal({
+            tipoDeclaracao:         r.tipoDeclaracao,
             rendaAnual:             r.rendaAnual,
             tetoPGBLAnual:          r.tetoPGBLAnual,
             aporteAnual:            r.aporteAnual,

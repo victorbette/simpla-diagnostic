@@ -61,8 +61,8 @@ export function SecaoAssetAllocation({
     const macroMeta: Record<string, number> = { ...(r.alocacaoMeta ?? {}) };
 
     const totalAportes = (r.planoAcao ?? [])
-      .filter((i) => (i.acao === "aportar" || i.acao === "novo") && i.movimentacaoBRL > 0)
-      .reduce((s, i) => s + i.movimentacaoBRL, 0);
+      .filter((i) => (i.acao === "aportar" || i.acao === "novo"))
+      .reduce((s, i) => s + (i.movimentacaoEditada ?? i.movimentacaoBRL), 0);
     const totalResgates = (r.planoAcao ?? [])
       .filter((i) => i.acao === "resgatar_parcial" || i.acao === "resgatar_total")
       .reduce((s, i) => {
@@ -89,6 +89,7 @@ export function SecaoAssetAllocation({
         valorAtualBRL: i.valorAtualBRL,
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
+        movimentacaoEditada: i.movimentacaoEditada,
         valorResgateBRL: i.valorResgateBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
@@ -178,8 +179,8 @@ export function SecaoAssetAllocation({
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   const totalAportes = (rc.planoAcao ?? [])
-    .filter((i) => { const a = i.acao ?? i.tipo; return (a === "aportar" || a === "novo") && (i.movimentacaoBRL ?? 0) > 0; })
-    .reduce((s, i) => s + (i.movimentacaoBRL ?? 0), 0);
+    .filter((i) => { const a = i.acao ?? i.tipo; return a === "aportar" || a === "novo"; })
+    .reduce((s, i) => s + (i.movimentacaoEditada ?? i.movimentacaoBRL ?? 0), 0);
   const totalResgates = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return a === "resgatar_parcial" || a === "resgatar_total"; })
     .reduce((s, i) => {
@@ -187,8 +188,6 @@ export function SecaoAssetAllocation({
       if (a === "resgatar_parcial" && i.valorResgateBRL !== undefined) return s + i.valorResgateBRL;
       return s + Math.abs(i.movimentacaoBRL ?? 0);
     }, 0);
-  const saldoLiquido = totalAportes - totalResgates;
-
   const actionItems = rc.planoAcao ?? [];
 
   const groupedByCard: Record<string, typeof actionItems> = {};
@@ -205,48 +204,13 @@ export function SecaoAssetAllocation({
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {/* Section header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 700, color: "#15803D", backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB", borderRadius: 999, padding: "4px 12px" }}>
-              ✓ Carteira definida
-            </span>
-            <span style={{ fontSize: 11, color: "#6B7280", backgroundColor: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 999, padding: "2px 10px" }}>
-              {new Date(rc.dataCalculo).toLocaleDateString("pt-BR")}
-            </span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <button
             onClick={() => setCarteiraOpen(true)}
             style={{ fontSize: 12, fontWeight: 600, color: "#000000", backgroundColor: "transparent", border: "1px solid #000000", borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}
           >
             Editar carteira →
           </button>
-        </div>
-
-        {/* Card 1 — Visão Geral */}
-        <div style={CARD}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Visão Geral</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-            <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Patrimônio Financeiro</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#1E3A8A", margin: 0 }}>{formatCurrency(patrimonio)}</p>
-            </div>
-            <div style={{ backgroundColor: "#DCFCE7", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: "#15803D", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Aportar</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatCurrency(totalAportes)}</p>
-            </div>
-            <div style={{ backgroundColor: totalResgates > 0 ? "#FEE2E2" : "#F0F7FF", borderRadius: 8, padding: "12px 16px" }}>
-              <p style={{ fontSize: 11, color: totalResgates > 0 ? "#B91C1C" : "#6B7280", margin: "0 0 4px", textTransform: "uppercase", fontWeight: 600 }}>Total a Resgatar</p>
-              <p style={{ fontSize: 20, fontWeight: 700, color: totalResgates > 0 ? "#B91C1C" : "#9CA3AF", margin: 0 }}>{formatCurrency(totalResgates)}</p>
-            </div>
-          </div>
-          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, backgroundColor: saldoLiquido >= 0 ? "#DCFCE7" : "#FEE2E2", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C", textTransform: "uppercase" }}>
-              Saldo Líquido (Aportes − Resgates)
-            </span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: saldoLiquido >= 0 ? "#15803D" : "#B91C1C" }}>
-              {saldoLiquido >= 0 ? "+" : ""}{formatCurrency(saldoLiquido)}
-            </span>
-          </div>
         </div>
 
         {/* Card 2 — Alocação Atual × Proposta */}
@@ -399,12 +363,10 @@ export function SecaoAssetAllocation({
                   } else if (acao === "resgatar_total") {
                     movTexto = "−" + formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
                     movCor = "#B91C1C";
-                  } else if ((item.movimentacaoBRL ?? 0) > 0) {
-                    movTexto = "+" + formatBRL(item.movimentacaoBRL ?? 0);
-                    movCor = "#15803D";
                   } else {
-                    movTexto = formatBRL(Math.abs(item.movimentacaoBRL ?? 0));
-                    movCor = "#111827";
+                    const mov = item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0;
+                    movTexto = mov > 0 ? "+" + formatBRL(mov) : formatBRL(Math.abs(mov));
+                    movCor = mov > 0 ? "#15803D" : "#111827";
                   }
                   return (
                     <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F0F7FF" }}>
@@ -423,7 +385,50 @@ export function SecaoAssetAllocation({
           )}
         </div>
 
-        {/* Card 5 — Comment */}
+        {/* Card 5 — Observações do Plano de Ação */}
+        {(() => {
+          const itensComObs = (rc.planoAcao ?? []).filter((i) => i.observacao && i.observacao.trim());
+          if (itensComObs.length === 0) return null;
+          return (
+            <div style={CARD}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                Observações do Plano de Ação
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {itensComObs.map((item) => {
+                  const acao = item.acao ?? item.tipo ?? "";
+                  const badge =
+                    acao === "novo"             ? { label: "✦ Novo",             bg: "#DBEAFE", color: "#1E40AF" } :
+                    acao === "aportar"          ? { label: "↑ Aportar",          bg: "#DCFCE7", color: "#15803D" } :
+                    acao === "manter"           ? { label: "→ Manter",           bg: "#F3F4F6", color: "#6B7280" } :
+                    acao === "resgatar_parcial" ? { label: "↓ Resgatar Parcial", bg: "#FEF3C7", color: "#B45309" } :
+                    acao === "resgatar_total"   ? { label: "↓ Resgatar Total",   bg: "#FEE2E2", color: "#B91C1C" } :
+                                                  { label: acao || "—",          bg: "#F3F4F6", color: "#6B7280" };
+                  return (
+                    <div key={item.id} style={{ padding: "10px 12px", backgroundColor: "#F8FAFC", borderRadius: 8, border: "0.5px solid #E5E7EB" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, backgroundColor: badge.bg, color: badge.color, flexShrink: 0 }}>{badge.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{item.nomeAtivo}</span>
+                        {item.prioridade && (
+                          <span style={{
+                            fontSize: 10, padding: "1px 6px", borderRadius: 999, flexShrink: 0,
+                            backgroundColor: item.prioridade === "alta" ? "#FEE2E2" : item.prioridade === "media" ? "#FEF3C7" : "#F0F7FF",
+                            color: item.prioridade === "alta" ? "#B91C1C" : item.prioridade === "media" ? "#B45309" : "#6B7280",
+                          }}>
+                            {item.prioridade === "alta" ? "Alta" : item.prioridade === "media" ? "Média" : "Baixa"}
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 12, color: "#374151", margin: 0, lineHeight: 1.5 }}>{item.observacao}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Card 6 — Comment */}
         {commentCard}
       </div>
 

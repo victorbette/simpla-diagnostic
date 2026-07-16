@@ -27,27 +27,27 @@ export function FinancialPlanDashboard({
 }: FinancialPlanDashboardProps) {
   const dc = plan.dadosCliente;
 
-  const scores = calcularScoresAreas(resultados);
+  const scores = calcularScoresAreas(plan, resultados);
   const textos = gerarTextosAreas(plan, resultados);
 
   const scoreGeral = scores.geral;
-  const nivelGeral = nivelScoreGauge(scoreGeral ?? 0);
+  const nivelGeral = nivelScoreGauge(scoreGeral ?? -1);
   const hoje = new Date().toLocaleDateString("pt-BR");
   const perfil = dc.suitabilityPerfil;
 
   // ── Gauges ─────────────────────────────────────────────────────────────────
   const gauges = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     temDados: scores.temDados.lf },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa,     temDados: scores.temDados.aa },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     temDados: scores.temDados.ps },
-    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, temDados: scores.temDados.fiscal },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf     },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa     },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps     },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal },
   ];
 
   const textCards = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textos.lf,     score: scores.lf,     temDados: scores.temDados.lf },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textos.aa,     score: scores.aa,     temDados: scores.temDados.aa },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textos.ps,     score: scores.ps,     temDados: scores.temDados.ps },
-    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textos.fiscal, score: scores.fiscal, temDados: scores.temDados.fiscal },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textos.lf,     score: scores.lf     },
+    { icone: "ti-chart-pie", nome: "Asset Allocation",          texto: textos.aa,     score: scores.aa     },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textos.ps,     score: scores.ps     },
+    { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textos.fiscal, score: scores.fiscal },
   ];
 
   return (
@@ -86,12 +86,12 @@ export function FinancialPlanDashboard({
 
       {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-        {gauges.map(({ icone, nome, score, temDados }) => {
-          const n = nivelScoreGauge(temDados ? score : 0);
+        {gauges.map(({ icone, nome, score }) => {
+          const n = nivelScoreGauge(score);
           return (
             <GaugeSemiCircular
               key={nome}
-              score={temDados ? score : 0}
+              score={score}
               label={nome}
               icone={icone}
               nivel={n}
@@ -101,8 +101,8 @@ export function FinancialPlanDashboard({
       </div>
 
       {/* ── CARDS ANALÍTICOS POR ÁREA ─────────────────────────────────────────── */}
-      {textCards.map(({ icone, nome, texto, score, temDados }) => {
-        const n = nivelScoreGauge(temDados ? score : 0);
+      {textCards.map(({ icone, nome, texto, score }) => {
+        const n = nivelScoreGauge(score);
         return (
           <div
             key={nome}

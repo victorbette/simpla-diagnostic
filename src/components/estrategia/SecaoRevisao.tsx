@@ -1095,7 +1095,7 @@ export function SecaoRevisao({
             (e.currentTarget as HTMLButtonElement).style.opacity = "1";
           }}
         >
-          Finalizar e ver Estratégia Inicial
+          Finalizar e ver Financial Planning
           <ArrowRight style={{ width: 18, height: 18 }} />
         </button>
       </div>

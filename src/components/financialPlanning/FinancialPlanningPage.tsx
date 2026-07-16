@@ -29,7 +29,7 @@ const ABAS = [
   { id: "protecao_sucessorio",  label: "Proteção e Sucessório", icone: "ti-shield"           },
   { id: "planejamento_fiscal",  label: "Planejamento Tributário",   icone: "ti-receipt"          },
   { id: "resultado",            label: "Resultado",             icone: "ti-chart-bar"        },
-  { id: "estrategia_pronta",    label: "Estratégia Pronta",     icone: "ti-file-download"    },
+  { id: "estrategia_pronta",    label: "Financial Planning",    icone: "ti-file-download"    },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────────────
@@ -119,6 +119,18 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         if (store.planRef.current) {
           setPlan(store.planRef.current);
           setDirty(false);
+          // Prioridade Supabase > localStorage para resultados
+          const planId = store.planRef.current.id;
+          if (planId) {
+            try {
+              const estrategia = await store.loadEstrategia(planId);
+              if (estrategia && Object.keys(estrategia).length > 0) {
+                setResultados(estrategia as unknown as ResultadosEstrategia);
+              }
+            } catch (err) {
+              console.error("loadEstrategia failed:", err);
+            }
+          }
         }
       }
     };
@@ -446,7 +458,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                     tags={secaoTags}
                     onTagsChange={handleTagsChange}
                     resultadoCarteira={resultados.carteira}
-                    onResultadoCarteira={(r) => setResultados((prev) => ({ ...prev, carteira: r }))}
+                    onResultadoCarteira={async (r) => {
+                      const novos = { ...resultados, carteira: r };
+                      setResultados(novos);
+                      if (plan.id) {
+                        try { await store.saveEstrategia(plan.id, novos as unknown as Record<string, unknown>); }
+                        catch (err) { console.error("saveEstrategia (carteira):", err); }
+                      }
+                    }}
                     onLimparCarteira={() => {
                       setResultados((prev) => ({ ...prev, carteira: null }));
                       try {
@@ -471,7 +490,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                     tags={secaoTags}
                     onTagsChange={handleTagsChange}
                     resultadoSeguro={resultados.seguro}
-                    onResultadoSeguro={(r) => setResultados((prev) => ({ ...prev, seguro: r }))}
+                    onResultadoSeguro={async (r) => {
+                      const novos = { ...resultados, seguro: r };
+                      setResultados(novos);
+                      if (plan.id) {
+                        try { await store.saveEstrategia(plan.id, novos as unknown as Record<string, unknown>); }
+                        catch (err) { console.error("saveEstrategia (seguro):", err); }
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -485,7 +511,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                     tags={secaoTags}
                     onTagsChange={handleTagsChange}
                     resultadoFiscal={resultados.fiscal}
-                    onResultadoFiscal={(r) => setResultados((prev) => ({ ...prev, fiscal: r }))}
+                    onResultadoFiscal={async (r) => {
+                      const novos = { ...resultados, fiscal: r };
+                      setResultados(novos);
+                      if (plan.id) {
+                        try { await store.saveEstrategia(plan.id, novos as unknown as Record<string, unknown>); }
+                        catch (err) { console.error("saveEstrategia (fiscal):", err); }
+                      }
+                    }}
                   />
                 </div>
               )}

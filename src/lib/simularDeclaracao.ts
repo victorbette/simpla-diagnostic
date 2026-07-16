@@ -1,4 +1,4 @@
-import { calcularIRAnual, DEDUCAO_DEPENDENTE } from "./tax";
+import { calcularIRAnual, DEDUCAO_DEPENDENTE, DESCONTO_SIMPLIFICADO_ANUAL } from "./tax";
 
 export interface DeclaracaoInput {
   rendaBruta: number;
@@ -7,6 +7,7 @@ export interface DeclaracaoInput {
   dependentes: number;
   inss: number;
   aporteAnual?: number; // se informado, usa esse valor (cap no teto); senão usa o teto completo
+  tipoDeclaracao?: string; // "completa" | "simplificada" | "nao_sei"
 }
 
 export interface DeclaracaoResult {
@@ -24,21 +25,31 @@ export interface DeclaracaoResult {
 }
 
 export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
-  const deducaoDep = Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE;
+  const isSimplificada = i.tipoDeclaracao === "simplificada";
 
-  const baseSemPGBL = Math.max(0, i.rendaBruta - i.despesas - deducaoDep - i.inss);
+  // Base de cálculo sem PGBL
+  const baseSemPGBL = isSimplificada
+    ? Math.max(0, i.rendaBruta - DESCONTO_SIMPLIFICADO_ANUAL)
+    : Math.max(0, i.rendaBruta - i.despesas - Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE - i.inss);
+
   const irSemPGBL = calcularIRAnual(baseSemPGBL, i.rendaBruta);
   const resultadoSem = irSemPGBL - i.irrf;
   const aliqEfetivaSem = i.rendaBruta > 0 ? (irSemPGBL / i.rendaBruta) * 100 : 0;
 
   const tetoPGBL = i.rendaBruta * 0.12;
-  const aporteEfetivo =
-    i.aporteAnual !== undefined && i.aporteAnual > 0
+
+  // Na simplificada, PGBL não gera dedução
+  const aporteEfetivo = isSimplificada
+    ? 0
+    : i.aporteAnual !== undefined && i.aporteAnual > 0
       ? Math.min(i.aporteAnual, tetoPGBL)
       : tetoPGBL;
 
-  const baseComPGBL = Math.max(0, baseSemPGBL - aporteEfetivo);
-  const irComPGBL = calcularIRAnual(baseComPGBL, i.rendaBruta);
+  const baseComPGBL = isSimplificada
+    ? baseSemPGBL
+    : Math.max(0, baseSemPGBL - aporteEfetivo);
+
+  const irComPGBL = isSimplificada ? irSemPGBL : calcularIRAnual(baseComPGBL, i.rendaBruta);
   const resultadoCom = irComPGBL - i.irrf;
   const aliqEfetivaCom = i.rendaBruta > 0 ? (irComPGBL / i.rendaBruta) * 100 : 0;
 

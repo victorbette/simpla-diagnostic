@@ -126,10 +126,11 @@ export function SecaoProtecaoSucessorio({
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
       {/* FerramentaSeguro inline */}
       <FerramentaSeguro
-        clientId={plan.clientId}
-        protecao={plan.protecao}
-        dadosCliente={plan.dadosCliente}
-        onResultadoSeguro={onResultadoSeguro}
+        plan={plan}
+        resultados={{ seguro: resultadoSeguro }}
+        onResultadosChange={(r) => {
+          if (r?.seguro) onResultadoSeguro(r.seguro as ResultadoSeguro);
+        }}
       />
 
       {/* Summary cards — shown after analysis is saved */}

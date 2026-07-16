@@ -345,7 +345,7 @@ export function FPLayout({
                   cursor: "pointer",
                 }}
               >
-                Montar Estratégia Inicial →
+                Montar Financial Planning →
               </button>
             ) : showNextButton ? (
               <button

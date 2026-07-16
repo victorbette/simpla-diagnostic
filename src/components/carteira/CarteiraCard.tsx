@@ -160,7 +160,7 @@ interface Props {
   ativosAtuaisRef?: Ativo[];
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
-  onAdd: () => void;
+  onAdd?: () => void;
   onRemove: (id: string) => void;
   onChange: (id: string, partial: Partial<Ativo>) => void;
 }
@@ -456,24 +456,52 @@ export function CarteiraCard({
             >
               <Trash2 size={13} />
             </button>
+            {modo === "recomendada" && ativo.adicionadoManualmente && (
+              <div style={{ gridColumn: "1 / -1", paddingBottom: 4 }}>
+                <input
+                  type="text"
+                  value={ativo.observacao ?? ""}
+                  onChange={(e) => onChange(ativo.id, { observacao: e.target.value })}
+                  placeholder="Justifique a inclusão deste ativo não previsto na recomendação..."
+                  style={{
+                    width: "100%",
+                    border: ativo.observacao?.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",
+                    borderRadius: 6,
+                    padding: "6px 10px",
+                    fontSize: 12,
+                    color: "#374151",
+                    background: ativo.observacao?.trim() ? "#F0FDF4" : "#FFF5F5",
+                    boxSizing: "border-box",
+                    outline: "none",
+                  }}
+                />
+                {!ativo.observacao?.trim() && (
+                  <div style={{ fontSize: 10, color: "#B91C1C", marginTop: 2 }}>
+                    Observação obrigatória para ativos adicionados manualmente
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
 
       {/* Add row */}
-      <div style={{ padding: "6px 12px" }}>
-        <button
-          onClick={onAdd}
-          style={{
-            display: "flex", alignItems: "center", gap: 4,
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 11, color: "#2563EB", padding: "2px 0",
-          }}
-        >
-          <Plus size={13} />
-          Adicionar
-        </button>
-      </div>
+      {onAdd && (
+        <div style={{ padding: "6px 12px" }}>
+          <button
+            onClick={onAdd}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: 11, color: "#2563EB", padding: "2px 0",
+            }}
+          >
+            <Plus size={13} />
+            Adicionar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

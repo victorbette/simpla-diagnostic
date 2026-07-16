@@ -187,7 +187,7 @@ export function EstrategiaFinalPage({
             </div>
           </div>
           <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}> › </span>
-          <span style={{ color: "white", fontSize: 14 }}>Estratégia Inicial — Pronta</span>
+          <span style={{ color: "white", fontSize: 14 }}>Financial Planning</span>
           <span style={{ color: "#3B82F6", fontSize: 14, marginLeft: 4 }}>· {clientName}</span>
         </div>
 
@@ -296,7 +296,7 @@ export function EstrategiaFinalPage({
             )}
 
             <div style={{ fontSize: 40, fontWeight: 700, color: "#000000", marginBottom: 8 }}>
-              Estratégia Inicial
+              Financial Planning
             </div>
             <div style={{ fontSize: 24, color: "#3B82F6", fontWeight: 700, marginBottom: 24 }}>
               {clientName}

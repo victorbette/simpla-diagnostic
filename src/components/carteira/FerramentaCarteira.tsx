@@ -62,6 +62,8 @@ function migrateAtivo(a: any): Ativo {
     valorBRL: Number(a.valorBRL) || 0,
     quantidade: a.quantidade != null ? Number(a.quantidade) : undefined,
     cotacaoAtual: a.cotacaoAtual != null ? Number(a.cotacaoAtual) : undefined,
+    adicionadoManualmente: a.adicionadoManualmente ? true : undefined,
+    observacao: a.observacao ? String(a.observacao) : undefined,
   };
 }
 
@@ -82,8 +84,10 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     valorAtualBRL: Number(p.valorAtualBRL) || 0,
     valorMetaBRL: Number(p.valorMetaBRL) || 0,
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,
+    movimentacaoEditada: p.movimentacaoEditada != null ? Number(p.movimentacaoEditada) : undefined,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
+    adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
   };
 }
 
@@ -167,11 +171,16 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
       setPlanoAcao((prev) => {
         if (prev.length === 0) {
-          // First time entering step 3 — use generated plan
-          return novoPlano;
+          return novoPlano.map((item) => {
+            if (item.acao !== "novo") return item;
+            const ativo = ativosRecomendados.find(
+              (a) => a.nome.trim().toLowerCase() === item.nomeAtivo.trim().toLowerCase() && a.card === item.card
+            );
+            return ativo?.observacao ? { ...item, observacao: ativo.observacao } : item;
+          });
         }
         // Merge: recalculated values + preserved consultant edits
-        return novoPlano.map((itemNovo) => {
+        const merged = novoPlano.map((itemNovo) => {
           const existente = prev.find(
             (e) =>
               e.nomeAtivo.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() &&
@@ -179,14 +188,25 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           );
           if (existente) {
             return {
-              ...itemNovo,                       // recalculated financials
-              acao: existente.acao,              // consultant's action choice
-              observacao: existente.observacao,  // consultant's notes
-              prioridade: existente.prioridade,  // consultant's priority
+              ...itemNovo,                                           // recalculated financials
+              acao: existente.acao,                                  // consultant's action choice
+              observacao: existente.observacao,                      // consultant's notes
+              prioridade: existente.prioridade,                      // consultant's priority
+              movimentacaoEditada: existente.movimentacaoEditada,    // consultant's edited movimentação
             };
           }
-          return itemNovo; // newly added asset — use defaults
+          // newly added asset — propagate observacao from Etapa 2
+          if (itemNovo.acao === "novo") {
+            const ativo = ativosRecomendados.find(
+              (a) => a.nome.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() && a.card === itemNovo.card
+            );
+            if (ativo?.observacao) return { ...itemNovo, observacao: ativo.observacao };
+          }
+          return itemNovo;
         });
+        // Preserve manually-added items from previous plan
+        const manuaisPrev = prev.filter((p) => p.adicionadoManualmente === true);
+        return [...merged, ...manuaisPrev];
       });
     }
     setEtapa(n);
@@ -388,14 +408,42 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           const totalAlocadoBRL = (totalAlocadoPct / 100) * patrimonioMeta;
           const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
           const alocacaoFaltando = totalAlocadoPct < 99.9;
-          const podeAvancar = etapa !== 2 || alocacaoCompleta;
+
+          const ativosManuaisSemObs = etapa === 2
+            ? ativosRecomendados.filter((a) => a.adicionadoManualmente && !a.observacao?.trim())
+            : [];
+
+          const itensExigemObservacao = etapa === 3
+            ? planoAcao.filter((item) => {
+                if (item.adicionadoManualmente === true) return !item.observacao?.trim();
+                const foiEditado =
+                  item.movimentacaoEditada !== undefined &&
+                  item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
+                if (foiEditado) return !item.observacao?.trim();
+                if (item.acao === "resgatar_parcial") return !item.observacao?.trim();
+                if (item.acao === "manter") {
+                  const valMeta = item.valorMetaBRL ?? 0;
+                  if (valMeta === 0) return !item.observacao?.trim();
+                  const valAtual = item.valorAtualBRL ?? 0;
+                  if (valMeta > 0) {
+                    const desvio = Math.abs(valAtual - valMeta) / valMeta * 100;
+                    if (desvio > 5) return !item.observacao?.trim();
+                  }
+                }
+                return false;
+              })
+            : [];
+
+          const podeAvancar = etapa === 2
+            ? alocacaoCompleta && ativosManuaisSemObs.length === 0
+            : etapa === 3 ? itensExigemObservacao.length === 0 : true;
 
           return (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
               <button
                 onClick={() => { if (podeAvancar) handleNext(); }}
                 disabled={!podeAvancar}
-                title={!podeAvancar ? "Aloque 100% do patrimônio antes de avançar" : ""}
+                title={!podeAvancar ? (etapa === 2 ? "Aloque 100% do patrimônio antes de avançar" : "Preencha a observação dos itens editados") : ""}
                 style={{
                   display: "flex", alignItems: "center", gap: 4,
                   backgroundColor: podeAvancar ? "#2563EB" : "#9CA3AF",
@@ -415,8 +463,15 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
                 <div style={{ fontSize: 11, color: "#B45309", textAlign: "right" }}>
                   {alocacaoFaltando
                     ? `Aloque mais ${formatBRL(Math.abs(diferencaBRL))} para continuar`
-                    : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
+                    : ativosManuaisSemObs.length > 0
+                      ? `${ativosManuaisSemObs.length} ativo(s) manual(is) sem observação`
+                      : `Reduza ${formatBRL(Math.abs(diferencaBRL))} para continuar`
                   }
+                </div>
+              )}
+              {etapa === 3 && !podeAvancar && (
+                <div style={{ fontSize: 11, color: "#B91C1C", textAlign: "right" }}>
+                  {itensExigemObservacao.length} ativo(s) aguardam observação do consultor
                 </div>
               )}
             </div>
