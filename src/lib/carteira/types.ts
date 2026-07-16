@@ -32,6 +32,7 @@ export interface PlanoAcaoItem {
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
   valorResgateBRL?: number;
+  adicionadoManualmente?: boolean;
 }
 
 export interface CarteiraResultado {

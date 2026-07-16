@@ -160,7 +160,7 @@ interface Props {
   ativosAtuaisRef?: Ativo[];
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
-  onAdd: () => void;
+  onAdd?: () => void;
   onRemove: (id: string) => void;
   onChange: (id: string, partial: Partial<Ativo>) => void;
 }
@@ -487,19 +487,21 @@ export function CarteiraCard({
       })}
 
       {/* Add row */}
-      <div style={{ padding: "6px 12px" }}>
-        <button
-          onClick={onAdd}
-          style={{
-            display: "flex", alignItems: "center", gap: 4,
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 11, color: "#2563EB", padding: "2px 0",
-          }}
-        >
-          <Plus size={13} />
-          Adicionar
-        </button>
-      </div>
+      {onAdd && (
+        <div style={{ padding: "6px 12px" }}>
+          <button
+            onClick={onAdd}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "none", border: "none", cursor: "pointer",
+              fontSize: 11, color: "#2563EB", padding: "2px 0",
+            }}
+          >
+            <Plus size={13} />
+            Adicionar
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
-import { CarteiraCard, makeNovoAtivo } from "./CarteiraCard";
+import { CarteiraCard } from "./CarteiraCard";
 import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
 
 interface Props {
@@ -58,21 +58,12 @@ export function Etapa2CarteiraRecomendada({
   const alocacaoExcede   = totalAlocado > 100.1;
   const alocacaoFalta    = totalAlocado < 99.9;
 
-  const ativosManuaisSemObservacao = ativos.filter(
-    (a) => a.adicionadoManualmente === true && !a.observacao?.trim()
-  );
-  const podeAvancar = alocacaoCompleta && ativosManuaisSemObservacao.length === 0;
-
   useEffect(() => {
-    onAlocacaoChange?.(podeAvancar);
-  }, [podeAvancar, onAlocacaoChange]);
+    onAlocacaoChange?.(alocacaoCompleta);
+  }, [alocacaoCompleta, onAlocacaoChange]);
 
   function setPct(cardId: CardId, val: number) {
     onAlocacaoMeta({ ...alocacaoMeta, [cardId]: Math.max(0, Math.min(100, val)) });
-  }
-
-  function handleAdd(cardId: CardId) {
-    onAtivos([...ativos, { ...makeNovoAtivo(cardId), adicionadoManualmente: true }]);
   }
 
   function handleRemove(id: string) {
@@ -219,25 +210,10 @@ export function Etapa2CarteiraRecomendada({
             </div>
           </div>
           <div style={{ marginTop: 10 }}>
-            {podeAvancar && (
+            {alocacaoCompleta && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#15803D" }}>
                 <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
                 100% alocado — carteira recomendada completa
-              </div>
-            )}
-            {alocacaoCompleta && ativosManuaisSemObservacao.length > 0 && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: "#FEE2E2", border: "0.5px solid #FCA5A5",
-                borderRadius: 8, padding: "8px 12px",
-                fontSize: 12, color: "#B91C1C",
-              }}>
-                <i className="ti ti-alert-circle" style={{ fontSize: 14, flexShrink: 0 }} />
-                <span>
-                  {ativosManuaisSemObservacao.length === 1
-                    ? "1 ativo adicionado manualmente precisa de observação antes de avançar."
-                    : `${ativosManuaisSemObservacao.length} ativos adicionados manualmente precisam de observação antes de avançar.`}
-                </span>
               </div>
             )}
             {alocacaoFalta && (
@@ -350,7 +326,6 @@ export function Etapa2CarteiraRecomendada({
           ativosAtuaisRef={ativosAtuais}
           usdBrl={usdBrl}
           onUsdBrlChange={onUsdBrlChange}
-          onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}
         />

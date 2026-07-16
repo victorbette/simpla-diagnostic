@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
-import type { PlanoAcaoItem } from "@/lib/carteira/types";
+import type { PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
+import { CurrencyInput } from "@/components/CurrencyInput";
 
 interface Props {
   planoAcao: PlanoAcaoItem[];
@@ -51,6 +52,8 @@ function movEfetivo(item: PlanoAcaoItem): number {
 }
 
 function exigeObservacao(item: PlanoAcaoItem): boolean {
+  if (item.adicionadoManualmente === true) return true;
+
   const foiEditado =
     item.movimentacaoEditada !== undefined &&
     item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
@@ -89,6 +92,18 @@ export function Etapa3PlanoAcao({
   const [editingValues, setEditingValues] = useState<Record<string, string>>({});
   const [editandoMovId, setEditandoMovId] = useState<string | null>(null);
   const [editandoMovVal, setEditandoMovVal] = useState<string>("");
+  const [adicionandoAtivo, setAdicionandoAtivo] = useState(false);
+  const [novoAtivo, setNovoAtivo] = useState({
+    nome: "",
+    card: "",
+    segmento: "",
+    valorBRL: 0,
+    observacao: "",
+  });
+
+  function resetNovoAtivo() {
+    setNovoAtivo({ nome: "", card: "", segmento: "", valorBRL: 0, observacao: "" });
+  }
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -468,6 +483,172 @@ export function Etapa3PlanoAcao({
             : "Nenhum item corresponde ao filtro selecionado."}
         </div>
       )}
+
+      {/* Adicionar ativo fora da recomendação */}
+      {!adicionandoAtivo && (
+        <button
+          onClick={() => setAdicionandoAtivo(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: "none", border: "1px dashed #BFDBFE",
+            borderRadius: 8, padding: "10px 16px",
+            fontSize: 13, color: "#2563EB",
+            cursor: "pointer", width: "100%", justifyContent: "center",
+            marginTop: 8,
+          }}
+        >
+          <i className="ti ti-plus" style={{ fontSize: 14 }} />
+          Adicionar ativo fora da recomendação
+        </button>
+      )}
+
+      {adicionandoAtivo && (() => {
+        const camposOk =
+          novoAtivo.nome.trim() !== "" &&
+          novoAtivo.card !== "" &&
+          novoAtivo.observacao.trim() !== "" &&
+          novoAtivo.valorBRL > 0;
+        return (
+          <div style={{
+            background: "#F8FAFF", border: "1px solid #BFDBFE",
+            borderRadius: 10, padding: 16, marginTop: 8,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#2563EB", marginBottom: 12 }}>
+              Novo ativo fora da recomendação
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              {/* Classe */}
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>Classe</label>
+                <select
+                  value={novoAtivo.card}
+                  onChange={(e) => setNovoAtivo((p) => ({ ...p, card: e.target.value }))}
+                  style={{
+                    width: "100%", border: "1px solid #E5E7EB",
+                    borderRadius: 8, padding: "8px 12px", fontSize: 13,
+                    backgroundColor: "white", color: "#111827",
+                    cursor: "pointer", outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <option value="">Selecionar...</option>
+                  {CARD_ORDER.map((id) => (
+                    <option key={id} value={id}>{CARD_META[id].label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Nome */}
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>Nome do ativo</label>
+                <input
+                  type="text"
+                  value={novoAtivo.nome}
+                  onChange={(e) => setNovoAtivo((p) => ({ ...p, nome: e.target.value }))}
+                  placeholder="Ex: PETR4, Tesouro IPCA+ 2035..."
+                  style={{
+                    width: "100%", border: "1px solid #E5E7EB",
+                    borderRadius: 8, padding: "8px 12px", fontSize: 13,
+                    outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              {/* Valor */}
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>Valor a aportar (R$)</label>
+                <CurrencyInput
+                  value={novoAtivo.valorBRL}
+                  onChange={(v) => setNovoAtivo((p) => ({ ...p, valorBRL: v }))}
+                  placeholder="R$ 0,00"
+                />
+              </div>
+
+              {/* Segmento */}
+              <div>
+                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>Segmento</label>
+                <input
+                  type="text"
+                  value={novoAtivo.segmento}
+                  onChange={(e) => setNovoAtivo((p) => ({ ...p, segmento: e.target.value }))}
+                  placeholder="Ex: Petróleo, Inflação, ETF..."
+                  style={{
+                    width: "100%", border: "1px solid #E5E7EB",
+                    borderRadius: 8, padding: "8px 12px", fontSize: 13,
+                    outline: "none", boxSizing: "border-box",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Observação obrigatória */}
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>
+                Justificativa (obrigatória)
+              </label>
+              <input
+                type="text"
+                value={novoAtivo.observacao}
+                onChange={(e) => setNovoAtivo((p) => ({ ...p, observacao: e.target.value }))}
+                placeholder="Justifique a inclusão deste ativo fora da alocação recomendada..."
+                style={{
+                  width: "100%",
+                  border: novoAtivo.observacao.trim() ? "1px solid #BBF7D0" : "1px solid #FCA5A5",
+                  borderRadius: 8, padding: "8px 12px", fontSize: 13,
+                  background: novoAtivo.observacao.trim() ? "#F0FDF4" : "#FFF5F5",
+                  outline: "none", boxSizing: "border-box" as const,
+                }}
+              />
+            </div>
+
+            {/* Botões */}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+              <button
+                onClick={() => { setAdicionandoAtivo(false); resetNovoAtivo(); }}
+                style={{
+                  fontSize: 12, color: "#6B7280", background: "white",
+                  border: "1px solid #E5E7EB", borderRadius: 6,
+                  padding: "6px 14px", cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+
+              <button
+                disabled={!camposOk}
+                onClick={() => {
+                  if (!camposOk) return;
+                  const itemNovo: PlanoAcaoItem = {
+                    id: crypto.randomUUID(),
+                    nomeAtivo: novoAtivo.nome,
+                    card: novoAtivo.card as CardId,
+                    segmento: novoAtivo.segmento,
+                    acao: "novo",
+                    valorAtualBRL: 0,
+                    valorMetaBRL: 0,
+                    movimentacaoBRL: novoAtivo.valorBRL,
+                    adicionadoManualmente: true,
+                    observacao: novoAtivo.observacao,
+                    prioridade: "baixa",
+                  };
+                  onPlanoAcao([...planoAcao, itemNovo]);
+                  setAdicionandoAtivo(false);
+                  resetNovoAtivo();
+                }}
+                style={{
+                  fontSize: 12, fontWeight: 600, color: "white",
+                  background: camposOk ? "#2563EB" : "#9CA3AF",
+                  border: "none", borderRadius: 6, padding: "6px 16px",
+                  cursor: camposOk ? "pointer" : "not-allowed",
+                }}
+              >
+                Adicionar ao plano
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Notas do consultor */}
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
