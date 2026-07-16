@@ -13,26 +13,24 @@ interface FilhoForm {
   custoMensal: number;
 }
 
-interface ListaItem {
-  id: string;
-  descricao: string;
-  valor: number;
-}
-
 interface FormData {
-  // Configuração Tributária
-  estadoUF: string;
-  aliquotaITCMD: number;
-  despesasFunerarias: number;
-  honorariosAdvocaticios: number;
-  // Listas
-  dividasList: ListaItem[];
-  bensList: ListaItem[];
+  // Necessidades Imediatas
+  itcmd: number;
+  custosAdvocaticios: number;
+  custosCartorarios: number;
+  dividas: number;
+  despesasFinais: number;
+  outrosImediatos: number;
+  // Bens e Direitos (informativo)
+  patrimonioFinanceiro: number;
+  patrimonioImoveis: number;
+  outrosBens: number;
   // Necessidades Contínuas
   despesasMensais: number;
   rendaConjuge: number;
   temPrevidencia: boolean;
   rendaPrevidencia: number;
+  saldoPrevidencia: number;
   anosSuporte: number;
   filhos: FilhoForm[];
   // Coberturas em Vida
@@ -50,19 +48,6 @@ interface Props {
   onResultadosChange?: (r: Record<string, unknown>) => void;
   clientId?: string;
 }
-
-// ── Constants ───────────────────────────────────────────────────────────────
-
-const ESTADOS_BR = [
-  "AC – Acre","AL – Alagoas","AP – Amapá","AM – Amazonas","BA – Bahia",
-  "CE – Ceará","DF – Distrito Federal","ES – Espírito Santo","GO – Goiás",
-  "MA – Maranhão","MT – Mato Grosso","MS – Mato Grosso do Sul",
-  "MG – Minas Gerais","PA – Pará","PB – Paraíba","PR – Paraná",
-  "PE – Pernambuco","PI – Piauí","RJ – Rio de Janeiro",
-  "RN – Rio Grande do Norte","RS – Rio Grande do Sul","RO – Rondônia",
-  "RR – Roraima","SC – Santa Catarina","SP – São Paulo",
-  "SE – Sergipe","TO – Tocantins",
-];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -108,6 +93,16 @@ const LABEL: React.CSSProperties = {
   display: "block",
 };
 
+const SECTION_LABEL: React.CSSProperties = {
+  fontSize: 10,
+  color: "#9CA3AF",
+  fontWeight: 700,
+  textTransform: "uppercase" as const,
+  letterSpacing: "0.06em",
+  marginBottom: 10,
+  display: "block",
+};
+
 const FIELD_WRAP: React.CSSProperties = { display: "flex", flexDirection: "column" };
 
 const NUMBER_INPUT: React.CSSProperties = {
@@ -121,6 +116,20 @@ const NUMBER_INPUT: React.CSSProperties = {
   outline: "none",
   color: "#111827",
   backgroundColor: "white",
+};
+
+const HINT: React.CSSProperties = { fontSize: 10, color: "#9CA3AF", marginTop: 3 };
+
+const DIVIDER: React.CSSProperties = { borderTop: "0.5px solid #F3F4F6", margin: "16px 0" };
+
+const SECTION_SUBTOTAL: React.CSSProperties = {
+  backgroundColor: "#F8FAFF",
+  borderTop: "0.5px solid #E5E7EB",
+  padding: "12px 0",
+  marginTop: 16,
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
 };
 
 const SUBTOTAL: React.CSSProperties = {
@@ -156,6 +165,8 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const df: any = seguroSalvo?.dadosFormulario ?? {};
   const dc = plan?.dadosCliente ?? {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dcAny = dc as any;
 
   const [data, setData] = useState<FormData>(() => {
     const initialFilhos: FilhoForm[] = Array.isArray(df.filhos)
@@ -168,44 +179,46 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           custoMensal: 0,
         }));
     return {
-      estadoUF:              String(df.estadoUF ?? ""),
-      aliquotaITCMD:         Number(df.aliquotaITCMD)         || 4,
-      despesasFunerarias:    Number(df.despesasFunerarias)    || 15000,
-      honorariosAdvocaticios: Number(df.honorariosAdvocaticios) || 6,
-      dividasList:           Array.isArray(df.dividasList) ? (df.dividasList as ListaItem[]) : [],
-      bensList:              Array.isArray(df.bensList)    ? (df.bensList    as ListaItem[]) : [],
-      despesasMensais:  Number(df.despesasMensais) || Number(dc.custoDeVidaMensal) || 0,
-      rendaConjuge:     Number(df.rendaConjuge)    || 0,
-      temPrevidencia:   Boolean(df.temPrevidencia),
-      rendaPrevidencia: Number(df.rendaPrevidencia) || 0,
-      anosSuporte:      Number(df.anosSuporte)      || 20,
-      filhos:           initialFilhos,
-      capitalInvalidez:     Number(df.capitalInvalidez)     || 0,
-      capitalDoencaGrave:   Number(df.capitalDoencaGrave)   || 0,
-      seguroVidaAtual:      Number(df.seguroVidaAtual)      || 0,
+      itcmd:               Number(df.itcmd)               || 0,
+      custosAdvocaticios:  Number(df.custosAdvocaticios)  || 0,
+      custosCartorarios:   Number(df.custosCartorarios)   || 0,
+      dividas:             Number(df.dividas)             || 0,
+      despesasFinais:      Number(df.despesasFinais)      || 0,
+      outrosImediatos:     Number(df.outrosImediatos)     || 0,
+      patrimonioFinanceiro: Number(df.patrimonioFinanceiro) || Number(dcAny.patrimonioFinanceiro) || 0,
+      patrimonioImoveis:   Number(df.patrimonioImoveis)   || 0,
+      outrosBens:          Number(df.outrosBens)          || 0,
+      despesasMensais:     Number(df.despesasMensais)     || Number(dc.custoDeVidaMensal) || 0,
+      rendaConjuge:        Number(df.rendaConjuge)        || 0,
+      temPrevidencia:      Boolean(df.temPrevidencia),
+      rendaPrevidencia:    Number(df.rendaPrevidencia)    || 0,
+      saldoPrevidencia:    Number(df.saldoPrevidencia)    || Number(dcAny.saldoPrevidencia) || 0,
+      anosSuporte:         Number(df.anosSuporte)         || 20,
+      filhos:              initialFilhos,
+      capitalInvalidez:    Number(df.capitalInvalidez)    || 0,
+      capitalDoencaGrave:  Number(df.capitalDoencaGrave)  || 0,
+      seguroVidaAtual:     Number(df.seguroVidaAtual)     || 0,
       seguroInvalidezAtual: Number(df.seguroInvalidezAtual) || 0,
-      outrosSeguroAtual:    Number(df.outrosSeguroAtual)    || 0,
+      outrosSeguroAtual:   Number(df.outrosSeguroAtual)   || 0,
     };
   });
 
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
+  const [invalidezEditada, setInvalidezEditada] = useState<boolean>(() => df.invalidezEditada === true);
 
   function upd(fields: Partial<FormData>) { setData(prev => ({ ...prev, ...fields })); }
 
   // ── Cálculos ──────────────────────────────────────────────────────────────
 
   const calc = useMemo(() => {
-    const totalDividas = data.dividasList.reduce((s, d) => s + (Number(d.valor) || 0), 0);
-    const totalBens    = data.bensList.reduce((s, b)    => s + (Number(b.valor) || 0), 0);
-    const baseInventariavel = Math.max(0, totalBens - totalDividas);
-    const itcmdCalc         = baseInventariavel * ((Number(data.aliquotaITCMD) || 0) / 100);
-    const honorariosCalc    = baseInventariavel * ((Number(data.honorariosAdvocaticios) || 0) / 100);
     const totalImediato =
-      (Number(data.despesasFunerarias) || 0) +
-      totalDividas +
-      itcmdCalc +
-      honorariosCalc;
+      (Number(data.itcmd)              || 0) +
+      (Number(data.custosAdvocaticios) || 0) +
+      (Number(data.custosCartorarios)  || 0) +
+      (Number(data.dividas)            || 0) +
+      (Number(data.despesasFinais)     || 0) +
+      (Number(data.outrosImediatos)    || 0);
 
     const rendaLiquida = Math.max(0,
       (Number(data.despesasMensais)  || 0) -
@@ -219,8 +232,15 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       return s + (Number(f.custoMensal) || 0) * 12 * anos;
     }, 0);
 
-    const subtotalContinuo    = totalContinuo + totalFilhos;
-    const totalCoberturasVida = (Number(data.capitalInvalidez) || 0) + (Number(data.capitalDoencaGrave) || 0);
+    const saldoPrevidencia = data.temPrevidencia ? (Number(data.saldoPrevidencia) || 0) : 0;
+    const subtotalContinuo = Math.max(0, totalContinuo + totalFilhos - saldoPrevidencia);
+
+    const invalidezCalculada = (Number(data.despesasMensais) || 0) * 60;
+    const capitalInvalidezEfetivo = invalidezEditada
+      ? (Number(data.capitalInvalidez) || 0)
+      : invalidezCalculada;
+
+    const totalCoberturasVida = capitalInvalidezEfetivo + (Number(data.capitalDoencaGrave) || 0);
     const capitalNecessario   = totalImediato + subtotalContinuo + totalCoberturasVida;
     const capitalAtual =
       (Number(data.seguroVidaAtual)      || 0) +
@@ -232,28 +252,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       : 0;
 
     return {
-      totalDividas, totalBens, itcmdCalc, honorariosCalc,
-      totalImediato, totalContinuo, totalFilhos,
-      subtotalContinuo, totalCoberturasVida,
-      capitalNecessario, capitalAtual, gap, coberturaPct,
+      totalImediato, rendaLiquida, totalContinuo, totalFilhos,
+      saldoPrevidencia, subtotalContinuo,
+      invalidezCalculada, capitalInvalidezEfetivo,
+      totalCoberturasVida, capitalNecessario, capitalAtual, gap, coberturaPct,
     };
-  }, [data]);
-
-  // ── Dívidas ───────────────────────────────────────────────────────────────
-
-  function addDivida()   { upd({ dividasList: [...data.dividasList, { id: genId(), descricao: "", valor: 0 }] }); }
-  function removeDivida(id: string) { upd({ dividasList: data.dividasList.filter(d => d.id !== id) }); }
-  function updateDivida(id: string, patch: Partial<ListaItem>) {
-    upd({ dividasList: data.dividasList.map(d => d.id === id ? { ...d, ...patch } : d) });
-  }
-
-  // ── Bens ─────────────────────────────────────────────────────────────────
-
-  function addBem()   { upd({ bensList: [...data.bensList, { id: genId(), descricao: "", valor: 0 }] }); }
-  function removeBem(id: string) { upd({ bensList: data.bensList.filter(b => b.id !== id) }); }
-  function updateBem(id: string, patch: Partial<ListaItem>) {
-    upd({ bensList: data.bensList.map(b => b.id === id ? { ...b, ...patch } : b) });
-  }
+  }, [data, invalidezEditada]);
 
   // ── Filhos ────────────────────────────────────────────────────────────────
 
@@ -276,33 +280,31 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       await onResultadosChange?.({
         ...resultados,
         seguro: {
-          // Campos canônicos
-          capitalNecessario:   calc.capitalNecessario,
-          capitalAtual:        calc.capitalAtual,
-          gap:                 calc.gap,
-          totalImediato:       calc.totalImediato,
-          subtotalContinuo:    calc.subtotalContinuo,
-          totalCoberturasVida: calc.totalCoberturasVida,
-          dadosFormulario:     data,
+          capitalNecessario:    calc.capitalNecessario,
+          capitalAtual:         calc.capitalAtual,
+          gap:                  calc.gap,
+          totalImediato:        calc.totalImediato,
+          subtotalContinuo:     calc.subtotalContinuo,
+          totalCoberturasVida:  calc.totalCoberturasVida,
+          dadosFormulario:      { ...data, capitalInvalidez: calc.capitalInvalidezEfetivo, invalidezEditada },
           dataUltimoSalvamento: new Date().toISOString(),
-          // Aliases legados (SecaoProtecaoSucessorio e Dashboard)
           totalNeed:     calc.capitalNecessario,
           totalCoverage: calc.capitalAtual,
           scoreProtecao,
-          capitalImediato:      calc.totalImediato,
-          capitalContinuo:      calc.subtotalContinuo,
+          capitalImediato:       calc.totalImediato,
+          capitalContinuo:       calc.subtotalContinuo,
           capitalCoberturasVida: calc.totalCoberturasVida,
-          capitalFilhos:        calc.totalFilhos,
-          temSeguroVida:        data.seguroVidaAtual > 0,
-          temSeguroInvalidez:   data.seguroInvalidezAtual > 0,
-          immediateTotal:       calc.totalImediato,
-          ongoingTotal:         calc.totalContinuo,
-          educationTotal:       calc.totalFilhos,
-          lifestyleTotal:       0,
-          inventoryCost:        calc.itcmdCalc + calc.honorariosCalc + (Number(data.despesasFunerarias) || 0),
-          disabilityTotal:      data.capitalInvalidez,
-          disabilityGap:        Math.max(0, data.capitalInvalidez - data.seguroInvalidezAtual),
-          disabilityCoverage:   Math.min(data.capitalInvalidez, data.seguroInvalidezAtual),
+          capitalFilhos:         calc.totalFilhos,
+          temSeguroVida:         data.seguroVidaAtual > 0,
+          temSeguroInvalidez:    data.seguroInvalidezAtual > 0,
+          immediateTotal:        calc.totalImediato,
+          ongoingTotal:          calc.totalContinuo,
+          educationTotal:        calc.totalFilhos,
+          lifestyleTotal:        0,
+          inventoryCost:         (Number(data.itcmd) || 0) + (Number(data.custosAdvocaticios) || 0) + (Number(data.custosCartorarios) || 0),
+          disabilityTotal:       calc.capitalInvalidezEfetivo,
+          disabilityGap:         Math.max(0, calc.capitalInvalidezEfetivo - data.seguroInvalidezAtual),
+          disabilityCoverage:    Math.min(calc.capitalInvalidezEfetivo, data.seguroInvalidezAtual),
           criticalIllnessTotal:    data.capitalDoencaGrave,
           criticalIllnessGap:      data.capitalDoencaGrave,
           criticalIllnessCoverage: 0,
@@ -319,170 +321,99 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
   const adequado = calc.capitalAtual >= calc.capitalNecessario && calc.capitalNecessario > 0;
   const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
+  const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiro) || 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
 
-      {/* ── CARD 1a — Configuração Tributária ────────────────────────────── */}
+      {/* ── CARD 1 — Necessidades Imediatas ──────────────────────────────── */}
       <div style={CARD}>
         <div style={CARD_HEADER}>
-          <div style={CARD_ICON}>
-            <i className="ti ti-building-bank" style={{ fontSize: 18, color: "#2563EB" }} />
+          <div style={{ ...CARD_ICON, backgroundColor: "#FEF2F2" }}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 18, color: "#B91C1C" }} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Configuração Tributária</p>
-            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>ITCMD e Honorários</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Imediatas</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Custos tributários, dívidas e despesas no evento do falecimento</p>
           </div>
         </div>
 
+        {/* Sub-seção: Configuração Tributária */}
+        <span style={SECTION_LABEL}>Configuração Tributária</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Estado de Residência</label>
-            <select
-              value={data.estadoUF}
-              onChange={(e) => upd({ estadoUF: e.target.value })}
-              style={NUMBER_INPUT}
-            >
-              <option value="">Selecione o estado</option>
-              {ESTADOS_BR.map((e) => (
-                <option key={e} value={e}>{e}</option>
-              ))}
-            </select>
+            <label style={LABEL}>ITCMD (R$)</label>
+            <CurrencyInput value={data.itcmd} onChange={(v) => upd({ itcmd: v })} />
+            <span style={HINT}>Imposto sobre transmissão causa mortis</span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Alíquota ITCMD (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={20}
-              step={0.5}
-              value={data.aliquotaITCMD}
-              onChange={(e) => upd({ aliquotaITCMD: Number(e.target.value) || 0 })}
-              style={NUMBER_INPUT}
-            />
+            <label style={LABEL}>Custos Advocatícios (R$)</label>
+            <CurrencyInput value={data.custosAdvocaticios} onChange={(v) => upd({ custosAdvocaticios: v })} />
+            <span style={HINT}>Honorários advocatícios do inventário</span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Despesas Funerárias</label>
-            <CurrencyInput value={data.despesasFunerarias} onChange={(v) => upd({ despesasFunerarias: v })} />
-          </div>
-          <div style={FIELD_WRAP}>
-            <label style={LABEL}>Honorários Advocatícios (%)</label>
-            <input
-              type="number"
-              min={0}
-              max={30}
-              step={0.5}
-              value={data.honorariosAdvocaticios}
-              onChange={(e) => upd({ honorariosAdvocaticios: Number(e.target.value) || 0 })}
-              style={NUMBER_INPUT}
-            />
+            <label style={LABEL}>Custos Cartorários (R$)</label>
+            <CurrencyInput value={data.custosCartorarios} onChange={(v) => upd({ custosCartorarios: v })} />
+            <span style={HINT}>Custas cartorárias e judiciais</span>
           </div>
         </div>
 
-        {(calc.itcmdCalc > 0 || calc.honorariosCalc > 0) && (
-          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <div style={{ backgroundColor: "#F8FAFF", borderRadius: 6, padding: "8px 12px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 10, color: "#9CA3AF" }}>ITCMD estimado ({data.aliquotaITCMD}%)</p>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#374151" }}>{formatCurrency(calc.itcmdCalc)}</p>
-            </div>
-            <div style={{ backgroundColor: "#F8FAFF", borderRadius: 6, padding: "8px 12px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 10, color: "#9CA3AF" }}>Honorários estimados ({data.honorariosAdvocaticios}%)</p>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#374151" }}>{formatCurrency(calc.honorariosCalc)}</p>
-            </div>
-          </div>
-        )}
-      </div>
+        <div style={DIVIDER} />
 
-      {/* ── CARD 1b — Dívidas ────────────────────────────────────────────── */}
-      <div style={CARD}>
-        <div style={{ ...CARD_HEADER, justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ ...CARD_ICON, backgroundColor: "#FEF2F2" }}>
-              <i className="ti ti-alert-triangle" style={{ fontSize: 18, color: "#B91C1C" }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Dívidas</p>
-              <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Financiamentos, empréstimos, etc.</p>
-            </div>
+        {/* Sub-seção: Dívidas */}
+        <span style={SECTION_LABEL}>Dívidas</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Dívidas e Financiamentos (R$)</label>
+            <CurrencyInput value={data.dividas} onChange={(v) => upd({ dividas: v })} />
+            <span style={HINT}>Saldo devedor total</span>
           </div>
-          <button onClick={addDivida} style={ADD_BTN}>
-            <i className="ti ti-plus" style={{ fontSize: 12 }} /> Adicionar
-          </button>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Despesas Finais (R$)</label>
+            <CurrencyInput value={data.despesasFinais} onChange={(v) => upd({ despesasFinais: v })} />
+            <span style={HINT}>Funeral, traslado e demais despesas</span>
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Outros (R$)</label>
+            <CurrencyInput value={data.outrosImediatos} onChange={(v) => upd({ outrosImediatos: v })} />
+          </div>
         </div>
 
-        {data.dividasList.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "8px 0" }}>
-            Nenhuma dívida cadastrada
-          </p>
-        ) : (
-          <>
-            {data.dividasList.map((d) => (
-              <div key={d.id} style={{ display: "grid", gridTemplateColumns: "1fr 180px auto", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <input
-                  type="text"
-                  value={d.descricao}
-                  onChange={(e) => updateDivida(d.id, { descricao: e.target.value })}
-                  placeholder="Descrição"
-                  style={NUMBER_INPUT}
-                />
-                <CurrencyInput value={d.valor} onChange={(v) => updateDivida(d.id, { valor: v })} />
-                <button onClick={() => removeDivida(d.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: "8px 4px", lineHeight: 1 }}>
-                  <i className="ti ti-trash" style={{ fontSize: 16 }} />
-                </button>
-              </div>
-            ))}
-            <div style={SUBTOTAL}>
-              <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Total Dívidas</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#B91C1C" }}>{formatCurrency(calc.totalDividas)}</span>
-            </div>
-          </>
-        )}
-      </div>
+        <div style={DIVIDER} />
 
-      {/* ── CARD 1c — Bens e Investimentos ───────────────────────────────── */}
-      <div style={CARD}>
-        <div style={{ ...CARD_HEADER, justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={CARD_ICON}>
-              <i className="ti ti-building-bank" style={{ fontSize: 18, color: "#2563EB" }} />
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Bens e Investimentos</p>
-              <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Imóveis, veículos, empresas</p>
-            </div>
+        {/* Sub-seção: Bens e Direitos (informativo) */}
+        <span style={SECTION_LABEL}>Bens e Direitos</span>
+        <p style={{ margin: "0 0 10px", fontSize: 11, color: "#9CA3AF" }}>
+          Informativo — não somam ao capital necessário (são o patrimônio a transmitir)
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={FIELD_WRAP}>
+            <label style={{ ...LABEL, display: "flex", alignItems: "center" }}>
+              Patrimônio Financeiro (R$)
+              {patrimonioFinanceiroColeta > 0 && (
+                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
+                  Da coleta
+                </span>
+              )}
+            </label>
+            <CurrencyInput value={data.patrimonioFinanceiro} onChange={(v) => upd({ patrimonioFinanceiro: v })} />
           </div>
-          <button onClick={addBem} style={ADD_BTN}>
-            <i className="ti ti-plus" style={{ fontSize: 12 }} /> Adicionar
-          </button>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Imóveis (R$)</label>
+            <CurrencyInput value={data.patrimonioImoveis} onChange={(v) => upd({ patrimonioImoveis: v })} />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Outros Bens (R$)</label>
+            <CurrencyInput value={data.outrosBens} onChange={(v) => upd({ outrosBens: v })} />
+            <span style={HINT}>Veículos, participações, etc.</span>
+          </div>
         </div>
 
-        {data.bensList.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 12, color: "#9CA3AF", textAlign: "center", padding: "8px 0" }}>
-            Nenhum bem cadastrado
-          </p>
-        ) : (
-          <>
-            {data.bensList.map((b) => (
-              <div key={b.id} style={{ display: "grid", gridTemplateColumns: "1fr 180px auto", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <input
-                  type="text"
-                  value={b.descricao}
-                  onChange={(e) => updateBem(b.id, { descricao: e.target.value })}
-                  placeholder="Descrição"
-                  style={NUMBER_INPUT}
-                />
-                <CurrencyInput value={b.valor} onChange={(v) => updateBem(b.id, { valor: v })} />
-                <button onClick={() => removeBem(b.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: "8px 4px", lineHeight: 1 }}>
-                  <i className="ti ti-trash" style={{ fontSize: 16 }} />
-                </button>
-              </div>
-            ))}
-            <div style={SUBTOTAL}>
-              <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Total Bens</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#15803D" }}>{formatCurrency(calc.totalBens)}</span>
-            </div>
-          </>
-        )}
+        {/* Subtotal */}
+        <div style={SECTION_SUBTOTAL}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Subtotal Necessidades Imediatas</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalImediato)}</span>
+        </div>
       </div>
 
       {/* ── CARD 2 — Necessidades Contínuas ─────────────────────────────── */}
@@ -499,10 +430,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>
+            <label style={{ ...LABEL, display: "flex", alignItems: "center" }}>
               Despesas Mensais da Família
               {custoDeVidaColeta > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600 }}>
+                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
                   Da coleta
                 </span>
               )}
@@ -533,7 +464,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                   checked={data.temPrevidencia}
                   onChange={(e) => upd({ temPrevidencia: e.target.checked })}
                 />
-                <span style={{ fontSize: 11, color: "#374151", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>Sim</span>
+                <span style={{ fontSize: 11, color: "#374151", fontWeight: 400, textTransform: "none" as const, letterSpacing: 0 }}>Sim</span>
               </label>
             </label>
             {data.temPrevidencia && (
@@ -544,16 +475,31 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
               />
             )}
           </div>
+
+          {data.temPrevidencia && (
+            <div style={FIELD_WRAP}>
+              <label style={LABEL}>Saldo Atual da Previdência (R$)</label>
+              <CurrencyInput
+                value={data.saldoPrevidencia}
+                onChange={(v) => upd({ saldoPrevidencia: v })}
+              />
+              <span style={HINT}>Saldo acumulado hoje — será descontado das necessidades contínuas</span>
+            </div>
+          )}
         </div>
 
         <div style={SUBTOTAL}>
           <span style={{ fontSize: 12, color: "#6B7280" }}>
-            Renda líquida: {formatCurrency(
-              Math.max(0, (Number(data.despesasMensais) || 0) - (Number(data.rendaConjuge) || 0) - (data.temPrevidencia ? (Number(data.rendaPrevidencia) || 0) : 0))
-            )}/mês × 12 × {data.anosSuporte} anos
+            Renda líquida: {formatCurrency(calc.rendaLiquida)}/mês × 12 × {data.anosSuporte} anos
           </span>
           <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalContinuo)}</span>
         </div>
+
+        {calc.saldoPrevidencia > 0 && (
+          <div style={{ fontSize: 12, color: "#15803D", marginTop: 4 }}>
+            Saldo previdência descontado: -{formatCurrency(calc.saldoPrevidencia)}
+          </div>
+        )}
 
         {/* Filhos */}
         <div style={{ marginTop: 16 }}>
@@ -623,9 +569,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           )}
         </div>
 
-        <div style={{ ...SUBTOTAL, marginTop: 12, backgroundColor: "#F0F7FF" }}>
-          <span style={{ fontSize: 12, color: "#1E40AF", fontWeight: 600 }}>Subtotal Contínuo (contínuo + filhos)</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#1E40AF" }}>{formatCurrency(calc.subtotalContinuo)}</span>
+        <div style={SECTION_SUBTOTAL}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Subtotal Necessidades Contínuas</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.subtotalContinuo)}</span>
         </div>
       </div>
 
@@ -643,8 +589,34 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Capital para Invalidez Total</label>
-            <CurrencyInput value={data.capitalInvalidez} onChange={(v) => upd({ capitalInvalidez: v })} />
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ ...LABEL, marginBottom: 0 }}>Capital para Invalidez Permanente (R$)</span>
+              {!invalidezEditada ? (
+                <span style={{ fontSize: 10, color: "#2563EB", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600, flexShrink: 0 }}>
+                  CALCULADO
+                </span>
+              ) : (
+                <button
+                  onClick={() => {
+                    setInvalidezEditada(false);
+                    upd({ capitalInvalidez: calc.invalidezCalculada });
+                  }}
+                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer", marginLeft: 6, padding: 0 }}
+                >
+                  ↺ Restaurar automático
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={invalidezEditada ? (Number(data.capitalInvalidez) || 0) : calc.invalidezCalculada}
+              onChange={(val) => {
+                setInvalidezEditada(true);
+                upd({ capitalInvalidez: val });
+              }}
+            />
+            <span style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
+              Sugestão: {formatCurrency(calc.invalidezCalculada)} (despesas mensais × 60 meses) — editável conforme avaliação do consultor
+            </span>
           </div>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Capital para Doenças Graves</label>
@@ -652,9 +624,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
         </div>
 
-        <div style={SUBTOTAL}>
-          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Subtotal Coberturas em Vida</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
+        <div style={SECTION_SUBTOTAL}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Subtotal Coberturas em Vida</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
         </div>
       </div>
 
@@ -705,7 +677,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
         </div>
 
-        {/* Top 3 colunas */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
           <div style={{ backgroundColor: "#F8FAFF", borderRadius: 8, padding: "12px 14px" }}>
             <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
@@ -731,7 +702,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
         </div>
 
-        {/* Detalhamento */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
           {[
             { label: "Necessidades Imediatas", value: calc.totalImediato },
@@ -745,14 +715,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           ))}
         </div>
 
-        {/* Banner gap/adequado */}
         {calc.capitalNecessario > 0 && (
           adequado ? (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB",
-              borderRadius: 8, padding: "12px 16px",
-            }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB", borderRadius: 8, padding: "12px 16px" }}>
               <i className="ti ti-circle-check" style={{ fontSize: 18, color: "#15803D", flexShrink: 0 }} />
               <div>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#15803D" }}>Cobertura adequada</p>
@@ -762,11 +727,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
               </div>
             </div>
           ) : (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 10,
-              backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5",
-              borderRadius: 8, padding: "12px 16px",
-            }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: 8, padding: "12px 16px" }}>
               <i className="ti ti-alert-circle" style={{ fontSize: 18, color: "#B91C1C", flexShrink: 0 }} />
               <div>
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>
