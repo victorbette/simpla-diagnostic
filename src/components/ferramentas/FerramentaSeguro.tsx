@@ -15,21 +15,16 @@ interface FilhoForm {
 
 interface FormData {
   // Necessidades Imediatas
-  itcmd: number;
-  custosAdvocaticios: number;
-  custosCartorarios: number;
+  pctITCMD: number;
+  pctAdvocaticios: number;
   dividas: number;
-  despesasFinais: number;
-  outrosImediatos: number;
-  // Bens e Direitos (informativo)
+  // Bens e Direitos (base de cálculo do ITCMD/honorários)
   patrimonioFinanceiro: number;
   patrimonioImoveis: number;
   outrosBens: number;
   // Necessidades Contínuas
   despesasMensais: number;
   rendaConjuge: number;
-  temPrevidencia: boolean;
-  rendaPrevidencia: number;
   saldoPrevidencia: number;
   anosSuporte: number;
   filhos: FilhoForm[];
@@ -179,19 +174,14 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           custoMensal: 0,
         }));
     return {
-      itcmd:               Number(df.itcmd)               || 0,
-      custosAdvocaticios:  Number(df.custosAdvocaticios)  || 0,
-      custosCartorarios:   Number(df.custosCartorarios)   || 0,
+      pctITCMD:            Number(df.pctITCMD)            || 4,
+      pctAdvocaticios:     Number(df.pctAdvocaticios)     || 2,
       dividas:             Number(df.dividas)             || 0,
-      despesasFinais:      Number(df.despesasFinais)      || 0,
-      outrosImediatos:     Number(df.outrosImediatos)     || 0,
       patrimonioFinanceiro: Number(df.patrimonioFinanceiro) || Number(dcAny.patrimonioFinanceiro) || 0,
       patrimonioImoveis:   Number(df.patrimonioImoveis)   || 0,
       outrosBens:          Number(df.outrosBens)          || 0,
       despesasMensais:     Number(df.despesasMensais)     || Number(dc.custoDeVidaMensal) || 0,
       rendaConjuge:        Number(df.rendaConjuge)        || 0,
-      temPrevidencia:      Boolean(df.temPrevidencia),
-      rendaPrevidencia:    Number(df.rendaPrevidencia)    || 0,
       saldoPrevidencia:    Number(df.saldoPrevidencia)    || Number(dcAny.saldoPrevidencia) || 0,
       anosSuporte:         Number(df.anosSuporte)         || 20,
       filhos:              initialFilhos,
@@ -212,18 +202,22 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   // ── Cálculos ──────────────────────────────────────────────────────────────
 
   const calc = useMemo(() => {
+    const patrimonioTotal =
+      (Number(data.patrimonioFinanceiro) || 0) +
+      (Number(data.patrimonioImoveis)   || 0) +
+      (Number(data.outrosBens)          || 0);
+
+    const itcmdCalculado              = patrimonioTotal * ((Number(data.pctITCMD)        || 0) / 100);
+    const custosAdvocaticiosCalculado = patrimonioTotal * ((Number(data.pctAdvocaticios) || 0) / 100);
+
     const totalImediato =
-      (Number(data.itcmd)              || 0) +
-      (Number(data.custosAdvocaticios) || 0) +
-      (Number(data.custosCartorarios)  || 0) +
-      (Number(data.dividas)            || 0) +
-      (Number(data.despesasFinais)     || 0) +
-      (Number(data.outrosImediatos)    || 0);
+      itcmdCalculado +
+      custosAdvocaticiosCalculado +
+      (Number(data.dividas) || 0);
 
     const rendaLiquida = Math.max(0,
-      (Number(data.despesasMensais)  || 0) -
-      (Number(data.rendaConjuge)     || 0) -
-      (data.temPrevidencia ? (Number(data.rendaPrevidencia) || 0) : 0)
+      (Number(data.despesasMensais) || 0) -
+      (Number(data.rendaConjuge)    || 0)
     );
     const totalContinuo = rendaLiquida * 12 * (Number(data.anosSuporte) || 20);
 
@@ -232,7 +226,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       return s + (Number(f.custoMensal) || 0) * 12 * anos;
     }, 0);
 
-    const saldoPrevidencia = data.temPrevidencia ? (Number(data.saldoPrevidencia) || 0) : 0;
+    const saldoPrevidencia = Number(data.saldoPrevidencia) || 0;
     const subtotalContinuo = Math.max(0, totalContinuo + totalFilhos - saldoPrevidencia);
 
     const invalidezCalculada = (Number(data.despesasMensais) || 0) * 60;
@@ -252,6 +246,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       : 0;
 
     return {
+      patrimonioTotal, itcmdCalculado, custosAdvocaticiosCalculado,
       totalImediato, rendaLiquida, totalContinuo, totalFilhos,
       saldoPrevidencia, subtotalContinuo,
       invalidezCalculada, capitalInvalidezEfetivo,
@@ -301,7 +296,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           ongoingTotal:          calc.totalContinuo,
           educationTotal:        calc.totalFilhos,
           lifestyleTotal:        0,
-          inventoryCost:         (Number(data.itcmd) || 0) + (Number(data.custosAdvocaticios) || 0) + (Number(data.custosCartorarios) || 0),
+          inventoryCost:         calc.itcmdCalculado + calc.custosAdvocaticiosCalculado,
           disabilityTotal:       calc.capitalInvalidezEfetivo,
           disabilityGap:         Math.max(0, calc.capitalInvalidezEfetivo - data.seguroInvalidezAtual),
           disabilityCoverage:    Math.min(calc.capitalInvalidezEfetivo, data.seguroInvalidezAtual),
@@ -334,7 +329,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
           <div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#111827" }}>Necessidades Imediatas</p>
-            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Custos tributários, dívidas e despesas no evento do falecimento</p>
+            <p style={{ margin: 0, fontSize: 11, color: "#9CA3AF" }}>Custos tributários e dívidas no evento do falecimento</p>
           </div>
         </div>
 
@@ -342,19 +337,48 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
         <span style={SECTION_LABEL}>Configuração Tributária</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>ITCMD (R$)</label>
-            <CurrencyInput value={data.itcmd} onChange={(v) => upd({ itcmd: v })} />
-            <span style={HINT}>Imposto sobre transmissão causa mortis</span>
+            <label style={LABEL}>ITCMD (%)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  value={data.pctITCMD}
+                  onChange={(e) => upd({ pctITCMD: Number(e.target.value) || 0 })}
+                  style={NUMBER_INPUT}
+                />
+              </div>
+              {calc.itcmdCalculado > 0 && (
+                <span style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
+                  = {formatCurrency(calc.itcmdCalculado)}
+                </span>
+              )}
+            </div>
+            <span style={HINT}>Alíquota do estado sobre o patrimônio</span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Custos Advocatícios (R$)</label>
-            <CurrencyInput value={data.custosAdvocaticios} onChange={(v) => upd({ custosAdvocaticios: v })} />
-            <span style={HINT}>Honorários advocatícios do inventário</span>
-          </div>
-          <div style={FIELD_WRAP}>
-            <label style={LABEL}>Custos Cartorários (R$)</label>
-            <CurrencyInput value={data.custosCartorarios} onChange={(v) => upd({ custosCartorarios: v })} />
-            <span style={HINT}>Custas cartorárias e judiciais</span>
+            <label style={LABEL}>Custos Advocatícios (%)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  step={0.5}
+                  value={data.pctAdvocaticios}
+                  onChange={(e) => upd({ pctAdvocaticios: Number(e.target.value) || 0 })}
+                  style={NUMBER_INPUT}
+                />
+              </div>
+              {calc.custosAdvocaticiosCalculado > 0 && (
+                <span style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
+                  = {formatCurrency(calc.custosAdvocaticiosCalculado)}
+                </span>
+              )}
+            </div>
+            <span style={HINT}>Percentual sobre o patrimônio</span>
           </div>
         </div>
 
@@ -362,29 +386,20 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         {/* Sub-seção: Dívidas */}
         <span style={SECTION_LABEL}>Dívidas</span>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ maxWidth: "50%", paddingRight: 6 }}>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Dívidas e Financiamentos (R$)</label>
             <CurrencyInput value={data.dividas} onChange={(v) => upd({ dividas: v })} />
             <span style={HINT}>Saldo devedor total</span>
           </div>
-          <div style={FIELD_WRAP}>
-            <label style={LABEL}>Despesas Finais (R$)</label>
-            <CurrencyInput value={data.despesasFinais} onChange={(v) => upd({ despesasFinais: v })} />
-            <span style={HINT}>Funeral, traslado e demais despesas</span>
-          </div>
-          <div style={FIELD_WRAP}>
-            <label style={LABEL}>Outros (R$)</label>
-            <CurrencyInput value={data.outrosImediatos} onChange={(v) => upd({ outrosImediatos: v })} />
-          </div>
         </div>
 
         <div style={DIVIDER} />
 
-        {/* Sub-seção: Bens e Direitos (informativo) */}
+        {/* Sub-seção: Bens e Direitos */}
         <span style={SECTION_LABEL}>Bens e Direitos</span>
         <p style={{ margin: "0 0 10px", fontSize: 11, color: "#9CA3AF" }}>
-          Informativo — não somam ao capital necessário (são o patrimônio a transmitir)
+          Base de cálculo do ITCMD e honorários — não somam diretamente ao capital necessário
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
@@ -407,6 +422,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             <CurrencyInput value={data.outrosBens} onChange={(v) => upd({ outrosBens: v })} />
             <span style={HINT}>Veículos, participações, etc.</span>
           </div>
+          {calc.patrimonioTotal > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+              <span style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>PATRIMÔNIO TOTAL</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{formatCurrency(calc.patrimonioTotal)}</span>
+            </div>
+          )}
         </div>
 
         {/* Subtotal */}
@@ -456,36 +477,13 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             />
           </div>
           <div style={FIELD_WRAP}>
-            <label style={{ ...LABEL, display: "flex", alignItems: "center", gap: 8 }}>
-              Possui Previdência?
-              <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={data.temPrevidencia}
-                  onChange={(e) => upd({ temPrevidencia: e.target.checked })}
-                />
-                <span style={{ fontSize: 11, color: "#374151", fontWeight: 400, textTransform: "none" as const, letterSpacing: 0 }}>Sim</span>
-              </label>
-            </label>
-            {data.temPrevidencia && (
-              <CurrencyInput
-                value={data.rendaPrevidencia}
-                onChange={(v) => upd({ rendaPrevidencia: v })}
-                placeholder="Renda mensal da previdência"
-              />
-            )}
+            <label style={LABEL}>Saldo Atual da Previdência (R$)</label>
+            <CurrencyInput
+              value={data.saldoPrevidencia}
+              onChange={(v) => upd({ saldoPrevidencia: v })}
+            />
+            <span style={HINT}>Saldo acumulado — será descontado das necessidades contínuas</span>
           </div>
-
-          {data.temPrevidencia && (
-            <div style={FIELD_WRAP}>
-              <label style={LABEL}>Saldo Atual da Previdência (R$)</label>
-              <CurrencyInput
-                value={data.saldoPrevidencia}
-                onChange={(v) => upd({ saldoPrevidencia: v })}
-              />
-              <span style={HINT}>Saldo acumulado hoje — será descontado das necessidades contínuas</span>
-            </div>
-          )}
         </div>
 
         <div style={SUBTOTAL}>
