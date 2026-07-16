@@ -14,9 +14,11 @@ interface FilhoForm {
 }
 
 interface FormData {
+  itcmd: number;
+  custosAdvocaticios: number;
+  custosCartorarios: number;
   dividas: number;
   despesasFinais: number;
-  mesesEmergencia: number;
   outrosImediatos: number;
   despesasMensais: number;
   rendaConjuge: number;
@@ -127,10 +129,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           custoMensal: 0,
         }));
     return {
-      dividas:          Number(df.dividas)         || 0,
-      despesasFinais:   Number(df.despesasFinais)  || 0,
-      mesesEmergencia:  Number(df.mesesEmergencia) || 6,
-      outrosImediatos:  Number(df.outrosImediatos) || 0,
+      itcmd:               Number(df.itcmd)               || 0,
+      custosAdvocaticios:  Number(df.custosAdvocaticios)  || 0,
+      custosCartorarios:   Number(df.custosCartorarios)   || 0,
+      dividas:             Number(df.dividas)             || 0,
+      despesasFinais:      Number(df.despesasFinais)      || 0,
+      outrosImediatos:     Number(df.outrosImediatos)     || 0,
       despesasMensais:  Number(df.despesasMensais) || Number(dc.custoDeVidaMensal) || 0,
       rendaConjuge:     Number(df.rendaConjuge)    || 0,
       temPrevidencia:   Boolean(df.temPrevidencia),
@@ -154,10 +158,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
   const calc = useMemo(() => {
     const totalImediato =
-      (Number(data.dividas)        || 0) +
-      (Number(data.despesasFinais) || 0) +
-      (Number(data.despesasMensais) || 0) * (Number(data.mesesEmergencia) || 6) +
-      (Number(data.outrosImediatos) || 0);
+      (Number(data.itcmd)               || 0) +
+      (Number(data.custosAdvocaticios)  || 0) +
+      (Number(data.custosCartorarios)   || 0) +
+      (Number(data.dividas)             || 0) +
+      (Number(data.despesasFinais)      || 0) +
+      (Number(data.outrosImediatos)     || 0);
 
     const rendaLiquida = Math.max(0,
       (Number(data.despesasMensais)  || 0) -
@@ -272,36 +278,42 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Dívidas e Financiamentos</label>
+            <label style={LABEL}>ITCMD (R$)</label>
+            <CurrencyInput value={data.itcmd} onChange={(v) => upd({ itcmd: v })} />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Imposto sobre transmissão causa mortis</span>
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Custos Advocatícios (R$)</label>
+            <CurrencyInput value={data.custosAdvocaticios} onChange={(v) => upd({ custosAdvocaticios: v })} />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Honorários advocatícios do inventário</span>
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Custos Cartorários (R$)</label>
+            <CurrencyInput value={data.custosCartorarios} onChange={(v) => upd({ custosCartorarios: v })} />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Custas cartorárias e judiciais</span>
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Dívidas e Financiamentos (R$)</label>
             <CurrencyInput value={data.dividas} onChange={(v) => upd({ dividas: v })} />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Saldo devedor de empréstimos e financiamentos</span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Despesas Finais (funeral, inventário)</label>
+            <label style={LABEL}>Despesas Finais (R$)</label>
             <CurrencyInput value={data.despesasFinais} onChange={(v) => upd({ despesasFinais: v })} />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>Funeral, traslado e demais despesas</span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Meses de Emergência</label>
-            <input
-              type="number"
-              min={1}
-              max={24}
-              value={data.mesesEmergencia}
-              onChange={(e) => upd({ mesesEmergencia: Math.max(1, Math.min(24, Number(e.target.value) || 6)) })}
-              style={NUMBER_INPUT}
-            />
-            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-              Reserva: {formatCurrency((Number(data.despesasMensais) || 0) * (Number(data.mesesEmergencia) || 6))}
-            </span>
-          </div>
-          <div style={FIELD_WRAP}>
-            <label style={LABEL}>Outros Gastos Imediatos</label>
+            <label style={LABEL}>Outros Gastos Imediatos (R$)</label>
             <CurrencyInput value={data.outrosImediatos} onChange={(v) => upd({ outrosImediatos: v })} />
           </div>
         </div>
 
-        <div style={SUBTOTAL}>
-          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 600 }}>Subtotal Imediato</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalImediato)}</span>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "12px 0", borderTop: "0.5px solid #F3F4F6", marginTop: 12,
+        }}>
+          <span style={{ fontSize: 12, color: "#6B7280" }}>Total Necessidades Imediatas</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalImediato)}</span>
         </div>
       </div>
 
