@@ -48,6 +48,9 @@ function movEfetivo(item: PlanoAcaoItem): number {
   if (item.acao === "aportar" || item.acao === "novo") {
     return item.movimentacaoEditada ?? item.movimentacaoBRL;
   }
+  if (item.acao === "resgatar_parcial" && item.valorResgateBRL !== undefined) {
+    return -item.valorResgateBRL;
+  }
   return item.movimentacaoBRL;
 }
 
@@ -89,7 +92,6 @@ export function Etapa3PlanoAcao({
   planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio, aporteDisponivel,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
-  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
   const [editandoMovId, setEditandoMovId] = useState<string | null>(null);
   const [editandoMovVal, setEditandoMovVal] = useState<string>("");
   const [adicionandoAtivo, setAdicionandoAtivo] = useState(false);
@@ -548,42 +550,35 @@ export function Etapa3PlanoAcao({
                   {item.acao === "resgatar_parcial" && (
                     <div style={{ padding: "0 14px 8px" }}>
                       <div style={{
-                        display: "flex", alignItems: "center", gap: 8,
                         padding: "8px 10px",
                         background: "#FFF5F5",
                         border: "0.5px solid #FECACA",
                         borderRadius: 6,
                       }}>
-                        <span style={{ fontSize: 11, color: "#B91C1C", whiteSpace: "nowrap" }}>
-                          Valor a resgatar:
-                        </span>
-                        <input
-                          type="text"
-                          value={editingValues[item.id] ?? formatInputBRL(item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))}
-                          onChange={(e) => setEditingValues((prev) => ({ ...prev, [item.id]: e.target.value }))}
-                          onBlur={(e) => {
-                            const valor = parseBRL(e.target.value);
-                            const valorValido = Math.min(Math.max(0, valor), item.valorAtualBRL);
-                            updateItem(item.id, { valorResgateBRL: valorValido });
-                            setEditingValues((prev) => { const next = { ...prev }; delete next[item.id]; return next; });
-                          }}
-                          style={{
-                            flex: 1,
-                            border: "1px solid #FECACA",
-                            borderRadius: 4,
-                            padding: "4px 8px",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: "#B91C1C",
-                            textAlign: "right",
-                            background: "white",
-                            outline: "none",
-                          }}
-                          placeholder={formatInputBRL(Math.abs(item.movimentacaoBRL))}
-                        />
-                        <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" }}>
-                          de {formatBRL(item.valorAtualBRL)}
-                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ fontSize: 11, color: "#B91C1C", flexShrink: 0 }}>
+                            Valor a resgatar:
+                          </span>
+                          <div style={{ flex: 1 }}>
+                            <CurrencyInput
+                              value={item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL)}
+                              onChange={(v) => {
+                                const valorValido = Math.min(Math.max(0, v), item.valorAtualBRL);
+                                updateItem(item.id, { valorResgateBRL: valorValido });
+                              }}
+                              placeholder="R$ 0,00"
+                            />
+                          </div>
+                          <span style={{ fontSize: 11, color: "#6B7280", flexShrink: 0 }}>
+                            de {formatBRL(item.valorAtualBRL)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#6B7280", marginTop: 6 }}>
+                          Saldo após resgate:{" "}
+                          <strong style={{ color: "#374151" }}>
+                            {formatBRL(Math.max(0, item.valorAtualBRL - (item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))))}
+                          </strong>
+                        </div>
                       </div>
                     </div>
                   )}
