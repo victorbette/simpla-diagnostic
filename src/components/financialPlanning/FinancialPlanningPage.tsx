@@ -612,25 +612,27 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
         </div>
       </main>
 
-      {/* Rodapé — Ver Resultado */}
-      <div style={{
-        position: "sticky", bottom: 0, background: "white",
-        borderTop: "0.5px solid #E5E7EB", padding: "12px 32px",
-        display: "flex", justifyContent: "flex-end",
-      }}>
-        <button
-          onClick={() => setMostrarResultado(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: "#1E3A8A", color: "white", border: "none",
-            borderRadius: 8, padding: "10px 24px", fontSize: 14,
-            fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          Ver Resultado
-          <i className="ti ti-arrow-right" style={{ fontSize: 16 }} />
-        </button>
-      </div>
+      {/* Rodapé — Ver Resultado (apenas na aba Liberdade Financeira) */}
+      {abaAtiva === "liberdade_financeira" && (
+        <div style={{
+          position: "sticky", bottom: 0, background: "white",
+          borderTop: "0.5px solid #E5E7EB", padding: "12px 32px",
+          display: "flex", justifyContent: "flex-end",
+        }}>
+          <button
+            onClick={() => setMostrarResultado(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: "#1E3A8A", color: "white", border: "none",
+              borderRadius: 8, padding: "10px 24px", fontSize: 14,
+              fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Ver Resultado
+            <i className="ti ti-arrow-right" style={{ fontSize: 16 }} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
