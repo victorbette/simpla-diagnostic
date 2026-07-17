@@ -28,6 +28,7 @@ export function SecaoAposentadoria({
   onComentarioChange,
   tags,
   onTagsChange,
+  resultadoIF,
   onResultadoIF,
   onSaveCloud,
 }: Props) {
@@ -43,7 +44,8 @@ export function SecaoAposentadoria({
         planejamentoIF={plan.planejamentoIF}
         dataNascimento={plan.dadosCliente.dataNascimento}
         dadosCliente={plan.dadosCliente}
-        onSave={async (params, objetivos, result) => {
+        resultadoIF={resultadoIF}
+        onSave={async (params, objetivos, result, taxaTravadaInfo) => {
           const r: ResultadoIF = {
             patrimonioAposentadoria: result.patrimonioNaIF,
             rendaSustentavel: result.rendaSustentavel,
@@ -64,6 +66,8 @@ export function SecaoAposentadoria({
             anoNascimento: params.anoNascimento,
             mesNascimento: params.mesNascimento,
             mesInicioRetirada: result.mesInicioRetirada,
+            taxaTravada: taxaTravadaInfo.taxaTravada,
+            taxaTravadaValor: taxaTravadaInfo.taxaTravadaValor,
             dataCalculo: new Date().toISOString(),
             savedAt: new Date().toISOString(),
           };

@@ -56,6 +56,8 @@ export interface ResultadoIF {
   anoNascimento?: number;
   mesNascimento?: number;
   mesInicioRetirada?: number;
+  taxaTravada?: boolean;
+  taxaTravadaValor?: number | null;
   dataCalculo: string;
   savedAt: string;
 }

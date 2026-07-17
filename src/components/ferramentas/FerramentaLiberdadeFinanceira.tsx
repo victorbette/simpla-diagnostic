@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
   type ProjecaoIFResult,
 } from "@/lib/financialFreedomCalc";
 import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
+import type { ResultadoIF } from "@/types/estrategiaResultados";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
 import { GraficoIF } from "@/components/shared/GraficoIF";
@@ -24,7 +25,8 @@ interface Props {
   planejamentoIF: PlanejamentoIF;
   dataNascimento?: string;
   dadosCliente?: DadosCliente;
-  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult) => Promise<void>;
+  resultadoIF?: ResultadoIF | null;
+  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult, taxaTravadaInfo: { taxaTravada: boolean; taxaTravadaValor: number | null }) => Promise<void>;
 }
 
 interface UIParams {
@@ -93,7 +95,7 @@ function migrateObjetivo(
 }
 
 export function FerramentaLiberdadeFinanceira({
-  clientId, planejamentoIF, dataNascimento, dadosCliente, onSave,
+  clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, onSave,
 }: Props) {
   // ── Birth date → age + anoNascimento/mesNascimento ─────────────────────────
   const parsed = parseDateNasc(dataNascimento ?? "");
@@ -158,6 +160,27 @@ export function FerramentaLiberdadeFinanceira({
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
+
+  // ── Initialize from Supabase data when it first arrives ───────────────────
+  const initializedFromSupabaseRef = useRef(false);
+  useEffect(() => {
+    if (resultadoIF && !initializedFromSupabaseRef.current) {
+      initializedFromSupabaseRef.current = true;
+      setParams((prev) => ({
+        ...prev,
+        idadeAposentadoria: resultadoIF.idadeMeta,
+        patrimonioInicial:  resultadoIF.patrimonioAtual,
+        aporteMensal:       resultadoIF.aporteAtual,
+        rendaDesejada:      resultadoIF.rendaMensalDesejada,
+      }));
+      setPatrimonioEditado(resultadoIF.patrimonioAtual !== patrimonioColeta);
+      setRendaEditada(resultadoIF.rendaMensalDesejada !== rendaDesejadaColeta);
+      if (resultadoIF.objetivos) setObjetivos(resultadoIF.objetivos);
+      if (resultadoIF.taxaTravada !== undefined) setTaxaTravada(resultadoIF.taxaTravada);
+      if (resultadoIF.taxaTravadaValor !== undefined) setTaxaTravadaValor(resultadoIF.taxaTravadaValor ?? null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultadoIF]);
 
   // Only objectives with ativo !== false impact the projection
   const objetivosAtivos = useMemo(() => objetivos.filter(o => o.ativo !== false), [objetivos]);
@@ -268,7 +291,7 @@ export function FerramentaLiberdadeFinanceira({
     if (!result) return;
     setSalvando(true);
     try {
-      await onSave(projecaoParams, objetivos, result);
+      await onSave(projecaoParams, objetivos, result, { taxaTravada, taxaTravadaValor });
       setSalvo(true);
       setTimeout(() => setSalvo(false), 2500);
     } finally {
