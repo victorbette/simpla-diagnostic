@@ -247,6 +247,11 @@ export function FerramentaLiberdadeFinanceira({
     });
   }, [result, params, patrimonioPerpetuidade, taxaMensalEfetiva]);
 
+  const rendaSustentavel = useMemo(() => {
+    if (!result || result.patrimonioNaIF <= 0) return 0;
+    return (result.patrimonioNaIF * 0.04) / 12;
+  }, [result]);
+
   const sensAporteScenarios = useMemo(() => {
     if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
     const base = params.aporteMensal;
@@ -564,18 +569,32 @@ export function FerramentaLiberdadeFinanceira({
 
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 8 }}>
-              Situação
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>
+              Renda Sustentável
             </p>
-            <span style={{
-              display: "inline-block",
-              backgroundColor: result.ifAlcancada ? "#DCFCE7" : "#FEE2E2",
-              color: result.ifAlcancada ? "#15803D" : "#B91C1C",
-              border: `1px solid ${result.ifAlcancada ? "#A8C8AB" : "#C8A8A8"}`,
-              borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 600,
-            }}>
-              {result.ifAlcancada ? "Aposentadoria alcançada ✓" : "Meta não atingida"}
-            </span>
+            <p style={{
+              fontSize: 20, fontWeight: 800, margin: 0,
+              color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827",
+            }} className="tabular-nums">
+              {rendaSustentavel > 0
+                ? rendaSustentavel.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
+                : "—"
+              }
+            </p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+              /mês com a projeção atual
+            </p>
+            {params.rendaDesejada > 0 && rendaSustentavel > 0 && (
+              <p style={{
+                fontSize: 10, marginTop: 4, fontWeight: 500,
+                color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C",
+              }}>
+                {rendaSustentavel >= params.rendaDesejada
+                  ? `✓ Meta de ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês atingida`
+                  : `Meta: ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
+                }
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
