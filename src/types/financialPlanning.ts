@@ -587,6 +587,7 @@ export interface DadosCliente {
   tipoPrevidencia: "pgbl" | "vgbl" | "ambos" | null;
   saldoPrevidencia: number;
   comecandoDoZero: boolean;
+  rendaDesejadaAposentadoria: number;
   nomeConjuge?: string;
   dataNascimentoConjuge?: string;
 }
@@ -628,6 +629,7 @@ export const initialDadosCliente: DadosCliente = {
   tipoPrevidencia: null,
   saldoPrevidencia: 0,
   comecandoDoZero: false,
+  rendaDesejadaAposentadoria: 0,
 };
 
 // ─── Financial Plan (raiz) ────────────────────────────────────────────────────

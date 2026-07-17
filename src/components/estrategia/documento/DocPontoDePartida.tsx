@@ -17,7 +17,7 @@ interface Props {
 /** Página "Ponto de Partida" — resumo do diagnóstico das quatro áreas (referência v4 p.5) */
 export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
   const scores = calcularScoresAreas(plan, resultados);
-  const textos = gerarTextosAreas(plan, resultados);
+  const textos = gerarTextosAreas(plan, resultados, nomeCliente);
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const nivelGeral = nivelScoreGauge(scores.geral ?? -1);
   const dataDiagnostico = new Date().toLocaleDateString("pt-BR");
@@ -130,7 +130,7 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
                   {n.label}
                 </span>
               </div>
-              <p style={{ fontSize: 10.5, color: DOC.texto, lineHeight: 1.6, margin: 0 }}>
+              <p style={{ fontSize: 10.5, color: DOC.texto, lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>
                 {texto}
               </p>
             </div>
