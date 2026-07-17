@@ -6,8 +6,6 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import {
   calcularProjecaoIF,
-  TAXA_ACUM_ANUAL,
-  TAXA_ACUM_MENSAL,
   calcularPatrimonioPerpetuidade,
   calcularAporteMensalNecessario,
   calcularTaxaNecessaria,
@@ -182,6 +180,17 @@ export function FerramentaLiberdadeFinanceira({
     [params, objetivosAtivos, patrimonioPerpetuidade],
   );
 
+  // Taxa que efetivamente rege os cálculos: travada ou calculada
+  const taxaEfetiva = useMemo(
+    () => taxaTravada && taxaTravadaValor !== null ? taxaTravadaValor : taxaNecessariaCalc,
+    [taxaTravada, taxaTravadaValor, taxaNecessariaCalc],
+  );
+
+  const taxaMensalEfetiva = useMemo(
+    () => Math.pow(1 + Math.max(taxaEfetiva, 0.03), 1 / 12) - 1,
+    [taxaEfetiva],
+  );
+
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual:           params.idadeAtual,
     idadeMeta:            params.idadeAposentadoria,
@@ -189,11 +198,11 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial:    params.patrimonioInicial,
     aporteMensal:         params.aporteMensal,
     rendaMensalDesejada:  params.rendaDesejada,
-    taxaRetornoAnual:     taxaTravada && taxaTravadaValor !== null ? taxaTravadaValor : TAXA_ACUM_ANUAL,
+    taxaRetornoAnual:     Math.max(taxaEfetiva, 0.03),
     anoNascimento,
     mesNascimento,
     objetivos:            objetivosAtivos,
-  }), [params, objetivosAtivos, anoNascimento, mesNascimento, taxaTravada, taxaTravadaValor]);
+  }), [params, objetivosAtivos, anoNascimento, mesNascimento, taxaEfetiva]);
 
   const result = useMemo(() => {
     try {
@@ -204,22 +213,15 @@ export function FerramentaLiberdadeFinanceira({
     }
   }, [projecaoParams]);
 
-  const curvaIdealPerpetuidade = useMemo(() => {
-    if (!result) return undefined;
-    return result.curvaIdeal.map((v, i) =>
-      i >= result.mesInicioRetirada ? patrimonioPerpetuidade : v
-    );
-  }, [result, patrimonioPerpetuidade]);
-
   const aporteNecessarioCalc = useMemo(
     () => result ? calcularAporteMensalNecessario({
       patrimonioAtual: params.patrimonioInicial,
       patrimonioAlvo:  patrimonioPerpetuidade,
       idadeAtual:      params.idadeAtual,
       idadeAlvo:       params.idadeAposentadoria,
-      taxaMensalReal:  TAXA_ACUM_MENSAL,
+      taxaMensalReal:  taxaMensalEfetiva,
     }) : 0,
-    [result, params, patrimonioPerpetuidade],
+    [result, params, patrimonioPerpetuidade, taxaMensalEfetiva],
   );
 
   const sensAporteScenarios = useMemo(() => {
@@ -233,12 +235,12 @@ export function FerramentaLiberdadeFinanceira({
         aporteMensal:    aporte,
         patrimonioAlvo:  alvo,
         idadeAtual:      params.idadeAtual,
-        taxaMensalReal:  TAXA_ACUM_MENSAL,
+        taxaMensalReal:  taxaMensalEfetiva,
         objetivos:       objetivosAtivos,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -251,12 +253,12 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioAlvo:  alvo,
         idadeAtual:      params.idadeAtual,
         idadeAlvo,
-        taxaMensalReal:  TAXA_ACUM_MENSAL,
+        taxaMensalReal:  taxaMensalEfetiva,
         objetivos:       objetivosAtivos,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
@@ -563,7 +565,6 @@ export function FerramentaLiberdadeFinanceira({
           </p>
           <GraficoIF
             projecao={result.projecao}
-            curvaIdeal={curvaIdealPerpetuidade}
             objetivos={objetivosAtivos}
             height={420}
             mesIF={mesIF}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  ReferenceLine, ResponsiveContainer,
 } from "recharts";
 import {
   Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
@@ -168,6 +168,12 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
+        {patrimonioNecessario !== undefined && patrimonioNecessario > 0 && patrimonioIdealVal == null && (
+          <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 14, height: 0, borderTop: "2px dashed #1E3A8A", display: "inline-block", flexShrink: 0 }} />
+            Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioNecessario)}
+          </div>
+        )}
         {/* IF icon marker: sem texto no tooltip (melhoria 1) */}
         {objsDoPonto.map((obj) => {
           const meta = getObjetivoMeta(obj.tipo);
@@ -311,6 +317,16 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           />
           <Tooltip content={<CustomTooltip />} />
 
+          {/* LINHA DE REFERÊNCIA HORIZONTAL — Aposentadoria Ideal (Perpetuidade) */}
+          {patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
+            <ReferenceLine
+              y={patrimonioNecessario}
+              stroke="#1E3A8A"
+              strokeWidth={2}
+              strokeDasharray="6 3"
+            />
+          )}
+
           {/* 1. ÁREA AZUL — patrimônio projetado, com activeDot ao hover */}
           {mostrarProjetado && (
             <Area
@@ -409,6 +425,12 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
             <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal (Perpetuidade)</span>
           </button>
+        )}
+        {!temCurvaIdeal && patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
+            <div style={{ width: 24, borderTop: "2px dashed #1E3A8A" }} />
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal (Perpetuidade)</span>
+          </div>
         )}
       </div>
       )}
