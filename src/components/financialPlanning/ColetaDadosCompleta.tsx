@@ -325,6 +325,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
             { label: "Renda mensal", key: "rendaMensal" },
             { label: "Custo de vida mensal", key: "custoDeVidaMensal" },
             { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal" },
+            { label: "Renda Mensal Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria", hint: "Quanto deseja receber por mês na aposentadoria" },
             { label: "Gasto mensal no cartão (familiar)", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
           ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
             <div key={key} className={fieldCls}>

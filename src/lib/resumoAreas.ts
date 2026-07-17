@@ -3,44 +3,11 @@
  * Ponto de Partida). Área sem análise recebe score -1 ("Não analisado") e é
  * excluída da média do score geral. */
 import { formatCurrency } from "@/lib/format";
-import { PERFIL_LABELS } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
-// ── Variáveis intermediárias compartilhadas entre scores e textos ────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Projeção de liberdade financeira a partir dos dados da coleta:
- *  acumulação a 4,5% a.a. real até a idade-meta e retirada a 4% a.a. até os 90. */
-function varsLiberdadeFinanceira(plan: FinancialPlan, resultados: ResultadosEstrategia) {
-  const dc = plan.dadosCliente;
-  const ifSalvo = resultados.if;
-  const patrimonioAtual = Number(dc.patrimonioFinanceiroEstimado) || 0;
-  const aporteMensal    = Number(dc.aportesMensalMedio) || 0;
-  const idadeAtual = dc.dataNascimento
-    ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 0;
-  const idadeMeta     = Number(ifSalvo?.idadeMeta)           || plan.planejamentoIF.idadeMeta || 60;
-  const rendaDesejada = Number(ifSalvo?.rendaMensalDesejada) || plan.planejamentoIF.rendaMensalDesejada || 0;
-
-  const taxaMensal = Math.pow(1.045, 1 / 12) - 1;
-  const nMeses     = Math.max(0, (idadeMeta - idadeAtual) * 12);
-  const projecao   = nMeses > 0
-    ? patrimonioAtual * Math.pow(1 + taxaMensal, nMeses) +
-      aporteMensal * (Math.pow(1 + taxaMensal, nMeses) - 1) / taxaMensal
-    : patrimonioAtual;
-
-  const taxaRetMensal = Math.pow(1.04, 1 / 12) - 1;
-  const mesesRetirada = Math.max(0, (90 - idadeMeta) * 12);
-  const patrimonioNecessario = rendaDesejada > 0
-    ? rendaDesejada * (1 - Math.pow(1 + taxaRetMensal, -mesesRetirada)) / taxaRetMensal
-    : 0;
-
-  const temDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
-
-  return { patrimonioAtual, aporteMensal, idadeAtual, idadeMeta, rendaDesejada, projecao, patrimonioNecessario, temDados };
-}
-
-/** Cobertura atual: campos diretos ou soma das apólices do formulário. */
 function capitalAtualSeguro(seguroSalvo: NonNullable<ResultadosEstrategia["seguro"]>): number {
   const direto = Number(seguroSalvo.capitalAtual) || Number(seguroSalvo.totalCoverage) || 0;
   if (direto) return direto;
@@ -52,20 +19,30 @@ function capitalAtualSeguro(seguroSalvo: NonNullable<ResultadosEstrategia["segur
     : 0;
 }
 
-function varsFiscal(plan: FinancialPlan, resultados: ResultadosEstrategia) {
-  const fiscalSalvo = resultados.fiscal;
-  return {
-    tipoDeclaracao: (fiscalSalvo?.tipoDeclaracao ?? plan.fiscal.tipoDeclaracao) as string,
-    rendaAnual:       Number(fiscalSalvo?.rendaAnual)            || 0,
-    tetoPGBL:         Number(fiscalSalvo?.tetoPGBLAnual)         || 0,
-    aporteAnual:      Number(fiscalSalvo?.aporteAnual)           || 0,
-    economiaAnual:    Number(fiscalSalvo?.economiaAnual)         || 0,
-    numDependentes:   Number(fiscalSalvo?.inputDependentes)      || 0,
-    aporteMensalPGBL: Number(fiscalSalvo?.inputAporteMensalPGBL) || 0,
-  };
+// Variáveis de Liberdade Financeira: APENAS coleta, perpetuidade IPCA+4%
+function varsLF(plan: FinancialPlan) {
+  const dc = plan.dadosCliente;
+  const patrimonioAtual = Number(dc.patrimonioFinanceiroEstimado) || 0;
+  const aporteMensal    = Number(dc.aportesMensalMedio) || 0;
+  const rendaDesejada   = Number(dc.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta       = Number(plan.planejamentoIF.idadeMeta) || 60;
+  const idadeAtual      = dc.dataNascimento
+    ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
+    : 0;
+
+  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
+  const TAXA_MENSAL = Math.pow(1.04, 1 / 12) - 1;
+  const nMeses = Math.max(0, (idadeMeta - idadeAtual) * 12);
+  const projecao = nMeses > 0
+    ? patrimonioAtual * Math.pow(1 + TAXA_MENSAL, nMeses) +
+      aporteMensal * (Math.pow(1 + TAXA_MENSAL, nMeses) - 1) / TAXA_MENSAL
+    : patrimonioAtual;
+
+  const temDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
+  return { patrimonioAtual, aporteMensal, rendaDesejada, idadeMeta, idadeAtual, patrimonioNecessario, projecao, temDados };
 }
 
-// ── Scores ───────────────────────────────────────────────────────────────────
+// ── Scores ────────────────────────────────────────────────────────────────────
 
 export interface ScoresAreas {
   lf: number;
@@ -77,17 +54,42 @@ export interface ScoresAreas {
 }
 
 export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosEstrategia): ScoresAreas {
-  const seguroSalvo   = resultados.seguro;
-  const fiscalSalvo   = resultados.fiscal;
-  const carteiraSalva = resultados.carteira;
+  const dc          = plan.dadosCliente;
+  const seguroSalvo = resultados.seguro;
+  const fiscalSalvo = resultados.fiscal;
 
-  // ── Liberdade Financeira (-1 = não analisado) ─────────────────────────────
-  const vlf = varsLiberdadeFinanceira(plan, resultados);
+  // ── Liberdade Financeira ──────────────────────────────────────────────────
+  const vlf = varsLF(plan);
   const lf = !vlf.temDados
     ? -1
     : Math.min(100, Math.round((vlf.projecao / vlf.patrimonioNecessario) * 100));
 
-  // ── Proteção (-1 = não analisado, 0 = 0% de cobertura) ────────────────────
+  // ── Asset Allocation ──────────────────────────────────────────────────────
+  const aa = (() => {
+    const aaTemDados = Number(dc.patrimonioFinanceiroEstimado) > 0;
+    if (!aaTemDados) return -1;
+
+    const perfil      = dc.suitabilityPerfil ?? '';
+    const temRendaFixa = true; // patrimônio > 0 implica ao menos renda fixa
+    const temAcoes    = Number(plan.ativosAtuais.acoes) > 0;
+    const temFIIs     = Number(plan.ativosAtuais.fiis) > 0;
+    const temExterior = Number(plan.ativosAtuais.rvGlobal) > 0 || Number(plan.ativosAtuais.rfGlobal) > 0;
+
+    let pontos = 0;
+    if (temRendaFixa) pontos += 30;
+    if (temAcoes)     pontos += 25;
+    if (temFIIs)      pontos += 25;
+    if (temExterior)  pontos += 20;
+
+    // Conservador sem RV não é penalizado
+    if (perfil === 'conservador' && !temAcoes && !temFIIs) {
+      pontos = Math.min(pontos + 20, 70);
+    }
+
+    return Math.min(100, pontos);
+  })();
+
+  // ── Proteção ──────────────────────────────────────────────────────────────
   const ps = (() => {
     if (!seguroSalvo) return -1;
     const capitalNecessario = Number(seguroSalvo.capitalNecessario) || Number(seguroSalvo.totalNeed) || 0;
@@ -95,49 +97,45 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
     if (capitalNecessario > 0) {
       return Math.min(100, Math.round((capitalAtual / capitalNecessario) * 100));
     }
-    return seguroSalvo.scoreProtecao ?? 0;
+    return capitalAtual > 0 ? 50 : (seguroSalvo.scoreProtecao ?? 0);
   })();
 
-  // ── Tributário (-1 = não analisado) ───────────────────────────────────────
+  // ── Tributário ────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo) return -1;
-    const vf = varsFiscal(plan, resultados);
-    let pts = 0;
-    // Critério 1: tipo de declaração definido (20pts)
-    if (vf.tipoDeclaracao !== "nao_sei") pts += 20;
-    // Critério 2: adequação do modelo (30pts)
-    if (vf.tipoDeclaracao === "completa") {
-      pts += (vf.rendaAnual > 40000 || vf.numDependentes > 0) ? 30 : 10;
-    } else if (vf.tipoDeclaracao === "simplificada") {
-      pts += (vf.rendaAnual <= 40000 && vf.numDependentes === 0) ? 30 : 15;
+    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
+    const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
+    const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
+    const economia        = Number(fiscalSalvo.economiaAnual) || 0;
+
+    let pontos = 0;
+
+    // 1. Tipo de declaração definido (30 pts completa / 20 pts simplificada)
+    if (tipoDeclaracao === 'completa')     pontos += 30;
+    else if (tipoDeclaracao === 'simplificada') pontos += 20;
+
+    // 2. Aproveitamento PGBL (40 pts) ou identificação do modelo (20 pts)
+    if (tipoDeclaracao === 'completa') {
+      if (aporteAnualPGBL > 0) {
+        const aproveitamento = tetoPGBL > 0 ? Math.min(1, aporteAnualPGBL / tetoPGBL) : 0;
+        pontos += Math.round(aproveitamento * 40);
+      }
+    } else if (tipoDeclaracao === 'simplificada') {
+      pontos += 20;
     }
-    // Critério 3: aproveitamento PGBL (50pts)
-    if (vf.tipoDeclaracao === "completa") {
-      const aprovPct = vf.tetoPGBL > 0
-        ? Math.min(100, Math.round((vf.aporteAnual / vf.tetoPGBL) * 100))
-        : 0;
-      pts += Math.round(aprovPct * 0.5);
-    } else if (vf.tipoDeclaracao === "simplificada") {
-      pts += 25;
+
+    // 3. Diferimento gerado (30 pts) ou neutro para simplificada (15 pts)
+    if (economia > 0 && tetoPGBL > 0) {
+      const economiaPct = Math.min(1, economia / (tetoPGBL * 0.275));
+      pontos += Math.round(economiaPct * 30);
+    } else if (tipoDeclaracao === 'simplificada') {
+      pontos += 15;
     }
-    return Math.min(100, pts);
+
+    return Math.min(100, pontos);
   })();
 
-  // ── Asset Allocation (-1 = não analisado) ─────────────────────────────────
-  const aa = (() => {
-    if (!carteiraSalva) return -1;
-    const macroAtual = carteiraSalva.macroAtual ?? {};
-    const macroMeta  = carteiraSalva.macroMeta  ?? {};
-    const ids = Object.keys(macroMeta);
-    if (!ids.length || !Object.keys(macroAtual).length) return -1;
-    const desvios = ids.map((id) =>
-      Math.abs((Number(macroAtual[id]) || 0) - (Number(macroMeta[id]) || 0))
-    );
-    const desvioMedio = desvios.reduce((s, d) => s + d, 0) / desvios.length;
-    return Math.max(0, Math.round(100 - desvioMedio * 3));
-  })();
-
-  // ── Score Geral (ignora áreas não analisadas) ─────────────────────────────
+  // ── Score Geral ───────────────────────────────────────────────────────────
   const scoresAtivos = [lf, aa, ps, fiscal].filter((s) => s >= 0);
   const geral = scoresAtivos.length > 0
     ? Math.round(scoresAtivos.reduce((a, v) => a + v, 0) / scoresAtivos.length)
@@ -146,7 +144,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   return { lf, aa, ps, fiscal, geral };
 }
 
-// ── Textos analíticos por área ───────────────────────────────────────────────
+// ── Textos analíticos por área ────────────────────────────────────────────────
 
 export interface TextosAreas {
   lf: string;
@@ -156,57 +154,43 @@ export interface TextosAreas {
 }
 
 export function gerarTextosAreas(plan: FinancialPlan, resultados: ResultadosEstrategia): TextosAreas {
-  const ifSalvo       = resultados.if;
-  const seguroSalvo   = resultados.seguro;
-  const fiscalSalvo   = resultados.fiscal;
-  const carteiraSalva = resultados.carteira;
-  const perfil = plan.dadosCliente.suitabilityPerfil;
+  const dc          = plan.dadosCliente;
+  const seguroSalvo = resultados.seguro;
+  const fiscalSalvo = resultados.fiscal;
 
+  // ── LF ────────────────────────────────────────────────────────────────────
   const lf = (() => {
-    if (!ifSalvo) {
-      return "Simulação de liberdade financeira ainda não realizada. Acesse a aba Liberdade Financeira para configurar sua projeção e descobrir em quanto tempo você pode atingir a independência financeira com os aportes atuais.";
+    const v = varsLF(plan);
+    if (!v.temDados) {
+      return "Para calcular o score de Liberdade Financeira, preencha na Coleta de Dados: patrimônio atual, aporte mensal, renda desejada na aposentadoria, data de nascimento e idade meta.";
     }
-    const v = varsLiberdadeFinanceira(plan, resultados);
-    const anosRestantes = Math.max(0, v.idadeMeta - v.idadeAtual);
-    const pct = v.patrimonioNecessario > 0
-      ? Math.round((v.projecao / v.patrimonioNecessario) * 100)
-      : 0;
+    const pct = Math.round((v.projecao / v.patrimonioNecessario) * 100);
+    if (v.projecao >= v.patrimonioNecessario) {
+      return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aporte de ${formatCurrency(v.aporteMensal)}/mês, a projeção a IPCA+4% ao ano indica patrimônio de ${formatCurrency(v.projecao)} aos ${v.idadeMeta} anos, suficiente para gerar ${formatCurrency(v.rendaDesejada)}/mês em perpetuidade (patrimônio necessário: ${formatCurrency(v.patrimonioNecessario)}).`;
+    }
     const gap = Math.max(0, v.patrimonioNecessario - v.projecao);
-    if (v.patrimonioNecessario > 0 && v.projecao >= v.patrimonioNecessario) {
-      return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aportes mensais de ${formatCurrency(v.aporteMensal)}, o patrimônio projetado aos ${v.idadeMeta} anos (em ${anosRestantes} anos) é de ${formatCurrency(v.projecao)} — ${pct}% da meta de ${formatCurrency(v.patrimonioNecessario)} para sustentar ${formatCurrency(v.rendaDesejada)}/mês. A liberdade financeira está no caminho certo.`;
-    }
-    if (v.patrimonioNecessario > 0) {
-      return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aportes de ${formatCurrency(v.aporteMensal)}/mês, a projeção aos ${v.idadeMeta} anos é de ${formatCurrency(v.projecao)} — ${pct}% dos ${formatCurrency(v.patrimonioNecessario)} necessários para ${formatCurrency(v.rendaDesejada)}/mês. Há um gap de ${formatCurrency(gap)}: considere aumentar aportes, postergar a meta de idade ou redimensionar a renda desejada.`;
-    }
-    // Sem dados da coleta para projetar — usa o resultado salvo da ferramenta
-    const projecao  = ifSalvo.patrimonioAposentadoria;
-    const meta      = ifSalvo.patrimonioNecessario;
-    const renda     = ifSalvo.rendaMensalDesejada;
-    const idadeAlvo = ifSalvo.idadeMeta;
-    if (projecao >= meta) {
-      return `Projeção de ${formatCurrency(projecao)} aos ${idadeAlvo} anos supera a meta de ${formatCurrency(meta)} para renda de ${formatCurrency(renda)}/mês. Liberdade financeira no caminho certo.`;
-    }
-    return `Projeção de ${formatCurrency(projecao)} aos ${idadeAlvo} anos é inferior à meta de ${formatCurrency(meta)} para renda de ${formatCurrency(renda)}/mês. Revise aportes ou estratégia de investimentos.`;
+    return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aporte de ${formatCurrency(v.aporteMensal)}/mês, a projeção a IPCA+4% ao ano indica ${formatCurrency(v.projecao)} aos ${v.idadeMeta} anos — ${pct}% do necessário para gerar ${formatCurrency(v.rendaDesejada)}/mês em perpetuidade. Gap de ${formatCurrency(gap)}.`;
   })();
 
+  // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
-    if (!carteiraSalva) {
-      return "Análise de carteira ainda não realizada. Acesse a aba Asset Allocation para registrar seus investimentos, definir a alocação ideal para seu perfil e receber um plano de ação personalizado de rebalanceamento.";
+    const aaTemDados = Number(dc.patrimonioFinanceiroEstimado) > 0;
+    if (!aaTemDados) {
+      return "Preencha o patrimônio financeiro e os tipos de investimentos na Coleta de Dados para obter a análise de Asset Allocation.";
     }
-    const { patrimonio, macroAtual, macroMeta } = carteiraSalva;
-    const ids = Object.keys(macroMeta ?? {});
-    const desvioMedio = ids.length
-      ? ids.map((id) => Math.abs((Number(macroAtual[id]) || 0) - (Number(macroMeta[id]) || 0)))
-          .reduce((s, d) => s + d, 0) / ids.length
-      : 0;
-    const alinhado = desvioMedio < 5;
-    const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
-    if (alinhado) {
-      return `Patrimônio financeiro de ${formatCurrency(patrimonio)} com perfil ${perfilLabel}. A alocação atual está alinhada com a meta — desvio médio entre segmentos inferior a 5%. A carteira segue as diretrizes do diagnóstico Simpla Invest para este perfil, com boa diversificação entre as classes de ativos.`;
-    }
-    return `Patrimônio financeiro de ${formatCurrency(patrimonio)} com perfil ${perfilLabel}. O desvio médio entre alocação atual e meta é de ${desvioMedio.toFixed(1)}%, indicando oportunidade de rebalanceamento. O plano de ação detalha os movimentos necessários para otimizar a carteira conforme o perfil ${perfilLabel} e os objetivos definidos.`;
+    const temAcoes   = Number(plan.ativosAtuais.acoes) > 0;
+    const temFIIs    = Number(plan.ativosAtuais.fiis) > 0;
+    const temExterior = Number(plan.ativosAtuais.rvGlobal) > 0 || Number(plan.ativosAtuais.rfGlobal) > 0;
+    const classes = [
+      `✓ Renda Fixa (base da carteira)`,
+      `${temAcoes    ? '✓' : '✗'} Ações (crescimento patrimonial)`,
+      `${temFIIs     ? '✓' : '✗'} FIIs (renda passiva)`,
+      `${temExterior ? '✓' : '✗'} Exterior (diversificação geográfica)`,
+    ].join(' · ');
+    return `Diversificação registrada na coleta: ${classes}.`;
   })();
 
+  // ── PS ────────────────────────────────────────────────────────────────────
   const ps = (() => {
     if (!seguroSalvo) {
       return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear sua necessidade de cobertura de vida, invalidez e doenças graves e identificar eventuais gaps.";
@@ -221,36 +205,36 @@ export function gerarTextosAreas(plan: FinancialPlan, resultados: ResultadosEstr
       return `Nenhuma apólice de seguro foi informada. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Recomendamos avaliar a contratação de seguro de vida para proteger sua família.`;
     }
     if (capitalAtual >= capitalNecessario) {
-      return `Sua cobertura atual de ${formatCurrency(capitalAtual)} (entre seguro de vida e demais apólices) é adequada para o capital necessário estimado de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Mantenha suas apólices em dia e revise anualmente.`;
+      return `Sua cobertura atual de ${formatCurrency(capitalAtual)} é adequada para o capital necessário estimado de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Mantenha suas apólices em dia e revise anualmente.`;
     }
     const pct = Math.round((capitalAtual / capitalNecessario) * 100);
     return `Sua cobertura atual de ${formatCurrency(capitalAtual)} cobre ${pct}% do capital necessário de ${formatCurrency(capitalNecessario)}. O gap identificado é de ${formatCurrency(gap)}. Avalie a contratação de seguro adicional para proteger adequadamente sua família.`;
   })();
 
+  // ── Fiscal ────────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo) {
-      return "Análise tributária ainda não realizada. Acesse a aba Planejamento Tributário para simular o diferimento fiscal via PGBL e identificar oportunidades de redução de IR.";
+      return "Acesse Planejamento Tributário para analisar o tipo de declaração e oportunidade de PGBL.";
     }
-    const vf = varsFiscal(plan, resultados);
-    if (vf.tipoDeclaracao === "simplificada") {
-      return "Declaração no modelo simplificado (desconto padrão de R$ 16.754,34/ano). Nesse modelo, aportes em PGBL não geram dedução adicional de IR. Avalie periodicamente se o modelo completo seria mais vantajoso — especialmente se despesas dedutíveis (saúde, educação, dependentes, INSS) superarem o desconto fixo.";
+    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
+    const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
+    const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
+    const economia        = Number(fiscalSalvo.economiaAnual) || 0;
+
+    if (tipoDeclaracao === 'nao_sei') {
+      return "Tipo de declaração ainda não definido. Isso impacta diretamente na elegibilidade ao PGBL e no planejamento fiscal.";
     }
-    if (vf.tipoDeclaracao === "nao_sei") {
-      return "Tipo de declaração não identificado. Para otimizar a estratégia tributária, defina se declara pelo modelo completo ou simplificado. No modelo completo, aportes em PGBL de até 12% da renda bruta anual são dedutíveis da base de cálculo do IR, podendo gerar economia significativa.";
+    if (tipoDeclaracao === 'completa' && economia > 0) {
+      const aprovPct = tetoPGBL > 0 ? Math.round((aporteAnualPGBL / tetoPGBL) * 100) : 0;
+      return `Declaração completa com PGBL. Aproveitamento: ${aprovPct}% do teto disponível (${formatCurrency(tetoPGBL)}/ano). Economia fiscal: ${formatCurrency(economia)}/ano.`;
     }
-    if (vf.economiaAnual > 0) {
-      const pctAproveitamento = vf.tetoPGBL > 0
-        ? Math.round((vf.aporteAnual / vf.tetoPGBL) * 100)
-        : 0;
-      if (vf.aporteMensalPGBL > 0) {
-        return `Declaração completa. Aportando ${formatCurrency(vf.aporteMensalPGBL)}/mês em PGBL (${formatCurrency(vf.aporteAnual)}/ano), aproveitando ${pctAproveitamento}% do teto de ${formatCurrency(vf.tetoPGBL)}/ano (12% da renda bruta de ${formatCurrency(vf.rendaAnual)}), a economia fiscal estimada é de ${formatCurrency(vf.economiaAnual)}/ano — ${formatCurrency(vf.economiaAnual / 12)}/mês. Reinvestindo a restituição no próprio PGBL, o efeito composto amplifica ainda mais o benefício ao longo do tempo.`;
-      }
-      return `Declaração completa. Com aporte de ${formatCurrency(vf.aporteAnual)}/ano no PGBL (${formatCurrency(vf.aporteAnual / 12)}/mês), aproveitando ${pctAproveitamento}% do teto de ${formatCurrency(vf.tetoPGBL)}/ano (12% da renda bruta de ${formatCurrency(vf.rendaAnual)}), a economia fiscal estimada é de ${formatCurrency(vf.economiaAnual)}/ano — ${formatCurrency(vf.economiaAnual / 12)}/mês. Ao reinvestir a restituição no próprio PGBL, o efeito composto amplifica ainda mais o benefício ao longo do tempo.`;
+    if (tipoDeclaracao === 'completa' && aporteAnualPGBL === 0) {
+      return `Declaração completa sem PGBL. Oportunidade de deduzir até ${formatCurrency(tetoPGBL)}/ano no IR.`;
     }
-    if (vf.aporteMensalPGBL === 0 && vf.tetoPGBL > 0) {
-      return `Declaração completa identificada. Nenhum aporte em PGBL informado. Há espaço para deduzir até ${formatCurrency(vf.tetoPGBL / 12)}/mês (${formatCurrency(vf.tetoPGBL)}/ano) e potencialmente economizar no IR.`;
+    if (tipoDeclaracao === 'simplificada') {
+      return "Declaração no modelo simplificado. Nesse modelo, aportes em PGBL não geram dedução adicional de IR. Avalie periodicamente se o modelo completo seria mais vantajoso — especialmente se despesas dedutíveis superarem o desconto padrão.";
     }
-    return `Declaração completa identificada. Não foi apurada economia fiscal com os dados informados — verifique se o aporte no PGBL foi preenchido e se a renda bruta anual de ${formatCurrency(vf.rendaAnual)} está correta na calculadora tributária.`;
+    return `Declaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária.`;
   })();
 
   return { lf, aa, ps, fiscal };
