@@ -71,9 +71,9 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
 
     const perfil      = dc.suitabilityPerfil ?? '';
     const temRendaFixa = true; // patrimônio > 0 implica ao menos renda fixa
-    const temAcoes    = Number(plan.ativosAtuais.acoes) > 0;
-    const temFIIs     = Number(plan.ativosAtuais.fiis) > 0;
-    const temExterior = Number(plan.ativosAtuais.rvGlobal) > 0 || Number(plan.ativosAtuais.rfGlobal) > 0;
+    const temAcoes    = Number(plan.ativosAtuais?.acoes) > 0;
+    const temFIIs     = Number(plan.ativosAtuais?.fiis) > 0;
+    const temExterior = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
 
     let pontos = 0;
     if (temRendaFixa) pontos += 30;
@@ -209,9 +209,9 @@ export function gerarTextosAreas(
       return `Para analisarmos a composição dos seus investimentos, precisamos que você informe o patrimônio financeiro atual e os tipos de ativos que já possui na Coleta de Dados.\n\nEssa análise nos ajuda a entender se sua carteira está preparada para gerar patrimônio e renda passiva no longo prazo.`;
     }
 
-    const temAcoes    = Number(plan.ativosAtuais.acoes) > 0;
-    const temFIIs     = Number(plan.ativosAtuais.fiis) > 0;
-    const temExterior = Number(plan.ativosAtuais.rvGlobal) > 0 || Number(plan.ativosAtuais.rfGlobal) > 0;
+    const temAcoes    = Number(plan.ativosAtuais?.acoes) > 0;
+    const temFIIs     = Number(plan.ativosAtuais?.fiis) > 0;
+    const temExterior = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
 
     let texto = `${nome}, analisamos a composição dos seus investimentos atuais. `;
 
