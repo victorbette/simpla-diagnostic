@@ -161,7 +161,7 @@ interface Props {
   usdBrl?: number;
   onUsdBrlChange?: (v: number) => void;
   onAdd?: () => void;
-  onRemove: (id: string) => void;
+  onRemove?: (id: string) => void;
   onChange: (id: string, partial: Partial<Ativo>) => void;
 }
 
@@ -444,18 +444,20 @@ export function CarteiraCard({
             )}
 
             {/* Trash */}
-            <button
-              onClick={() => onRemove(ativo.id)}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: 22, height: 22, borderRadius: 4,
-                border: "none", background: "none", cursor: "pointer",
-                opacity: isHover ? 1 : 0, transition: "opacity 150ms",
-                color: "#B91C1C",
-              }}
-            >
-              <Trash2 size={13} />
-            </button>
+            {onRemove && (
+              <button
+                onClick={() => onRemove(ativo.id)}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: 22, height: 22, borderRadius: 4,
+                  border: "none", background: "none", cursor: "pointer",
+                  opacity: isHover ? 1 : 0, transition: "opacity 150ms",
+                  color: "#B91C1C",
+                }}
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
             {modo === "recomendada" && ativo.adicionadoManualmente && (
               <div style={{ gridColumn: "1 / -1", paddingBottom: 4 }}>
                 <input

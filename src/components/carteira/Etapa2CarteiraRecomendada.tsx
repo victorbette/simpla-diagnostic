@@ -66,10 +66,6 @@ export function Etapa2CarteiraRecomendada({
     onAlocacaoMeta({ ...alocacaoMeta, [cardId]: Math.max(0, Math.min(100, val)) });
   }
 
-  function handleRemove(id: string) {
-    onAtivos(ativos.filter((a) => a.id !== id));
-  }
-
   function handleChange(id: string, partial: Partial<Ativo>) {
     onAtivos(ativos.map((a) => (a.id === id ? { ...a, ...partial } : a)));
   }
@@ -326,7 +322,6 @@ export function Etapa2CarteiraRecomendada({
           ativosAtuaisRef={ativosAtuais}
           usdBrl={usdBrl}
           onUsdBrlChange={onUsdBrlChange}
-          onRemove={handleRemove}
           onChange={handleChange}
         />
       ))}

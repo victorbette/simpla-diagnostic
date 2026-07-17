@@ -535,15 +535,28 @@ export function Etapa3PlanoAcao({
                         </button>
                       </div>
                     ) : (
-                      <select
-                        value={item.prioridade ?? "baixa"}
-                        onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
-                        style={selectStyle}
-                      >
-                        <option value="alta">Alta</option>
-                        <option value="media">Média</option>
-                        <option value="baixa">Baixa</option>
-                      </select>
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        <select
+                          value={item.prioridade ?? "baixa"}
+                          onChange={(e) => updateItem(item.id, { prioridade: e.target.value as PlanoAcaoItem["prioridade"] })}
+                          style={selectStyle}
+                        >
+                          <option value="alta">Alta</option>
+                          <option value="media">Média</option>
+                          <option value="baixa">Baixa</option>
+                        </select>
+                        <button
+                          onClick={() => onPlanoAcao(planoAcao.filter((i) => i.id !== item.id))}
+                          title="Remover ativo do plano"
+                          style={{
+                            background: "none", border: "1px solid #FCA5A5",
+                            borderRadius: 6, padding: "4px 8px",
+                            cursor: "pointer", color: "#B91C1C", flexShrink: 0,
+                          }}
+                        >
+                          <i className="ti ti-trash" style={{ fontSize: 13 }} />
+                        </button>
+                      </div>
                     )}
                   </div>
 
