@@ -196,6 +196,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [invalidezEditada, setInvalidezEditada] = useState<boolean>(() => df.invalidezEditada === true);
+  const [doencaGraveEditada, setDoencaGraveEditada] = useState<boolean>(() => df.doencaGraveEditada === true);
 
   function upd(fields: Partial<FormData>) { setData(prev => ({ ...prev, ...fields })); }
 
@@ -234,7 +235,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       ? (Number(data.capitalInvalidez) || 0)
       : invalidezCalculada;
 
-    const totalCoberturasVida = capitalInvalidezEfetivo + (Number(data.capitalDoencaGrave) || 0);
+    const doencaGraveCalculada = (Number(data.despesasMensais) || 0) * 12;
+    const capitalDoencaGraveEfetivo = doencaGraveEditada
+      ? (Number(data.capitalDoencaGrave) || 0)
+      : doencaGraveCalculada;
+
+    const totalCoberturasVida = capitalInvalidezEfetivo + capitalDoencaGraveEfetivo;
     const capitalNecessario   = totalImediato + subtotalContinuo + totalCoberturasVida;
     const capitalAtual =
       (Number(data.seguroVidaAtual)      || 0) +
@@ -250,9 +256,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       totalImediato, rendaLiquida, totalContinuo, totalFilhos,
       saldoPrevidencia, subtotalContinuo,
       invalidezCalculada, capitalInvalidezEfetivo,
+      doencaGraveCalculada, capitalDoencaGraveEfetivo,
       totalCoberturasVida, capitalNecessario, capitalAtual, gap, coberturaPct,
     };
-  }, [data, invalidezEditada]);
+  }, [data, invalidezEditada, doencaGraveEditada]);
 
   // ── Filhos ────────────────────────────────────────────────────────────────
 
@@ -281,7 +288,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           totalImediato:        calc.totalImediato,
           subtotalContinuo:     calc.subtotalContinuo,
           totalCoberturasVida:  calc.totalCoberturasVida,
-          dadosFormulario:      { ...data, capitalInvalidez: calc.capitalInvalidezEfetivo, invalidezEditada },
+          dadosFormulario:      { ...data, capitalInvalidez: calc.capitalInvalidezEfetivo, invalidezEditada, capitalDoencaGrave: calc.capitalDoencaGraveEfetivo, doencaGraveEditada },
           dataUltimoSalvamento: new Date().toISOString(),
           totalNeed:     calc.capitalNecessario,
           totalCoverage: calc.capitalAtual,
@@ -300,8 +307,8 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           disabilityTotal:       calc.capitalInvalidezEfetivo,
           disabilityGap:         Math.max(0, calc.capitalInvalidezEfetivo - data.seguroInvalidezAtual),
           disabilityCoverage:    Math.min(calc.capitalInvalidezEfetivo, data.seguroInvalidezAtual),
-          criticalIllnessTotal:    data.capitalDoencaGrave,
-          criticalIllnessGap:      data.capitalDoencaGrave,
+          criticalIllnessTotal:    calc.capitalDoencaGraveEfetivo,
+          criticalIllnessGap:      calc.capitalDoencaGraveEfetivo,
           criticalIllnessCoverage: 0,
           dataCalculo: new Date().toISOString(),
           savedAt:     new Date().toISOString(),
@@ -617,8 +624,36 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             </span>
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Capital para Doenças Graves</label>
-            <CurrencyInput value={data.capitalDoencaGrave} onChange={(v) => upd({ capitalDoencaGrave: v })} />
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 6, gap: 6 }}>
+              <label style={{ fontSize: 11, color: "#6B7280" }}>Capital para Doenças Graves (R$)</label>
+              {!doencaGraveEditada && (
+                <span style={{ fontSize: 10, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99 }}>
+                  CALCULADO (custo mensal × 12)
+                </span>
+              )}
+              {doencaGraveEditada && (
+                <button
+                  onClick={() => {
+                    setDoencaGraveEditada(false);
+                    upd({ capitalDoencaGrave: calc.doencaGraveCalculada });
+                  }}
+                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer" }}
+                >
+                  ↺ Restaurar automático
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={calc.capitalDoencaGraveEfetivo}
+              onChange={(val: number) => {
+                setDoencaGraveEditada(true);
+                upd({ capitalDoencaGrave: val });
+              }}
+            />
+            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
+              Sugestão: {calc.doencaGraveCalculada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+              {" "}(despesas mensais × 12 meses) — editável conforme avaliação do consultor
+            </div>
           </div>
         </div>
 
