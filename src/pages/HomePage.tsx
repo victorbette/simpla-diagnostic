@@ -21,9 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
 import { toast } from "sonner";
-import { OportunidadesPage } from "@/pages/OportunidadesPage";
 import { ConfiguracoesPage } from "@/pages/ConfiguracoesPage";
-import { detectarOportunidades } from "@/lib/detectarOportunidades";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -89,7 +87,6 @@ export function HomePage() {
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
-  const [mostrarOportunidades, setMostrarOportunidades] = useState(false);
   const [mostrarConfig, setMostrarConfig] = useState(false);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
@@ -104,19 +101,6 @@ export function HomePage() {
         (c.email ?? "").toLowerCase().includes(q)
     );
   }, [clientStore.clients, search]);
-
-  const rawPlans = useMemo((): Record<string, Record<string, unknown>> => {
-    const result: Record<string, Record<string, unknown>> = {};
-    for (const c of clientStore.clients) {
-      if (!c.planId) continue;
-      result[c.id] = {
-        dados_cliente: c.planDadosCliente ?? {},
-        sucessorio: c.planSucessorio ?? {},
-        estrategia_inicial: c.planEstrategia ?? {},
-      };
-    }
-    return result;
-  }, [clientStore.clients]);
 
   useEffect(() => {
     const fechar = () => { setMenuAberto(null); setMenuPos(null); };
@@ -134,21 +118,6 @@ export function HomePage() {
 
   if (mostrarConfig) {
     return <ConfiguracoesPage onFechar={() => setMostrarConfig(false)} />;
-  }
-
-  if (mostrarOportunidades) {
-    return (
-      <OportunidadesPage
-        clientes={clientStore.clients}
-        rawPlans={rawPlans}
-        onVoltar={() => setMostrarOportunidades(false)}
-        onAbrirCliente={(clienteId) => {
-          const found = clientStore.clients.find((cl) => cl.id === clienteId);
-          if (found) setClienteSelecionado(found);
-          setMostrarOportunidades(false);
-        }}
-      />
-    );
   }
 
   if (clienteSelecionado) {
@@ -260,16 +229,6 @@ export function HomePage() {
     (c) => !c.planStatus || c.planStatus === "nao_iniciado"
   ).length;
 
-  const totalOportunidades = (() => {
-    let manuais: Array<{ id: string }> = [];
-    let resolvidasArr: string[] = [];
-    try { manuais = JSON.parse(localStorage.getItem("oportunidades_manuais") ?? "[]"); } catch { /* */ }
-    try { resolvidasArr = JSON.parse(localStorage.getItem("oportunidades_resolvidas") ?? "[]"); } catch { /* */ }
-    const resolvidasSet = new Set(resolvidasArr);
-    const autoOps = detectarOportunidades(clientStore.clients, rawPlans);
-    return [...autoOps, ...manuais].filter((op) => !resolvidasSet.has(op.id)).length;
-  })();
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#F0F7FF" }}>
 
@@ -365,22 +324,6 @@ export function HomePage() {
                 style={{ width: 280 }}
               />
             </div>
-            <button
-              onClick={() => setMostrarOportunidades(true)}
-              className="relative flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
-              style={{ backgroundColor: "#1E3A8A" }}
-            >
-              <i className="ti ti-bulb" style={{ fontSize: 16 }} />
-              Oportunidades
-              {totalOportunidades > 0 && (
-                <span
-                  className="absolute -top-1.5 -right-1.5 h-5 min-w-5 rounded-full flex items-center justify-center text-white text-xs font-bold px-1"
-                  style={{ backgroundColor: "#B91C1C" }}
-                >
-                  {totalOportunidades > 99 ? "99+" : totalOportunidades}
-                </span>
-              )}
-            </button>
             <button
               onClick={openNovoCliente}
               className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
