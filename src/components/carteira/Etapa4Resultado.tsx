@@ -75,6 +75,29 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
     [ativosAtuais, alocacaoMeta, patrimonioMeta]
   );
 
+  const carteiraFinal = useMemo(() =>
+    planoAcao
+      .map((item) => {
+        const valorFinal = calcularValorFinal(item);
+        if (valorFinal <= 0) return null;
+        const base =
+          ativosRecomendados.find((a) => a.nome === item.nomeAtivo && a.card === item.card) ??
+          ativosAtuais.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+        return {
+          id: item.id,
+          nome: item.nomeAtivo,
+          card: item.card,
+          segmento: item.segmento ?? "",
+          valorBRL: valorFinal,
+          vencimento: base?.vencimento,
+          adicionadoManualmente: item.adicionadoManualmente,
+          observacao: item.observacao,
+        } as Ativo;
+      })
+      .filter(Boolean) as Ativo[],
+    [planoAcao, ativosRecomendados, ativosAtuais]
+  );
+
   const cardStyle = (_accent?: string): React.CSSProperties => ({
     border: "0.5px solid #E5E7EB",
     borderRadius: 10, backgroundColor: "white", overflow: "hidden",
@@ -190,28 +213,13 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
       </div>
 
       {/* Seleção de Ativos Recomendados */}
-      {(() => {
-        const ativosCarteiraFinal = planoAcao
-          .map((item) => {
-            const valorFinal = calcularValorFinal(item);
-            if (valorFinal <= 0) return null;
-            const ativoRec = ativosRecomendados.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
-            const ativoAtual = ativosAtuais.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
-            const base = ativoRec ?? ativoAtual;
-            if (!base) return null;
-            return { ...base, valorBRL: valorFinal, nome: item.nomeAtivo, card: item.card };
-          })
-          .filter(Boolean) as Ativo[];
-        return (
-          <CardSelecaoAtivos
-            ativosRecomendados={ativosCarteiraFinal}
-            macroMeta={alocacaoMeta}
-            patrimonio={patrimonioMeta}
-            titulo="Seleção de Ativos Recomendados"
-            subtitulo="Carteira final após execução do plano de ação"
-          />
-        );
-      })()}
+      <CardSelecaoAtivos
+        ativosRecomendados={carteiraFinal}
+        macroMeta={alocacaoMeta}
+        patrimonio={patrimonioMeta}
+        titulo="Como sua carteira deverá ficar"
+        subtitulo="Seleção de ativos após execução do plano"
+      />
 
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
