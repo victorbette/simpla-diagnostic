@@ -22,6 +22,7 @@ import { useClientStore } from "@/hooks/useClientStore";
 import type { Client } from "@/hooks/useClientStore";
 import { toast } from "sonner";
 import { ConfiguracoesPage } from "@/pages/ConfiguracoesPage";
+import { DiagnosticoPage } from "@/diagnostico/DiagnosticoPage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -88,6 +89,7 @@ export function HomePage() {
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [mostrarConfig, setMostrarConfig] = useState(false);
+  const [mostrarDiagnostico, setMostrarDiagnostico] = useState(false);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
@@ -118,6 +120,10 @@ export function HomePage() {
 
   if (mostrarConfig) {
     return <ConfiguracoesPage onFechar={() => setMostrarConfig(false)} />;
+  }
+
+  if (mostrarDiagnostico) {
+    return <DiagnosticoPage onVoltar={() => setMostrarDiagnostico(false)} />;
   }
 
   if (clienteSelecionado) {
@@ -273,6 +279,16 @@ export function HomePage() {
             >
               {userInitials}
             </div>
+            <button
+              onClick={() => setMostrarDiagnostico(true)}
+              title="Diagnóstico Financeiro"
+              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+            >
+              <i className="ti ti-stethoscope" style={{ fontSize: 16 }} />
+              Diagnóstico
+            </button>
             <button
               onClick={() => setMostrarConfig(true)}
               title="Configurações"
