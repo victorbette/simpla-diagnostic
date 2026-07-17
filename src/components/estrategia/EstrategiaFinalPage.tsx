@@ -173,7 +173,7 @@ export function EstrategiaFinalPage({
           </button>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img
-              src="/logo-si.svg"
+              src="/diamond-icon-small.png"
               alt="Simpla Invest"
               style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
             />
@@ -289,7 +289,7 @@ export function EstrategiaFinalPage({
               />
             ) : (
               <img
-                src="/logo-si.svg"
+                src="/diamond-icon-small.png"
                 alt="Simpla Invest"
                 style={{ height: 80, width: 80, objectFit: "contain", margin: "0 auto 24px", display: "block", borderRadius: 8 }}
               />

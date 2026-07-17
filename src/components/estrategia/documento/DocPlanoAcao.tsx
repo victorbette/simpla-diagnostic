@@ -3,7 +3,9 @@ import { calcularIF, calcularProtecao, calcularFiscal } from "@/types/financialP
 import { detectarSeguroRC } from "@/lib/seguroRC";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia, ProximoPasso } from "@/types/estrategiaResultados";
-import { PAGINA, HEADER_PAGINA, TITULO_SECAO, LABEL_METRICA } from "@/lib/documentoStyles";
+import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
+import { PaginaDoc } from "./PaginaDoc";
+import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
 
 interface Props {
@@ -11,7 +13,6 @@ interface Props {
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
   onResultadosChange: (r: ResultadosEstrategia) => void;
-  numPagina?: number;
 }
 
 const PRIO_BADGE = {
@@ -23,7 +24,7 @@ const PRIO_BADGE = {
 const AREAS = [
   "Asset Allocation",
   "Liberdade Financeira",
-  "Proteção e Sucessório",
+  "Proteção e Sucessão",
   "Planejamento Tributário",
   "Viagens e Milhas",
   "Geral",
@@ -41,7 +42,7 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
 
   const seguroGap = resultados.seguro?.gap ?? calcularProtecao(plan.protecao).gap;
   if (seguroGap > 0) {
-    passos.push({ id: crypto.randomUUID(), descricao: "Contratar seguro de vida para cobrir o gap de proteção identificado", prioridade: "alta", dataPrevisao: "", area: "Proteção e Sucessório" });
+    passos.push({ id: crypto.randomUUID(), descricao: "Contratar seguro de vida para cobrir o gap de proteção identificado", prioridade: "alta", dataPrevisao: "", area: "Proteção e Sucessão" });
   }
 
   const fiscalEspaco = resultados.fiscal?.espacoDisponivelMensal ?? (calcularFiscal(plan.fiscal).espacoPGBL / 12);
@@ -57,12 +58,12 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
       descricao: `Analisar necessidade de Seguro de Responsabilidade Civil Profissional — ${profissao} tem exposição a processos por erros profissionais`,
       prioridade: "media" as const,
       dataPrevisao: "",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
     });
   }
 
   if (!plan.sucessorio.possuiTestamento && plan.sucessorio.patrimonioTotal > 500_000) {
-    passos.push({ id: crypto.randomUUID(), descricao: "Elaborar testamento para planejamento sucessório", prioridade: "media", dataPrevisao: "", area: "Proteção e Sucessório" });
+    passos.push({ id: crypto.randomUUID(), descricao: "Elaborar testamento para planejamento sucessório", prioridade: "media", dataPrevisao: "", area: "Proteção e Sucessão" });
   }
 
   const gastoCartao = Number(plan?.dadosCliente?.gastoCartaoMensal) || 0;
@@ -88,12 +89,14 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
 
   return (
     <div
+      className="doc-card"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => { setHovered(false); setTrashHovered(false); }}
       style={{ position: "relative", background: "white", borderRadius: 8, border: `0.5px solid #E5E7EB`, borderLeft: `4px solid ${pb.border}`, padding: "14px 18px", marginBottom: 10, boxSizing: "border-box" }}
     >
       {hovered && (
         <button
+          className="no-print"
           onClick={onRemove}
           onMouseEnter={() => setTrashHovered(true)}
           onMouseLeave={() => setTrashHovered(false)}
@@ -118,6 +121,7 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
             style={{ marginTop: 5, fontSize: 11, color: "#6B7280", border: "none", background: "transparent", cursor: "pointer", fontFamily: "inherit", outline: "none" }}
           >
             {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+            {!AREAS.includes(passo.area) && <option value={passo.area}>{passo.area}</option>}
           </select>
         </div>
 
@@ -148,7 +152,8 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
   );
 }
 
-export function DocProximosPassos({ nomeCliente, plan, resultados, onResultadosChange, numPagina = 14 }: Props) {
+/** Página "Plano de Ação" — cronograma de implementação editável (v4 p.17) */
+export function DocPlanoAcao({ nomeCliente, plan, resultados, onResultadosChange }: Props) {
   const [passos, setPassos] = useState<ProximoPasso[]>(() => {
     const saved = resultados.proximosPassos;
     if (saved && saved.length > 0) return saved;
@@ -165,21 +170,22 @@ export function DocProximosPassos({ nomeCliente, plan, resultados, onResultadosC
   };
 
   return (
-    <div style={PAGINA} className="doc-pagina">
-      {/* Header */}
-      <div style={HEADER_PAGINA("#7C3AED")}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ width: 40, height: 40, background: "#7C3AED", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
-            <i className="ti ti-list-checks" style={{ fontSize: 20 }} />
-          </div>
-          <div>
-            <span style={TITULO_SECAO}>Próximos Passos</span>
-            <p style={{ margin: "3px 0 0", fontSize: 12, color: "#6B7280" }}>Ações recomendadas e planejadas para o cliente</p>
-          </div>
-        </div>
-      </div>
+    <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
+      <HeaderSecao titulo="Plano de Ação" />
 
-      <p style={{ ...LABEL_METRICA, marginBottom: 14 }}>Plano de ação</p>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        Um planejamento financeiro de excelência só gera valor real quando aliado a uma execução
+        disciplinada, técnica e diligente. A transição da estratégia para a prática é o momento
+        mais crítico da sua jornada de construção e proteção patrimonial.
+      </p>
+
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 18 }}>
+        Para que a estratégia desenhada saia do papel e se traduza em resultados tangíveis,
+        estruturamos um cronograma de implementação claro, listando as ações recomendadas em ordem
+        de prioridade. Essa organização metodológica garante que nosso foco inicial esteja voltado
+        para a mitigação de riscos imediatos e para a captura das oportunidades de maior impacto no
+        seu patrimônio.
+      </p>
 
       {/* Lista */}
       <div style={{ marginBottom: 12 }}>
@@ -192,17 +198,15 @@ export function DocProximosPassos({ nomeCliente, plan, resultados, onResultadosC
           />
         ))}
         {passos.length === 0 && (
-          <p style={{ textAlign: "center", color: "#9CA3AF", fontSize: 12, padding: "28px 0", fontStyle: "italic" }}>
+          <p style={{ textAlign: "center", color: DOC.hint, fontSize: 12, padding: "28px 0", fontStyle: "italic" }}>
             Nenhum próximo passo adicionado. Clique em "Adicionar" abaixo.
           </p>
         )}
       </div>
 
-      {/* Add */}
+      {/* Add — só na tela */}
       <AddButton onClick={handleAdd} />
-
-      <RodapePagina nomeCliente={nomeCliente} numPagina={numPagina} totalPaginas={9} />
-    </div>
+    </PaginaDoc>
   );
 }
 
@@ -210,10 +214,11 @@ function AddButton({ onClick }: { onClick: () => void }) {
   const [hovered, setHovered] = useState(false);
   return (
     <button
+      className="no-print"
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ width: "100%", border: "1.5px dashed #BFDBFE", borderRadius: 8, padding: "12px", textAlign: "center", color: "#2563EB", fontSize: 12, background: hovered ? "#EFF6FF" : "white", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, marginBottom: 56 }}
+      style={{ width: "100%", border: "1.5px dashed #BFDBFE", borderRadius: 8, padding: "12px", textAlign: "center", color: "#2563EB", fontSize: 12, background: hovered ? "#EFF6FF" : "white", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
     >
       <i className="ti ti-plus" style={{ fontSize: 13 }} />
       Adicionar próximo passo

@@ -55,6 +55,33 @@ export const CARD_META = {
 
 export const CARD_ORDER: CardId[] = ['resgate_longo','resgate_rapido','acoes','fiis','exterior','cripto'];
 
+/** Agrupamento macro (Renda Fixa / Renda Variável) → subclasses por CardId */
+export const HIERARQUIA_CLASSES: ReadonlyArray<{
+  id: string;
+  label: string;
+  cor: string;
+  corBg: string;
+  icone: string;
+  subclasses: ReadonlyArray<{ cardId: CardId; label: string }>;
+}> = [
+  {
+    id: 'renda_fixa', label: 'Renda Fixa', cor: '#1E40AF', corBg: '#EFF6FF', icone: 'ti-building-bank',
+    subclasses: [
+      { cardId: 'resgate_longo',  label: 'Resgate Longo' },
+      { cardId: 'resgate_rapido', label: 'Resgate Rápido' },
+    ],
+  },
+  {
+    id: 'renda_variavel', label: 'Renda Variável', cor: '#15803D', corBg: '#F0FDF4', icone: 'ti-trending-up',
+    subclasses: [
+      { cardId: 'acoes',    label: 'Ações' },
+      { cardId: 'fiis',     label: 'Fundos Imobiliários' },
+      { cardId: 'exterior', label: 'Exterior' },
+      { cardId: 'cripto',   label: 'Cripto' },
+    ],
+  },
+];
+
 export const ALOCACAO_PADRAO: Record<string, Record<CardId, number>> = {
   conservador:          { resgate_longo: 42, resgate_rapido: 50, acoes: 2, fiis: 2, exterior: 4,    cripto: 0   },
   conservador_moderado: { resgate_longo: 43, resgate_rapido: 35, acoes: 7, fiis: 6, exterior: 9,    cripto: 0   },

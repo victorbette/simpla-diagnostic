@@ -343,7 +343,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
       <div className="app-main-header" style={{ height: 56, backgroundColor: "#1E3A8A", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <img
-            src="/logo-si.svg"
+            src="/diamond-icon-small.png"
             alt="Simpla Invest"
             style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
           />

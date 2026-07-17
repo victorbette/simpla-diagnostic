@@ -12,7 +12,7 @@ interface Props {
 
 const RADIAN = Math.PI / 180;
 
-function renderLabel({
+export function renderLabelPizza({
   cx, cy, midAngle, outerRadius, percent, name, cor,
 }: {
   cx: number; cy: number; midAngle: number; outerRadius: number;
@@ -51,7 +51,7 @@ function renderLabel({
 
 // ── GraficoPizza ─────────────────────────────────────────────────────────────
 
-interface Fatia {
+export interface Fatia {
   name: string;
   value: number;
   cor: string;
@@ -87,7 +87,7 @@ function GraficoPizza({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
               labelLine={false}
               label={(props) => {
                 const item = filtrados[props.index];
-                return renderLabel({ ...props, cor: item?.cor ?? "#9CA3AF" });
+                return renderLabelPizza({ ...props, cor: item?.cor ?? "#9CA3AF" });
               }}
             >
               {filtrados.map((entry, i) => (

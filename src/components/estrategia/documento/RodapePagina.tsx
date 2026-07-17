@@ -2,12 +2,10 @@ import { DOC } from "@/lib/documentoStyles";
 
 interface Props {
   nomeCliente: string;
-  numPagina: number;
-  totalPaginas: number;
 }
 
 /** Rodapé em fluxo das páginas de conteúdo (renderizado via prop `rodape` do PaginaDoc) */
-export function RodapePagina({ nomeCliente, numPagina, totalPaginas }: Props) {
+export function RodapePagina({ nomeCliente }: Props) {
   return (
     <div
       style={{
@@ -15,14 +13,10 @@ export function RodapePagina({ nomeCliente, numPagina, totalPaginas }: Props) {
         paddingTop: 10,
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
       }}
     >
       <span style={{ fontSize: 10, color: DOC.hint }}>
         Financial Planning · {nomeCliente}
-      </span>
-      <span style={{ fontSize: 10, color: DOC.hint, fontVariantNumeric: "tabular-nums" }}>
-        {numPagina} / {totalPaginas}
       </span>
     </div>
   );

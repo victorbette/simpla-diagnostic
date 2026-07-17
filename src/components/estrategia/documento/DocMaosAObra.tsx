@@ -1,6 +1,5 @@
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
-import { PAG, TOTAL_PAGINAS } from "@/lib/documentoPaginas";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
@@ -10,7 +9,7 @@ interface Props {
   config: ConfigConsultor;
 }
 
-export function DocMaosAObra({ nomeCliente, config }: Props) {
+export function DocMaosAObra({ nomeCliente }: Props) {
   const primeiroNome = nomeCliente.split(" ")[0];
 
   return (
@@ -18,33 +17,40 @@ export function DocMaosAObra({ nomeCliente, config }: Props) {
       marcaDagua
       rodape={
         <>
-          {/* Bloco de validade */}
+          {/* Marca discreta acima do rodapé (padrão da referência) */}
+          <p
+            style={{
+              margin: "0 0 14px",
+              fontSize: 15,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              color: "#D1D5DB",
+              textAlign: "right",
+            }}
+          >
+            SIMPLA INVEST
+          </p>
           <div
             style={{
               borderTop: `1px solid ${DOC.linha}`,
-              paddingTop: 14,
-              marginBottom: 16,
+              paddingTop: 10,
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               gap: 16,
+              marginBottom: 8,
             }}
           >
             <div>
-              <p style={{ margin: 0, fontSize: 11.5, fontWeight: 600, color: DOC.texto }}>
+              <p style={{ margin: 0, fontSize: 10.5, color: DOC.hint }}>
                 Financial Planning elaborado por Simpla Invest
               </p>
               <p style={{ margin: "3px 0 0", fontSize: 10.5, color: DOC.hint }}>
                 Válido por 12 meses · Recomendamos revisão anual
               </p>
             </div>
-            <img
-              src="/diamond-icon.png"
-              alt="Simpla Invest"
-              style={{ height: 26, objectFit: "contain", opacity: 0.9 }}
-            />
           </div>
-          <RodapePagina nomeCliente={nomeCliente} numPagina={PAG.maosAObra} totalPaginas={TOTAL_PAGINAS} />
+          <RodapePagina nomeCliente={nomeCliente} />
         </>
       }
     >
@@ -54,35 +60,30 @@ export function DocMaosAObra({ nomeCliente, config }: Props) {
         Olá, {primeiroNome}!
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: "150mm" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-          Primeiro, gostaria de te parabenizar pela decisão de investir no seu futuro e entrar para
-          o seleto grupo de brasileiros que têm controle total do seu dinheiro e estão trabalhando
-          para preservar e multiplicar seu patrimônio.
+          Primeiramente, parabenizo você pela decisão de investir no seu futuro e de integrar um
+          grupo seleto de pessoas que detêm o controle absoluto sobre as suas finanças, trabalhando
+          ativamente para preservar e multiplicar o seu legado.
         </p>
 
         <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-          Segundo, estou com você nessa. A SIMPLA INVEST tem o compromisso de te acompanhar nessa
-          caminhada. Periodicamente você poderá ter uma reunião ao vivo comigo para esclarecer
-          quaisquer dúvidas sobre o seu plano, bem como te ajudar nos novos aportes e
-          rebalanceamento, visando sempre buscar a realização dos seus projetos e sonhos com
-          segurança e tranquilidade.
+          Gostaria de reforçar que a Simpla Invest tem o compromisso inegociável de caminhar ao seu
+          lado. Periodicamente, realizaremos encontros de alinhamento para sanar dúvidas, calibrar
+          novos aportes e rebalancear o seu portfólio, sempre com o foco exclusivo na realização dos
+          seus projetos com segurança institucional e tranquilidade.
         </p>
 
         <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-          Nosso objetivo aqui é te ajudar a cuidar do seu plano e permitir que você tenha mais tempo
-          para aumentar sua renda e se dedicar à sua família. No final do dia, isso é o que
-          realmente importa. Sucesso na sua jornada!
+          O nosso propósito final é cuidar da inteligência do seu capital, permitindo que você
+          direcione o seu tempo e energia para o que gera mais valor: o crescimento da sua renda
+          profissional e, acima de tudo, o convívio com a sua família. No fim do dia, isso é o que
+          realmente importa.
         </p>
-      </div>
 
-      {/* Assinatura */}
-      <div style={{ marginTop: 56 }}>
-        <div style={{ width: 210, borderBottom: `1px solid ${DOC.texto}`, marginBottom: 9 }} />
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: DOC.ink }}>
-          {config.nomeCompleto}
+        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+          Conte conosco para o sucesso desta jornada.
         </p>
-        <p style={{ margin: "3px 0 0", fontSize: 11, color: DOC.muted }}>{config.credenciais}</p>
       </div>
     </PaginaDoc>
   );

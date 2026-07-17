@@ -6,8 +6,9 @@ import { formatBRL } from "@/lib/carteira/calculos";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
-import type { CarteiraResultado, CardId, Ativo } from "@/lib/carteira/types";
-import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
+import type { CarteiraResultado } from "@/lib/carteira/types";
+import { CARD_ORDER, CARD_META, HIERARQUIA_CLASSES } from "@/lib/carteira/types";
+import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
 import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 
 interface Props {
@@ -30,25 +31,6 @@ const CARD: React.CSSProperties = {
 };
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
-
-const HIERARQUIA_CLASSES = [
-  {
-    id: "renda_fixa", label: "Renda Fixa", cor: "#1E40AF", corBg: "#EFF6FF", icone: "ti-building-bank",
-    subclasses: [
-      { cardId: "resgate_longo",  label: "Resgate Longo" },
-      { cardId: "resgate_rapido", label: "Resgate Rápido" },
-    ],
-  },
-  {
-    id: "renda_variavel", label: "Renda Variável", cor: "#15803D", corBg: "#F0FDF4", icone: "ti-trending-up",
-    subclasses: [
-      { cardId: "acoes",    label: "Ações" },
-      { cardId: "fiis",     label: "Fundos Imobiliários" },
-      { cardId: "exterior", label: "Exterior" },
-      { cardId: "cripto",   label: "Cripto" },
-    ],
-  },
-];
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -320,45 +302,7 @@ export function SecaoAssetAllocation({
 
         {/* Card 3B — Seleção de Ativos Recomendados */}
         {(() => {
-          const ativosRec = rc.ativosRecomendados ?? [];
-          const ativosCarteiraFinal = (rc.planoAcao ?? [])
-            .map((item) => {
-              if (!item.card) return null;
-              const acao = item.acao ?? item.tipo ?? "";
-              let valorFinal = 0;
-              switch (acao) {
-                case "novo":
-                case "aportar":
-                  valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0);
-                  break;
-                case "manter":
-                  valorFinal = item.valorAtualBRL ?? 0;
-                  break;
-                case "resgatar_parcial": {
-                  const resgate = item.valorResgateBRL !== undefined
-                    ? item.valorResgateBRL
-                    : Math.abs(item.movimentacaoBRL ?? 0);
-                  valorFinal = Math.max(0, (item.valorAtualBRL ?? 0) - resgate);
-                  break;
-                }
-                case "resgatar_total":
-                  return null;
-                default:
-                  valorFinal = item.valorAtualBRL ?? 0;
-              }
-              if (valorFinal <= 0) return null;
-              const cardId = item.card as CardId;
-              const base = ativosRec.find((a) => a.nome === item.nomeAtivo && a.card === cardId);
-              return {
-                id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
-                card: cardId,
-                nome: item.nomeAtivo,
-                segmento: item.segmento ?? base?.segmento ?? "",
-                vencimento: base?.vencimento,
-                valorBRL: valorFinal,
-              } satisfies Ativo;
-            })
-            .filter(Boolean) as Ativo[];
+          const ativosCarteiraFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
           if (ativosCarteiraFinal.length === 0) return null;
           return (
             <CardSelecaoAtivos
