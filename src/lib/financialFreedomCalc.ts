@@ -369,6 +369,7 @@ export function calcularPatrimonioNecessario(
 }
 
 export function calcularPatrimonioPerpetuidade(rendaMensalDesejada: number): number {
+  if (!rendaMensalDesejada || rendaMensalDesejada <= 0 || !isFinite(rendaMensalDesejada)) return 0;
   return rendaMensalDesejada * 12 / 0.04;
 }
 
@@ -385,7 +386,8 @@ function projetarComObjetivos(p: {
   const hoje = new Date();
   let anoIter = hoje.getFullYear();
   let mesIter = hoje.getMonth() + 1; // 1-12
-  const nMeses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  const nMeses = Math.max(0, Math.round((p.idadeAlvo - p.idadeAtual) * 12));
+  if (!isFinite(nMeses)) return p.patrimonioAtual;
   let patrimonio = p.patrimonioAtual;
   for (let m = 0; m < nMeses; m++) {
     mesIter++;
@@ -409,8 +411,8 @@ export function calcularProjecaoComAporte(p: {
   taxaMensalReal?: number;
 }): number {
   const r = p.taxaMensalReal ?? TAXA_ACUM_MENSAL;
-  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
-  if (meses <= 0) return p.patrimonioAtual;
+  const meses = Math.max(0, Math.round((p.idadeAlvo - p.idadeAtual) * 12));
+  if (meses <= 0 || !isFinite(meses)) return p.patrimonioAtual;
   if (Math.abs(r) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
   const f = Math.pow(1 + r, meses);
   return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / r;
@@ -425,8 +427,8 @@ export function calcularAporteMensalNecessario(p: {
   objetivos?: ObjetivoVida[];
 }): number {
   const r = p.taxaMensalReal ?? TAXA_ACUM_MENSAL;
-  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
-  if (meses <= 0) return 0;
+  const meses = Math.max(1, Math.round((p.idadeAlvo - p.idadeAtual) * 12));
+  if (!isFinite(meses) || meses <= 0) return 0;
   if (p.objetivos && p.objetivos.length > 0) {
     // Binary search: hi = patrimonioAlvo guarantees reaching the target in month 1
     let lo = 0, hi = p.patrimonioAlvo;
@@ -452,7 +454,7 @@ export function calcularTaxaNecessaria(p: {
 }): number {
   const TAXA_MINIMA_ANUAL = 0.03; // IPCA+3% a.a. — piso da taxa necessária
   const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
-  if (meses <= 0 || p.patrimonioAlvo <= 0) return TAXA_MINIMA_ANUAL;
+  if (meses <= 0 || !isFinite(meses) || p.patrimonioAlvo <= 0 || !isFinite(p.patrimonioAlvo)) return TAXA_MINIMA_ANUAL;
   function fv(ta: number): number {
     const tm = Math.pow(1 + ta, 1 / 12) - 1;
     if (p.objetivos && p.objetivos.length > 0) {

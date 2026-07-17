@@ -185,23 +185,23 @@ export function FerramentaLiberdadeFinanceira({
   // Only objectives with ativo !== false impact the projection
   const objetivosAtivos = useMemo(() => objetivos.filter(o => o.ativo !== false), [objetivos]);
 
-  const patrimonioPerpetuidade = useMemo(
-    () => calcularPatrimonioPerpetuidade(params.rendaDesejada),
-    [params.rendaDesejada],
-  );
+  const patrimonioPerpetuidade = useMemo(() => {
+    if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
+    return calcularPatrimonioPerpetuidade(params.rendaDesejada);
+  }, [params.rendaDesejada]);
 
   // Computed independently so taxaNecessariaCalc has no circular dep on result
-  const taxaNecessariaCalc = useMemo(
-    () => calcularTaxaNecessaria({
+  const taxaNecessariaCalc = useMemo(() => {
+    if (patrimonioPerpetuidade <= 0) return 0.03;
+    return calcularTaxaNecessaria({
       patrimonioAtual: params.patrimonioInicial,
       aporteMensal:    params.aporteMensal,
       patrimonioAlvo:  patrimonioPerpetuidade,
       idadeAtual:      params.idadeAtual,
       idadeAlvo:       params.idadeAposentadoria,
       objetivos:       objetivosAtivos,
-    }),
-    [params, objetivosAtivos, patrimonioPerpetuidade],
-  );
+    });
+  }, [params, objetivosAtivos, patrimonioPerpetuidade]);
 
   // Taxa que efetivamente rege os cálculos: travada ou calculada
   const taxaEfetiva = useMemo(
@@ -236,16 +236,16 @@ export function FerramentaLiberdadeFinanceira({
     }
   }, [projecaoParams]);
 
-  const aporteNecessarioCalc = useMemo(
-    () => result ? calcularAporteMensalNecessario({
+  const aporteNecessarioCalc = useMemo(() => {
+    if (!result || patrimonioPerpetuidade <= 0) return 0;
+    return calcularAporteMensalNecessario({
       patrimonioAtual: params.patrimonioInicial,
       patrimonioAlvo:  patrimonioPerpetuidade,
       idadeAtual:      params.idadeAtual,
       idadeAlvo:       params.idadeAposentadoria,
       taxaMensalReal:  taxaMensalEfetiva,
-    }) : 0,
-    [result, params, patrimonioPerpetuidade, taxaMensalEfetiva],
-  );
+    });
+  }, [result, params, patrimonioPerpetuidade, taxaMensalEfetiva]);
 
   const sensAporteScenarios = useMemo(() => {
     if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
