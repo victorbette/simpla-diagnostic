@@ -368,6 +368,10 @@ export function calcularPatrimonioNecessario(
   return pvAnuidade(rendaMensalDesejada, TAXA_RET_MENSAL, meses);
 }
 
+export function calcularPatrimonioPerpetuidade(rendaMensalDesejada: number): number {
+  return rendaMensalDesejada * 12 / 0.04;
+}
+
 // Simulates patrimônio month-by-month applying objectives at their calendar month/year.
 // Signs: aportes_financeiros = positive; all others = negative (expense).
 function projetarComObjetivos(p: {
@@ -503,4 +507,18 @@ export function calcularIdadeComAporte(p: {
     if (pat >= p.patrimonioAlvo) return p.idadeAtual + m / 12;
   }
   return p.idadeAtual + 50;
+}
+
+export function calcularProjecaoComTaxa(p: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+  taxaMensal: number;
+}): number {
+  const meses = Math.round((p.idadeAlvo - p.idadeAtual) * 12);
+  if (meses <= 0) return p.patrimonioAtual;
+  if (Math.abs(p.taxaMensal) < 1e-10) return p.patrimonioAtual + p.aporteMensal * meses;
+  const f = Math.pow(1 + p.taxaMensal, meses);
+  return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / p.taxaMensal;
 }

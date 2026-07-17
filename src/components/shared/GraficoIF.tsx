@@ -165,7 +165,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         {patrimonioIdealVal != null && (
           <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 14, height: 2, background: "#1E3A8A", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
-            Aposentadoria Ideal: {formatCurrency(patrimonioIdealVal)}
+            Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
         {/* IF icon marker: sem texto no tooltip (melhoria 1) */}
@@ -407,7 +407,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             }}
           >
             <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
-            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal (Perpetuidade)</span>
           </button>
         )}
       </div>
