@@ -108,7 +108,6 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
           >
             <GraficoIF
               projecao={rif.projecao}
-              curvaIdeal={rif.curvaIdeal}
               objetivos={objetivos}
               height={205}
               mesIF={rif.mesInicioRetirada}
