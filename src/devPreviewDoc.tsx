@@ -207,13 +207,29 @@ function mockResultados(): ResultadosEstrategia {
   };
 }
 
+/* Reproduz a casca estrutural da FinancialPlanningPage (header + abas +
+ * <main> com as mesmas classes) para o preview imprimir igual à produção. */
+function PreviewShell() {
+  return (
+    <div className="fp-print-root" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0, height: 56, display: "flex", alignItems: "center", padding: "0 24px", color: "white", fontSize: 14 }}>
+        Simpla Invest · Financial Planning (preview)
+      </header>
+      <div className="no-print" style={{ backgroundColor: "white", borderBottom: "1px solid #E5E7EB", padding: "0 24px", height: 44, display: "flex", alignItems: "center", fontSize: 13, color: "#6B7280", flexShrink: 0 }}>
+        [barra de abas do preview]
+      </div>
+      <main className="fp-print-main" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <EstrategiaFinal
+          plan={mockPlan()}
+          resultados={mockResultados()}
+          clientName={CLIENTE}
+        />
+      </main>
+    </div>
+  );
+}
+
 const root = document.getElementById("root");
 if (root) {
-  createRoot(root).render(
-    <EstrategiaFinal
-      plan={mockPlan()}
-      resultados={mockResultados()}
-      clientName={CLIENTE}
-    />,
-  );
+  createRoot(root).render(<PreviewShell />);
 }

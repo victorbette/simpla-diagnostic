@@ -270,7 +270,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
 
   return (
     <>
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div className="fp-print-root" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* ── Header ── */}
         <header
@@ -335,6 +335,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
 
         {/* ── Tab bar ── */}
         <div
+          className="no-print"
           style={{
             backgroundColor: "white",
             borderBottom: "1px solid #E5E7EB",
@@ -408,7 +409,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
 
         {/* ── Content ── */}
         {/* EstrategiaFinal manages its own overflow — needs overflow:hidden parent */}
-        <main style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <main className="fp-print-main" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {abaAtiva === "estrategia_pronta" ? (
             <EstrategiaFinal
               plan={plan}

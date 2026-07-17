@@ -168,6 +168,21 @@
     overflow: visible !important;
     background: white !important;
   }
+  /* Página Financial Planning (HomePage → FinancialPlanningPage → aba
+     "Financial Planning"): raiz e <main> usam 100vh + overflow:hidden na
+     tela; sem estes overrides a impressão fica cortada na 1ª folha */
+  .fp-print-root,
+  .fp-print-main {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+  /* Se um overlay de impressão do Resultado estiver aberto, imprimir só ele */
+  body:has(.print-advisor) .fp-print-root,
+  body:has(.print-client) .fp-print-root {
+    display: none !important;
+  }
   .doc-pages-wrap { padding: 0 !important; }
 
   /* Se o overlay "Gerar PDF Consultor" estiver aberto, imprimir só ele */
