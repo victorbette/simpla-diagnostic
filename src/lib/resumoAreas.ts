@@ -66,14 +66,16 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
 
   // ── Asset Allocation ──────────────────────────────────────────────────────
   const aa = (() => {
-    const aaTemDados = Number(dc.patrimonioFinanceiroEstimado) > 0;
+    const temRendaFixa = Number(plan.ativosAtuais?.rendaFixa) > 0;
+    const temAcoes     = Number(plan.ativosAtuais?.acoes) > 0;
+    const temFIIs      = Number(plan.ativosAtuais?.fiis) > 0;
+    const temExterior  = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
+    const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
+
+    const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
     if (!aaTemDados) return -1;
 
-    const perfil      = dc.suitabilityPerfil ?? '';
-    const temRendaFixa = true; // patrimônio > 0 implica ao menos renda fixa
-    const temAcoes    = Number(plan.ativosAtuais?.acoes) > 0;
-    const temFIIs     = Number(plan.ativosAtuais?.fiis) > 0;
-    const temExterior = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
+    const perfil = dc.suitabilityPerfil ?? '';
 
     let pontos = 0;
     if (temRendaFixa) pontos += 30;
@@ -158,7 +160,6 @@ export function gerarTextosAreas(
   resultados: ResultadosEstrategia,
   clientName?: string,
 ): TextosAreas {
-  const dc          = plan.dadosCliente;
   const seguroSalvo = resultados.seguro;
   const fiscalSalvo = resultados.fiscal;
   const nome        = clientName?.split(' ')[0] ?? 'Cliente';
@@ -204,52 +205,65 @@ export function gerarTextosAreas(
 
   // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
-    const aaTemDados = Number(dc.patrimonioFinanceiroEstimado) > 0;
+    const temRendaFixa = Number(plan.ativosAtuais?.rendaFixa) > 0;
+    const temAcoes     = Number(plan.ativosAtuais?.acoes) > 0;
+    const temFIIs      = Number(plan.ativosAtuais?.fiis) > 0;
+    const temExterior  = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
+    const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
+
+    const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
     if (!aaTemDados) {
-      return `Para analisarmos a composição dos seus investimentos, precisamos que você informe o patrimônio financeiro atual e os tipos de ativos que já possui na Coleta de Dados.\n\nEssa análise nos ajuda a entender se sua carteira está preparada para gerar patrimônio e renda passiva no longo prazo.`;
+      return `Os valores da carteira de investimentos ainda não foram informados na Coleta de Dados. Para obter uma análise completa da composição da carteira, acesse a aba de Coleta de Dados, informe os valores de cada classe de ativo e selecione o perfil de investidor.`;
     }
 
-    const temAcoes    = Number(plan.ativosAtuais?.acoes) > 0;
-    const temFIIs     = Number(plan.ativosAtuais?.fiis) > 0;
-    const temExterior = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
+    const ativos: string[] = [];
+    const ausentes: { nome: string; motivo: string }[] = [];
 
-    const positivos: string[] = [
-      'você possui uma base em renda fixa, que garante segurança e liquidez para momentos de necessidade',
-    ];
-    const melhorias: string[] = [];
+    if (temRendaFixa) ativos.push('renda fixa');
+    else ausentes.push({ nome: 'renda fixa', motivo: 'base de segurança e liquidez da carteira' });
 
-    if (temAcoes) {
-      positivos.push('sua carteira inclui ações, um componente fundamental para o crescimento do patrimônio no longo prazo');
+    if (temAcoes) ativos.push('ações');
+    else ausentes.push({ nome: 'ações', motivo: 'crescimento patrimonial no longo prazo' });
+
+    if (temFIIs) ativos.push('fundos imobiliários');
+    else ausentes.push({ nome: 'fundos imobiliários', motivo: 'geração de renda passiva mensal' });
+
+    if (temExterior) ativos.push('investimentos no exterior');
+    else ausentes.push({ nome: 'exterior', motivo: 'diversificação e proteção cambial' });
+
+    let texto = '';
+    if (ativos.length === 0) {
+      texto = 'A carteira não registra investimentos nas classes principais. ';
+    } else if (ativos.length === 1) {
+      texto = `Sua carteira está concentrada em ${ativos[0]}. `;
     } else {
-      melhorias.push('incluir ações na carteira para potencializar o crescimento patrimonial no longo prazo');
-    }
-    if (temFIIs) {
-      positivos.push('os Fundos de Investimento Imobiliário (FIIs) já fazem parte da sua carteira, gerando renda passiva mensal');
-    } else {
-      melhorias.push('considerar Fundos Imobiliários como fonte de renda passiva mensal');
-    }
-    if (temExterior) {
-      positivos.push('você já tem investimentos no exterior, o que protege parte do seu patrimônio contra variações do mercado brasileiro');
-    } else {
-      melhorias.push('diversificar parte dos investimentos para o exterior, reduzindo a dependência exclusiva do mercado brasileiro');
+      const ultimo = ativos[ativos.length - 1];
+      const anteriores = ativos.slice(0, -1);
+      texto = `Sua carteira já inclui ${anteriores.join(', ')} e ${ultimo} — uma boa base para construir patrimônio. `;
     }
 
-    let texto = 'Pontos positivos: ';
-    positivos.forEach((p, i) => {
-      texto += i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : '; ' + p;
-    });
-    texto += '. ';
+    if (temAcoes && temFIIs && temExterior) {
+      texto += `\n\nA diversificação entre ações, fundos imobiliários e exterior é excelente: você tem ativos voltados para crescimento, renda passiva e proteção cambial ao mesmo tempo. Essa combinação é justamente o que diferencia os investidores que constroem patrimônio sólido no longo prazo.`;
+    } else {
+      if (temAcoes) {
+        texto += `\n\nTer ações na carteira é um ponto muito positivo — são elas que costumam impulsionar o crescimento do patrimônio ao longo dos anos.`;
+      }
+      if (temFIIs) {
+        texto += `\n\nOs fundos imobiliários contribuem com renda passiva mensal, ajudando a antecipar parte da renda que você terá na aposentadoria.`;
+      }
+      if (temExterior) {
+        texto += `\n\nTer parte do patrimônio no exterior reduz a dependência do mercado brasileiro e protege contra variações do câmbio.`;
+      }
+    }
 
-    if (melhorias.length > 0) {
-      texto += '\n\nOportunidades de melhoria: Para fortalecer ainda mais sua carteira, recomendamos ';
-      melhorias.forEach((m, i) => {
-        if (i === 0) texto += m;
-        else if (i === melhorias.length - 1) texto += ' e ' + m;
-        else texto += ', ' + m;
+    if (ausentes.length > 0) {
+      texto += `\n\nOportunidades de melhoria: `;
+      ausentes.forEach((a, i) => {
+        if (i === 0) texto += `Incluir ${a.nome} na carteira traria ${a.motivo}`;
+        else if (i === ausentes.length - 1) texto += `; e ${a.nome} para ${a.motivo}`;
+        else texto += `; ${a.nome} para ${a.motivo}`;
       });
-      texto += '. ';
-    } else {
-      texto += '\n\nSua carteira demonstra uma boa diversificação entre as principais classes de ativos. Continue monitorando e rebalanceando periodicamente para manter esse equilíbrio.';
+      texto += `. Esses ajustes podem ser trabalhados na aba de Asset Allocation, onde montamos o plano de ação para chegar na carteira ideal para o seu perfil.`;
     }
 
     return texto;
