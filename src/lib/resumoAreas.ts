@@ -189,12 +189,12 @@ export function gerarTextosAreas(
     let texto = '';
 
     if (v.patrimonioAtual > 0 || v.aporteMensal > 0) {
-      texto += `${nome}, você já está no caminho certo `;
+      texto += `Você já está no caminho certo `;
       if (v.patrimonioAtual > 0) texto += `— tem ${formatCurrency(v.patrimonioAtual)} acumulados `;
       if (v.aporteMensal > 0)   texto += `e investe ${formatCurrency(v.aporteMensal)}/mês, `;
       texto += `o que é muito positivo. `;
     } else {
-      texto += `${nome}, sua jornada de acumulação ainda está no início. `;
+      texto += `Sua jornada de acumulação ainda está no início. `;
     }
 
     texto += `\n\nPara conquistar a renda de ${formatCurrency(v.rendaDesejada)}/mês na aposentadoria aos ${v.idadeMeta} anos, você precisará de um patrimônio de ${formatCurrency(v.patrimonioNecessario)}. Com o ritmo atual, a projeção aponta para ${formatCurrency(v.projecao)} — equivalente a ${pct}% da meta. `;
@@ -212,8 +212,6 @@ export function gerarTextosAreas(
     const temAcoes    = Number(plan.ativosAtuais?.acoes) > 0;
     const temFIIs     = Number(plan.ativosAtuais?.fiis) > 0;
     const temExterior = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
-
-    let texto = `${nome}, analisamos a composição dos seus investimentos atuais. `;
 
     const positivos: string[] = [
       'você possui uma base em renda fixa, que garante segurança e liquidez para momentos de necessidade',
@@ -236,7 +234,7 @@ export function gerarTextosAreas(
       melhorias.push('diversificar parte dos investimentos para o exterior, reduzindo a dependência exclusiva do mercado brasileiro');
     }
 
-    texto += '\n\nPontos positivos: ';
+    let texto = 'Pontos positivos: ';
     positivos.forEach((p, i) => {
       texto += i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : '; ' + p;
     });
@@ -268,16 +266,16 @@ export function gerarTextosAreas(
     const gap               = Math.max(0, capitalNecessario - capitalAtual);
     const coberturaPct      = capitalNecessario > 0 ? Math.round((capitalAtual / capitalNecessario) * 100) : 0;
 
-    let texto = `${nome}, realizamos a análise das necessidades de proteção da sua família. `;
+    let texto = '';
 
     if (capitalAtual === 0) {
-      texto += `\n\nNo momento, não identificamos nenhuma apólice de seguro de vida ou invalidez em vigor. Isso representa um risco importante: em caso de falecimento ou incapacidade, sua família precisaria de aproximadamente ${formatCurrency(capitalNecessario)} para cobrir as despesas imediatas e manter o padrão de vida pelos próximos anos. `;
+      texto = `No momento, não identificamos nenhuma apólice de seguro de vida ou invalidez em vigor. Isso representa um risco importante: em caso de falecimento ou incapacidade, sua família precisaria de aproximadamente ${formatCurrency(capitalNecessario)} para cobrir as despesas imediatas e manter o padrão de vida pelos próximos anos. `;
       texto += `\n\nContratar um seguro de vida é uma das medidas mais importantes e acessíveis que você pode tomar hoje para proteger quem você ama.`;
     } else if (gap <= 0) {
-      texto += `\n\nBoa notícia: sua cobertura atual de ${formatCurrency(capitalAtual)} é suficiente para proteger sua família. Isso inclui a cobertura das despesas imediatas, a manutenção da renda familiar pelo período necessário e as coberturas em vida. `;
+      texto = `Boa notícia: sua cobertura atual de ${formatCurrency(capitalAtual)} é suficiente para proteger sua família. Isso inclui a cobertura das despesas imediatas, a manutenção da renda familiar pelo período necessário e as coberturas em vida. `;
       texto += `\n\nMantenha suas apólices em dia e revise anualmente para garantir que a cobertura acompanhe as mudanças na sua situação familiar.`;
     } else {
-      texto += `\n\nVocê já deu um passo importante ao contratar uma cobertura de ${formatCurrency(capitalAtual)}. No entanto, a análise indica que seria ideal ter uma cobertura total de ${formatCurrency(capitalNecessario)} para garantir a proteção completa da sua família em qualquer cenário. `;
+      texto = `Você já deu um passo importante ao contratar uma cobertura de ${formatCurrency(capitalAtual)}. No entanto, a análise indica que seria ideal ter uma cobertura total de ${formatCurrency(capitalNecessario)} para garantir a proteção completa da sua família em qualquer cenário. `;
       texto += `\n\nA cobertura atual representa ${coberturaPct}% do recomendado. Avaliar um reforço na apólice de seguro seria uma medida prudente para dar mais tranquilidade para você e sua família.`;
     }
 
@@ -295,27 +293,27 @@ export function gerarTextosAreas(
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
     const economia        = Number(fiscalSalvo.economiaAnual) || 0;
 
-    let texto = `${nome}, analisamos sua situação em relação ao Imposto de Renda. `;
+    let texto = '';
 
     if (tipoDeclaracao === 'nao_sei') {
-      texto += `\n\nO primeiro passo é definir qual o modelo de declaração mais vantajoso para o seu caso — completo ou simplificado. Essa escolha impacta diretamente quanto você pode economizar no IR e se vale a pena utilizar a previdência privada como estratégia de redução de imposto. Nossa equipe pode ajudar a definir o melhor caminho para você.`;
+      texto = `O primeiro passo é definir qual o modelo de declaração mais vantajoso para o seu caso — completo ou simplificado. Essa escolha impacta diretamente quanto você pode economizar no IR e se vale a pena utilizar a previdência privada como estratégia de redução de imposto. Nossa equipe pode ajudar a definir o melhor caminho para você.`;
     } else if (tipoDeclaracao === 'simplificada') {
-      texto += `\n\nVocê utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, o aporte em previdência privada do tipo PGBL não gera dedução adicional no IR. `;
+      texto = `Você utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, o aporte em previdência privada do tipo PGBL não gera dedução adicional no IR. `;
       texto += `\n\nSe seus rendimentos crescerem ou você passar a ter mais despesas dedutíveis, pode valer a pena reavaliar o modelo de declaração. Mantenha esse ponto em revisão anualmente.`;
     } else if (tipoDeclaracao === 'completa') {
       if (aporteAnualPGBL > 0 && economia > 0) {
         const aproveitamentoPct = tetoPGBL > 0 ? Math.round((aporteAnualPGBL / tetoPGBL) * 100) : 0;
         const espacoMensal      = tetoPGBL > 0 ? Math.max(0, (tetoPGBL - aporteAnualPGBL) / 12) : 0;
-        texto += `\n\nÓtima notícia: você utiliza a declaração completa e já contribui com ${formatCurrency(aporteAnualPGBL / 12)}/mês em previdência privada, o que reduz legalmente o valor do seu Imposto de Renda em ${formatCurrency(economia)} por ano — isso equivale a ${formatCurrency(economia / 12)}/mês que ficam no seu bolso em vez de ir para o fisco. `;
+        texto = `Ótima notícia: você utiliza a declaração completa e já contribui com ${formatCurrency(aporteAnualPGBL / 12)}/mês em previdência privada, o que reduz legalmente o valor do seu Imposto de Renda em ${formatCurrency(economia)} por ano — isso equivale a ${formatCurrency(economia / 12)}/mês que ficam no seu bolso em vez de ir para o fisco. `;
         if (aproveitamentoPct < 100 && espacoMensal > 0) {
           texto += `\n\nVocê está aproveitando ${aproveitamentoPct}% do benefício disponível. Aumentando a contribuição em ${formatCurrency(espacoMensal)}/mês, seria possível maximizar ainda mais a redução do imposto e fortalecer o patrimônio para a aposentadoria ao mesmo tempo.`;
         } else {
           texto += `\n\nVocê está aproveitando ao máximo o benefício fiscal disponível — parabéns pela estratégia tributária bem estruturada!`;
         }
       } else if (aporteAnualPGBL === 0 && tetoPGBL > 0) {
-        texto += `\n\nVocê utiliza a declaração completa, o que é muito positivo. No entanto, identificamos uma oportunidade ainda não aproveitada: contribuindo com ${formatCurrency(tetoPGBL / 12)}/mês em previdência privada do tipo PGBL, você poderia reduzir legalmente seu Imposto de Renda de forma significativa. Além disso, esse valor ficaria investido e rendendo para a sua aposentadoria. É uma estratégia que ganha nos dois lados.`;
+        texto = `Você utiliza a declaração completa, o que é muito positivo. No entanto, identificamos uma oportunidade ainda não aproveitada: contribuindo com ${formatCurrency(tetoPGBL / 12)}/mês em previdência privada do tipo PGBL, você poderia reduzir legalmente seu Imposto de Renda de forma significativa. Além disso, esse valor ficaria investido e rendendo para a sua aposentadoria. É uma estratégia que ganha nos dois lados.`;
       } else {
-        texto += `\n\nDeclaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária para apurar a economia fiscal potencial.`;
+        texto = `Declaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária para apurar a economia fiscal potencial.`;
       }
     }
 
