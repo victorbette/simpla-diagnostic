@@ -153,88 +153,173 @@ export interface TextosAreas {
   fiscal: string;
 }
 
-export function gerarTextosAreas(plan: FinancialPlan, resultados: ResultadosEstrategia): TextosAreas {
+export function gerarTextosAreas(
+  plan: FinancialPlan,
+  resultados: ResultadosEstrategia,
+  clientName?: string,
+): TextosAreas {
   const dc          = plan.dadosCliente;
   const seguroSalvo = resultados.seguro;
   const fiscalSalvo = resultados.fiscal;
+  const nome        = clientName?.split(' ')[0] ?? 'Cliente';
 
   // ── LF ────────────────────────────────────────────────────────────────────
   const lf = (() => {
     const v = varsLF(plan);
+
     if (!v.temDados) {
-      return "Para calcular o score de Liberdade Financeira, preencha na Coleta de Dados: patrimônio atual, aporte mensal, renda desejada na aposentadoria, data de nascimento e idade meta.";
+      return `Para analisarmos sua jornada rumo à liberdade financeira, precisamos de algumas informações básicas ainda não preenchidas: patrimônio atual, valor que você investe por mês, renda desejada na aposentadoria e a idade em que deseja se aposentar.\n\nPreencha esses dados na Coleta de Dados e voltamos aqui com a análise completa.`;
     }
-    const pct = Math.round((v.projecao / v.patrimonioNecessario) * 100);
+
     if (v.projecao >= v.patrimonioNecessario) {
-      return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aporte de ${formatCurrency(v.aporteMensal)}/mês, a projeção a IPCA+4% ao ano indica patrimônio de ${formatCurrency(v.projecao)} aos ${v.idadeMeta} anos, suficiente para gerar ${formatCurrency(v.rendaDesejada)}/mês em perpetuidade (patrimônio necessário: ${formatCurrency(v.patrimonioNecessario)}).`;
+      let texto = `${nome}, sua situação em relação à liberdade financeira é muito positiva. `;
+      if (v.patrimonioAtual > 0) {
+        texto += `Você já construiu um patrimônio de ${formatCurrency(v.patrimonioAtual)}, o que representa um ótimo ponto de partida para a sua jornada. `;
+      }
+      if (v.aporteMensal > 0) {
+        texto += `Além disso, você está investindo ${formatCurrency(v.aporteMensal)} por mês — um hábito fundamental para quem quer conquistar a independência financeira. `;
+      }
+      texto += `\n\nCom a sua estratégia atual, a projeção indica que você chegará à aposentadoria aos ${v.idadeMeta} anos com um patrimônio estimado de ${formatCurrency(v.projecao)}, suficiente para gerar uma renda mensal de ${formatCurrency(v.rendaDesejada)} para sempre, sem precisar consumir o que acumulou. `;
+      texto += `\n\nContinue nessa direção! O mais importante agora é manter a consistência nos aportes e garantir que seu patrimônio esteja bem alocado para render ao longo dos anos.`;
+      return texto;
     }
-    const gap = Math.max(0, v.patrimonioNecessario - v.projecao);
-    return `Com patrimônio atual de ${formatCurrency(v.patrimonioAtual)} e aporte de ${formatCurrency(v.aporteMensal)}/mês, a projeção a IPCA+4% ao ano indica ${formatCurrency(v.projecao)} aos ${v.idadeMeta} anos — ${pct}% do necessário para gerar ${formatCurrency(v.rendaDesejada)}/mês em perpetuidade. Gap de ${formatCurrency(gap)}.`;
+
+    const pct          = Math.round((v.projecao / v.patrimonioNecessario) * 100);
+    const anosRestantes = Math.max(0, v.idadeMeta - v.idadeAtual);
+    let texto = '';
+
+    if (v.patrimonioAtual > 0 || v.aporteMensal > 0) {
+      texto += `${nome}, você já está no caminho certo `;
+      if (v.patrimonioAtual > 0) texto += `— tem ${formatCurrency(v.patrimonioAtual)} acumulados `;
+      if (v.aporteMensal > 0)   texto += `e investe ${formatCurrency(v.aporteMensal)}/mês, `;
+      texto += `o que é muito positivo. `;
+    } else {
+      texto += `${nome}, sua jornada de acumulação ainda está no início. `;
+    }
+
+    texto += `\n\nPara conquistar a renda de ${formatCurrency(v.rendaDesejada)}/mês na aposentadoria aos ${v.idadeMeta} anos, você precisará de um patrimônio de ${formatCurrency(v.patrimonioNecessario)}. Com o ritmo atual, a projeção aponta para ${formatCurrency(v.projecao)} — equivalente a ${pct}% da meta. `;
+    texto += `\n\nA boa notícia é que você ainda tem ${anosRestantes} anos pela frente, tempo suficiente para ajustar a estratégia e chegar lá. As principais alavancas disponíveis são: aumentar o valor investido por mês, otimizar a rentabilidade da sua carteira e eventualmente ajustar a data ou a renda desejada na aposentadoria. Veja no Simulador de Liberdade Financeira como pequenos ajustes fazem uma diferença enorme ao longo do tempo.`;
+    return texto;
   })();
 
   // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
     const aaTemDados = Number(dc.patrimonioFinanceiroEstimado) > 0;
     if (!aaTemDados) {
-      return "Preencha o patrimônio financeiro e os tipos de investimentos na Coleta de Dados para obter a análise de Asset Allocation.";
+      return `Para analisarmos a composição dos seus investimentos, precisamos que você informe o patrimônio financeiro atual e os tipos de ativos que já possui na Coleta de Dados.\n\nEssa análise nos ajuda a entender se sua carteira está preparada para gerar patrimônio e renda passiva no longo prazo.`;
     }
-    const temAcoes   = Number(plan.ativosAtuais.acoes) > 0;
-    const temFIIs    = Number(plan.ativosAtuais.fiis) > 0;
+
+    const temAcoes    = Number(plan.ativosAtuais.acoes) > 0;
+    const temFIIs     = Number(plan.ativosAtuais.fiis) > 0;
     const temExterior = Number(plan.ativosAtuais.rvGlobal) > 0 || Number(plan.ativosAtuais.rfGlobal) > 0;
-    const classes = [
-      `✓ Renda Fixa (base da carteira)`,
-      `${temAcoes    ? '✓' : '✗'} Ações (crescimento patrimonial)`,
-      `${temFIIs     ? '✓' : '✗'} FIIs (renda passiva)`,
-      `${temExterior ? '✓' : '✗'} Exterior (diversificação geográfica)`,
-    ].join(' · ');
-    return `Diversificação registrada na coleta: ${classes}.`;
+
+    let texto = `${nome}, analisamos a composição dos seus investimentos atuais. `;
+
+    const positivos: string[] = [
+      'você possui uma base em renda fixa, que garante segurança e liquidez para momentos de necessidade',
+    ];
+    const melhorias: string[] = [];
+
+    if (temAcoes) {
+      positivos.push('sua carteira inclui ações, um componente fundamental para o crescimento do patrimônio no longo prazo');
+    } else {
+      melhorias.push('incluir ações na carteira para potencializar o crescimento patrimonial no longo prazo');
+    }
+    if (temFIIs) {
+      positivos.push('os Fundos de Investimento Imobiliário (FIIs) já fazem parte da sua carteira, gerando renda passiva mensal');
+    } else {
+      melhorias.push('considerar Fundos Imobiliários como fonte de renda passiva mensal');
+    }
+    if (temExterior) {
+      positivos.push('você já tem investimentos no exterior, o que protege parte do seu patrimônio contra variações do mercado brasileiro');
+    } else {
+      melhorias.push('diversificar parte dos investimentos para o exterior, reduzindo a dependência exclusiva do mercado brasileiro');
+    }
+
+    texto += '\n\nPontos positivos: ';
+    positivos.forEach((p, i) => {
+      texto += i === 0 ? p.charAt(0).toUpperCase() + p.slice(1) : '; ' + p;
+    });
+    texto += '. ';
+
+    if (melhorias.length > 0) {
+      texto += '\n\nOportunidades de melhoria: Para fortalecer ainda mais sua carteira, recomendamos ';
+      melhorias.forEach((m, i) => {
+        if (i === 0) texto += m;
+        else if (i === melhorias.length - 1) texto += ' e ' + m;
+        else texto += ', ' + m;
+      });
+      texto += '. ';
+    } else {
+      texto += '\n\nSua carteira demonstra uma boa diversificação entre as principais classes de ativos. Continue monitorando e rebalanceando periodicamente para manter esse equilíbrio.';
+    }
+
+    return texto;
   })();
 
   // ── PS ────────────────────────────────────────────────────────────────────
   const ps = (() => {
     if (!seguroSalvo) {
-      return "Análise de proteção ainda não realizada. Acesse a aba Proteção e Sucessório para mapear sua necessidade de cobertura de vida, invalidez e doenças graves e identificar eventuais gaps.";
+      return `A análise de proteção ainda não foi realizada. Acesse a aba Proteção e Sucessório para mapear as necessidades da sua família em caso de imprevistos.\n\nEssa etapa é fundamental para garantir que, independente do que aconteça com você, sua família esteja financeiramente protegida.`;
     }
+
     const capitalNecessario = Number(seguroSalvo.capitalNecessario) || Number(seguroSalvo.totalNeed) || 0;
-    const capitalAtual = capitalAtualSeguro(seguroSalvo);
-    const gap = Math.max(0, capitalNecessario - capitalAtual);
-    const totalImediato = Number(seguroSalvo.capitalImediato) || Number(seguroSalvo.immediateTotal) || 0;
-    const subtotalContinuo = Number(seguroSalvo.capitalContinuo) || Number(seguroSalvo.ongoingTotal) || 0;
-    const totalCoberturasVida = Number(seguroSalvo.capitalCoberturasVida) || Math.max(0, capitalNecessario - totalImediato - subtotalContinuo);
-    if (capitalAtual === 0 && capitalNecessario > 0) {
-      return `Nenhuma apólice de seguro foi informada. O capital necessário estimado é de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Recomendamos avaliar a contratação de seguro de vida para proteger sua família.`;
+    const capitalAtual      = capitalAtualSeguro(seguroSalvo);
+    const gap               = Math.max(0, capitalNecessario - capitalAtual);
+    const coberturaPct      = capitalNecessario > 0 ? Math.round((capitalAtual / capitalNecessario) * 100) : 0;
+
+    let texto = `${nome}, realizamos a análise das necessidades de proteção da sua família. `;
+
+    if (capitalAtual === 0) {
+      texto += `\n\nNo momento, não identificamos nenhuma apólice de seguro de vida ou invalidez em vigor. Isso representa um risco importante: em caso de falecimento ou incapacidade, sua família precisaria de aproximadamente ${formatCurrency(capitalNecessario)} para cobrir as despesas imediatas e manter o padrão de vida pelos próximos anos. `;
+      texto += `\n\nContratar um seguro de vida é uma das medidas mais importantes e acessíveis que você pode tomar hoje para proteger quem você ama.`;
+    } else if (gap <= 0) {
+      texto += `\n\nBoa notícia: sua cobertura atual de ${formatCurrency(capitalAtual)} é suficiente para proteger sua família. Isso inclui a cobertura das despesas imediatas, a manutenção da renda familiar pelo período necessário e as coberturas em vida. `;
+      texto += `\n\nMantenha suas apólices em dia e revise anualmente para garantir que a cobertura acompanhe as mudanças na sua situação familiar.`;
+    } else {
+      texto += `\n\nVocê já deu um passo importante ao contratar uma cobertura de ${formatCurrency(capitalAtual)}. No entanto, a análise indica que seria ideal ter uma cobertura total de ${formatCurrency(capitalNecessario)} para garantir a proteção completa da sua família em qualquer cenário. `;
+      texto += `\n\nA cobertura atual representa ${coberturaPct}% do recomendado. Avaliar um reforço na apólice de seguro seria uma medida prudente para dar mais tranquilidade para você e sua família.`;
     }
-    if (capitalAtual >= capitalNecessario) {
-      return `Sua cobertura atual de ${formatCurrency(capitalAtual)} é adequada para o capital necessário estimado de ${formatCurrency(capitalNecessario)}, considerando necessidades imediatas de ${formatCurrency(totalImediato)}, renda contínua de ${formatCurrency(subtotalContinuo)} e coberturas em vida de ${formatCurrency(totalCoberturasVida)}. Mantenha suas apólices em dia e revise anualmente.`;
-    }
-    const pct = Math.round((capitalAtual / capitalNecessario) * 100);
-    return `Sua cobertura atual de ${formatCurrency(capitalAtual)} cobre ${pct}% do capital necessário de ${formatCurrency(capitalNecessario)}. O gap identificado é de ${formatCurrency(gap)}. Avalie a contratação de seguro adicional para proteger adequadamente sua família.`;
+
+    return texto;
   })();
 
   // ── Fiscal ────────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo) {
-      return "Acesse Planejamento Tributário para analisar o tipo de declaração e oportunidade de PGBL.";
+      return `O planejamento tributário ainda não foi analisado. Acesse a aba Planejamento Tributário para simular o impacto do seu Imposto de Renda e identificar oportunidades de redução legal da carga fiscal.\n\nEsse é um dos ajustes que pode gerar mais resultado com menos esforço.`;
     }
+
     const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
     const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
     const economia        = Number(fiscalSalvo.economiaAnual) || 0;
 
+    let texto = `${nome}, analisamos sua situação em relação ao Imposto de Renda. `;
+
     if (tipoDeclaracao === 'nao_sei') {
-      return "Tipo de declaração ainda não definido. Isso impacta diretamente na elegibilidade ao PGBL e no planejamento fiscal.";
+      texto += `\n\nO primeiro passo é definir qual o modelo de declaração mais vantajoso para o seu caso — completo ou simplificado. Essa escolha impacta diretamente quanto você pode economizar no IR e se vale a pena utilizar a previdência privada como estratégia de redução de imposto. Nossa equipe pode ajudar a definir o melhor caminho para você.`;
+    } else if (tipoDeclaracao === 'simplificada') {
+      texto += `\n\nVocê utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, o aporte em previdência privada do tipo PGBL não gera dedução adicional no IR. `;
+      texto += `\n\nSe seus rendimentos crescerem ou você passar a ter mais despesas dedutíveis, pode valer a pena reavaliar o modelo de declaração. Mantenha esse ponto em revisão anualmente.`;
+    } else if (tipoDeclaracao === 'completa') {
+      if (aporteAnualPGBL > 0 && economia > 0) {
+        const aproveitamentoPct = tetoPGBL > 0 ? Math.round((aporteAnualPGBL / tetoPGBL) * 100) : 0;
+        const espacoMensal      = tetoPGBL > 0 ? Math.max(0, (tetoPGBL - aporteAnualPGBL) / 12) : 0;
+        texto += `\n\nÓtima notícia: você utiliza a declaração completa e já contribui com ${formatCurrency(aporteAnualPGBL / 12)}/mês em previdência privada, o que reduz legalmente o valor do seu Imposto de Renda em ${formatCurrency(economia)} por ano — isso equivale a ${formatCurrency(economia / 12)}/mês que ficam no seu bolso em vez de ir para o fisco. `;
+        if (aproveitamentoPct < 100 && espacoMensal > 0) {
+          texto += `\n\nVocê está aproveitando ${aproveitamentoPct}% do benefício disponível. Aumentando a contribuição em ${formatCurrency(espacoMensal)}/mês, seria possível maximizar ainda mais a redução do imposto e fortalecer o patrimônio para a aposentadoria ao mesmo tempo.`;
+        } else {
+          texto += `\n\nVocê está aproveitando ao máximo o benefício fiscal disponível — parabéns pela estratégia tributária bem estruturada!`;
+        }
+      } else if (aporteAnualPGBL === 0 && tetoPGBL > 0) {
+        texto += `\n\nVocê utiliza a declaração completa, o que é muito positivo. No entanto, identificamos uma oportunidade ainda não aproveitada: contribuindo com ${formatCurrency(tetoPGBL / 12)}/mês em previdência privada do tipo PGBL, você poderia reduzir legalmente seu Imposto de Renda de forma significativa. Além disso, esse valor ficaria investido e rendendo para a sua aposentadoria. É uma estratégia que ganha nos dois lados.`;
+      } else {
+        texto += `\n\nDeclaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária para apurar a economia fiscal potencial.`;
+      }
     }
-    if (tipoDeclaracao === 'completa' && economia > 0) {
-      const aprovPct = tetoPGBL > 0 ? Math.round((aporteAnualPGBL / tetoPGBL) * 100) : 0;
-      return `Declaração completa com PGBL. Aproveitamento: ${aprovPct}% do teto disponível (${formatCurrency(tetoPGBL)}/ano). Economia fiscal: ${formatCurrency(economia)}/ano.`;
-    }
-    if (tipoDeclaracao === 'completa' && aporteAnualPGBL === 0) {
-      return `Declaração completa sem PGBL. Oportunidade de deduzir até ${formatCurrency(tetoPGBL)}/ano no IR.`;
-    }
-    if (tipoDeclaracao === 'simplificada') {
-      return "Declaração no modelo simplificado. Nesse modelo, aportes em PGBL não geram dedução adicional de IR. Avalie periodicamente se o modelo completo seria mais vantajoso — especialmente se despesas dedutíveis superarem o desconto padrão.";
-    }
-    return `Declaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária.`;
+
+    return texto;
   })();
 
   return { lf, aa, ps, fiscal };

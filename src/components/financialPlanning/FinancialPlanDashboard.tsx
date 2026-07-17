@@ -28,7 +28,7 @@ export function FinancialPlanDashboard({
   const dc = plan.dadosCliente;
 
   const scores = calcularScoresAreas(plan, resultados);
-  const textos = gerarTextosAreas(plan, resultados);
+  const textos = gerarTextosAreas(plan, resultados, clientName);
 
   const scoreGeral = scores.geral;
   const nivelGeral = nivelScoreGauge(scoreGeral ?? -1);
@@ -120,7 +120,7 @@ export function FinancialPlanDashboard({
                 {n.label}
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" }}>
               {texto}
             </p>
           </div>
