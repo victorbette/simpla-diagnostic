@@ -8,6 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { AtivoForm } from "@/components/financialPlanning/AtivoForm";
+import { initialAtivoAtual } from "@/types/financialPlanning";
+import type { PerfilRisco } from "@/types/financialPlanning";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -364,29 +367,15 @@ export function DiagColeta({ dados, onChange }: Props) {
         title="Investimentos"
         subtitle="Carteira atual e perfil de risco do cliente"
       >
-        {/* Tipos de investimentos */}
+        {/* Carteira de Investimentos */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "#111827", display: "block", marginBottom: 10 }}>Tipos de investimentos que possui</label>
-          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8 }}>
-            {([
-              { key: "temRendaFixa" as const, label: "Renda Fixa" },
-              { key: "temAcoes" as const, label: "Ações" },
-              { key: "temFIIs" as const, label: "FIIs" },
-              { key: "temExterior" as const, label: "Exterior" },
-              { key: "temCripto" as const, label: "Cripto" },
-            ]).map(({ key, label }) => {
-              const on = !!dados[key];
-              return (
-                <button
-                  key={key}
-                  onClick={() => onChange({ [key]: !on })}
-                  style={{ padding: "6px 14px", borderRadius: 999, border: on ? "1.5px solid #1E3A8A" : "1.5px solid #E5E7EB", background: on ? "#1E3A8A" : "white", color: on ? "white" : "#374151", fontSize: 12, fontWeight: on ? 600 : 400, cursor: "pointer", fontFamily: "inherit" }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          <AtivoForm
+            value={dados.ativosAtuais ?? initialAtivoAtual}
+            suitabilityPerfil={(dados.suitabilityPerfil ?? null) as PerfilRisco | null}
+            onChange={(v) => onChange({ ativosAtuais: v })}
+            comecandoDoZero={dados.comecandoDoZero ?? false}
+            onComecandoDoZeroChange={(v) => onChange({ comecandoDoZero: v })}
+          />
         </div>
 
         {/* Perfil de Risco */}

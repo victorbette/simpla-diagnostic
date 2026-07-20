@@ -146,12 +146,16 @@ export function DiagResultado({ lead, onAtualizar }: Props) {
 
   const hasLFData = patrimonioInicial > 0 || aporteMensal > 0 || rendaDesejada > 0;
 
+  const ativos = dadosColeta.ativosAtuais;
   const ativoLabels: string[] = [];
-  if (dadosColeta.temRendaFixa) ativoLabels.push("Renda Fixa");
-  if (dadosColeta.temAcoes) ativoLabels.push("Ações");
-  if (dadosColeta.temFIIs) ativoLabels.push("FIIs");
-  if (dadosColeta.temExterior) ativoLabels.push("Exterior");
-  if (dadosColeta.temCripto) ativoLabels.push("Cripto");
+  if (ativos) {
+    if (ativos.rendaFixa > 0) ativoLabels.push("Renda Fixa");
+    if (ativos.acoes > 0) ativoLabels.push("Ações");
+    if (ativos.fiis > 0) ativoLabels.push("FIIs");
+    if (ativos.rvGlobal > 0) ativoLabels.push("RV Global");
+    if (ativos.rfGlobal > 0) ativoLabels.push("RF Global");
+    if (ativos.cripto > 0) ativoLabels.push("Criptoativos");
+  }
 
   return (
     <>

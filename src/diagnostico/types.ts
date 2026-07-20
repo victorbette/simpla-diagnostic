@@ -1,3 +1,5 @@
+import type { AtivoAtual } from "@/types/financialPlanning";
+
 export interface Lead {
   id: string;
   nome: string;
@@ -25,11 +27,8 @@ export interface DadosColetaDiag {
   rendaDesejadaAposentadoria?: number;
   idadeMeta?: number;
   suitabilityPerfil?: string;
-  temRendaFixa?: boolean;
-  temAcoes?: boolean;
-  temFIIs?: boolean;
-  temExterior?: boolean;
-  temCripto?: boolean;
+  ativosAtuais?: AtivoAtual;
+  comecandoDoZero?: boolean;
   contribuiINSS?: boolean;
   valorINSS?: number;
   possuiSeguro?: boolean;
