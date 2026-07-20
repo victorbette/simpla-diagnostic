@@ -445,12 +445,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
               <Line
                 type="monotone"
                 dataKey="patrimonioComObjetivos"
-                stroke="#15803D"
-                strokeWidth={2}
+                stroke="#4ADE80"
+                strokeWidth={2.5}
                 dot={false}
                 activeDot={{
                   r: 4,
-                  fill: "#15803D",
+                  fill: "#4ADE80",
                   stroke: "white",
                   strokeWidth: 2,
                 }}
