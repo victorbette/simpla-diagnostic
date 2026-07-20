@@ -384,11 +384,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
             />
 
             <XAxis
-              dataKey="idade"
-              tick={{ fontSize: 11, fill: "#9CA3AF" }}
-              tickFormatter={(v) => `${v}a`}
+              dataKey="ano"
+              tick={{ fontSize: 10, fill: "#9CA3AF" }}
+              tickFormatter={(v) => `${v}`}
               axisLine={false}
               tickLine={false}
+              interval="preserveStartEnd"
             />
 
             <YAxis
@@ -414,7 +415,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
                   ? "Patrimônio Projetado"
                   : "Com Objetivos de Vida",
               ]}
-              labelFormatter={(v) => `Idade: ${v} anos`}
+              labelFormatter={(v) => `${v}`}
               contentStyle={{
                 fontSize: 12,
                 borderRadius: 8,
@@ -431,24 +432,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
               wrapperStyle={{ fontSize: 12 }}
             />
 
-            <ReferenceLine
-              y={patrimonioPerpetuidade}
-              stroke="#15803D"
-              strokeWidth={1.5}
-              strokeDasharray="6 3"
-              label={{
-                value: "Meta",
-                position: "insideTopRight",
-                fontSize: 10,
-                fill: "#15803D",
-              }}
-            />
-
             <Bar
               dataKey="patrimonioProjeto"
-              fill="#BFDBFE"
-              stroke="#93C5FD"
-              strokeWidth={0.5}
+              fill="#2563EB"
+              stroke="#1D4ED8"
+              strokeWidth={0}
               radius={[3, 3, 0, 0]}
               name="patrimonioProjeto"
             />
@@ -469,6 +457,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
                 name="patrimonioComObjetivos"
               />
             )}
+
+            <ReferenceLine
+              y={patrimonioPerpetuidade}
+              stroke="#15803D"
+              strokeWidth={2}
+              strokeDasharray="6 3"
+              label={false}
+              ifOverflow="extendDomain"
+            />
 
           </ComposedChart>
         </ResponsiveContainer>

@@ -79,7 +79,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
       </div>
 
       {/* Content */}
-      <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+      <main style={{ width: "100%", boxSizing: "border-box", padding: "24px 32px" }}>
         {etapaAtiva === "coleta" && (
           <DiagColeta dados={lead.dadosColeta} onChange={atualizarColeta} />
         )}
