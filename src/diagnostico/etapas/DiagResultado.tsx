@@ -1,21 +1,11 @@
-import { useState, useMemo } from "react";
-import {
-  calcularProjecaoIF,
-  calcularPatrimonioPerpetuidade,
-  calcularTaxaNecessaria,
-  type ProjecaoIFParams,
-} from "@/lib/financialFreedomCalc";
-import { formatCurrency, formatNumber } from "@/lib/format";
-import type { Lead, ProximoPasso, ResultadoDiag } from "../types";
-import type { ObjetivoVida } from "@/types/objetivos";
-import { OBJETIVO_META } from "@/types/objetivos";
+import type { Lead } from "../types";
+
+const TAXA_MENSAL_SCORE = Math.pow(1.045, 1 / 12) - 1;
 
 interface Props {
   lead: Lead;
-  onAtualizar: (patch: Partial<Lead>) => void;
+  onAtualizar?: (patch: Partial<Lead>) => void;
 }
-
-const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
 
 function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -26,135 +16,241 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
   return null;
 }
 
-function perfilLabel(key?: string): string {
-  switch (key) {
-    case "conservador": return "Conservador";
-    case "conservador_moderado": return "Conservador Moderado";
-    case "moderado": return "Moderado";
-    case "arrojado": return "Arrojado";
-    default: return "Não definido";
-  }
+function nivelScore(score: number): { label: string; cor: string; bg: string } {
+  if (score < 0)   return { label: "Não avaliado",      cor: "#9CA3AF", bg: "#F3F4F6" };
+  if (score === 0) return { label: "Atenção urgente",   cor: "#B91C1C", bg: "#FEE2E2" };
+  if (score <= 40) return { label: "Precisa melhorar",  cor: "#B91C1C", bg: "#FEE2E2" };
+  if (score <= 60) return { label: "Em desenvolvimento",cor: "#B45309", bg: "#FEF3C7" };
+  if (score <= 80) return { label: "No caminho certo",  cor: "#2563EB", bg: "#DBEAFE" };
+  return             { label: "Muito bem!",             cor: "#15803D", bg: "#DCFCE7" };
 }
 
-function perfilColor(key?: string): string {
-  switch (key) {
-    case "conservador": return "#3B82F6";
-    case "conservador_moderado": return "#1E40AF";
-    case "moderado": return "#2563EB";
-    case "arrojado": return "#B91C1C";
-    default: return "#9CA3AF";
-  }
+function GaugeDiag({
+  score,
+  label,
+  icone,
+  nivel,
+}: {
+  score: number;
+  label: string;
+  icone: string;
+  nivel: ReturnType<typeof nivelScore>;
+}) {
+  const W = 160, H = 90;
+  const CX = W / 2, CY = H;
+  const R_EXT = 72, R_INT = 52;
+  const scoreClamped = Math.max(0, Math.min(100, score));
+  const graus = 180 - (scoreClamped / 100) * 180;
+  const rad = (graus * Math.PI) / 180;
+  const xFimExt = CX + R_EXT * Math.cos(rad);
+  const yFimExt = CY - R_EXT * Math.sin(rad);
+  const xFimInt = CX + R_INT * Math.cos(rad);
+  const yFimInt = CY - R_INT * Math.sin(rad);
+  const largeArc = scoreClamped > 50 ? 1 : 0;
+
+  const pathFundo = [
+    `M ${CX - R_EXT} ${CY}`,
+    `A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY}`,
+    `L ${CX + R_INT} ${CY}`,
+    `A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY}`,
+    "Z",
+  ].join(" ");
+
+  const pathPreenchido = scoreClamped > 0 ? [
+    `M ${CX - R_EXT} ${CY}`,
+    `A ${R_EXT} ${R_EXT} 0 ${largeArc} 1 ${xFimExt} ${yFimExt}`,
+    `L ${xFimInt} ${yFimInt}`,
+    `A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY}`,
+    "Z",
+  ].join(" ") : "";
+
+  return (
+    <div style={{
+      background: "white",
+      border: "0.5px solid #E5E7EB",
+      borderRadius: 12,
+      padding: "20px 16px 16px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    }}>
+      <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`} style={{ overflow: "visible" }}>
+        <path d={pathFundo} fill="#F3F4F6" />
+        {scoreClamped > 0 && (
+          <path d={pathPreenchido} fill={nivel.cor} opacity={0.9} />
+        )}
+        <text x={CX} y={CY - 10} textAnchor="middle" fontSize="22" fontWeight="800" fill={score >= 0 ? nivel.cor : "#9CA3AF"}>
+          {score >= 0 ? scoreClamped : "—"}
+        </text>
+        <text x={CX} y={CY + 6} textAnchor="middle" fontSize="10" fill="#9CA3AF">
+          /100
+        </text>
+      </svg>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
+        <i className={`ti ${icone}`} style={{ fontSize: 13, color: nivel.cor }} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "center" }}>
+          {label}
+        </span>
+      </div>
+
+      <span style={{
+        fontSize: 10, fontWeight: 600,
+        color: nivel.cor, background: nivel.bg,
+        padding: "2px 10px", borderRadius: 99,
+        marginTop: 6,
+      }}>
+        {nivel.label}
+      </span>
+    </div>
+  );
 }
 
-const PRIORIDADE_CONFIG = {
-  alta: { label: "Alta", color: "#B91C1C", bg: "#FEE2E2" },
-  media: { label: "Média", color: "#B45309", bg: "#FEF3C7" },
-  baixa: { label: "Baixa", color: "#15803D", bg: "#DCFCE7" },
-};
+export function DiagResultado({ lead }: Props) {
+  const { dadosColeta } = lead;
 
-export function DiagResultado({ lead, onAtualizar }: Props) {
-  const { dadosColeta, dadosLF } = lead;
-  const [novoTexto, setNovoTexto] = useState("");
-  const [novaPrioridade, setNovaPrioridade] = useState<ProximoPasso["prioridade"]>("media");
-
-  const passos = lead.resultado?.proximosPassos ?? [];
-
-  function salvarPassos(novos: ProximoPasso[]) {
-    const resultado: ResultadoDiag = {
-      ...lead.resultado,
-      proximosPassos: novos,
-      dataResultado: new Date().toISOString(),
-    };
-    onAtualizar({ resultado });
-  }
-
-  function addPasso() {
-    if (!novoTexto.trim()) return;
-    const novo: ProximoPasso = { id: crypto.randomUUID(), texto: novoTexto.trim(), prioridade: novaPrioridade };
-    salvarPassos([...passos, novo]);
-    setNovoTexto("");
-  }
-
-  function removePasso(id: string) {
-    salvarPassos(passos.filter(p => p.id !== id));
-  }
-
-  function togglePrioridade(id: string) {
-    const ordem: ProximoPasso["prioridade"][] = ["alta", "media", "baixa"];
-    salvarPassos(passos.map(p => {
-      if (p.id !== id) return p;
-      const idx = ordem.indexOf(p.prioridade);
-      return { ...p, prioridade: ordem[(idx + 1) % 3] };
-    }));
-  }
-
-  // ── Recalculate from dadosLF ──
+  // ── Score Liberdade Financeira ──
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
-  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
-  const mesNascimento = parsed?.mes ?? 1;
   const idadeAtual = parsed
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 30;
+    : 0;
 
-  const patrimonioInicial = Number(dadosLF.patrimonioInicial) || Number(dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteMensal = Number(dadosLF.aporteMensal) || Number(dadosColeta.aporteMensal) || 0;
-  const idadeAlvo = Number(dadosLF.idadeAlvo) || Number(dadosColeta.idadeMeta) || 60;
-  const rendaDesejada = Number(dadosLF.rendaDesejada) || Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteMensal = Number(dadosColeta.aporteMensal) || 0;
+  const rendaDesejada = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta = Number(dadosColeta.idadeMeta) || 60;
 
-  const objetivosAtivos = useMemo((): ObjetivoVida[] => {
-    const raw = dadosLF.objetivos ?? [];
-    return (raw as Record<string, unknown>[])
-      .filter(o => VALID_TIPOS.has(String(o.tipo)) && o.ativo !== false) as unknown as ObjetivoVida[];
-  }, [dadosLF.objetivos]);
+  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
 
-  const patrimonioPerpetuidade = useMemo(() => {
-    if (!rendaDesejada) return 0;
-    return calcularPatrimonioPerpetuidade(rendaDesejada);
-  }, [rendaDesejada]);
+  const nMeses = Math.max(0, (idadeMeta - idadeAtual) * 12);
+  const f = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL_SCORE, nMeses) : 1;
+  const projecao = nMeses > 0
+    ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL_SCORE
+    : patrimonioAtual;
 
-  const taxaEfetiva = useMemo(() => {
-    if (dadosLF.taxaTravada && dadosLF.taxaTravadaValor != null) return dadosLF.taxaTravadaValor;
-    if (patrimonioPerpetuidade <= 0) return 0.03;
-    return calcularTaxaNecessaria({
-      patrimonioAtual: patrimonioInicial,
-      aporteMensal,
-      patrimonioAlvo: patrimonioPerpetuidade,
-      idadeAtual,
-      idadeAlvo,
-      objetivos: objetivosAtivos,
-    });
-  }, [dadosLF.taxaTravada, dadosLF.taxaTravadaValor, patrimonioPerpetuidade, patrimonioInicial, aporteMensal, idadeAtual, idadeAlvo, objetivosAtivos]);
+  const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
 
-  const projecaoParams: ProjecaoIFParams = useMemo(() => ({
-    idadeAtual,
-    idadeMeta: idadeAlvo,
-    idadeMaxima: 100,
-    patrimonioInicial,
-    aporteMensal,
-    rendaMensalDesejada: rendaDesejada,
-    taxaRetornoAnual: Math.max(taxaEfetiva, 0.03),
-    anoNascimento,
-    mesNascimento,
-    objetivos: objetivosAtivos,
-  }), [idadeAtual, idadeAlvo, patrimonioInicial, aporteMensal, rendaDesejada, taxaEfetiva, anoNascimento, mesNascimento, objetivosAtivos]);
+  const scoreLF = !lfTemDados ? -1
+    : Math.min(100, Math.round(projecao / patrimonioNecessario * 100));
 
-  const result = useMemo(() => {
-    try { return calcularProjecaoIF(projecaoParams); } catch { return null; }
-  }, [projecaoParams]);
-
-  const rendaSustentavel = result ? (result.patrimonioNaIF * 0.04) / 12 : 0;
-
-  const hasLFData = patrimonioInicial > 0 || aporteMensal > 0 || rendaDesejada > 0;
-
+  // ── Score Investimentos ──
   const ativos = dadosColeta.ativosAtuais;
-  const ativoLabels: string[] = [];
-  if (ativos) {
-    if (ativos.rendaFixa > 0) ativoLabels.push("Renda Fixa");
-    if (ativos.acoes > 0) ativoLabels.push("Ações");
-    if (ativos.fiis > 0) ativoLabels.push("FIIs");
-    if (ativos.rvGlobal > 0) ativoLabels.push("RV Global");
-    if (ativos.rfGlobal > 0) ativoLabels.push("RF Global");
-    if (ativos.cripto > 0) ativoLabels.push("Criptoativos");
+  const temRendaFixa = (ativos?.rendaFixa ?? 0) > 0;
+  const temAcoes     = (ativos?.acoes ?? 0) > 0;
+  const temFIIs      = (ativos?.fiis ?? 0) > 0;
+  const temExterior  = (ativos?.rvGlobal ?? 0) > 0 || (ativos?.rfGlobal ?? 0) > 0;
+  const temCripto    = (ativos?.cripto ?? 0) > 0;
+  const perfil       = dadosColeta.suitabilityPerfil ?? "";
+
+  const temAlgumAtivo = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
+  const aaTemDados = (temAlgumAtivo || dadosColeta.comecandoDoZero === true) && perfil !== "";
+
+  let pontosAA = 0;
+  if (temRendaFixa) pontosAA += 25;
+  if (temAcoes)     pontosAA += 25;
+  if (temFIIs)      pontosAA += 25;
+  if (temExterior)  pontosAA += 20;
+  if (temCripto)    pontosAA += 5;
+  if (perfil === "conservador" && !temAcoes && !temFIIs) {
+    pontosAA = Math.min(pontosAA + 15, 70);
+  }
+
+  const scoreInvestimentos = !aaTemDados ? -1 : Math.min(100, pontosAA);
+
+  // ── Score Blindagem ──
+  const despesas = Number(dadosColeta.custoVidaMensal) || 0;
+  const capitalNecessarioBlindagem = despesas * 12 * 20;
+  const capitalAtualBlindagem = dadosColeta.possuiSeguro === true
+    ? (Number(dadosColeta.valorApolice) || 0)
+    : 0;
+  const blindagemTemDados = despesas > 0;
+
+  const scoreBlindagem = !blindagemTemDados ? -1
+    : capitalNecessarioBlindagem > 0
+      ? Math.min(100, Math.round(capitalAtualBlindagem / capitalNecessarioBlindagem * 100))
+      : 0;
+
+  // ── Score Geral ──
+  const scoreGeral = (() => {
+    const scores = [scoreLF, scoreInvestimentos, scoreBlindagem].filter(s => s >= 0);
+    if (scores.length === 0) return 0;
+    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  })();
+
+  // ── Textos humanizados ──
+  function gerarTexto(area: string): string {
+    if (area === "lf") {
+      if (!lfTemDados) {
+        return "Para visualizar como está sua jornada rumo à aposentadoria, precisamos de algumas informações ainda não preenchidas. Volte à Coleta de Dados e informe seu patrimônio atual, quanto investe por mês e a renda que deseja ter no futuro.";
+      }
+      if (projecao >= patrimonioNecessario) {
+        return "Ótima notícia! Com o ritmo atual de investimentos e o patrimônio que você já construiu, você está no caminho para ter a renda que deseja na aposentadoria.\n\nSe mantiver a consistência nos aportes mensais, a projeção indica que você chegará ao seu objetivo. O segredo agora é não parar — cada mês de investimento conta muito no longo prazo.";
+      }
+      const pct = Math.round(projecao / patrimonioNecessario * 100);
+      return `Você já começou sua jornada de investimentos, o que é ótimo! Com o ritmo atual, você está chegando a ${pct}% da renda que deseja ter na aposentadoria.\n\nA diferença pode ser reduzida aumentando um pouco o valor investido por mês ou ajustando a data da aposentadoria. Pequenos ajustes hoje fazem uma diferença enorme lá na frente.`;
+    }
+
+    if (area === "inv") {
+      if (!aaTemDados) {
+        return "Para analisar sua carteira de investimentos, informe na Coleta de Dados os tipos de ativos que você já possui. Isso nos ajuda a entender se sua carteira está preparada para crescer ao longo do tempo.";
+      }
+
+      const ativosLabels = (
+        [
+          temRendaFixa ? "renda fixa" : false,
+          temAcoes     ? "ações" : false,
+          temFIIs      ? "fundos imobiliários" : false,
+          temExterior  ? "investimentos fora do Brasil" : false,
+        ] as (string | false)[]
+      ).filter((x): x is string => x !== false);
+
+      const ausentes = (
+        [
+          !temAcoes    ? "ações" : false,
+          !temFIIs     ? "fundos imobiliários" : false,
+          !temExterior ? "investimentos internacionais" : false,
+        ] as (string | false)[]
+      ).filter((x): x is string => x !== false);
+
+      let texto = "";
+
+      if (ativosLabels.length > 0) {
+        texto += `Você já tem investimentos em ${ativosLabels.join(", ")} — isso é muito positivo!\n`;
+      } else if (dadosColeta.comecandoDoZero) {
+        texto += "Você está começando sua jornada de investimentos — isso é um passo muito importante!\n";
+      }
+
+      if (temAcoes) {
+        texto += "\nTer ações é importante para fazer seu dinheiro crescer no longo prazo.";
+      }
+      if (temFIIs) {
+        texto += "\nOs fundos imobiliários ajudam a gerar uma renda extra todo mês.";
+      }
+
+      if (ausentes.length > 0) {
+        texto += `\n\nUma dica importante: diversificar seus investimentos em mais tipos de ativos pode ajudar a proteger e multiplicar seu patrimônio. Ainda não vemos ${ausentes.join(", ")} na sua carteira — vale conversar sobre isso com seu assessor.`;
+      } else {
+        texto += "\n\nSua carteira está bem diversificada! Continue monitorando e ajustando conforme seu objetivo de vida.";
+      }
+
+      return texto.trim();
+    }
+
+    if (area === "blind") {
+      if (!blindagemTemDados) {
+        return "Para analisarmos sua proteção financeira, precisamos saber quanto você gasta por mês. Preencha esse dado na Coleta de Dados.";
+      }
+      if (capitalAtualBlindagem === 0) {
+        return "Identificamos que você não possui seguro de vida ou invalidez no momento. Isso é um ponto de atenção importante: caso algo inesperado aconteça, sua família poderia enfrentar dificuldades financeiras.\n\nUm seguro de vida é uma das formas mais simples e acessíveis de proteger quem você ama. Vale muito a pena avaliar essa possibilidade.";
+      }
+      if (capitalAtualBlindagem < capitalNecessarioBlindagem) {
+        const pct = Math.round(capitalAtualBlindagem / capitalNecessarioBlindagem * 100);
+        return `Você já tem um seguro de vida — isso é muito importante e mostra que você pensa no futuro da sua família.\n\nA análise indica que a cobertura atual representa ${pct}% do valor recomendado para proteger o padrão de vida da sua família. Pode valer a pena avaliar se o valor da apólice ainda está adequado para a sua situação atual.`;
+      }
+      return "Excelente! Você possui uma cobertura de seguro adequada para proteger sua família. Sua blindagem patrimonial está bem estruturada.\n\nLembre-se de revisar o valor da apólice periodicamente, especialmente quando houver mudanças na sua renda ou estrutura familiar.";
+    }
+
+    return "";
   }
 
   return (
@@ -168,147 +264,87 @@ export function DiagResultado({ lead, onAtualizar }: Props) {
       `}</style>
 
       <div className="diag-print-root">
-        {/* ── Print button ── */}
-        <div className="diag-no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+
+        {/* ── Header com score geral ── */}
+        <div style={{
+          background: "#1E3A8A", borderRadius: 12, padding: "24px 28px",
+          color: "white", marginBottom: 20,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div>
+            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>Diagnóstico Financeiro</div>
+            <div style={{ fontSize: 22, fontWeight: 700 }}>{lead.nome}</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 48, fontWeight: 800, lineHeight: 1 }}>{scoreGeral}</div>
+            <div style={{ fontSize: 11, opacity: 0.7 }}>pontos de 100</div>
+            <span style={{
+              fontSize: 11, fontWeight: 600,
+              background: "rgba(255,255,255,0.2)",
+              padding: "3px 12px", borderRadius: 99,
+              marginTop: 6, display: "inline-block",
+            }}>
+              {nivelScore(scoreGeral).label}
+            </span>
+          </div>
+        </div>
+
+        {/* ── 3 Gauges ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+          <GaugeDiag score={scoreLF}           label="Liberdade Financeira"   icone="ti-beach"     nivel={nivelScore(scoreLF)} />
+          <GaugeDiag score={scoreInvestimentos} label="Investimentos"          icone="ti-chart-pie" nivel={nivelScore(scoreInvestimentos)} />
+          <GaugeDiag score={scoreBlindagem}     label="Blindagem de Patrimônio" icone="ti-shield"    nivel={nivelScore(scoreBlindagem)} />
+        </div>
+
+        {/* ── 3 Cards analíticos ── */}
+        {[
+          { area: "lf",    score: scoreLF,           icone: "ti-beach",     titulo: "Liberdade Financeira" },
+          { area: "inv",   score: scoreInvestimentos, icone: "ti-chart-pie", titulo: "Investimentos" },
+          { area: "blind", score: scoreBlindagem,     icone: "ti-shield",    titulo: "Blindagem de Patrimônio" },
+        ].map(({ area, score, icone, titulo }) => (
+          <div key={area} style={{
+            background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
+            padding: "20px 24px", marginBottom: 16,
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <i className={`ti ${icone}`} style={{ fontSize: 18, color: "#2563EB" }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{titulo}</span>
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 600,
+                color: nivelScore(score).cor, background: nivelScore(score).bg,
+                padding: "3px 10px", borderRadius: 99,
+              }}>
+                {nivelScore(score).label}
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" }}>
+              {gerarTexto(area)}
+            </p>
+          </div>
+        ))}
+
+        {/* ── Botão imprimir ── */}
+        <div className="diag-no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
           <button
             onClick={() => window.print()}
-            style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 16px", fontSize: 13, color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "#1E3A8A", color: "white",
+              border: "none", borderRadius: 8,
+              padding: "10px 24px", fontSize: 13,
+              fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+            }}
           >
             <i className="ti ti-printer" style={{ fontSize: 15 }} />
-            Imprimir relatório
+            Imprimir Diagnóstico
           </button>
         </div>
 
-        {/* ── LF Card ── */}
-        {hasLFData && result ? (
-          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <i className="ti ti-trending-up" style={{ fontSize: 16, color: "#15803D" }} />
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Liberdade Financeira</h3>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-              <div style={{ background: "#F8FAFF", borderRadius: 10, padding: "14px 16px", border: "0.5px solid #BFDBFE" }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 4 }}>Patrimônio Necessário</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">{formatCurrency(patrimonioPerpetuidade)}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF" }}>perpetuidade (4%)</div>
-              </div>
-              <div style={{ background: "#F8FAFF", borderRadius: 10, padding: "14px 16px", border: "0.5px solid #BFDBFE" }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 4 }}>Projeção Atual</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(result.patrimonioNaIF)}</div>
-                <div style={{ fontSize: 10, color: "#9CA3AF" }}>na aposentadoria</div>
-              </div>
-              <div style={{ background: "#F8FAFF", borderRadius: 10, padding: "14px 16px", border: "0.5px solid #BFDBFE" }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 4 }}>Taxa Necessária</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: taxaEfetiva > 0.15 ? "#B91C1C" : taxaEfetiva > 0.08 ? "#B45309" : "#15803D" }} className="tabular-nums">
-                  IPCA + {formatNumber(taxaEfetiva * 100, 1)}% a.a.
-                </div>
-                <div style={{ fontSize: 10, color: "#9CA3AF" }}>para atingir a meta</div>
-              </div>
-              <div style={{ background: "#F8FAFF", borderRadius: 10, padding: "14px 16px", border: "0.5px solid #BFDBFE" }}>
-                <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 4 }}>Renda Sustentável</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: rendaSustentavel >= rendaDesejada && rendaDesejada > 0 ? "#15803D" : "#111827" }} className="tabular-nums">
-                  {rendaSustentavel > 0 ? rendaSustentavel.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—"}
-                </div>
-                <div style={{ fontSize: 10, color: "#9CA3AF" }}>/mês com a projeção atual</div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16, color: "#9CA3AF", textAlign: "center" as const }}>
-            <i className="ti ti-trending-up" style={{ fontSize: 28, display: "block", marginBottom: 8 }} />
-            <div style={{ fontSize: 13 }}>Configure a simulação de Liberdade Financeira para ver os resultados.</div>
-          </div>
-        )}
-
-        {/* ── Carteira Card ── */}
-        <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <i className="ti ti-chart-pie" style={{ fontSize: 16, color: "#2563EB" }} />
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Carteira & Perfil</h3>
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 24 }}>
-            <div>
-              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 6 }}>Perfil de risco</div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: perfilColor(dadosColeta.suitabilityPerfil), background: `${perfilColor(dadosColeta.suitabilityPerfil)}18`, padding: "4px 12px", borderRadius: 999 }}>
-                {perfilLabel(dadosColeta.suitabilityPerfil)}
-              </span>
-            </div>
-            {ativoLabels.length > 0 && (
-              <div>
-                <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 6 }}>Classes na carteira</div>
-                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
-                  {ativoLabels.map(l => (
-                    <span key={l} style={{ fontSize: 11, fontWeight: 500, color: "#1E40AF", background: "#DBEAFE", padding: "3px 10px", borderRadius: 999 }}>{l}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Próximos Passos ── */}
-        <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-            <i className="ti ti-list-check" style={{ fontSize: 16, color: "#1E3A8A" }} />
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Próximos Passos</h3>
-          </div>
-
-          {passos.length === 0 && (
-            <div style={{ color: "#9CA3AF", fontSize: 13, marginBottom: 16 }}>Nenhum passo cadastrado.</div>
-          )}
-
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8, marginBottom: 16 }}>
-            {passos.map(p => {
-              const cfg = PRIORIDADE_CONFIG[p.prioridade];
-              return (
-                <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#F8FAFF", borderRadius: 8, border: "0.5px solid #E5E7EB" }}>
-                  <button
-                    onClick={() => togglePrioridade(p.id)}
-                    title="Alterar prioridade"
-                    style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: cfg.color, background: cfg.bg, border: "none", borderRadius: 4, padding: "2px 7px", cursor: "pointer", fontFamily: "inherit" }}
-                  >
-                    {cfg.label}
-                  </button>
-                  <span style={{ flex: 1, fontSize: 13, color: "#111827" }}>{p.texto}</span>
-                  <button
-                    onClick={() => removePasso(p.id)}
-                    className="diag-no-print"
-                    style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: "2px 4px", fontSize: 15, fontFamily: "inherit" }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Add passo */}
-          <div className="diag-no-print" style={{ display: "flex", gap: 8 }}>
-            <input
-              type="text"
-              value={novoTexto}
-              onChange={e => setNovoTexto(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && addPasso()}
-              placeholder="Descreva o próximo passo..."
-              style={{ flex: 1, border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", fontFamily: "inherit" }}
-            />
-            <select
-              value={novaPrioridade}
-              onChange={e => setNovaPrioridade(e.target.value as ProximoPasso["prioridade"])}
-              style={{ border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#374151", outline: "none", fontFamily: "inherit", cursor: "pointer" }}
-            >
-              <option value="alta">Alta</option>
-              <option value="media">Média</option>
-              <option value="baixa">Baixa</option>
-            </select>
-            <button
-              onClick={addPasso}
-              style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" as const }}
-            >
-              + Adicionar
-            </button>
-          </div>
-        </div>
       </div>
     </>
   );
