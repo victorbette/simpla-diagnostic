@@ -2,20 +2,24 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
-  calcularAporteMensalNecessario,
-  calcularTaxaNecessaria,
-  calcularIdadeComAporte,
   type ProjecaoIFParams,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META } from "@/types/objetivos";
-import { GraficoIF } from "@/components/shared/GraficoIF";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
+import {
+  ComposedChart, Bar, Line, XAxis, YAxis,
+  CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, ReferenceLine,
+} from "recharts";
+
+const TAXA_ANUAL_DIAG = 0.045;
+const TAXA_MENSAL_DIAG = Math.pow(1 + TAXA_ANUAL_DIAG, 1 / 12) - 1;
 
 interface UIParams {
   idadeAtual: number;
@@ -35,15 +39,6 @@ const cardStyle: React.CSSProperties = {
   border: "0.5px solid #E5E7EB",
   borderRadius: 12,
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-};
-
-const badgePctStyle: React.CSSProperties = {
-  backgroundColor: "#1E3A8A",
-  color: "white",
-  borderRadius: 6,
-  padding: "2px 8px",
-  fontSize: 12,
-  fontWeight: 600,
 };
 
 const badgeColetaStyle: React.CSSProperties = {
@@ -116,9 +111,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       .map((o) => migrateObjetivo(o, anoNascimento, mesNascimento))
       .filter((o) => VALID_TIPOS.has(o.tipo));
   });
-  const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
-  const [taxaTravada, setTaxaTravada] = useState(() => !!dadosLF.taxaTravada);
-  const [taxaTravadaValor, setTaxaTravadaValor] = useState<number | null>(() => dadosLF.taxaTravadaValor ?? null);
 
   const isFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
@@ -132,11 +124,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       idadeAlvo: params.idadeAposentadoria,
       rendaDesejada: params.rendaDesejada,
       objetivos: objetivos as unknown[],
-      taxaTravada,
-      taxaTravadaValor,
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, objetivos, taxaTravada, taxaTravadaValor]);
+  }, [params, objetivos]);
 
   useEffect(() => {
     setParams((prev) => ({
@@ -157,28 +147,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     return calcularPatrimonioPerpetuidade(params.rendaDesejada);
   }, [params.rendaDesejada]);
 
-  const taxaNecessariaCalc = useMemo(() => {
-    if (patrimonioPerpetuidade <= 0) return 0.03;
-    return calcularTaxaNecessaria({
-      patrimonioAtual: params.patrimonioInicial,
-      aporteMensal: params.aporteMensal,
-      patrimonioAlvo: patrimonioPerpetuidade,
-      idadeAtual: params.idadeAtual,
-      idadeAlvo: params.idadeAposentadoria,
-      objetivos: objetivosAtivos,
-    });
-  }, [params, objetivosAtivos, patrimonioPerpetuidade]);
-
-  const taxaEfetiva = useMemo(
-    () => taxaTravada && taxaTravadaValor !== null ? taxaTravadaValor : taxaNecessariaCalc,
-    [taxaTravada, taxaTravadaValor, taxaNecessariaCalc],
-  );
-
-  const taxaMensalEfetiva = useMemo(
-    () => Math.pow(1 + Math.max(taxaEfetiva, 0.03), 1 / 12) - 1,
-    [taxaEfetiva],
-  );
-
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual: params.idadeAtual,
     idadeMeta: params.idadeAposentadoria,
@@ -186,11 +154,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     patrimonioInicial: params.patrimonioInicial,
     aporteMensal: params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: Math.max(taxaEfetiva, 0.03),
+    taxaRetornoAnual: TAXA_ANUAL_DIAG,
     anoNascimento,
     mesNascimento,
     objetivos: objetivosAtivos,
-  }), [params, objetivosAtivos, anoNascimento, mesNascimento, taxaEfetiva]);
+  }), [params, objetivosAtivos, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
@@ -200,62 +168,57 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     }
   }, [projecaoParams]);
 
-  const aporteNecessarioCalc = useMemo(() => {
-    if (!result || patrimonioPerpetuidade <= 0) return 0;
-    return calcularAporteMensalNecessario({
-      patrimonioAtual: params.patrimonioInicial,
-      patrimonioAlvo: patrimonioPerpetuidade,
-      idadeAtual: params.idadeAtual,
-      idadeAlvo: params.idadeAposentadoria,
-      taxaMensalReal: taxaMensalEfetiva,
-    });
-  }, [result, params, patrimonioPerpetuidade, taxaMensalEfetiva]);
-
   const rendaSustentavel = useMemo(() => {
     if (!result || result.patrimonioNaIF <= 0) return 0;
     return (result.patrimonioNaIF * 0.04) / 12;
   }, [result]);
 
-  const sensAporteScenarios = useMemo(() => {
-    if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
-    const base = params.aporteMensal;
-    const alvo = patrimonioPerpetuidade;
-    return [-0.4, -0.2, 0, 0.2, 0.4].map(pct => {
-      const aporte = Math.max(0, Math.round(base * (1 + pct) / 100) * 100);
-      const idadeResult = calcularIdadeComAporte({
-        patrimonioAtual: params.patrimonioInicial,
-        aporteMensal: aporte,
-        patrimonioAlvo: alvo,
-        idadeAtual: params.idadeAtual,
-        taxaMensalReal: taxaMensalEfetiva,
-        objetivos: objetivosAtivos,
-      });
-      return { pct, aporte, idadeResult };
-    });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
-
-  const sensPrazoScenarios = useMemo(() => {
-    if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
-    const base = params.idadeAposentadoria;
-    const alvo = patrimonioPerpetuidade;
-    return [-4, -2, 0, 2, 4].map(delta => {
-      const idadeAlvo = Math.max(params.idadeAtual + 1, base + delta);
-      const aporte = calcularAporteMensalNecessario({
-        patrimonioAtual: params.patrimonioInicial,
-        patrimonioAlvo: alvo,
-        idadeAtual: params.idadeAtual,
-        idadeAlvo,
-        taxaMensalReal: taxaMensalEfetiva,
-        objetivos: objetivosAtivos,
-      });
-      return { delta, idadeAlvo, aporte };
-    });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
-
-  const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
-  const sliderAporteMax = Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000);
+
+  const dadosGrafico = useMemo(() => {
+    const dados: {
+      ano: number;
+      idade: number;
+      patrimonioProjeto: number;
+      patrimonioComObjetivos: number;
+      temObjetivo: boolean;
+    }[] = [];
+    const anoAtual = new Date().getFullYear();
+    const nAnos = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
+
+    let patrimonioSemObjetivos = params.patrimonioInicial;
+    let patrimonioComObj = params.patrimonioInicial;
+    const fatorAnual = Math.pow(1 + TAXA_MENSAL_DIAG, 12);
+    const aporteAnual = params.aporteMensal * 12;
+
+    for (let ano = 0; ano <= nAnos; ano++) {
+      const idadeAno = params.idadeAtual + ano;
+      const anoCalendario = anoAtual + ano;
+
+      const objetivosAno = objetivos.filter(o =>
+        o.ativo !== false &&
+        Number(o.ano) === anoCalendario
+      );
+
+      if (ano > 0) {
+        patrimonioSemObjetivos = patrimonioSemObjetivos * fatorAnual + aporteAnual;
+        patrimonioComObj = patrimonioComObj * fatorAnual + aporteAnual;
+        objetivosAno.forEach(o => {
+          patrimonioComObj = Math.max(0, patrimonioComObj - (Number(o.valorBRL) || 0));
+        });
+      }
+
+      dados.push({
+        ano: anoCalendario,
+        idade: idadeAno,
+        patrimonioProjeto: Math.round(patrimonioSemObjetivos),
+        patrimonioComObjetivos: Math.round(patrimonioComObj),
+        temObjetivo: objetivosAno.length > 0,
+      });
+    }
+    return dados;
+  }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, objetivos]);
 
   if (!result) {
     return (
@@ -264,6 +227,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       </div>
     );
   }
+
+  const temObjetivosAtivos = objetivosAtivos.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -362,40 +327,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
         </div>
       </div>
 
-      {/* ── Sliders ── */}
-      <Card style={cardStyle}>
-        <CardContent className="pt-4 pb-4">
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aposentadoria</label>
-                <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
-              </div>
-              <input type="range" min={params.idadeAtual + 5} max={80} step={1} value={params.idadeAposentadoria}
-                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                className="w-full" style={{ accentColor: "#1E3A8A" }} />
-              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                <span>{params.idadeAtual + 5} anos</span><span>80 anos</span>
-              </div>
-            </div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aporte mensal</label>
-                <span style={{ ...badgePctStyle, backgroundColor: "#15803D" }}>{formatCurrency(params.aporteMensal)}/mês</span>
-              </div>
-              <input type="range" min={0} max={sliderAporteMax} step={100} value={params.aporteMensal}
-                onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
-                className="w-full" style={{ accentColor: "#15803D" }} />
-              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                <span>R$ 0</span><span>{formatCurrency(sliderAporteMax)}/mês</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── Cards de resultado 2×2 ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      {/* ── Cards de resultado ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>Patrimônio Necessário</p>
@@ -409,35 +342,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>Projeção Atual</p>
             <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(result.patrimonioNaIF)}</p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
-          </CardContent>
-        </Card>
-
-        <Card style={{ ...cardStyle, ...(taxaTravada ? { border: "1px solid #F59E0B" } : {}) }}>
-          <CardContent className="pt-4 pb-4">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-              <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", margin: 0 }}>Taxa Necessária</p>
-              <button
-                onClick={() => {
-                  if (taxaTravada) { setTaxaTravada(false); setTaxaTravadaValor(null); }
-                  else { setTaxaTravada(true); setTaxaTravadaValor(taxaNecessariaCalc); }
-                }}
-                style={{ fontSize: 11, fontWeight: 600, cursor: "pointer", border: "none", borderRadius: 6, padding: "2px 8px", fontFamily: "inherit", background: taxaTravada ? "#FEF3C7" : "#F3F4F6", color: taxaTravada ? "#92400E" : "#6B7280" }}>
-                {taxaTravada ? "Travado" : "Travar"}
-              </button>
-            </div>
-            {taxaTravada && taxaTravadaValor !== null ? (
-              <>
-                <p style={{ fontSize: 17, fontWeight: 700, color: "#B45309" }} className="tabular-nums">IPCA + {formatNumber(taxaTravadaValor * 100, 1)}% a.a.</p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>taxa travada · necessária: IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}%</p>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: 17, fontWeight: 700, color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D" }} className="tabular-nums">
-                  IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>para atingir a meta</p>
-              </>
-            )}
           </CardContent>
         </Card>
 
@@ -462,79 +366,114 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       </div>
 
       {/* ── Gráfico ── */}
-      <Card style={cardStyle}>
-        <CardContent className="pt-5">
-          <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Projeção Patrimonial</p>
-          <GraficoIF
-            projecao={result.projecao}
-            objetivos={objetivosAtivos}
-            height={420}
-            mesIF={mesIF}
-            mesNascimento={mesNascimento}
-            patrimonioNecessario={patrimonioPerpetuidade}
-          />
-        </CardContent>
-      </Card>
+      <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: "#111827", marginBottom: 16 }}>
+          Projeção Patrimonial
+        </div>
 
-      {/* ── Análise de Sensibilidade ── */}
-      <Card style={cardStyle}>
-        <CardContent className="pt-5">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <p style={{ color: "#000000", fontSize: 15, fontWeight: 700, margin: 0 }}>Análise de Sensibilidade</p>
-            <div style={{ display: "flex", gap: 4 }}>
-              {(["aporte", "prazo"] as const).map(tab => (
-                <button key={tab} onClick={() => setSensTab(tab)}
-                  style={{ fontSize: 12, fontWeight: sensTab === tab ? 600 : 400, color: sensTab === tab ? "#2563EB" : "#9CA3AF", background: sensTab === tab ? "#DBEAFE" : "transparent", border: sensTab === tab ? "0.5px solid #BFDBFE" : "0.5px solid #E5E7EB", borderRadius: 6, padding: "4px 12px", cursor: "pointer", fontFamily: "inherit" }}>
-                  {tab === "aporte" ? "Variando o Aporte" : "Variando o Prazo"}
-                </button>
-              ))}
-            </div>
-          </div>
+        <ResponsiveContainer width="100%" height={320}>
+          <ComposedChart
+            data={dadosGrafico}
+            margin={{ top: 10, right: 20, bottom: 0, left: 20 }}
+            barCategoryGap="20%"
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#F3F4F6"
+              vertical={false}
+            />
 
-          {sensTab === "aporte" && (
-            <div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6 }}>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Variação</span>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Aporte Mensal</span>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Aposentadoria</span>
-              </div>
-              {sensAporteScenarios.map(({ pct, aporte, idadeResult }) => {
-                const isBase = pct === 0;
-                const atingiu = idadeResult <= params.idadeAposentadoria + 0.1;
-                return (
-                  <div key={pct} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "7px 6px", borderBottom: "0.5px solid #F3F4F6", background: isBase ? "#F0F7FF" : "transparent", borderRadius: isBase ? 6 : 0 }}>
-                    <span style={{ fontSize: 12, color: isBase ? "#2563EB" : "#374151", fontWeight: isBase ? 600 : 400 }}>{pct === 0 ? "Atual" : pct > 0 ? `+${Math.round(pct * 100)}%` : `${Math.round(pct * 100)}%`}</span>
-                    <span style={{ fontSize: 12, color: "#374151" }} className="tabular-nums">{formatCurrency(aporte)}/mês</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: atingiu ? "#059669" : "#B91C1C" }} className="tabular-nums">{idadeResult >= params.idadeAtual + 49.9 ? ">50 anos" : `${Math.floor(idadeResult)} anos`}</span>
-                  </div>
-                );
-              })}
-              <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8, fontStyle: "italic" }}>Idade estimada para atingir o patrimônio necessário com cada aporte.</p>
-            </div>
-          )}
+            <XAxis
+              dataKey="idade"
+              tick={{ fontSize: 11, fill: "#9CA3AF" }}
+              tickFormatter={(v) => `${v}a`}
+              axisLine={false}
+              tickLine={false}
+            />
 
-          {sensTab === "prazo" && (
-            <div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderBottom: "1px solid #F3F4F6", paddingBottom: 6, marginBottom: 6 }}>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Variação</span>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Aposentadoria</span>
-                <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Aporte Necessário</span>
-              </div>
-              {sensPrazoScenarios.map(({ delta, idadeAlvo, aporte }) => {
-                const isBase = delta === 0;
-                return (
-                  <div key={delta} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", padding: "7px 6px", borderBottom: "0.5px solid #F3F4F6", background: isBase ? "#F0F7FF" : "transparent", borderRadius: isBase ? 6 : 0 }}>
-                    <span style={{ fontSize: 12, color: isBase ? "#2563EB" : "#374151", fontWeight: isBase ? 600 : 400 }}>{delta === 0 ? "Atual" : delta > 0 ? `+${delta} anos` : `${delta} anos`}</span>
-                    <span style={{ fontSize: 12, color: "#374151" }} className="tabular-nums">{idadeAlvo} anos</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#1E3A8A" }} className="tabular-nums">{formatCurrency(aporte)}/mês</span>
-                  </div>
-                );
-              })}
-              <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 8, fontStyle: "italic" }}>Aporte mensal necessário para cada data-alvo de aposentadoria.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            <YAxis
+              tick={{ fontSize: 10, fill: "#9CA3AF" }}
+              tickFormatter={(v: number) => {
+                if (v >= 1000000) return `R$${(v / 1000000).toFixed(1)}M`;
+                if (v >= 1000) return `R$${(v / 1000).toFixed(0)}k`;
+                return `R$${v}`;
+              }}
+              axisLine={false}
+              tickLine={false}
+              width={70}
+            />
+
+            <Tooltip
+              formatter={(value, name) => [
+                (value as number).toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                  maximumFractionDigits: 0,
+                }),
+                name === "patrimonioProjeto"
+                  ? "Patrimônio Projetado"
+                  : "Com Objetivos de Vida",
+              ]}
+              labelFormatter={(v) => `Idade: ${v} anos`}
+              contentStyle={{
+                fontSize: 12,
+                borderRadius: 8,
+                border: "0.5px solid #E5E7EB",
+              }}
+            />
+
+            <Legend
+              formatter={(value) =>
+                value === "patrimonioProjeto"
+                  ? "Patrimônio Projetado"
+                  : "Com Objetivos de Vida"
+              }
+              wrapperStyle={{ fontSize: 12 }}
+            />
+
+            <ReferenceLine
+              y={patrimonioPerpetuidade}
+              stroke="#15803D"
+              strokeWidth={1.5}
+              strokeDasharray="6 3"
+              label={{
+                value: "Meta",
+                position: "insideTopRight",
+                fontSize: 10,
+                fill: "#15803D",
+              }}
+            />
+
+            <Bar
+              dataKey="patrimonioProjeto"
+              fill="#BFDBFE"
+              stroke="#93C5FD"
+              strokeWidth={0.5}
+              radius={[3, 3, 0, 0]}
+              name="patrimonioProjeto"
+            />
+
+            {temObjetivosAtivos && (
+              <Line
+                type="monotone"
+                dataKey="patrimonioComObjetivos"
+                stroke="#15803D"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{
+                  r: 4,
+                  fill: "#15803D",
+                  stroke: "white",
+                  strokeWidth: 2,
+                }}
+                name="patrimonioComObjetivos"
+              />
+            )}
+
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+
     </div>
   );
 }
