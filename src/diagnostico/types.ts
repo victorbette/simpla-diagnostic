@@ -30,6 +30,10 @@ export interface DadosColetaDiag {
   temFIIs?: boolean;
   temExterior?: boolean;
   temCripto?: boolean;
+  contribuiINSS?: boolean;
+  valorINSS?: number;
+  possuiSeguro?: boolean;
+  valorApolice?: number;
 }
 
 export interface DadosLFDiag {
