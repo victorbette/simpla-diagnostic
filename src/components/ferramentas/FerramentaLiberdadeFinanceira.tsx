@@ -3,13 +3,14 @@ import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   calcularAporteMensalNecessario,
-  calcularTaxaNecessaria,
   calcularIdadeComAporte,
+  TAXA_ACUM_ANUAL,
+  TAXA_ACUM_MENSAL,
   type ProjecaoIFParams,
   type ProjecaoIFResult,
 } from "@/lib/financialFreedomCalc";
@@ -126,14 +127,12 @@ export function FerramentaLiberdadeFinanceira({
   const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
-  const [taxaTravada, setTaxaTravada] = useState(false);
-  const [taxaTravadaValor, setTaxaTravadaValor] = useState<number | null>(null);
 
   const CHAVE = `ferramenta_if_${clientId}`;
 
   useFerramentaStorage(
     CHAVE,
-    { params, objetivos, taxaTravada, taxaTravadaValor },
+    { params, objetivos },
     (v) => {
       if (v.params) setParams({ ...initialParams, ...v.params, idadeAtual: idadeAtualCalculada });
       if (v.objetivos) {
@@ -142,10 +141,8 @@ export function FerramentaLiberdadeFinanceira({
           .filter((o) => VALID_TIPOS.has(o.tipo));
         setObjetivos(migrados);
       }
-      if (v.taxaTravada) setTaxaTravada(true);
-      if (v.taxaTravadaValor != null) setTaxaTravadaValor(v.taxaTravadaValor);
     },
-    { params: initialParams, objetivos: [], taxaTravada: false, taxaTravadaValor: null },
+    { params: initialParams, objetivos: [] },
   );
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
@@ -176,8 +173,6 @@ export function FerramentaLiberdadeFinanceira({
       setPatrimonioEditado(resultadoIF.patrimonioAtual !== patrimonioColeta);
       setRendaEditada(resultadoIF.rendaMensalDesejada !== rendaDesejadaColeta);
       if (resultadoIF.objetivos) setObjetivos(resultadoIF.objetivos);
-      if (resultadoIF.taxaTravada !== undefined) setTaxaTravada(resultadoIF.taxaTravada);
-      if (resultadoIF.taxaTravadaValor !== undefined) setTaxaTravadaValor(resultadoIF.taxaTravadaValor ?? null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resultadoIF]);
@@ -190,30 +185,6 @@ export function FerramentaLiberdadeFinanceira({
     return calcularPatrimonioPerpetuidade(params.rendaDesejada);
   }, [params.rendaDesejada]);
 
-  // Computed independently so taxaNecessariaCalc has no circular dep on result
-  const taxaNecessariaCalc = useMemo(() => {
-    if (patrimonioPerpetuidade <= 0) return 0.03;
-    return calcularTaxaNecessaria({
-      patrimonioAtual: params.patrimonioInicial,
-      aporteMensal:    params.aporteMensal,
-      patrimonioAlvo:  patrimonioPerpetuidade,
-      idadeAtual:      params.idadeAtual,
-      idadeAlvo:       params.idadeAposentadoria,
-      objetivos:       objetivosAtivos,
-    });
-  }, [params, objetivosAtivos, patrimonioPerpetuidade]);
-
-  // Taxa que efetivamente rege os cálculos: travada ou calculada
-  const taxaEfetiva = useMemo(
-    () => taxaTravada && taxaTravadaValor !== null ? taxaTravadaValor : taxaNecessariaCalc,
-    [taxaTravada, taxaTravadaValor, taxaNecessariaCalc],
-  );
-
-  const taxaMensalEfetiva = useMemo(
-    () => Math.pow(1 + Math.max(taxaEfetiva, 0.03), 1 / 12) - 1,
-    [taxaEfetiva],
-  );
-
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual:           params.idadeAtual,
     idadeMeta:            params.idadeAposentadoria,
@@ -221,11 +192,11 @@ export function FerramentaLiberdadeFinanceira({
     patrimonioInicial:    params.patrimonioInicial,
     aporteMensal:         params.aporteMensal,
     rendaMensalDesejada:  params.rendaDesejada,
-    taxaRetornoAnual:     Math.max(taxaEfetiva, 0.03),
+    taxaRetornoAnual:     TAXA_ACUM_ANUAL,
     anoNascimento,
     mesNascimento,
     objetivos:            objetivosAtivos,
-  }), [params, objetivosAtivos, anoNascimento, mesNascimento, taxaEfetiva]);
+  }), [params, objetivosAtivos, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
     try {
@@ -236,16 +207,22 @@ export function FerramentaLiberdadeFinanceira({
     }
   }, [projecaoParams]);
 
-  const aporteNecessarioCalc = useMemo(() => {
-    if (!result || patrimonioPerpetuidade <= 0) return 0;
-    return calcularAporteMensalNecessario({
-      patrimonioAtual: params.patrimonioInicial,
-      patrimonioAlvo:  patrimonioPerpetuidade,
-      idadeAtual:      params.idadeAtual,
-      idadeAlvo:       params.idadeAposentadoria,
-      taxaMensalReal:  taxaMensalEfetiva,
-    });
-  }, [result, params, patrimonioPerpetuidade, taxaMensalEfetiva]);
+  const aporteNecessario = useMemo(() => {
+    if (patrimonioPerpetuidade <= 0) return 0;
+    const n = Math.max(1, (params.idadeAposentadoria - params.idadeAtual) * 12);
+    const f = Math.pow(1 + TAXA_ACUM_MENSAL, n);
+    const fvSemAporte = params.patrimonioInicial * f;
+    const anoCard = new Date().getFullYear();
+    const mesCard = new Date().getMonth() + 1;
+    const vpObjetivos = objetivosAtivos.reduce((soma, obj) => {
+      const mesesAteObj = Math.max(0, (obj.ano - anoCard) * 12 + (obj.mes - mesCard));
+      return soma + (Number(obj.valorBRL) || 0) / Math.pow(1 + TAXA_ACUM_MENSAL, mesesAteObj);
+    }, 0);
+    const metaAjustada = Math.max(0, patrimonioPerpetuidade + vpObjetivos);
+    if (metaAjustada <= fvSemAporte) return 0;
+    return Math.max(0, (metaAjustada - fvSemAporte) * TAXA_ACUM_MENSAL / (f - 1));
+  }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
+      patrimonioPerpetuidade, objetivosAtivos]);
 
   const rendaSustentavel = useMemo(() => {
     if (!result || result.patrimonioNaIF <= 0) return 0;
@@ -263,12 +240,12 @@ export function FerramentaLiberdadeFinanceira({
         aporteMensal:    aporte,
         patrimonioAlvo:  alvo,
         idadeAtual:      params.idadeAtual,
-        taxaMensalReal:  taxaMensalEfetiva,
+        taxaMensalReal:  TAXA_ACUM_MENSAL,
         objetivos:       objetivosAtivos,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
+  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -281,12 +258,12 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioAlvo:  alvo,
         idadeAtual:      params.idadeAtual,
         idadeAlvo,
-        taxaMensalReal:  taxaMensalEfetiva,
+        taxaMensalReal:  TAXA_ACUM_MENSAL,
         objetivos:       objetivosAtivos,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade, taxaMensalEfetiva]);
+  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
@@ -296,7 +273,7 @@ export function FerramentaLiberdadeFinanceira({
     if (!result) return;
     setSalvando(true);
     try {
-      await onSave(projecaoParams, objetivos, result, { taxaTravada, taxaTravadaValor });
+      await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null });
       setSalvo(true);
       setTimeout(() => setSalvo(false), 2500);
     } finally {
@@ -304,7 +281,7 @@ export function FerramentaLiberdadeFinanceira({
     }
   };
 
-  const sliderAporteMax = Math.max(Math.round(aporteNecessarioCalc * 2 / 100) * 100, 20000);
+  const sliderAporteMax = Math.max(Math.round(aporteNecessario * 2 / 100) * 100, 20000);
 
   if (!result) {
     return (
@@ -502,7 +479,12 @@ export function FerramentaLiberdadeFinanceira({
             <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
               {formatCurrency(patrimonioPerpetuidade)}
             </p>
-            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>perpetuidade (regra dos 4%)</p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>
+              {params.rendaDesejada > 0
+                ? `Para gerar ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
+                : "Preencha a renda desejada"
+              }
+            </p>
           </CardContent>
         </Card>
 
@@ -518,51 +500,30 @@ export function FerramentaLiberdadeFinanceira({
           </CardContent>
         </Card>
 
-        <Card style={{ ...cardGreenTop, ...(taxaTravada ? { border: "1px solid #F59E0B" } : {}) }}>
+        <Card style={{ ...cardGreenTop, border: `0.5px solid ${aporteNecessario <= params.aporteMensal && patrimonioPerpetuidade > 0 ? "#BBF7D0" : "#E5E7EB"}` }}>
           <CardContent className="pt-4 pb-4">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-              <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", margin: 0 }}>
-                Taxa Necessária
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>
+              Aporte Necessário
+            </p>
+            <p style={{
+              fontSize: 20, fontWeight: 800, margin: 0,
+              color: aporteNecessario <= params.aporteMensal ? "#15803D" : "#B91C1C",
+            }} className="tabular-nums">
+              {aporteNecessario > 0
+                ? aporteNecessario.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) + "/mês"
+                : "Meta atingível"
+              }
+            </p>
+            <p style={{ fontSize: 10, color: aporteNecessario <= params.aporteMensal ? "#15803D" : "#9CA3AF", marginTop: 4 }}>
+              {aporteNecessario <= params.aporteMensal
+                ? "Aporte atual suficiente"
+                : `Faltam ${(aporteNecessario - params.aporteMensal).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
+              }
+            </p>
+            {objetivosAtivos.length > 0 && (
+              <p style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>
+                Inclui {objetivosAtivos.length} objetivo(s) de vida
               </p>
-              <button
-                onClick={() => {
-                  if (taxaTravada) {
-                    setTaxaTravada(false);
-                    setTaxaTravadaValor(null);
-                  } else {
-                    setTaxaTravada(true);
-                    setTaxaTravadaValor(taxaNecessariaCalc);
-                  }
-                }}
-                style={{
-                  fontSize: 11, fontWeight: 600, cursor: "pointer",
-                  border: "none", borderRadius: 6, padding: "2px 8px", fontFamily: "inherit",
-                  background: taxaTravada ? "#FEF3C7" : "#F3F4F6",
-                  color: taxaTravada ? "#92400E" : "#6B7280",
-                }}
-              >
-                {taxaTravada ? "Travado" : "Travar"}
-              </button>
-            </div>
-            {taxaTravada && taxaTravadaValor !== null ? (
-              <>
-                <p style={{ fontSize: 17, fontWeight: 700, color: "#B45309" }} className="tabular-nums">
-                  IPCA + {formatNumber(taxaTravadaValor * 100, 1)}% a.a.
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>
-                  taxa travada · necessária: IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}%
-                </p>
-              </>
-            ) : (
-              <>
-                <p style={{
-                  fontSize: 17, fontWeight: 700,
-                  color: taxaNecessariaCalc > 0.15 ? "#B91C1C" : taxaNecessariaCalc > 0.08 ? "#B45309" : "#15803D",
-                }} className="tabular-nums">
-                  IPCA + {formatNumber(taxaNecessariaCalc * 100, 1)}% a.a.
-                </p>
-                <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>para atingir a meta</p>
-              </>
             )}
           </CardContent>
         </Card>

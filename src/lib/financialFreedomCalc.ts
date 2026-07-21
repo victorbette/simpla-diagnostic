@@ -175,7 +175,7 @@ function pmtMensal(patrimonio: number, taxaMensalReal: number, meses: number): n
 }
 
 /** Fixed real rates (already inflation-adjusted) — all calcs run in IPCA-adjusted terms */
-export const TAXA_ACUM_ANUAL  = 0.06; // IPCA+6% a.a. — accumulation phase
+export const TAXA_ACUM_ANUAL  = 0.045; // IPCA+4.5% a.a. — accumulation phase (fixed rate)
 export const TAXA_ACUM_MENSAL = Math.pow(1 + TAXA_ACUM_ANUAL, 1 / 12) - 1;
 export const TAXA_RET_ANUAL   = 0.04; // IPCA+4% a.a. — withdrawal phase
 export const TAXA_RET_MENSAL  = Math.pow(1 + TAXA_RET_ANUAL,  1 / 12) - 1;
