@@ -193,11 +193,9 @@ function mockResultados(): ResultadosEstrategia {
       dataCalculo: agora,
       savedAt: agora,
       inputRendaAnualBruta: 420_000,
-      inputIrrf: 70_000,
       inputDespesas: 24_000,
       inputDependentes: 2,
-      inputInssAnual: 9_120,
-      inputAporteMensalPGBL: 2_917,
+      inputAporteAnualPGBL: 35_000,
     },
     proximosPassos: [
       { id: "pp-1", descricao: "Contratar seguro de vida para cobrir o gap de proteção identificado", prioridade: "alta",  dataPrevisao: "2026-08", area: "Proteção e Sucessão" },

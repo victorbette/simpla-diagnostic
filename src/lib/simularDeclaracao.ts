@@ -2,10 +2,8 @@ import { calcularIRAnual, DEDUCAO_DEPENDENTE, DESCONTO_SIMPLIFICADO_ANUAL } from
 
 export interface DeclaracaoInput {
   rendaBruta: number;
-  irrf: number;
   despesas: number;
   dependentes: number;
-  inss: number;
   aporteAnual?: number; // se informado, usa esse valor (cap no teto); senão usa o teto completo
   tipoDeclaracao?: string; // "completa" | "simplificada" | "nao_sei"
 }
@@ -30,10 +28,10 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
   // Base de cálculo sem PGBL
   const baseSemPGBL = isSimplificada
     ? Math.max(0, i.rendaBruta - DESCONTO_SIMPLIFICADO_ANUAL)
-    : Math.max(0, i.rendaBruta - i.despesas - Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE - i.inss);
+    : Math.max(0, i.rendaBruta - i.despesas - Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE);
 
   const irSemPGBL = calcularIRAnual(baseSemPGBL, i.rendaBruta);
-  const resultadoSem = irSemPGBL - i.irrf;
+  const resultadoSem = irSemPGBL;
   const aliqEfetivaSem = i.rendaBruta > 0 ? (irSemPGBL / i.rendaBruta) * 100 : 0;
 
   const tetoPGBL = i.rendaBruta * 0.12;
@@ -50,7 +48,7 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
     : Math.max(0, baseSemPGBL - aporteEfetivo);
 
   const irComPGBL = isSimplificada ? irSemPGBL : calcularIRAnual(baseComPGBL, i.rendaBruta);
-  const resultadoCom = irComPGBL - i.irrf;
+  const resultadoCom = irComPGBL;
   const aliqEfetivaCom = i.rendaBruta > 0 ? (irComPGBL / i.rendaBruta) * 100 : 0;
 
   const economia = Math.max(0, irSemPGBL - irComPGBL);

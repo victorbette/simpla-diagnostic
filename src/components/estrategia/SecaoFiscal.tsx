@@ -61,11 +61,10 @@ export function SecaoFiscal({
           espacoDisponivelMensal: resultadoFiscal.espacoDisponivelMensal,
           aproveitandoTeto:       resultadoFiscal.aproveitandoTeto,
           inputRendaAnualBruta:   resultadoFiscal.inputRendaAnualBruta,
-          inputIrrf:              resultadoFiscal.inputIrrf,
           inputDespesas:          resultadoFiscal.inputDespesas,
           inputDependentes:       resultadoFiscal.inputDependentes,
-          inputInssAnual:         resultadoFiscal.inputInssAnual,
-          inputAporteMensalPGBL:  resultadoFiscal.inputAporteMensalPGBL,
+          inputAporteAnualPGBL:   resultadoFiscal.inputAporteAnualPGBL,
+          inputSaldoPrevidencia:  resultadoFiscal.inputSaldoPrevidencia,
         } : null}
         onSave={(r) => {
           onResultadoFiscal({
@@ -81,11 +80,10 @@ export function SecaoFiscal({
             dataCalculo:            new Date().toISOString(),
             savedAt:                new Date().toISOString(),
             inputRendaAnualBruta:   r.inputRendaAnualBruta,
-            inputIrrf:              r.inputIrrf,
             inputDespesas:          r.inputDespesas,
             inputDependentes:       r.inputDependentes,
-            inputInssAnual:         r.inputInssAnual,
-            inputAporteMensalPGBL:  r.inputAporteMensalPGBL,
+            inputAporteAnualPGBL:   r.inputAporteAnualPGBL,
+            inputSaldoPrevidencia:  r.inputSaldoPrevidencia,
           });
         }}
       />

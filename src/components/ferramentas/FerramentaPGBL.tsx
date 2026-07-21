@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   CartesianGrid, ResponsiveContainer,
   BarChart, Bar, Cell, LabelList,
 } from "recharts";
 import type { FinancialPlan } from "@/types/financialPlanning";
-import { formatBRL, DEDUCAO_DEPENDENTE, TETO_INSS_2026, calcularINSSMensal } from "@/lib/tax";
+import { formatBRL, DEDUCAO_DEPENDENTE } from "@/lib/tax";
 import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simularDeclaracao";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 
@@ -20,11 +20,9 @@ export interface SavedPGBLResult {
   espacoDisponivelMensal: number;
   aproveitandoTeto: boolean;
   inputRendaAnualBruta?: number;
-  inputIrrf?: number;
   inputDespesas?: number;
   inputDependentes?: number;
-  inputInssAnual?: number;
-  inputAporteMensalPGBL?: number;
+  inputAporteAnualPGBL?: number;
   inputSaldoPrevidencia?: number;
 }
 
@@ -55,59 +53,28 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const idadeMeta = plan?.planejamentoIF?.idadeMeta ?? 60;
   const nAnos     = idadeAtual > 0 ? Math.max(1, idadeMeta - idadeAtual) : 0;
 
-  const rendaMensalBruta =
-    (Number(dc?.rendaMensal) || 0) +
-    (dc?.possuiImovelRenda ? (Number(dc?.rendaImovelMensal) || 0) : 0);
-  const rendaAnualBruta = rendaMensalBruta * 12;
-
-  const isINSSCalculado =
-    dc?.tipoTrabalho === "clt" || dc?.tipoTrabalho === "concursado";
-  const inssAnualCalc =
-    calcularINSSMensal(rendaMensalBruta, dc?.tipoTrabalho ?? "") * 12;
-  const numDependentes = dc?.filhos?.length ?? 0;
-
-  const possuiPrevidencia = dc?.possuiPrevidencia ?? false;
-  const tipoPrevidencia   = dc?.tipoPrevidencia ?? null;
-  const saldoPrevidencia  = Number(dc?.saldoPrevidencia) || 0;
-  const temPGBL  = possuiPrevidencia && (tipoPrevidencia === "pgbl" || tipoPrevidencia === "ambos");
-  const tetoPGBL = rendaAnualBruta * 0.12;
-
   const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(
     savedResult?.tipoDeclaracao ?? fiscal?.tipoDeclaracao ?? "nao_sei"
   );
 
-  const renda        = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? rendaAnualBruta);
-  const irrf         = useCurrencyInput(savedResult?.inputIrrf ?? 0);
-  const despesas     = useCurrencyInput(savedResult?.inputDespesas ?? 0);
-  const inss         = useCurrencyInput(savedResult?.inputInssAnual ?? inssAnualCalc);
-  const aporteMensal = useCurrencyInput(savedResult?.inputAporteMensalPGBL ?? (temPGBL ? 0 : tetoPGBL / 12));
-  const saldoAtual   = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? saldoPrevidencia);
-  const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? numDependentes));
+  const renda      = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? 0);
+  const despesas   = useCurrencyInput(savedResult?.inputDespesas ?? 0);
+  const aporteAnual = useCurrencyInput(savedResult?.inputAporteAnualPGBL ?? 0);
+  const saldoAtual  = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? 0);
+  const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? 0));
   const [salvo, setSalvo] = useState(false);
-
-  useEffect(() => {
-    if (savedResult) return;
-    renda.set(rendaAnualBruta);
-    inss.set(inssAnualCalc);
-    aporteMensal.set(temPGBL ? 0 : rendaAnualBruta * 0.12 / 12);
-    saldoAtual.set(saldoPrevidencia);
-    setDependentes(String(numDependentes));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const sim = useMemo(() => {
     if (renda.value <= 0) return null;
-    const aporteAnual = aporteMensal.value > 0 ? aporteMensal.value * 12 : undefined;
+    const aporteAnualVal = aporteAnual.value > 0 ? aporteAnual.value : undefined;
     return simularDeclaracaoIRPF({
       rendaBruta:     renda.value,
-      irrf:           irrf.value,
       despesas:       despesas.value,
       dependentes:    Math.max(0, parseInt(dependentes) || 0),
-      inss:           inss.value,
-      aporteAnual,
+      aporteAnual:    aporteAnualVal,
       tipoDeclaracao,
     });
-  }, [renda.value, irrf.value, despesas.value, dependentes, inss.value, aporteMensal.value, tipoDeclaracao]);
+  }, [renda.value, despesas.value, dependentes, aporteAnual.value, tipoDeclaracao]);
 
   const projecao = useMemo(() => {
     if (!sim || sim.economia <= 0) return [];
@@ -123,8 +90,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const ultimoPonto = projecao[projecao.length - 1];
   const diferencaFinal = ultimoPonto ? ultimoPonto.comPGBL - ultimoPonto.semPGBL : 0;
 
-  const aporteAnualPGBL = aporteMensal.value * 12;
-  const tetoPGBLLive    = sim?.tetoPGBL ?? 0;
+  const aporteAnualPGBL  = aporteAnual.value;
+  const tetoPGBLLive     = sim?.tetoPGBL ?? 0;
   const aproveitamentoPct = tetoPGBLLive > 0
     ? Math.min(100, Math.round((aporteAnualPGBL / tetoPGBLLive) * 100))
     : 0;
@@ -144,11 +111,9 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       espacoDisponivelMensal: Math.max(0, (sim.tetoPGBL - sim.aporteEfetivo) / 12),
       aproveitandoTeto:       sim.aporteEfetivo >= sim.tetoPGBL,
       inputRendaAnualBruta:   renda.value,
-      inputIrrf:              irrf.value,
       inputDespesas:          despesas.value,
       inputDependentes:       Math.max(0, parseInt(dependentes) || 0),
-      inputInssAnual:         inss.value,
-      inputAporteMensalPGBL:  aporteMensal.value,
+      inputAporteAnualPGBL:   aporteAnual.value,
       inputSaldoPrevidencia:  saldoAtual.value,
     });
     setSalvo(true);
@@ -276,22 +241,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
 
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={labelStyle}>Renda Bruta Anual (R$)</span>
-              {rendaAnualBruta > 0 && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF", flexShrink: 0 }}>
-                  Da coleta
-                </span>
-              )}
-            </div>
+            <span style={labelStyle}>Renda Bruta Anual Tributável (R$)</span>
             <input type="text" value={renda.display} onChange={renda.onChange} onBlur={renda.onBlur} placeholder="0,00" style={inputStyle} />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Renda anual + renda de imóveis</p>
-          </div>
-
-          <div>
-            <span style={labelStyle}>IRRF Retido na Fonte (R$)</span>
-            <input type="text" value={irrf.display} onChange={irrf.onChange} onBlur={irrf.onBlur} placeholder="0,00" style={inputStyle} />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Informes de rendimentos do empregador</p>
           </div>
 
           <div>
@@ -301,50 +252,13 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
 
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={labelStyle}>Dependentes</span>
-              {numDependentes > 0 && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF", flexShrink: 0 }}>
-                  Da coleta
-                </span>
-              )}
-            </div>
+            <span style={labelStyle}>Dependentes</span>
             <input type="number" min={0} max={10} value={dependentes} onChange={(e) => setDependentes(e.target.value)} style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{formatBRL(DEDUCAO_DEPENDENTE)}/dep/ano deduzidos</p>
           </div>
 
-          <div style={{ gridColumn: "span 2" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={labelStyle}>INSS Anual (R$)</span>
-              {isINSSCalculado && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DCFCE7", color: "#15803D", flexShrink: 0 }}>
-                  Calculado
-                </span>
-              )}
-            </div>
-            <input
-              type="text"
-              value={inss.display}
-              onChange={inss.onChange}
-              onBlur={inss.onBlur}
-              placeholder="0,00"
-              readOnly={isINSSCalculado}
-              style={{ ...inputStyle, backgroundColor: isINSSCalculado ? "#F9FAFB" : "white" }}
-            />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
-              {isINSSCalculado ? `Teto 2026: ${formatBRL(TETO_INSS_2026 * 12)}/ano` : "Informe o INSS pago"}
-            </p>
-          </div>
-
-          <div style={{ gridColumn: "span 2" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <span style={labelStyle}>Saldo Atual na Previdência (R$)</span>
-              {saldoPrevidencia > 0 && (
-                <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF", flexShrink: 0 }}>
-                  Da coleta
-                </span>
-              )}
-            </div>
+          <div>
+            <span style={labelStyle}>Saldo Atual na Previdência (R$)</span>
             <input
               type="text"
               value={saldoAtual.display}
@@ -359,17 +273,17 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
 
           <div style={{ gridColumn: "span 2" }}>
-            <span style={labelStyle}>Aporte Mensal em Previdência (PGBL) (R$)</span>
+            <span style={labelStyle}>Investimento em Previdência Privada (PGBL) no ano vigente (R$)</span>
             <input
               type="text"
-              value={aporteMensal.display}
-              onChange={aporteMensal.onChange}
-              onBlur={aporteMensal.onBlur}
+              value={aporteAnual.display}
+              onChange={aporteAnual.onChange}
+              onBlur={aporteAnual.onBlur}
               placeholder="0,00"
               style={inputStyle}
             />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
-              Valor que contribui mensalmente ao PGBL
+              Total investido em PGBL no ano fiscal vigente
             </p>
             {tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
@@ -384,12 +298,12 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             )}
             {excedenteAnual > 0 && tipoDeclaracao !== "simplificada" && (
               <p style={{ fontSize: 11, color: "#B91C1C", margin: "4px 0 0" }}>
-                Aporte acima do teto dedutível ({formatBRL(tetoPGBLLive / 12)}/mês)
+                Aporte acima do teto dedutível ({formatBRL(tetoPGBLLive)}/ano)
               </p>
             )}
             {tipoDeclaracao === "completa" && espacoDisponivel > 0 && (
               <p style={{ fontSize: 11, color: "#15803D", margin: "4px 0 0" }}>
-                Espaço disponível para deduzir: {formatBRL(espacoDisponivel / 12)}/mês
+                Espaço disponível para deduzir: {formatBRL(espacoDisponivel)}/ano
               </p>
             )}
           </div>
@@ -400,7 +314,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
-              <strong>Considere VGBL para o excedente:</strong> Você está aportando {formatBRL(excedenteAnual / 12)}/mês acima do teto dedutível de 12% da renda bruta. O excedente não gera benefício fiscal no PGBL — o VGBL pode ser uma alternativa para manter a previdência sem comprometer a dedução.
+              <strong>Considere VGBL para o excedente:</strong> Você está aportando {formatBRL(excedenteAnual)}/ano acima do teto dedutível de 12% da renda bruta. O excedente não gera benefício fiscal no PGBL — o VGBL pode ser uma alternativa para manter a previdência sem comprometer a dedução.
             </p>
           </div>
         )}
@@ -408,7 +322,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={{ marginTop: 12, background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
-              <strong>Atenção: PGBL sem benefício na simplificada:</strong> Na declaração simplificada, o PGBL não gera dedução fiscal. Além disso, o aporte de {formatBRL(excedenteAnual / 12)}/mês está acima do teto de 12% da renda bruta. O VGBL pode ser mais adequado ao seu perfil.
+              <strong>Atenção: PGBL sem benefício na simplificada:</strong> Na declaração simplificada, o PGBL não gera dedução fiscal. Além disso, o aporte de {formatBRL(excedenteAnual)}/ano está acima do teto de 12% da renda bruta. O VGBL pode ser mais adequado ao seu perfil.
             </p>
           </div>
         )}

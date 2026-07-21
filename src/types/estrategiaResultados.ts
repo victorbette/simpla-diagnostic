@@ -107,11 +107,10 @@ export interface ResultadoFiscal {
   savedAt: string;
   // Inputs do formulário (para restauração ao reabrir a calculadora)
   inputRendaAnualBruta?: number;
-  inputIrrf?: number;
   inputDespesas?: number;
   inputDependentes?: number;
-  inputInssAnual?: number;
-  inputAporteMensalPGBL?: number;
+  inputAporteAnualPGBL?: number;
+  inputSaldoPrevidencia?: number;
 }
 
 export interface EstrategiaFinalComentarios {

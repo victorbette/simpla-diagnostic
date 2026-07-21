@@ -73,11 +73,9 @@ export function DocPlanejamentoTributario({ nomeCliente, plan, resultados }: Pro
   const sim: DeclaracaoResult | null = temInputs
     ? simularDeclaracaoIRPF({
         rendaBruta: rf!.inputRendaAnualBruta!,
-        irrf: rf!.inputIrrf ?? 0,
         despesas: rf!.inputDespesas ?? 0,
         dependentes: rf!.inputDependentes ?? 0,
-        inss: rf!.inputInssAnual ?? 0,
-        aporteAnual: (rf!.inputAporteMensalPGBL ?? 0) > 0 ? rf!.inputAporteMensalPGBL! * 12 : undefined,
+        aporteAnual: (rf!.inputAporteAnualPGBL ?? 0) > 0 ? rf!.inputAporteAnualPGBL : undefined,
       })
     : null;
 
