@@ -45,15 +45,6 @@ const cardGreenTop: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const badgePctStyle: React.CSSProperties = {
-  backgroundColor: "#1E3A8A",
-  color: "white",
-  borderRadius: 6,
-  padding: "2px 8px",
-  fontSize: 12,
-  fontWeight: 600,
-};
-
 const badgeColetaStyle: React.CSSProperties = {
   backgroundColor: "#DBEAFE",
   color: "#1E40AF",
@@ -351,6 +342,20 @@ export function FerramentaLiberdadeFinanceira({
                   onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
                   style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
                 />
+                <input
+                  type="range"
+                  min={params.idadeAtual + 1}
+                  max={80}
+                  step={1}
+                  value={params.idadeAposentadoria}
+                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                  className="w-full"
+                  style={{ accentColor: "#2563EB", marginTop: 4 }}
+                />
+                <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+                  <span>{params.idadeAtual + 1} anos</span>
+                  <span>80 anos</span>
+                </div>
               </div>
             </div>
 
@@ -389,6 +394,20 @@ export function FerramentaLiberdadeFinanceira({
                 )}
               </div>
               <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+              <input
+                type="range"
+                min={0}
+                max={sliderAporteMax}
+                step={100}
+                value={params.aporteMensal}
+                onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
+                className="w-full"
+                style={{ accentColor: "#2563EB", marginTop: 4 }}
+              />
+              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+                <span>R$ 0</span>
+                <span>{formatCurrency(sliderAporteMax)}/mês</span>
+              </div>
             </div>
 
             {/* Renda Mensal Desejada */}
@@ -428,59 +447,7 @@ export function FerramentaLiberdadeFinanceira({
         </div>
       </div>
 
-      {/* ── 2. SLIDERS ──────────────────────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
-        <CardContent className="pt-4 pb-4">
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-
-            {/* Slider: Aposentadoria */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aposentadoria</label>
-                <span style={badgePctStyle}>{params.idadeAposentadoria} anos</span>
-              </div>
-              <input
-                type="range"
-                min={params.idadeAtual + 5}
-                max={80}
-                step={1}
-                value={params.idadeAposentadoria}
-                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                className="w-full"
-                style={{ accentColor: "#1E3A8A" }}
-              />
-              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                <span>{params.idadeAtual + 5} anos</span>
-                <span>80 anos</span>
-              </div>
-            </div>
-
-            {/* Slider: Aporte Mensal */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <label style={{ fontSize: 12, color: "#6B7280" }}>Ajuste: Aporte mensal</label>
-                <span style={{ ...badgePctStyle, backgroundColor: "#15803D" }}>{formatCurrency(params.aporteMensal)}/mês</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={sliderAporteMax}
-                step={100}
-                value={params.aporteMensal}
-                onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
-                className="w-full"
-                style={{ accentColor: "#15803D" }}
-              />
-              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
-                <span>R$ 0</span>
-                <span>{formatCurrency(sliderAporteMax)}/mês</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
+      {/* ── 2. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
