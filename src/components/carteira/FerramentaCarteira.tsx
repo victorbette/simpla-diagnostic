@@ -138,6 +138,48 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     setTemMudancas(true);
   }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl]);
 
+  // Sync plan whenever ativosAtuais or ativosRecomendados change — skip the
+  // initial post-load fire so the saved plan from localStorage is not overwritten.
+  const planoSyncInitRef = useRef(false);
+  useEffect(() => {
+    if (!loaded) return;
+    if (!planoSyncInitRef.current) { planoSyncInitRef.current = true; return; }
+    if (ativosRecomendados.length === 0) return;
+
+    const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivel);
+
+    setPlanoAcao((prev) => {
+      // Keep items added manually by the consultant
+      const manuais = prev.filter((i) => i.adicionadoManualmente === true);
+
+      const novoComPreservacao = novoPlano.map((item) => {
+        const anterior = prev.find(
+          (p) => p.nomeAtivo === item.nomeAtivo && p.card === item.card && !p.adicionadoManualmente
+        );
+        // Inherit observacao from ativosRecomendados for brand-new items
+        const recObs =
+          item.acao === "novo"
+            ? (ativosRecomendados.find(
+                (a) =>
+                  a.nome.trim().toLowerCase() === item.nomeAtivo.trim().toLowerCase() &&
+                  a.card === item.card
+              )?.observacao ?? "")
+            : "";
+
+        if (!anterior) return recObs ? { ...item, observacao: recObs } : item;
+        return {
+          ...item,
+          observacao: anterior.observacao || recObs || item.observacao,
+          valorResgateBRL: anterior.valorResgateBRL,
+          movimentacaoEditada: anterior.movimentacaoEditada,
+        };
+      });
+
+      return [...novoComPreservacao, ...manuais];
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, ativosAtuais, ativosRecomendados]);
+
   // Recalculate USD assets when exchange rate changes
   const usdBrlInitial = useRef(true);
   useEffect(() => {
