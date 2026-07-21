@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, CardId, CarteiraResultado, PlanoAcaoItem } from "@/lib/carteira/types";
 import { CARD_ORDER, ALOCACAO_PADRAO } from "@/lib/carteira/types";
@@ -106,6 +106,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [usdBrl, setUsdBrl] = useState<number>(5.0);
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [temMudancas, setTemMudancas] = useState(false);
+  const [salvo, setSalvo] = useState(false);
 
   // Load from localStorage once
   useEffect(() => {
@@ -127,19 +129,13 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Debounced save
-  const debRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track unsaved changes — skip the first fire after load
+  const mudancasInitRef = useRef(false);
   useEffect(() => {
     if (!loaded) return;
-    if (debRef.current) clearTimeout(debRef.current);
-    debRef.current = setTimeout(() => {
-      try {
-        const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl };
-        localStorage.setItem(storageKey, JSON.stringify(s));
-      } catch { /* ignore */ }
-    }, 800);
-    return () => { if (debRef.current) clearTimeout(debRef.current); };
-  }, [ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl, storageKey, loaded]);
+    if (!mudancasInitRef.current) { mudancasInitRef.current = true; return; }
+    setTemMudancas(true);
+  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl]);
 
   // Recalculate USD assets when exchange rate changes
   const usdBrlInitial = useRef(true);
@@ -166,58 +162,28 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     [ativosAtuais, patrimonyInicial]
   );
 
-  function goToEtapa(n: Etapa) {
+  const goToEtapa = useCallback((n: Etapa) => {
     if (n === 3) {
-      const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivel);
-
       setPlanoAcao((prev) => {
-        if (prev.length === 0) {
-          return novoPlano.map((item) => {
-            if (item.acao !== "novo") return item;
-            const ativo = ativosRecomendados.find(
-              (a) => a.nome.trim().toLowerCase() === item.nomeAtivo.trim().toLowerCase() && a.card === item.card
-            );
-            return ativo?.observacao ? { ...item, observacao: ativo.observacao } : item;
-          });
-        }
-        // Merge: recalculated values + preserved consultant edits
-        const merged = novoPlano.map((itemNovo) => {
-          const existente = prev.find(
-            (e) =>
-              e.nomeAtivo.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() &&
-              e.card === itemNovo.card
+        // Only generate the plan on first entry; after that the consultant controls it
+        if (prev.length > 0) return prev;
+        const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivel);
+        return novoPlano.map((item) => {
+          if (item.acao !== "novo") return item;
+          const ativo = ativosRecomendados.find(
+            (a) => a.nome.trim().toLowerCase() === item.nomeAtivo.trim().toLowerCase() && a.card === item.card
           );
-          if (existente) {
-            return {
-              ...itemNovo,                                           // recalculated financials
-              acao: existente.acao,                                  // consultant's action choice
-              observacao: existente.observacao,                      // consultant's notes
-              prioridade: existente.prioridade,                      // consultant's priority
-              movimentacaoEditada: existente.movimentacaoEditada,    // consultant's edited movimentação
-              valorResgateBRL: existente.valorResgateBRL,            // consultant's partial resgate amount
-            };
-          }
-          // newly added asset — propagate observacao from Etapa 2
-          if (itemNovo.acao === "novo") {
-            const ativo = ativosRecomendados.find(
-              (a) => a.nome.trim().toLowerCase() === itemNovo.nomeAtivo.trim().toLowerCase() && a.card === itemNovo.card
-            );
-            if (ativo?.observacao) return { ...itemNovo, observacao: ativo.observacao };
-          }
-          return itemNovo;
+          return ativo?.observacao ? { ...item, observacao: ativo.observacao } : item;
         });
-        // Preserve manually-added items from previous plan
-        const manuaisPrev = prev.filter((p) => p.adicionadoManualmente === true);
-        return [...merged, ...manuaisPrev];
       });
     }
     setEtapa(n);
-  }
+  }, [ativosAtuais, ativosRecomendados, patrimonio, aporteDisponivel]);
 
   function handleNext() { if (etapa < 4) goToEtapa((etapa + 1) as Etapa); }
   function handleBack() { if (etapa > 1) setEtapa((etapa - 1) as Etapa); }
 
-  function handleSave() {
+  function handleSalvarCarteira() {
     const resultado: CarteiraResultado = {
       patrimonio,
       ativosAtuais,
@@ -226,8 +192,14 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       planoAcao,
       aporteDisponivel,
     };
-    try { localStorage.setItem(storageKey, JSON.stringify({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, savedAt: new Date().toISOString() })); } catch { /* ignore */ }
+    try {
+      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl };
+      localStorage.setItem(storageKey, JSON.stringify(s));
+    } catch { /* ignore */ }
     onSave?.(resultado);
+    setTemMudancas(false);
+    setSalvo(true);
+    setTimeout(() => setSalvo(false), 2500);
   }
 
   function handleLimpar() {
@@ -273,7 +245,29 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
         <div style={{ flex: 1 }} />
 
-        <span style={{ color: "#93C5FD", fontSize: 11, flexShrink: 0 }}>● Dados salvos automaticamente</span>
+        {temMudancas && !salvo && (
+          <span style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", padding: "2px 8px", borderRadius: 99, flexShrink: 0 }}>
+            Mudanças não salvas
+          </span>
+        )}
+
+        <button
+          onClick={handleSalvarCarteira}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            background: salvo ? "#15803D" : temMudancas ? "#2563EB" : "rgba(255,255,255,0.12)",
+            color: "white", border: "none",
+            borderRadius: 8, padding: "6px 14px",
+            fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0,
+            transition: "background 200ms",
+          }}
+        >
+          {salvo ? (
+            <><i className="ti ti-circle-check" style={{ fontSize: 13 }} /> Salvo!</>
+          ) : (
+            <><i className="ti ti-device-floppy" style={{ fontSize: 13 }} /> Salvar Carteira</>
+          )}
+        </button>
 
         <button
           onClick={handleLimpar}
@@ -382,7 +376,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             planoAcao={planoAcao}
             patrimonio={patrimonio}
             aporteDisponivel={aporteDisponivel}
-            onSave={handleSave}
+            onSave={handleSalvarCarteira}
           />
         )}
       </div>
@@ -481,17 +475,17 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           );
         })() : (
           <button
-            onClick={handleSave}
+            onClick={handleSalvarCarteira}
             style={{
               display: "flex", alignItems: "center", gap: 6,
-              backgroundColor: "#15803D", color: "white",
+              backgroundColor: salvo ? "#166534" : "#15803D", color: "white",
               border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#166534")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#15803D")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = salvo ? "#166534" : "#15803D")}
           >
             <Save style={{ width: 14, height: 14 }} />
-            Salvar carteira
+            {salvo ? "Salvo!" : "Salvar carteira"}
           </button>
         )}
       </footer>
