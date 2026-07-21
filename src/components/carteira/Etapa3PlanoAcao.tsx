@@ -301,7 +301,7 @@ export function Etapa3PlanoAcao({
 
           <div style={{
             display: "grid",
-            gridTemplateColumns: "1.5fr 80px 80px 80px 90px 80px",
+            gridTemplateColumns: "1.5fr 80px 80px 80px 100px",
             padding: "6px 8px",
             background: "#F8FAFF",
             borderRadius: 6,
@@ -316,55 +316,56 @@ export function Etapa3PlanoAcao({
             <span style={{ textAlign: "right" }}>% Atual</span>
             <span style={{ textAlign: "right" }}>% Meta</span>
             <span style={{ textAlign: "right" }}>% Final</span>
-            <span style={{ textAlign: "right" }}>Desvio</span>
-            <span style={{ textAlign: "right" }}>Movimentação</span>
+            <span style={{ textAlign: "right" }}>Saldo vs Meta</span>
           </div>
 
-          {resumoPorClasse.map((c) => (
-            <div key={c.cardId} style={{
-              display: "grid",
-              gridTemplateColumns: "1.5fr 80px 80px 80px 90px 80px",
-              padding: "8px 8px",
-              borderBottom: "0.5px solid #F9FAFB",
-              alignItems: "center",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.cor, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{c.label}</span>
-              </div>
-              <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
-                {c.pctAtual.toFixed(1)}%
-              </span>
-              <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
-                {c.pctMeta.toFixed(1)}%
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: c.adequado ? "#15803D" : "#B45309", textAlign: "right" }}>
-                {c.pctFinal.toFixed(1)}%
-              </span>
-              <div style={{ textAlign: "right" }}>
-                {Math.abs(c.desvio) < 0.1 ? (
-                  <span style={{ fontSize: 10, color: "#15803D", background: "#DCFCE7", padding: "1px 6px", borderRadius: 99 }}>
-                    ✓ OK
-                  </span>
-                ) : (
-                  <span style={{
-                    fontSize: 10,
-                    color: Math.abs(c.desvio) <= 5 ? "#B45309" : "#B91C1C",
-                    background: Math.abs(c.desvio) <= 5 ? "#FEF3C7" : "#FEE2E2",
-                    padding: "1px 6px", borderRadius: 99,
-                  }}>
-                    {c.desvio > 0 ? "+" : ""}{c.desvio.toFixed(1)}pp
-                  </span>
-                )}
-              </div>
-              <span style={{
-                fontSize: 11, fontWeight: 500, textAlign: "right",
-                color: c.movLiquida > 0 ? "#15803D" : c.movLiquida < 0 ? "#B91C1C" : "#9CA3AF",
+          {resumoPorClasse.map((c) => {
+            const saldoVsMeta = c.valorFinal - c.valorMeta;
+            return (
+              <div key={c.cardId} style={{
+                display: "grid",
+                gridTemplateColumns: "1.5fr 80px 80px 80px 100px",
+                padding: "8px 8px",
+                borderBottom: "0.5px solid #F9FAFB",
+                alignItems: "center",
               }}>
-                {c.movLiquida === 0 ? "—" : (c.movLiquida > 0 ? "+" : "") + c.movLiquida.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
-              </span>
-            </div>
-          ))}
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.cor, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{c.label}</span>
+                </div>
+                <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
+                  {c.pctAtual.toFixed(1)}%
+                </span>
+                <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
+                  {c.pctMeta.toFixed(1)}%
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: c.adequado ? "#15803D" : "#B45309", textAlign: "right" }}>
+                  {c.pctFinal.toFixed(1)}%
+                </span>
+                <div style={{ textAlign: "right" }}>
+                  {saldoVsMeta === 0 ? (
+                    <span style={{ fontSize: 10, color: "#15803D", background: "#DCFCE7", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>
+                      Na meta
+                    </span>
+                  ) : saldoVsMeta > 0 ? (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#B45309" }}>
+                        +{saldoVsMeta.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+                      </div>
+                      <div style={{ fontSize: 9, color: "#9CA3AF" }}>acima da meta</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "#B91C1C" }}>
+                        {saldoVsMeta.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+                      </div>
+                      <div style={{ fontSize: 9, color: "#9CA3AF" }}>abaixo da meta</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
 
           {(() => {
             const classesComDesvio = resumoPorClasse.filter((c) => !c.adequado && c.pctMeta > 0);
