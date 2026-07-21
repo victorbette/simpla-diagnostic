@@ -342,6 +342,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
                     tags={allTags["asset_allocation"] ?? []}
                     onTagsChange={(v) => setAllTags((prev) => ({ ...prev, asset_allocation: v }))}
                     resultadoCarteira={resultados.carteira}
+                    onUpdate={updatePlan}
                     onResultadoCarteira={async (r) => {
                       const novos = { ...resultados, carteira: r };
                       setResultados(novos);

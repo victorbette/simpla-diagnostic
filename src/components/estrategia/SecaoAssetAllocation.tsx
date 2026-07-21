@@ -3,7 +3,7 @@ import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoCompara
 import { useState } from "react";
 import { formatCurrency } from "@/lib/format";
 import { formatBRL } from "@/lib/carteira/calculos";
-import type { FinancialPlan } from "@/types/financialPlanning";
+import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import type { CarteiraResultado } from "@/lib/carteira/types";
@@ -21,6 +21,7 @@ interface Props {
   resultadoCarteira: ResultadoCarteira | null;
   onResultadoCarteira: (r: ResultadoCarteira) => void;
   onLimparCarteira?: () => void;
+  onUpdate?: (patch: Partial<FinancialPlan>) => void;
 }
 
 const CARD: React.CSSProperties = {
@@ -31,6 +32,13 @@ const CARD: React.CSSProperties = {
 };
 
 const AVAILABLE_TAGS = ["Rebalanceamento", "ETFs", "Renda Fixa", "Renda Variável", "Internacional"];
+
+const PERFIS: { id: PerfilRisco; label: string; descricao: string; cor: string; bg: string }[] = [
+  { id: "conservador",          label: "Conservador",           descricao: "Prioriza segurança e liquidez",       cor: "#1E40AF", bg: "#EFF6FF" },
+  { id: "conservador_moderado", label: "Conservador Moderado",  descricao: "Equilíbrio com mais segurança",       cor: "#1D4ED8", bg: "#EFF6FF" },
+  { id: "moderado",             label: "Moderado",              descricao: "Equilíbrio entre risco e retorno",    cor: "#2563EB", bg: "#DBEAFE" },
+  { id: "arrojado",             label: "Arrojado",              descricao: "Aceita mais risco por mais retorno",  cor: "#B91C1C", bg: "#FEE2E2" },
+];
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -44,6 +52,7 @@ export function SecaoAssetAllocation({
   resultadoCarteira,
   onResultadoCarteira,
   onLimparCarteira,
+  onUpdate,
 }: Props) {
   const [carteiraOpen, setCarteiraOpen] = useState(false);
 
@@ -104,6 +113,43 @@ export function SecaoAssetAllocation({
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
 
+  // ── Perfil card (always visible) ──────────────────────────────────────────
+  const perfilAtual = plan.dadosCliente.suitabilityPerfil ?? "";
+
+  function handlePerfilChange(novoPerfil: PerfilRisco) {
+    onUpdate?.({ dadosCliente: { ...plan.dadosCliente, suitabilityPerfil: novoPerfil } });
+  }
+
+  const perfilCard = (
+    <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        Perfil do Investidor
+      </p>
+      <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+        Selecione o perfil de risco do cliente
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {PERFIS.map(({ id, label, descricao, cor, bg }) => {
+          const selected = perfilAtual === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => handlePerfilChange(id)}
+              style={{ border: selected ? `2px solid ${cor}` : "1.5px solid #BFDBFE", borderRadius: 10, padding: "14px 16px", backgroundColor: selected ? bg : "white", cursor: "pointer", textAlign: "left", position: "relative", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 6 }}
+            >
+              {selected && (
+                <span style={{ position: "absolute", top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: cor, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>✓</span>
+              )}
+              <span style={{ fontSize: 13, fontWeight: 700, color: selected ? cor : "#111827" }}>{label}</span>
+              <span style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.4 }}>{descricao}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   // ── Comment card (always visible) ─────────────────────────────────────────
   const commentCard = (
     <div style={{ ...CARD, border: "0.5px solid #E5E7EB" }}>
@@ -141,6 +187,7 @@ export function SecaoAssetAllocation({
     return (
       <>
         <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
+          {perfilCard}
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div style={{ backgroundColor: "white", border: "2px dashed #3B82F6", borderRadius: 12, padding: "40px 32px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <PieChartIcon size={48} color="#3B82F6" strokeWidth={1.5} style={{ marginBottom: 16 }} />
@@ -202,6 +249,8 @@ export function SecaoAssetAllocation({
   return (
     <>
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
+
+        {perfilCard}
 
         {/* Section header */}
         <div style={{ display: "flex", justifyContent: "flex-end" }}>

@@ -1,5 +1,5 @@
 import {
-  Briefcase, User, Building2, BadgeCheck, Shield, TrendingUp, BarChart2, Zap,
+  Briefcase, User, Building2, BadgeCheck,
   DollarSign, PieChart, Plus, X,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "./AtivoForm";
-import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
+import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
 import { calcularIdade } from "@/lib/format";
 
 const UFS = [
@@ -25,20 +25,6 @@ const VINCULO_OPTIONS: { key: DadosCliente["tipoTrabalho"]; label: string; Icon:
   { key: "concursado", label: "Concursado", Icon: BadgeCheck },
 ];
 
-const PERFIL_CARDS: {
-  perfil: PerfilRisco;
-  label: string;
-  alocacao: string;
-  descricao: string;
-  color: string;
-  bgSelected: string;
-  icon: React.ElementType;
-}[] = [
-  { perfil: "conservador", label: "Conservador", alocacao: "RF 92% · RV 4% · Internacional 4%", descricao: "Foco em preservação de capital e liquidez. Baixa tolerância a risco.", color: "#3B82F6", bgSelected: "#EAF0F5", icon: Shield },
-  { perfil: "conservador_moderado", label: "Conservador Moderado", alocacao: "RF 78% · RV 13% · Internacional 9%", descricao: "Equilíbrio com predominância em renda fixa e alguma exposição a RV.", color: "#1E40AF", bgSelected: "#EAF0F5", icon: TrendingUp },
-  { perfil: "moderado", label: "Moderado", alocacao: "RF 66% · RV 20% · Internacional 13%", descricao: "Equilíbrio entre segurança e crescimento. Aceita volatilidade moderada.", color: "#2563EB", bgSelected: "#EFF6FF", icon: BarChart2 },
-  { perfil: "arrojado", label: "Arrojado", alocacao: "RF 52% · RV 29% · Internacional 17,5%", descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.", color: "#B91C1C", bgSelected: "#FEE2E2", icon: Zap },
-];
 
 
 interface Props {
@@ -433,39 +419,6 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
           onComecandoDoZeroChange={(v) => setDados("comecandoDoZero", v)}
         />
 
-        {/* Perfil de Risco */}
-        <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 24, paddingTop: 24 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            Perfil de Risco do Cliente
-          </p>
-          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
-            Selecione o perfil conforme análise do consultor
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {PERFIL_CARDS.map(({ perfil, label, alocacao, descricao, color, bgSelected, icon: PIcon }) => {
-              const selected = dados.suitabilityPerfil === perfil;
-              return (
-                <button
-                  key={perfil}
-                  type="button"
-                  onClick={() => setDados("suitabilityPerfil", perfil)}
-                  style={{ border: selected ? `2px solid ${color}` : "1.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px", backgroundColor: selected ? bgSelected : "white", cursor: "pointer", textAlign: "left", position: "relative", transition: "all 0.15s", display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  {selected && (
-                    <span style={{ position: "absolute", top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: color, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>✓</span>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <PIcon style={{ width: 20, height: 20, color }} />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>{label}</span>
-                  </div>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
-                  <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
-                </button>
-              );
-            })}
-          </div>
-
-        </div>
       </SecaoCard>
 
 
