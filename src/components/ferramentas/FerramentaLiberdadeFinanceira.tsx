@@ -188,7 +188,11 @@ export function FerramentaLiberdadeFinanceira({
     anoNascimento,
     mesNascimento,
     objetivos:            objetivosAtivos,
-  }), [params, objetivosAtivos, anoNascimento, mesNascimento]);
+  }), [
+    params.idadeAtual, params.idadeAposentadoria, params.patrimonioInicial,
+    params.aporteMensal, params.rendaDesejada,
+    objetivosAtivos, anoNascimento, mesNascimento,
+  ]);
 
   const result = useMemo(() => {
     try {
@@ -230,6 +234,11 @@ export function FerramentaLiberdadeFinanceira({
     if (projecaoComAporteAtual <= 0) return 0;
     return (projecaoComAporteAtual * 0.04) / 12;
   }, [projecaoComAporteAtual]);
+
+  const dadosGrafico = useMemo(
+    () => result?.projecao ?? [],
+    [result, params.aporteMensal],
+  );
 
   const sensAporteScenarios = useMemo(() => {
     if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
@@ -545,7 +554,7 @@ export function FerramentaLiberdadeFinanceira({
             Projeção Patrimonial
           </p>
           <GraficoIF
-            projecao={result.projecao}
+            projecao={dadosGrafico}
             objetivos={objetivosAtivos}
             height={420}
             mesIF={mesIF}
