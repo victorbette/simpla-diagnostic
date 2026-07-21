@@ -373,6 +373,25 @@ export function calcularPatrimonioPerpetuidade(rendaMensalDesejada: number): num
   return rendaMensalDesejada * 12 / 0.04;
 }
 
+/**
+ * Closed-form FV projection using TAXA_ACUM_MENSAL and integer age difference.
+ * n = Math.round((idadeAlvo - idadeAtual) * 12) — no fractional-age drift.
+ */
+export function calcularProjecao(params: {
+  patrimonioAtual: number;
+  aporteMensal: number;
+  idadeAtual: number;
+  idadeAlvo: number;
+}): number {
+  const { patrimonioAtual, aporteMensal, idadeAtual, idadeAlvo } = params;
+  const n = Math.max(0, Math.round((idadeAlvo - idadeAtual) * 12));
+  if (n === 0) return patrimonioAtual;
+  if (!isFinite(n) || n > 2400) return patrimonioAtual;
+  const f = Math.pow(1 + TAXA_ACUM_MENSAL, n);
+  if (!isFinite(f)) return patrimonioAtual;
+  return patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_ACUM_MENSAL;
+}
+
 // Simulates patrimônio month-by-month applying objectives at their calendar month/year.
 // Signs: aportes_financeiros = positive; all others = negative (expense).
 function projetarComObjetivos(p: {

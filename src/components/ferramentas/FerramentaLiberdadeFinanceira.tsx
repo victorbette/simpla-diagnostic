@@ -6,6 +6,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import {
   calcularProjecaoIF,
+  calcularProjecao,
   calcularPatrimonioPerpetuidade,
   calcularAporteMensalNecessario,
   calcularIdadeComAporte,
@@ -224,10 +225,20 @@ export function FerramentaLiberdadeFinanceira({
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
       patrimonioPerpetuidade, objetivosAtivos]);
 
+  const projecaoComAporteAtual = useMemo(() =>
+    calcularProjecao({
+      patrimonioAtual: params.patrimonioInicial,
+      aporteMensal:    params.aporteMensal,
+      idadeAtual:      params.idadeAtual,
+      idadeAlvo:       params.idadeAposentadoria,
+    }),
+    [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria],
+  );
+
   const rendaSustentavel = useMemo(() => {
-    if (!result || result.patrimonioNaIF <= 0) return 0;
-    return (result.patrimonioNaIF * 0.04) / 12;
-  }, [result]);
+    if (projecaoComAporteAtual <= 0) return 0;
+    return (projecaoComAporteAtual * 0.04) / 12;
+  }, [projecaoComAporteAtual]);
 
   const sensAporteScenarios = useMemo(() => {
     if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
@@ -493,8 +504,8 @@ export function FerramentaLiberdadeFinanceira({
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
               Projeção Atual
             </p>
-            <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
-              {formatCurrency(result.patrimonioNaIF)}
+            <p style={{ fontSize: 17, fontWeight: 700, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
+              {formatCurrency(projecaoComAporteAtual)}
             </p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
           </CardContent>
