@@ -10,7 +10,7 @@ import {
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import type { ObjetivoVida } from "@/types/objetivos";
-import { OBJETIVO_META } from "@/types/objetivos";
+import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 import {
   ComposedChart, Bar, Line, XAxis, YAxis,
@@ -205,7 +205,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
         patrimonioSemObjetivos = patrimonioSemObjetivos * fatorAnual + aporteAnual;
         patrimonioComObj = patrimonioComObj * fatorAnual + aporteAnual;
         objetivosAno.forEach(o => {
-          patrimonioComObj = Math.max(0, patrimonioComObj - (Number(o.valorBRL) || 0));
+          const valor = Number(o.valorBRL) || 0;
+          if (isEntradaObjetivo(o)) {
+            patrimonioComObj += valor;
+          } else {
+            patrimonioComObj = Math.max(0, patrimonioComObj - valor);
+          }
         });
       }
 
