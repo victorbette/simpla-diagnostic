@@ -13,7 +13,9 @@ interface Props {
   planoAcao: PlanoAcaoItem[];
   patrimonio: number;
   aporteDisponivel?: number;
-  onSave: () => void;
+  onSalvar: () => void;
+  salvando: boolean;
+  salvo: boolean;
 }
 
 function calcularValorFinal(item: PlanoAcaoItem): number {
@@ -36,7 +38,7 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
   }
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSave }: Props) {
+export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
   const patrimonioMeta = patrimonio + aporteDisponivel;
 
   const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
@@ -224,18 +226,21 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
         <button
-          onClick={onSave}
+          onClick={onSalvar}
+          disabled={salvando}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            backgroundColor: "#15803D", color: "white",
+            backgroundColor: salvo ? "#166534" : "#15803D", color: "white",
             border: "none", borderRadius: 8,
-            padding: "12px 40px", fontSize: 15, fontWeight: 500, cursor: "pointer",
+            padding: "12px 40px", fontSize: 15, fontWeight: 500,
+            cursor: salvando ? "wait" : "pointer",
+            opacity: salvando ? 0.85 : 1,
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#166534")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#15803D")}
+          onMouseEnter={(e) => { if (!salvando) e.currentTarget.style.backgroundColor = "#166534"; }}
+          onMouseLeave={(e) => { if (!salvando) e.currentTarget.style.backgroundColor = salvo ? "#166534" : "#15803D"; }}
         >
           <Save size={18} />
-          Salvar carteira
+          {salvando ? "Salvando..." : salvo ? "Salvo!" : "Salvar carteira"}
         </button>
       </div>
     </div>

@@ -107,6 +107,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [temMudancas, setTemMudancas] = useState(false);
+  const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
 
   // Load from localStorage once
@@ -184,6 +185,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   function handleBack() { if (etapa > 1) setEtapa((etapa - 1) as Etapa); }
 
   function handleSalvarCarteira() {
+    setSalvando(true);
     const resultado: CarteiraResultado = {
       patrimonio,
       ativosAtuais,
@@ -198,6 +200,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     } catch { /* ignore */ }
     onSave?.(resultado);
     setTemMudancas(false);
+    setSalvando(false);
     setSalvo(true);
     setTimeout(() => setSalvo(false), 2500);
   }
@@ -247,27 +250,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
         {temMudancas && !salvo && (
           <span style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", padding: "2px 8px", borderRadius: 99, flexShrink: 0 }}>
-            Mudanças não salvas
+            Não salvo
           </span>
         )}
-
-        <button
-          onClick={handleSalvarCarteira}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: salvo ? "#15803D" : temMudancas ? "#2563EB" : "rgba(255,255,255,0.12)",
-            color: "white", border: "none",
-            borderRadius: 8, padding: "6px 14px",
-            fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0,
-            transition: "background 200ms",
-          }}
-        >
-          {salvo ? (
-            <><i className="ti ti-circle-check" style={{ fontSize: 13 }} /> Salvo!</>
-          ) : (
-            <><i className="ti ti-device-floppy" style={{ fontSize: 13 }} /> Salvar Carteira</>
-          )}
-        </button>
 
         <button
           onClick={handleLimpar}
@@ -376,7 +361,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             planoAcao={planoAcao}
             patrimonio={patrimonio}
             aporteDisponivel={aporteDisponivel}
-            onSave={handleSalvarCarteira}
+            onSalvar={handleSalvarCarteira}
+            salvando={salvando}
+            salvo={salvo}
           />
         )}
       </div>
@@ -476,16 +463,19 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
         })() : (
           <button
             onClick={handleSalvarCarteira}
+            disabled={salvando}
             style={{
               display: "flex", alignItems: "center", gap: 6,
               backgroundColor: salvo ? "#166534" : "#15803D", color: "white",
-              border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer",
+              border: "none", borderRadius: 6, padding: "6px 14px", fontSize: 13, fontWeight: 500,
+              cursor: salvando ? "wait" : "pointer",
+              opacity: salvando ? 0.85 : 1,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#166534")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = salvo ? "#166534" : "#15803D")}
+            onMouseEnter={(e) => { if (!salvando) e.currentTarget.style.backgroundColor = "#166534"; }}
+            onMouseLeave={(e) => { if (!salvando) e.currentTarget.style.backgroundColor = salvo ? "#166534" : "#15803D"; }}
           >
             <Save style={{ width: 14, height: 14 }} />
-            {salvo ? "Salvo!" : "Salvar carteira"}
+            {salvando ? "Salvando..." : salvo ? "Salvo!" : "Salvar carteira"}
           </button>
         )}
       </footer>
