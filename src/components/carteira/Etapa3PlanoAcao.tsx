@@ -11,6 +11,7 @@ interface Props {
   onNotasConsultor: (s: string) => void;
   patrimonio: number;
   aporteDisponivel: number;
+  macroMeta: Record<CardId, number>;
 }
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
@@ -89,7 +90,7 @@ function placeholderObservacao(item: PlanoAcaoItem): string {
 }
 
 export function Etapa3PlanoAcao({
-  planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio: _patrimonio, aporteDisponivel,
+  planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio, aporteDisponivel, macroMeta,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [editandoMovId, setEditandoMovId] = useState<string | null>(null);
@@ -172,6 +173,53 @@ export function Etapa3PlanoAcao({
 
   const cardsComItens = CARD_ORDER.filter((k) => filtrados.some((p) => p.card === k));
 
+  const resumoPorClasse = useMemo(() => {
+    return CARD_ORDER.map((cardId) => {
+      const itensDaClasse = planoAcao.filter((i) => i.card === cardId);
+      const valorAtual = itensDaClasse.reduce((s, i) => s + (Number(i.valorAtualBRL) || 0), 0);
+      const valorFinal = itensDaClasse.reduce((s, i) => {
+        let vf = 0;
+        switch (i.acao) {
+          case "aportar":
+          case "novo":
+            vf = (Number(i.valorAtualBRL) || 0) + (i.movimentacaoEditada ?? Math.abs(i.movimentacaoBRL ?? 0));
+            break;
+          case "manter":
+            vf = Number(i.valorAtualBRL) || 0;
+            break;
+          case "resgatar_parcial":
+            vf = Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
+            break;
+          case "resgatar_total":
+            vf = 0;
+            break;
+          default:
+            vf = Number(i.valorAtualBRL) || 0;
+        }
+        return s + vf;
+      }, 0);
+      const pctMeta = Number(macroMeta[cardId]) || 0;
+      const valorMeta = (pctMeta / 100) * patrimonio;
+      const pctFinal = patrimonio > 0 ? (valorFinal / patrimonio) * 100 : 0;
+      const desvio = pctFinal - pctMeta;
+      const movLiquida = valorFinal - valorAtual;
+      return {
+        cardId,
+        label: CARD_META[cardId].label,
+        cor: CARD_META[cardId].cor,
+        valorAtual,
+        valorFinal,
+        valorMeta,
+        pctAtual: patrimonio > 0 ? (valorAtual / patrimonio) * 100 : 0,
+        pctFinal,
+        pctMeta,
+        desvio,
+        movLiquida,
+        adequado: Math.abs(desvio) <= 2,
+      };
+    }).filter((c) => c.valorAtual > 0 || c.valorMeta > 0 || c.valorFinal > 0);
+  }, [planoAcao, macroMeta, patrimonio]);
+
   const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr";
 
   return (
@@ -233,6 +281,121 @@ export function Etapa3PlanoAcao({
           </button>
         ))}
       </div>
+
+      {/* Painel de Conferência por Classe */}
+      {resumoPorClasse.length > 0 && (
+        <div style={{
+          background: "white",
+          border: "0.5px solid #E5E7EB",
+          borderRadius: 12,
+          padding: "20px 24px",
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6",
+          }}>
+            <i className="ti ti-layout-grid" style={{ fontSize: 16, color: "#2563EB" }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Conferência por Classe</span>
+            <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>após execução do plano</span>
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1.5fr 80px 80px 80px 90px 80px",
+            padding: "6px 8px",
+            background: "#F8FAFF",
+            borderRadius: 6,
+            marginBottom: 6,
+            fontSize: 9,
+            color: "#9CA3AF",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+          }}>
+            <span>Classe</span>
+            <span style={{ textAlign: "right" }}>% Atual</span>
+            <span style={{ textAlign: "right" }}>% Meta</span>
+            <span style={{ textAlign: "right" }}>% Final</span>
+            <span style={{ textAlign: "right" }}>Desvio</span>
+            <span style={{ textAlign: "right" }}>Movimentação</span>
+          </div>
+
+          {resumoPorClasse.map((c) => (
+            <div key={c.cardId} style={{
+              display: "grid",
+              gridTemplateColumns: "1.5fr 80px 80px 80px 90px 80px",
+              padding: "8px 8px",
+              borderBottom: "0.5px solid #F9FAFB",
+              alignItems: "center",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.cor, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{c.label}</span>
+              </div>
+              <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
+                {c.pctAtual.toFixed(1)}%
+              </span>
+              <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>
+                {c.pctMeta.toFixed(1)}%
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: c.adequado ? "#15803D" : "#B45309", textAlign: "right" }}>
+                {c.pctFinal.toFixed(1)}%
+              </span>
+              <div style={{ textAlign: "right" }}>
+                {Math.abs(c.desvio) < 0.1 ? (
+                  <span style={{ fontSize: 10, color: "#15803D", background: "#DCFCE7", padding: "1px 6px", borderRadius: 99 }}>
+                    ✓ OK
+                  </span>
+                ) : (
+                  <span style={{
+                    fontSize: 10,
+                    color: Math.abs(c.desvio) <= 5 ? "#B45309" : "#B91C1C",
+                    background: Math.abs(c.desvio) <= 5 ? "#FEF3C7" : "#FEE2E2",
+                    padding: "1px 6px", borderRadius: 99,
+                  }}>
+                    {c.desvio > 0 ? "+" : ""}{c.desvio.toFixed(1)}pp
+                  </span>
+                )}
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 500, textAlign: "right",
+                color: c.movLiquida > 0 ? "#15803D" : c.movLiquida < 0 ? "#B91C1C" : "#9CA3AF",
+              }}>
+                {c.movLiquida === 0 ? "—" : (c.movLiquida > 0 ? "+" : "") + c.movLiquida.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          ))}
+
+          {(() => {
+            const classesComDesvio = resumoPorClasse.filter((c) => !c.adequado && c.pctMeta > 0);
+            const totalMov = resumoPorClasse.reduce((s, c) => s + c.movLiquida, 0);
+            return (
+              <div style={{
+                marginTop: 12, padding: "10px 8px",
+                background: classesComDesvio.length === 0 ? "#F0FDF4" : "#FFF7ED",
+                borderRadius: 8,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 500,
+                  color: classesComDesvio.length === 0 ? "#15803D" : "#B45309",
+                }}>
+                  {classesComDesvio.length === 0
+                    ? "✓ Todas as classes dentro da meta"
+                    : `${classesComDesvio.length} classe(s) com desvio`}
+                </span>
+                <span style={{ fontSize: 11, color: "#6B7280" }}>
+                  Movimentação total:{" "}
+                  <strong style={{ marginLeft: 4, color: totalMov >= 0 ? "#15803D" : "#B91C1C" }}>
+                    {totalMov >= 0 ? "+" : ""}
+                    {totalMov.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+                  </strong>
+                </span>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Groups by card */}
       {cardsComItens.map((cardId) => {

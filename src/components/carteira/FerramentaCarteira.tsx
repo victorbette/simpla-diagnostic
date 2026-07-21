@@ -371,6 +371,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             onNotasConsultor={setNotasConsultor}
             patrimonio={patrimonio}
             aporteDisponivel={aporteDisponivel}
+            macroMeta={alocacaoMeta}
           />
         )}
         {etapa === 4 && (
