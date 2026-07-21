@@ -217,8 +217,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
 
-  // Use exact decimal age so the transition lands on the idadeMeta birthday month
-  const mesInicioRetirada = Math.round((idadeMeta - idadeExataHoje) * 12);
+  // Use integer age (same as calcularProjecao / cards) so all values converge consistently
+  const mesInicioRetirada = Math.round((idadeMeta - idadeAtual) * 12);
   const totalMeses = (idadeMaxima - idadeAtual) * 12;
 
   const projecao: PontoProjecao[] = [];

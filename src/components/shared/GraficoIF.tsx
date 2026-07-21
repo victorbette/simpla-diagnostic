@@ -92,7 +92,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     0,
   );
   const STEP = 500_000;
-  const yMax = Math.ceil(maxPatrimonio / STEP) * STEP || STEP;
+  const yMax = Math.ceil((maxPatrimonio * 1.1) / STEP) * STEP || STEP;
   const yTicks: number[] = [];
   for (let v = 0; v <= yMax; v += STEP) yTicks.push(v);
 
