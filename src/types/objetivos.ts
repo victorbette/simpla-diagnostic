@@ -50,5 +50,11 @@ export interface ObjetivoVida {
   mes: number;    // 1-12
   ano: number;    // calendar year
   valorBRL: number;
-  ativo?: boolean; // undefined = active (backwards compatible)
+  ativo?: boolean;          // undefined = active (backwards compatible)
+  tipoFluxo?: 'saida' | 'entrada'; // undefined = saida (backwards compatible)
+}
+
+/** Returns true when the objective adds capital (entrada) to the patrimônio */
+export function isEntradaObjetivo(obj: ObjetivoVida): boolean {
+  return obj.tipoFluxo === 'entrada' || obj.tipo === 'aportes_financeiros';
 }

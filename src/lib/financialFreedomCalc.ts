@@ -1,4 +1,5 @@
 import type { ObjetivoVida } from "@/types/objetivos";
+import { isEntradaObjetivo } from "@/types/objetivos";
 
 export type LifeGoalTipo = "despesa" | "aporte";
 export interface LifeGoal {
@@ -212,7 +213,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   const objByMesAno = new Map<string, number>();
   for (const obj of objetivos) {
-    const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
+    const sinal = isEntradaObjetivo(obj) ? 1 : -1;
     const key = `${obj.ano}-${obj.mes}`;
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
@@ -414,7 +415,7 @@ function projetarComObjetivos(p: {
     patrimonio = patrimonio * (1 + p.taxaMensal) + p.aporteMensal;
     for (const obj of p.objetivos) {
       if (obj.ano === anoIter && obj.mes === mesIter) {
-        const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
+        const sinal = isEntradaObjetivo(obj) ? 1 : -1;
         patrimonio = Math.max(0, patrimonio + sinal * obj.valorBRL);
       }
     }
@@ -514,7 +515,7 @@ export function calcularIdadeComAporte(p: {
       pat = pat * (1 + r) + p.aporteMensal;
       for (const obj of p.objetivos) {
         if (obj.ano === anoIter && obj.mes === mesIter) {
-          const sinal = obj.tipo === "aportes_financeiros" ? 1 : -1;
+          const sinal = isEntradaObjetivo(obj) ? 1 : -1;
           pat = Math.max(0, pat + sinal * obj.valorBRL);
         }
       }

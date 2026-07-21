@@ -4,7 +4,7 @@ import {
   Monitor, Shield, TrendingUp, MoreHorizontal, Plus,
 } from "lucide-react";
 import type { ObjetivoVida, TipoObjetivo } from "@/types/objetivos";
-import { OBJETIVO_META, getObjetivoMeta } from "@/types/objetivos";
+import { OBJETIVO_META, getObjetivoMeta, isEntradaObjetivo } from "@/types/objetivos";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 
@@ -141,6 +141,49 @@ function FormularioCampos({
   );
 }
 
+function TipoFluxoToggle({
+  tipoFluxo, onChange,
+}: {
+  tipoFluxo: 'saida' | 'entrada';
+  onChange: (v: 'saida' | 'entrada') => void;
+}) {
+  return (
+    <div>
+      <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        Tipo de fluxo
+      </label>
+      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+        <button
+          onClick={() => onChange('saida')}
+          style={{
+            flex: 1, padding: "6px",
+            border: tipoFluxo !== 'entrada' ? '2px solid #B91C1C' : '1px solid #E5E7EB',
+            borderRadius: 6,
+            background: tipoFluxo !== 'entrada' ? '#FEE2E2' : 'white',
+            color: tipoFluxo !== 'entrada' ? '#B91C1C' : '#6B7280',
+            fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          ↓ Saída (gasto)
+        </button>
+        <button
+          onClick={() => onChange('entrada')}
+          style={{
+            flex: 1, padding: "6px",
+            border: tipoFluxo === 'entrada' ? '2px solid #15803D' : '1px solid #E5E7EB',
+            borderRadius: 6,
+            background: tipoFluxo === 'entrada' ? '#DCFCE7' : 'white',
+            color: tipoFluxo === 'entrada' ? '#15803D' : '#6B7280',
+            fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          ↑ Entrada (aporte extra)
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [tipoSel, setTipoSel] = useState<TipoObjetivo>("viagem");
@@ -148,6 +191,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   const [valorBRL, setValorBRL] = useState(0);
   const [mes, setMes] = useState(1);
   const [ano, setAno] = useState(anoAtual + 5);
+  const [tipoFluxo, setTipoFluxo] = useState<'saida' | 'entrada'>('saida');
 
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editTipo, setEditTipo] = useState<TipoObjetivo>("viagem");
@@ -155,6 +199,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   const [editValorBRL, setEditValorBRL] = useState(0);
   const [editMes, setEditMes] = useState(1);
   const [editAno, setEditAno] = useState(anoAtual + 5);
+  const [editTipoFluxo, setEditTipoFluxo] = useState<'saida' | 'entrada'>('saida');
 
   function openForm() {
     setTipoSel("viagem");
@@ -162,6 +207,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     setValorBRL(0);
     setMes(1);
     setAno(anoAtual + 5);
+    setTipoFluxo('saida');
     setShowForm(true);
   }
 
@@ -169,7 +215,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     if (!label.trim() || valorBRL <= 0) return;
     onObjetivos([
       ...objetivos,
-      { id: generateId(), tipo: tipoSel, label: label.trim(), valorBRL, mes, ano, ativo: true },
+      { id: generateId(), tipo: tipoSel, label: label.trim(), valorBRL, mes, ano, ativo: true, tipoFluxo },
     ]);
     setShowForm(false);
   }
@@ -185,6 +231,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     setEditValorBRL(o.valorBRL);
     setEditMes(o.mes);
     setEditAno(o.ano);
+    setEditTipoFluxo(o.tipoFluxo ?? (o.tipo === 'aportes_financeiros' ? 'entrada' : 'saida'));
   }
 
   function saveEdit(id: string) {
@@ -192,7 +239,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     onObjetivos(
       objetivos.map((o) =>
         o.id === id
-          ? { ...o, tipo: editTipo, label: editLabel.trim(), valorBRL: editValorBRL, mes: editMes, ano: editAno }
+          ? { ...o, tipo: editTipo, label: editLabel.trim(), valorBRL: editValorBRL, mes: editMes, ano: editAno, tipoFluxo: editTipoFluxo }
           : o,
       ),
     );
@@ -233,7 +280,11 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
         }}>
           <TipoGrid
             tipoSel={tipoSel}
-            onSelect={(t) => { setTipoSel(t); setLabel(OBJETIVO_META[t].label); }}
+            onSelect={(t) => {
+              setTipoSel(t);
+              setLabel(OBJETIVO_META[t].label);
+              if (t === 'aportes_financeiros') setTipoFluxo('entrada');
+            }}
           />
           <FormularioCampos
             label={label} onLabel={setLabel}
@@ -242,6 +293,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             ano={ano} onAno={setAno}
             anoAtual={anoAtual} anoMeta={anoMeta}
           />
+          <TipoFluxoToggle tipoFluxo={tipoFluxo} onChange={setTipoFluxo} />
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={confirm}
@@ -280,6 +332,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
         const dataLabel = `${MESES_ABREV[o.mes - 1]}/${o.ano}`;
         const cor = meta?.cor ?? "#2563EB";
         const ativo = o.ativo !== false;
+        const entrada = isEntradaObjetivo(o);
 
         if (editandoId === o.id) {
           return (
@@ -293,7 +346,11 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             >
               <TipoGrid
                 tipoSel={editTipo}
-                onSelect={(t) => { setEditTipo(t); setEditLabel(OBJETIVO_META[t].label); }}
+                onSelect={(t) => {
+                  setEditTipo(t);
+                  setEditLabel(OBJETIVO_META[t].label);
+                  if (t === 'aportes_financeiros') setEditTipoFluxo('entrada');
+                }}
               />
               <FormularioCampos
                 label={editLabel} onLabel={setEditLabel}
@@ -302,6 +359,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 ano={editAno} onAno={setEditAno}
                 anoAtual={anoAtual} anoMeta={anoMeta}
               />
+              <TipoFluxoToggle tipoFluxo={editTipoFluxo} onChange={setEditTipoFluxo} />
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   onClick={() => saveEdit(o.id)}
@@ -337,7 +395,7 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
               padding: "8px 10px", borderRadius: 8,
-              border: `1px solid ${ativo ? "#BFDBFE" : "#E5E7EB"}`,
+              border: `1px solid ${ativo ? (entrada ? "#BBF7D0" : "#BFDBFE") : "#E5E7EB"}`,
               backgroundColor: ativo ? "white" : "#FAFAFA",
             }}
           >
@@ -367,13 +425,13 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                backgroundColor: `${cor}18`,
+                backgroundColor: entrada ? "#DCFCE7" : `${cor}18`,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                {Icon && <Icon style={{ width: 16, height: 16, color: ativo ? cor : "#9CA3AF" }} />}
+                {Icon && <Icon style={{ width: 16, height: 16, color: ativo ? (entrada ? "#15803D" : cor) : "#9CA3AF" }} />}
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <p style={{
                     fontSize: 12, fontWeight: 600,
                     color: ativo ? "#000000" : "#9CA3AF",
@@ -381,12 +439,20 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                   }}>
                     {o.label}
                   </p>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600,
+                    color: entrada ? '#15803D' : '#B91C1C',
+                    background: entrada ? '#DCFCE7' : '#FEE2E2',
+                    padding: '1px 6px', borderRadius: 99, flexShrink: 0,
+                  }}>
+                    {entrada ? '↑ Entrada' : '↓ Saída'}
+                  </span>
                 </div>
                 <p style={{ fontSize: 11, color: "#6B7280", margin: 0 }}>
-                  {dataLabel} · {formatCurrency(o.valorBRL)}
-                  {o.tipo === "aportes_financeiros" && (
-                    <span style={{ marginLeft: 4, color: "#15803D", fontWeight: 600 }}>· entrada</span>
-                  )}
+                  {dataLabel} ·{" "}
+                  <span style={{ color: entrada ? '#15803D' : '#B91C1C', fontWeight: 600 }}>
+                    {entrada ? '+' : '−'}{formatCurrency(o.valorBRL)}
+                  </span>
                 </p>
               </div>
             </div>

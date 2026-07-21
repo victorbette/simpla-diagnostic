@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 import type { ObjetivoVida } from "@/types/objetivos";
-import { getObjetivoMeta } from "@/types/objetivos";
+import { getObjetivoMeta, isEntradaObjetivo } from "@/types/objetivos";
 import { formatCurrency } from "@/lib/format";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -177,10 +177,10 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         {/* IF icon marker: sem texto no tooltip (melhoria 1) */}
         {objsDoPonto.map((obj) => {
           const meta = getObjetivoMeta(obj.tipo);
-          const sinal = obj.tipo === "aportes_financeiros" ? "+" : "−";
+          const entrada = isEntradaObjetivo(obj);
           return (
-            <p key={obj.id} style={{ margin: "3px 0 0", color: meta.cor, fontSize: 11 }}>
-              {sinal}{formatCurrency(obj.valorBRL)} · {obj.label}
+            <p key={obj.id} style={{ margin: "3px 0 0", color: entrada ? "#15803D" : meta.cor, fontSize: 11 }}>
+              {entrada ? "+" : "−"}{formatCurrency(obj.valorBRL)} · {obj.label}
             </p>
           );
         })}

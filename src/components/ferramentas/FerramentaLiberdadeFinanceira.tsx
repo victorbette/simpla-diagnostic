@@ -18,7 +18,7 @@ import {
 import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import type { ObjetivoVida } from "@/types/objetivos";
-import { OBJETIVO_META } from "@/types/objetivos";
+import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 
@@ -212,7 +212,8 @@ export function FerramentaLiberdadeFinanceira({
     const mesCard = new Date().getMonth() + 1;
     const vpObjetivos = objetivosAtivos.reduce((soma, obj) => {
       const mesesAteObj = Math.max(0, (obj.ano - anoCard) * 12 + (obj.mes - mesCard));
-      return soma + (Number(obj.valorBRL) || 0) / Math.pow(1 + TAXA_ACUM_MENSAL, mesesAteObj);
+      const vp = (Number(obj.valorBRL) || 0) / Math.pow(1 + TAXA_ACUM_MENSAL, mesesAteObj);
+      return isEntradaObjetivo(obj) ? soma - vp : soma + vp;
     }, 0);
     const metaAjustada = Math.max(0, patrimonioPerpetuidade + vpObjetivos);
     if (metaAjustada <= fvSemAporte) return 0;
