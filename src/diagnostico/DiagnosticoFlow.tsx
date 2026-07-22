@@ -19,7 +19,18 @@ interface Props {
 }
 
 export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
-  const [etapaAtiva, setEtapaAtiva] = useState<Etapa>("coleta");
+  const [etapaAtiva, setEtapaAtiva] = useState<Etapa>(() => {
+    try {
+      const saved = sessionStorage.getItem(`diag_etapa_${lead.id}`);
+      if (saved === "coleta" || saved === "lf" || saved === "resultado") return saved;
+    } catch { /* ignore */ }
+    return "coleta";
+  });
+
+  function changeEtapa(etapa: Etapa) {
+    setEtapaAtiva(etapa);
+    try { sessionStorage.setItem(`diag_etapa_${lead.id}`, etapa); } catch { /* ignore */ }
+  }
 
   function atualizarColeta(patch: Partial<DadosColetaDiag>) {
     onAtualizar({ ...lead, dadosColeta: { ...lead.dadosColeta, ...patch } });
@@ -59,7 +70,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         {ABAS.map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => setEtapaAtiva(id)}
+            onClick={() => changeEtapa(id)}
             style={{
               padding: "14px 20px",
               fontSize: 13,
@@ -93,7 +104,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
             />
             <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
               <button
-                onClick={() => setEtapaAtiva("resultado")}
+                onClick={() => changeEtapa("resultado")}
                 style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
               >
                 Ver Resultado →

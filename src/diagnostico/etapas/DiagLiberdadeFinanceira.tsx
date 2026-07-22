@@ -104,6 +104,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
 
   const [params, setParams] = useState<UIParams>(initialParams);
   const [patrimonioEditado, setPatrimonioEditado] = useState(false);
+  const [aporteEditado, setAporteEditado] = useState(false);
   const [rendaEditada, setRendaEditada] = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>(() => {
     const raw = dadosLF.objetivos ?? [];
@@ -133,10 +134,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       ...prev,
       idadeAtual: idadeAtualCalculada,
       patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
+      aporteMensal: !aporteEditado ? aporteColeta : prev.aporteMensal,
       rendaDesejada: !rendaEditada ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
+  }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
 
@@ -292,15 +294,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
               <div style={{ display: "flex", alignItems: "center" }}>
                 <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
-                {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
-                {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
-                  <button onClick={() => setP({ aporteMensal: aporteColeta })}
+                {aporteColeta > 0 && !aporteEditado && <span style={badgeColetaStyle}>Da coleta</span>}
+                {aporteEditado && (
+                  <button onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
                     style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
                     ↺ Restaurar
                   </button>
                 )}
               </div>
-              <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+              <CurrencyInput value={params.aporteMensal} onChange={(v) => { setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }} />
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>

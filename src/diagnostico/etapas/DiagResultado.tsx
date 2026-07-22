@@ -107,7 +107,7 @@ function GaugeDiag({
 }
 
 export function DiagResultado({ lead }: Props) {
-  const { dadosColeta } = lead;
+  const { dadosColeta, dadosLF } = lead;
 
   // ── Score Liberdade Financeira ──
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
@@ -115,10 +115,11 @@ export function DiagResultado({ lead }: Props) {
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
 
-  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteMensal = Number(dadosColeta.aporteMensal) || 0;
-  const rendaDesejada = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta = Number(dadosColeta.idadeMeta) || 60;
+  // Prefer values edited in the LF tab; fall back to Coleta values
+  const patrimonioAtual = Number(dadosLF.patrimonioInicial ?? dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteMensal = Number(dadosLF.aporteMensal ?? dadosColeta.aporteMensal) || 0;
+  const rendaDesejada = Number(dadosLF.rendaDesejada ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta = Number(dadosLF.idadeAlvo ?? dadosColeta.idadeMeta) || 60;
 
   const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
 
