@@ -1,5 +1,6 @@
 import type { Lead } from "../types";
 import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
+import { ATIVOS_TEXTOS, TEXTOS_DIVERSIFICACAO } from "../ativosTextos";
 
 const TAXA_MENSAL_SCORE = Math.pow(1.045, 1 / 12) - 1;
 
@@ -177,6 +178,51 @@ export function DiagResultado({ lead }: Props) {
   })();
 
   // ── Textos humanizados ──
+  function gerarTextoInvestimentos(): string {
+    if (!aaTemDados) {
+      return "Ainda não foram informados os investimentos. Informe na Coleta de Dados quais ativos você já possui para receber uma análise completa.";
+    }
+
+    const norm = (s: string) => s.replace(/\n/g, " ").trim();
+    const partes: string[] = [];
+
+    if (ativosBons.length > 0) {
+      const linhas = ["O que você já faz bem:"];
+      for (const a of ativosBons) {
+        const t = ATIVOS_TEXTOS[a.id];
+        const positivo = t?.positivo ? norm(t.positivo) : "";
+        const dica = t?.dica ? ` ${norm(t.dica)}` : "";
+        if (positivo) linhas.push(`• ${a.label}: ${positivo}${dica}`);
+      }
+      if (linhas.length > 1) partes.push(linhas.join("\n"));
+    }
+
+    if (ativosRuins.length > 0) {
+      const linhas = ["Pontos de atenção:"];
+      for (const a of ativosRuins) {
+        const t = ATIVOS_TEXTOS[a.id];
+        const negativo = t?.negativo ? norm(t.negativo) : "";
+        const dica = t?.dica ? ` ${norm(t.dica)}` : "";
+        if (negativo) linhas.push(`• ${a.label}: ${negativo}${dica}`);
+      }
+      if (linhas.length > 1) partes.push(linhas.join("\n"));
+    }
+
+    const totalClassesBoas = [temRF, temRV, temExt].filter(Boolean).length;
+    const linhasDiversif: string[] = ["Análise da diversificação:"];
+    if (!temRF)  linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semRF));
+    if (!temRV)  linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semRV));
+    if (!temExt) linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semExt));
+    if (totalClassesBoas >= 3) {
+      linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.excelenteDiversificacao));
+    } else if (totalClassesBoas === 2) {
+      linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.boaDiversificacao));
+    }
+    if (linhasDiversif.length > 1) partes.push(linhasDiversif.join("\n"));
+
+    return partes.join("\n\n");
+  }
+
   function gerarTexto(area: string): string {
     if (area === "lf") {
       if (!lfTemDados) {
@@ -189,36 +235,7 @@ export function DiagResultado({ lead }: Props) {
       return `Você já começou sua jornada de investimentos, o que é ótimo! Com o ritmo atual, você está chegando a ${pct}% da renda que deseja ter na aposentadoria.\n\nA diferença pode ser reduzida aumentando um pouco o valor investido por mês ou ajustando a data da aposentadoria. Pequenos ajustes hoje fazem uma diferença enorme lá na frente.`;
     }
 
-    if (area === "inv") {
-      if (!aaTemDados) {
-        return "Ainda não foram informados os investimentos. Informe na Coleta de Dados quais ativos você já possui para receber uma análise completa.";
-      }
-
-      let texto = "";
-
-      if (ativosBons.length > 0) {
-        texto += `Pontos positivos: você já investe em ${ativosBons.map(a => a.label).join(", ")}. `;
-      }
-
-      if (ativosRuins.length > 0) {
-        texto += `\n\nAtenção: identificamos ativos que costumam gerar custos elevados ou retornos abaixo do mercado: ${ativosRuins.map(a => a.label).join(", ")}. Vale avaliar alternativas mais eficientes com seu assessor.`;
-      }
-
-      if (!temRV) {
-        texto += "\n\nOportunidade: incluir ações ou fundos imobiliários pode potencializar o crescimento do patrimônio no longo prazo.";
-      }
-      if (!temExt) {
-        texto += "\n\nDiversificar parte do patrimônio no exterior protege contra riscos do mercado brasileiro.";
-      }
-      if (!temRF) {
-        texto += "\n\nTer uma base em renda fixa é essencial para segurança e liquidez da carteira.";
-      }
-      if (ativosBons.length >= 3 && ativosRuins.length === 0) {
-        texto += "\n\nSua carteira está bem estruturada com boas escolhas de ativos!";
-      }
-
-      return texto.trim();
-    }
+    if (area === "inv") return gerarTextoInvestimentos();
 
     if (area === "blind") {
       if (!blindagemTemDados) {

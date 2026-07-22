@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
+import { ATIVOS_TEXTOS } from "../ativosTextos";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -301,12 +302,18 @@ export function DiagColeta({ dados, onChange }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
                   const marcado = dados.ativosInvestimento?.[ativo.id] ?? false;
+                  const t = ATIVOS_TEXTOS[ativo.id];
+                  const snippet = marcado
+                    ? (ativo.qualidade === "bom"
+                        ? t?.positivo?.split("\n")[0].trim().slice(0, 90)
+                        : t?.negativo?.split("\n")[0].trim().slice(0, 90))
+                    : undefined;
                   return (
                     <div
                       key={ativo.id}
                       style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems: snippet ? "flex-start" : "center",
                         justifyContent: "space-between",
                         padding: "8px 12px",
                         border: marcado
@@ -319,15 +326,20 @@ export function DiagColeta({ dados, onChange }: Props) {
                         transition: "all 150ms",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? ativo.cor : "#9CA3AF" }} />
-                        <div>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, flex: 1, minWidth: 0 }}>
+                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? ativo.cor : "#9CA3AF", marginTop: 2, flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: marcado ? 600 : 400, color: marcado ? "#111827" : "#6B7280" }}>
                             {ativo.label}
                           </div>
                           {marcado && (
                             <div style={{ fontSize: 9, color: ativo.qualidade === "bom" ? "#15803D" : "#B91C1C", marginTop: 1 }}>
                               {ativo.qualidade === "bom" ? "✓ Recomendado" : "⚠ Não recomendado"}
+                            </div>
+                          )}
+                          {snippet && (
+                            <div style={{ fontSize: 10, color: ativo.qualidade === "bom" ? "#166534" : "#991B1B", marginTop: 4, lineHeight: 1.5 }}>
+                              {snippet}…
                             </div>
                           )}
                         </div>
