@@ -6,8 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { AtivoForm } from "@/components/financialPlanning/AtivoForm";
-import { initialAtivoAtual } from "@/types/financialPlanning";
+import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -291,14 +290,87 @@ export function DiagColeta({ dados, onChange }: Props) {
         color="#1E40AF"
         Icon={PieChart}
         title="Investimentos"
-        subtitle="Carteira atual de investimentos"
+        subtitle="Marque os ativos que o cliente já possui"
       >
-        <AtivoForm
-          value={dados.ativosAtuais ?? initialAtivoAtual}
-          suitabilityPerfil={null}
-          onChange={(v) => onChange({ ativosAtuais: v })}
-          hideComecandoDoZero={true}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {CLASSES_INVESTIMENTO.map(({ classe, label, cor }) => (
+            <div key={classe}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: cor, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                {label}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
+                  const marcado = dados.ativosInvestimento?.[ativo.id] ?? false;
+                  return (
+                    <div
+                      key={ativo.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 12px",
+                        border: marcado
+                          ? `1px solid ${ativo.qualidade === "bom" ? "#BBF7D0" : "#FCA5A5"}`
+                          : "1px solid #F3F4F6",
+                        borderRadius: 8,
+                        background: marcado
+                          ? ativo.qualidade === "bom" ? "#F0FDF4" : "#FFF5F5"
+                          : "white",
+                        transition: "all 150ms",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? ativo.cor : "#9CA3AF" }} />
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: marcado ? 600 : 400, color: marcado ? "#111827" : "#6B7280" }}>
+                            {ativo.label}
+                          </div>
+                          {marcado && (
+                            <div style={{ fontSize: 9, color: ativo.qualidade === "bom" ? "#15803D" : "#B91C1C", marginTop: 1 }}>
+                              {ativo.qualidade === "bom" ? "✓ Recomendado" : "⚠ Não recomendado"}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <label style={{ position: "relative", display: "inline-block", width: 36, height: 20, cursor: "pointer", flexShrink: 0 }}>
+                        <input
+                          type="checkbox"
+                          checked={marcado}
+                          onChange={e => onChange({
+                            ativosInvestimento: {
+                              ...dados.ativosInvestimento,
+                              [ativo.id]: e.target.checked,
+                            },
+                          })}
+                          style={{ opacity: 0, width: 0, height: 0 }}
+                        />
+                        <span style={{
+                          position: "absolute",
+                          top: 0, right: 0, bottom: 0, left: 0,
+                          borderRadius: 20,
+                          background: marcado
+                            ? ativo.qualidade === "bom" ? "#15803D" : "#B91C1C"
+                            : "#D1D5DB",
+                          transition: "background 200ms",
+                        }}>
+                          <span style={{
+                            position: "absolute",
+                            width: 14, height: 14,
+                            borderRadius: "50%",
+                            background: "white",
+                            top: 3,
+                            left: marcado ? 19 : 3,
+                            transition: "left 200ms",
+                          }} />
+                        </span>
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       </SecaoCard>
     </div>
   );

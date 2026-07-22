@@ -28,6 +28,7 @@ export interface DadosColetaDiag {
   idadeMeta?: number;
   suitabilityPerfil?: string;
   ativosAtuais?: AtivoAtual;
+  ativosInvestimento?: Record<string, boolean>;
   comecandoDoZero?: boolean;
   contribuiINSS?: boolean;
   valorINSS?: number;

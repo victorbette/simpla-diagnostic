@@ -1,4 +1,5 @@
 import type { Lead } from "../types";
+import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
 
 const TAXA_MENSAL_SCORE = Math.pow(1.045, 1 / 12) - 1;
 
@@ -135,28 +136,25 @@ export function DiagResultado({ lead }: Props) {
     : Math.min(100, Math.round(projecao / patrimonioNecessario * 100));
 
   // ── Score Investimentos ──
-  const ativos = dadosColeta.ativosAtuais;
-  const temRendaFixa = (ativos?.rendaFixa ?? 0) > 0;
-  const temAcoes     = (ativos?.acoes ?? 0) > 0;
-  const temFIIs      = (ativos?.fiis ?? 0) > 0;
-  const temExterior  = (ativos?.rvGlobal ?? 0) > 0 || (ativos?.rfGlobal ?? 0) > 0;
-  const temCripto    = (ativos?.cripto ?? 0) > 0;
-  const perfil       = dadosColeta.suitabilityPerfil ?? "";
+  const ativosMap = dadosColeta.ativosInvestimento ?? {};
+  const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
+  const aaTemDados = ativosDoLead.length > 0;
 
-  const temAlgumAtivo = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
-  const aaTemDados = (temAlgumAtivo || dadosColeta.comecandoDoZero === true) && perfil !== "";
+  const ativosBons  = ativosDoLead.filter(a => a.qualidade === "bom");
+  const ativosRuins = ativosDoLead.filter(a => a.qualidade === "ruim");
 
-  let pontosAA = 0;
-  if (temRendaFixa) pontosAA += 25;
-  if (temAcoes)     pontosAA += 25;
-  if (temFIIs)      pontosAA += 25;
-  if (temExterior)  pontosAA += 20;
-  if (temCripto)    pontosAA += 5;
-  if (perfil === "conservador" && !temAcoes && !temFIIs) {
-    pontosAA = Math.min(pontosAA + 15, 70);
-  }
+  const temRF  = ativosBons.some(a => a.classe === "renda_fixa");
+  const temRV  = ativosBons.some(a => a.classe === "renda_variavel");
+  const temExt = ativosBons.some(a => a.classe === "exterior");
 
-  const scoreInvestimentos = !aaTemDados ? -1 : Math.min(100, pontosAA);
+  let pontos = 0;
+  if (temRF)  pontos += 25;
+  if (temRV)  pontos += 35;
+  if (temExt) pontos += 25;
+  pontos -= ativosRuins.length * 10;
+  pontos = Math.max(0, Math.min(100, pontos));
+
+  const scoreInvestimentos = !aaTemDados ? -1 : pontos;
 
   // ── Score Blindagem ──
   const despesas = Number(dadosColeta.custoVidaMensal) || 0;
@@ -193,45 +191,30 @@ export function DiagResultado({ lead }: Props) {
 
     if (area === "inv") {
       if (!aaTemDados) {
-        return "Para analisar sua carteira de investimentos, informe na Coleta de Dados os tipos de ativos que você já possui. Isso nos ajuda a entender se sua carteira está preparada para crescer ao longo do tempo.";
+        return "Ainda não foram informados os investimentos. Informe na Coleta de Dados quais ativos você já possui para receber uma análise completa.";
       }
-
-      const ativosLabels = (
-        [
-          temRendaFixa ? "renda fixa" : false,
-          temAcoes     ? "ações" : false,
-          temFIIs      ? "fundos imobiliários" : false,
-          temExterior  ? "investimentos fora do Brasil" : false,
-        ] as (string | false)[]
-      ).filter((x): x is string => x !== false);
-
-      const ausentes = (
-        [
-          !temAcoes    ? "ações" : false,
-          !temFIIs     ? "fundos imobiliários" : false,
-          !temExterior ? "investimentos internacionais" : false,
-        ] as (string | false)[]
-      ).filter((x): x is string => x !== false);
 
       let texto = "";
 
-      if (ativosLabels.length > 0) {
-        texto += `Você já tem investimentos em ${ativosLabels.join(", ")} — isso é muito positivo!\n`;
-      } else if (dadosColeta.comecandoDoZero) {
-        texto += "Você está começando sua jornada de investimentos — isso é um passo muito importante!\n";
+      if (ativosBons.length > 0) {
+        texto += `Pontos positivos: você já investe em ${ativosBons.map(a => a.label).join(", ")}. `;
       }
 
-      if (temAcoes) {
-        texto += "\nTer ações é importante para fazer seu dinheiro crescer no longo prazo.";
-      }
-      if (temFIIs) {
-        texto += "\nOs fundos imobiliários ajudam a gerar uma renda extra todo mês.";
+      if (ativosRuins.length > 0) {
+        texto += `\n\nAtenção: identificamos ativos que costumam gerar custos elevados ou retornos abaixo do mercado: ${ativosRuins.map(a => a.label).join(", ")}. Vale avaliar alternativas mais eficientes com seu assessor.`;
       }
 
-      if (ausentes.length > 0) {
-        texto += `\n\nUma dica importante: diversificar seus investimentos em mais tipos de ativos pode ajudar a proteger e multiplicar seu patrimônio. Ainda não vemos ${ausentes.join(", ")} na sua carteira — vale conversar sobre isso com seu assessor.`;
-      } else {
-        texto += "\n\nSua carteira está bem diversificada! Continue monitorando e ajustando conforme seu objetivo de vida.";
+      if (!temRV) {
+        texto += "\n\nOportunidade: incluir ações ou fundos imobiliários pode potencializar o crescimento do patrimônio no longo prazo.";
+      }
+      if (!temExt) {
+        texto += "\n\nDiversificar parte do patrimônio no exterior protege contra riscos do mercado brasileiro.";
+      }
+      if (!temRF) {
+        texto += "\n\nTer uma base em renda fixa é essencial para segurança e liquidez da carteira.";
+      }
+      if (ativosBons.length >= 3 && ativosRuins.length === 0) {
+        texto += "\n\nSua carteira está bem estruturada com boas escolhas de ativos!";
       }
 
       return texto.trim();
