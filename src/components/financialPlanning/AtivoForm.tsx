@@ -20,9 +20,10 @@ interface Props {
   onChange: (v: AtivoAtual) => void;
   comecandoDoZero?: boolean;
   onComecandoDoZeroChange?: (v: boolean) => void;
+  hideComecandoDoZero?: boolean;
 }
 
-export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero, onComecandoDoZeroChange }: Props) {
+export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero, onComecandoDoZeroChange, hideComecandoDoZero }: Props) {
   const zerando = comecandoDoZero ?? false;
 
   const total = value.rendaFixa + value.acoes + value.fiis + value.rvGlobal + value.rfGlobal + value.cripto;
@@ -51,15 +52,17 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero,
         <p style={{ fontSize: 13, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>
           Carteira de Investimentos
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Switch id="zerando" checked={zerando} onCheckedChange={handleZerando} />
-          <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B7280]">
-            Começando do zero
-          </Label>
-        </div>
+        {!hideComecandoDoZero && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Switch id="zerando" checked={zerando} onCheckedChange={handleZerando} />
+            <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B7280]">
+              Começando do zero
+            </Label>
+          </div>
+        )}
       </div>
 
-      {zerando ? (
+      {(!hideComecandoDoZero && zerando) ? (
         <div style={{ backgroundColor: "#EAF0F5", border: "1px solid #BFDBFE", borderRadius: 8, padding: "14px 16px", fontSize: 13, color: "#1E40AF" }}>
           <span style={{ fontSize: 20, marginRight: 8 }}>🌱</span>
           Cliente está iniciando sua jornada de investimentos.

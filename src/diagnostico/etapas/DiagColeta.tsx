@@ -1,7 +1,5 @@
 import {
-  Briefcase, User, Building2, BadgeCheck,
-  Shield, TrendingUp, BarChart2, Zap,
-  DollarSign, PieChart,
+  User, DollarSign, PieChart,
   X, Plus,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -10,7 +8,6 @@ import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "@/components/financialPlanning/AtivoForm";
 import { initialAtivoAtual } from "@/types/financialPlanning";
-import type { PerfilRisco } from "@/types/financialPlanning";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -56,28 +53,6 @@ function SecaoCard({
     </div>
   );
 }
-
-const VINCULOS: { key: string; label: string; Icon: React.ElementType }[] = [
-  { key: "clt", label: "CLT", Icon: Briefcase },
-  { key: "autonomo", label: "Autônomo", Icon: User },
-  { key: "empresario", label: "Empresário", Icon: Building2 },
-  { key: "concursado", label: "Concursado", Icon: BadgeCheck },
-];
-
-const PERFIL_CARDS: {
-  key: string;
-  label: string;
-  alocacao: string;
-  descricao: string;
-  color: string;
-  bgSelected: string;
-  Icon: React.ElementType;
-}[] = [
-  { key: "conservador", label: "Conservador", alocacao: "RF 92% · RV 4% · Internacional 4%", descricao: "Foco em preservação de capital e liquidez. Baixa tolerância a risco.", color: "#3B82F6", bgSelected: "#EAF0F5", Icon: Shield },
-  { key: "conservador_moderado", label: "Conservador Moderado", alocacao: "RF 78% · RV 13% · Internacional 9%", descricao: "Equilíbrio com predominância em renda fixa e alguma exposição a RV.", color: "#1E40AF", bgSelected: "#EAF0F5", Icon: TrendingUp },
-  { key: "moderado", label: "Moderado", alocacao: "RF 66% · RV 20% · Internacional 13%", descricao: "Equilíbrio entre segurança e crescimento. Aceita volatilidade moderada.", color: "#2563EB", bgSelected: "#EFF6FF", Icon: BarChart2 },
-  { key: "arrojado", label: "Arrojado", alocacao: "RF 52% · RV 29% · Internacional 17,5%", descricao: "Foco em crescimento. Alta tolerância a risco e volatilidade.", color: "#B91C1C", bgSelected: "#FEE2E2", Icon: Zap },
-];
 
 const CURRENCY_KEYS = [
   { label: "Patrimônio Financeiro (R$)", key: "patrimonioFinanceiro" },
@@ -241,55 +216,6 @@ export function DiagColeta({ dados, onChange }: Props) {
           </button>
         </div>
 
-        {/* Vínculo profissional */}
-        <div style={{ marginTop: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "#111827", display: "block", marginBottom: 10 }}>Vínculo profissional</label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            {VINCULOS.map(({ key, label, Icon: VIcon }) => {
-              const selected = dados.vinculoProfissional === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => onChange({ vinculoProfissional: key })}
-                  style={{ border: selected ? "2px solid #3B82F6" : "1.5px solid #BFDBFE", borderRadius: 10, padding: "14px 12px", backgroundColor: selected ? "#000000" : "white", color: selected ? "white" : "#111827", cursor: "pointer", display: "flex", flexDirection: "column" as const, alignItems: "center" as const, gap: 8, position: "relative" as const, transition: "all 0.15s", fontFamily: "inherit" }}
-                >
-                  {selected && (
-                    <span style={{ position: "absolute" as const, top: 8, right: 8, backgroundColor: "#3B82F6", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center" as const, justifyContent: "center" as const, fontSize: 11, color: "#000000", fontWeight: 700 }}>✓</span>
-                  )}
-                  <VIcon size={22} />
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* INSS */}
-        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              checked={!!(dados.contribuiINSS ?? false)}
-              onCheckedChange={(v) => onChange({ contribuiINSS: v })}
-            />
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Contribui para o INSS?</p>
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Contribuição previdenciária pública</p>
-            </div>
-          </div>
-          {dados.contribuiINSS && (
-            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE" }}>
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
-                <label style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>Valor estimado do benefício futuro</label>
-                <CurrencyInput
-                  value={dados.valorINSS ?? 0}
-                  onChange={(v) => onChange({ valorINSS: v })}
-                />
-                <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>Estimativa do benefício mensal do INSS</p>
-              </div>
-            </div>
-          )}
-        </div>
       </SecaoCard>
 
       {/* ─── CARD 2: Situação Financeira e Patrimonial ─── */}
@@ -365,51 +291,14 @@ export function DiagColeta({ dados, onChange }: Props) {
         color="#1E40AF"
         Icon={PieChart}
         title="Investimentos"
-        subtitle="Carteira atual e perfil de risco do cliente"
+        subtitle="Carteira atual de investimentos"
       >
-        {/* Carteira de Investimentos */}
-        <div style={{ marginBottom: 24 }}>
-          <AtivoForm
-            value={dados.ativosAtuais ?? initialAtivoAtual}
-            suitabilityPerfil={(dados.suitabilityPerfil ?? null) as PerfilRisco | null}
-            onChange={(v) => onChange({ ativosAtuais: v })}
-            comecandoDoZero={dados.comecandoDoZero ?? false}
-            onComecandoDoZeroChange={(v) => onChange({ comecandoDoZero: v })}
-          />
-        </div>
-
-        {/* Perfil de Risco */}
-        <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: 24 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 4px", textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
-            Perfil de Risco do Cliente
-          </p>
-          <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
-            Selecione o perfil conforme análise do consultor
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            {PERFIL_CARDS.map(({ key, label, alocacao, descricao, color, bgSelected, Icon: PIcon }) => {
-              const selected = dados.suitabilityPerfil === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => onChange({ suitabilityPerfil: key })}
-                  style={{ border: selected ? `2px solid ${color}` : "1.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px", backgroundColor: selected ? bgSelected : "white", cursor: "pointer", textAlign: "left" as const, position: "relative" as const, transition: "all 0.15s", display: "flex", flexDirection: "column" as const, gap: 8, fontFamily: "inherit" }}
-                >
-                  {selected && (
-                    <span style={{ position: "absolute" as const, top: 10, right: 12, width: 20, height: 20, borderRadius: "50%", backgroundColor: color, color: "white", display: "flex", alignItems: "center" as const, justifyContent: "center" as const, fontSize: 11, fontWeight: 700 }}>✓</span>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <PIcon style={{ width: 20, height: 20, color }} />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#000000" }}>{label}</span>
-                  </div>
-                  <p style={{ fontSize: 11, color: "#6B7280", margin: 0, fontWeight: 500 }}>{alocacao}</p>
-                  <p style={{ fontSize: 12, color: "#111827", margin: 0, lineHeight: 1.5 }}>{descricao}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <AtivoForm
+          value={dados.ativosAtuais ?? initialAtivoAtual}
+          suitabilityPerfil={null}
+          onChange={(v) => onChange({ ativosAtuais: v })}
+          hideComecandoDoZero={true}
+        />
       </SecaoCard>
     </div>
   );
