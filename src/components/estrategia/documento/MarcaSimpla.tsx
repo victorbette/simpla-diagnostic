@@ -1,32 +1,19 @@
-import { DOC } from "@/lib/documentoStyles";
-
 interface Props {
-  /** Versão para fundo escuro (texto branco) */
-  clara?: boolean;
-  tamanho?: number;
+  /** Largura do lockup em px (referência v5: ~150 no topo das páginas escuras) */
+  largura?: number;
 }
 
-/** Lockup da marca: diamante + wordmark "Simpla Invest" */
-export function MarcaSimpla({ clara = false, tamanho = 30 }: Props) {
+/**
+ * Lockup oficial da marca — diamante branco + wordmark "Simpla Invest"
+ * (public/simplainvest_logobranca.png). Uso em fundo escuro (capa,
+ * divisórias e contracapa), conforme a referência v5.
+ */
+export function MarcaSimpla({ largura = 150 }: Props) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
-      <img
-        src="/diamond-icon.png"
-        alt=""
-        aria-hidden="true"
-        style={{ height: tamanho * 0.72, objectFit: "contain" }}
-      />
-      <span
-        style={{
-          fontSize: tamanho * 0.62,
-          fontWeight: 600,
-          letterSpacing: "0.02em",
-          color: clara ? "#F3F7FF" : DOC.navyInk,
-          lineHeight: 1,
-        }}
-      >
-        Simpla Invest
-      </span>
-    </div>
+    <img
+      src="/simplainvest_logobranca.png"
+      alt="Simpla Invest"
+      style={{ width: largura, height: "auto", objectFit: "contain", display: "block" }}
+    />
   );
 }

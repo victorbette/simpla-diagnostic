@@ -4,6 +4,7 @@ import { detectarSeguroRC } from "@/lib/seguroRC";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia, ProximoPasso } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
+import { empacotarPorAltura, orcamentoPagina } from "@/lib/paginacaoDoc";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
@@ -82,6 +83,11 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
   return passos;
 }
 
+function formatarMesAno(valor: string): string {
+  const [ano, mes] = (valor ?? "").split("-");
+  return ano && mes ? `${mes}/${ano}` : "—";
+}
+
 function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChange: (u: ProximoPasso) => void; onRemove: () => void }) {
   const [hovered, setHovered] = useState(false);
   const [trashHovered, setTrashHovered] = useState(false);
@@ -110,11 +116,16 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
         <div style={{ minWidth: 0 }}>
           <input
             type="text"
+            className="doc-screen-only"
             value={passo.descricao}
             placeholder="Descreva o próximo passo..."
             onChange={(e) => onChange({ ...passo, descricao: e.target.value })}
             style={{ width: "100%", border: "none", borderBottom: "1px solid #E5E7EB", fontSize: 13, color: "#111827", padding: "3px 0", paddingRight: hovered ? 24 : 0, outline: "none", background: "transparent", fontFamily: "inherit", boxSizing: "border-box" }}
           />
+          {/* Impressão: texto com quebra de linha (o input corta o excedente) */}
+          <div className="doc-print-only" style={{ fontSize: 13, color: "#111827", lineHeight: 1.5 }}>
+            {passo.descricao || "—"}
+          </div>
           <select
             value={passo.area}
             onChange={(e) => onChange({ ...passo, area: e.target.value })}
@@ -135,17 +146,22 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
             <option value="media">Média</option>
             <option value="baixa">Baixa</option>
           </select>
-          <i className="ti ti-chevron-down" style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: pb.color, pointerEvents: "none" }} />
+          <i className="ti ti-chevron-down no-print" style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", fontSize: 9, color: pb.color, pointerEvents: "none" }} />
         </div>
 
         <div style={{ flexShrink: 0 }}>
           <p style={{ margin: "0 0 2px", fontSize: 9, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em" }}>Previsão</p>
           <input
             type="month"
+            className="doc-screen-only"
             value={passo.dataPrevisao}
             onChange={(e) => onChange({ ...passo, dataPrevisao: e.target.value })}
             style={{ fontSize: 12, color: "#374151", border: "1px solid #E5E7EB", borderRadius: 5, padding: "3px 7px", fontFamily: "inherit", outline: "none", background: "white" }}
           />
+          {/* Impressão: "mm/aaaa" em vez do valor bruto "aaaa-mm" do input */}
+          <span className="doc-print-only" style={{ fontSize: 12, color: "#374151" }}>
+            {formatarMesAno(passo.dataPrevisao)}
+          </span>
         </div>
       </div>
     </div>
@@ -169,44 +185,66 @@ export function DocPlanoAcao({ nomeCliente, plan, resultados, onResultadosChange
     updatePassos([...passos, { id: crypto.randomUUID(), descricao: "", prioridade: "media", dataPrevisao: "", area: "Geral" }]);
   };
 
+  // Distribui os passos em folhas — antes a lista inteira ficava numa única
+  // página e listas longas eram cortadas na impressão
+  const ALTURA_PASSO = 85;      // card + margem inferior
+  const ALTURA_INTRO = 205;     // dois parágrafos introdutórios (só na 1ª folha)
+  const ALTURA_BOTAO_ADD = 57;  // botão "Adicionar" (só na tela, mas ocupa a folha)
+  const paginadas = empacotarPorAltura(
+    passos.map((passo) => ({ item: passo, altura: ALTURA_PASSO })),
+    [
+      orcamentoPagina(false) - ALTURA_INTRO - ALTURA_BOTAO_ADD,
+      orcamentoPagina(true) - ALTURA_BOTAO_ADD,
+    ],
+  ).map((pagina) => pagina.map(({ item }) => item));
+  const paginas = paginadas.length > 0 ? paginadas : [[] as ProximoPasso[]];
+
   return (
-    <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
-      <HeaderSecao titulo="Plano de Ação" />
+    <>
+      {paginas.map((grupo, p) => (
+        <PaginaDoc key={p} rodape={<RodapePagina nomeCliente={nomeCliente} />}>
+          <HeaderSecao titulo="Plano de Ação" subtitulo={p > 0 ? "continuação" : undefined} />
 
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-        Um planejamento financeiro de excelência só gera valor real quando aliado a uma execução
-        disciplinada, técnica e diligente. A transição da estratégia para a prática é o momento
-        mais crítico da sua jornada de construção e proteção patrimonial.
-      </p>
+          {p === 0 && (
+            <>
+              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+                Um planejamento financeiro de excelência só gera valor real quando aliado a uma execução
+                disciplinada, técnica e diligente. A transição da estratégia para a prática é o momento
+                mais crítico da sua jornada de construção e proteção patrimonial.
+              </p>
 
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 18 }}>
-        Para que a estratégia desenhada saia do papel e se traduza em resultados tangíveis,
-        estruturamos um cronograma de implementação claro, listando as ações recomendadas em ordem
-        de prioridade. Essa organização metodológica garante que nosso foco inicial esteja voltado
-        para a mitigação de riscos imediatos e para a captura das oportunidades de maior impacto no
-        seu patrimônio.
-      </p>
+              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 18 }}>
+                Para que a estratégia desenhada saia do papel e se traduza em resultados tangíveis,
+                estruturamos um cronograma de implementação claro, listando as ações recomendadas em ordem
+                de prioridade. Essa organização metodológica garante que nosso foco inicial esteja voltado
+                para a mitigação de riscos imediatos e para a captura das oportunidades de maior impacto no
+                seu patrimônio.
+              </p>
+            </>
+          )}
 
-      {/* Lista */}
-      <div style={{ marginBottom: 12 }}>
-        {passos.map((passo) => (
-          <PassoCard
-            key={passo.id}
-            passo={passo}
-            onChange={(updated) => updatePassos(passos.map((p) => (p.id === passo.id ? updated : p)))}
-            onRemove={() => updatePassos(passos.filter((p) => p.id !== passo.id))}
-          />
-        ))}
-        {passos.length === 0 && (
-          <p style={{ textAlign: "center", color: DOC.hint, fontSize: 12, padding: "28px 0", fontStyle: "italic" }}>
-            Nenhum próximo passo adicionado. Clique em "Adicionar" abaixo.
-          </p>
-        )}
-      </div>
+          {/* Lista */}
+          <div style={{ marginBottom: 12 }}>
+            {grupo.map((passo) => (
+              <PassoCard
+                key={passo.id}
+                passo={passo}
+                onChange={(updated) => updatePassos(passos.map((p2) => (p2.id === passo.id ? updated : p2)))}
+                onRemove={() => updatePassos(passos.filter((p2) => p2.id !== passo.id))}
+              />
+            ))}
+            {passos.length === 0 && (
+              <p style={{ textAlign: "center", color: DOC.hint, fontSize: 12, padding: "28px 0", fontStyle: "italic" }}>
+                Nenhum próximo passo adicionado. Clique em "Adicionar" abaixo.
+              </p>
+            )}
+          </div>
 
-      {/* Add — só na tela */}
-      <AddButton onClick={handleAdd} />
-    </PaginaDoc>
+          {/* Add — só na tela, na última folha */}
+          {p === paginas.length - 1 && <AddButton onClick={handleAdd} />}
+        </PaginaDoc>
+      ))}
+    </>
   );
 }
 

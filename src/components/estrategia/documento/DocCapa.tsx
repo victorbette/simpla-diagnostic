@@ -19,7 +19,7 @@ const LABEL_CAPA = {
 export function DocCapa({ nomeCliente, dataEstrategia, nomeConsultor }: Props) {
   return (
     <PaginaDoc escura paddingConteudo="16mm 18mm 12mm">
-      <MarcaSimpla clara tamanho={34} />
+      <MarcaSimpla />
 
       {/* Bloco central */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>

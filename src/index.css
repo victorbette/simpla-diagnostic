@@ -135,8 +135,20 @@
   border-radius: 6px;
 }
 
+/* Rótulos externos dos gráficos (pizzas) podem exceder o viewport do SVG;
+   sem isto são cortados na borda ("Resgate Lo...") na tela e no PDF */
+.doc-pagina .recharts-surface {
+  overflow: visible;
+}
+
 /* Blocos que só existem na impressão (ex.: texto das observações) */
 .doc-print-only { display: none; }
+
+/* Medidor da paginação fluida (PaginaDocFluida): reproduz na tela o layout
+   de impressão para medir a altura real dos blocos no modo print */
+.doc-medida-print .doc-screen-only { display: none !important; }
+.doc-medida-print .doc-print-only { display: block !important; }
+.doc-medida-print .doc-vazio-no-print { display: none !important; }
 
 /* ── Print styles ──────────────────────────────────────────── */
 @media print {
@@ -147,6 +159,7 @@
   .estrategia-abas-topo { display: none !important; }
   .doc-screen-only { display: none !important; }
   header, .sidebar, .btn-imprimir { display: none !important; }
+  [data-sonner-toaster] { display: none !important; }
 
   .doc-print-only { display: block !important; }
   .doc-vazio-no-print { display: none !important; }
@@ -189,12 +202,49 @@
   .estrategia-inicial-root:has(.print-layer) .estrategia-final-root {
     display: none !important;
   }
+  .estrategia-inicial-root:has(.print-layer) > div:not(.print-layer) {
+    display: none !important;
+  }
 
-  /* Cada página do documento em folha própria */
+  /* Overlay de impressão da Estratégia Inicial: position:fixed corta o
+     conteúdo na 1ª folha — vira fluxo normal com margens próprias de
+     página (@page fluida), já que o documento é contínuo (não pré-diagramado
+     em folhas A4). O padding de tela sai; as margens vêm da @page. */
+  .print-layer {
+    position: static !important;
+    inset: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    page: fluida;
+  }
+  .print-layer > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Resultado do diagnóstico (fluxo contínuo) também imprime com margens */
+  .diag-print-root {
+    page: fluida;
+  }
+  .diag-print-root > div {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Cada página do documento em folha própria.
+     Altura travada em exatamente 297mm: sem a trava, conteúdo que excede a
+     folha faz a div crescer e o navegador a divide em duas folhas físicas —
+     corte no pé da primeira e continuação sem margem no topo da segunda.
+     Com a trava, um eventual excesso é aparado dentro da própria folha
+     (na faixa do padding inferior), mantendo o enquadramento. */
   .doc-pagina {
     box-shadow: none !important;
     border-radius: 0 !important;
     margin: 0 auto !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
     page-break-after: always !important;
     break-after: page !important;
   }
@@ -224,6 +274,14 @@
   @page {
     size: A4;
     margin: 0;
+  }
+
+  /* Página nomeada dos fluxos contínuos (sem folhas A4 pré-diagramadas):
+     com margin 0 global, toda quebra de página encostaria o conteúdo na
+     borda física da folha. */
+  @page fluida {
+    size: A4;
+    margin: 16mm 14mm;
   }
 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }

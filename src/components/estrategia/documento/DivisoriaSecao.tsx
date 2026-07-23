@@ -10,7 +10,7 @@ interface Props {
 export function DivisoriaSecao({ titulo, nomeCliente }: Props) {
   return (
     <PaginaDoc escura paddingConteudo="16mm 18mm 12mm">
-      <MarcaSimpla clara />
+      <MarcaSimpla />
 
       <div
         style={{

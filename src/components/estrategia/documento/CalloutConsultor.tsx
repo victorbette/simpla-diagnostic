@@ -1,36 +1,60 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DOC } from "@/lib/documentoStyles";
+import type { BlocoDoc } from "./PaginaDocFluida";
 
-interface Props {
-  clientId: string;
-  /** Sufixo da chave de armazenamento (lf, aa, ps, fiscal...) */
-  secao: string;
+/* O mesmo comentário é renderizado em várias instâncias (editor da página +
+ * medidor da paginação fluida); este evento propaga a digitação entre elas
+ * para a medição de altura acompanhar o texto em tempo real. */
+const EVENTO_SYNC = "doc-coment-sync";
+
+function chaveNota(clientId: string, secao: string) {
+  return `doc_coment_${clientId}_${secao}`;
 }
 
-/**
- * Callout "Observações do Consultor". Na tela é um textarea editável
- * (persistido em localStorage); na impressão vira o bloco de texto da
- * referência. Se vazio, some do PDF (classe doc-vazio-no-print).
- */
-export function CalloutConsultor({ clientId, secao }: Props) {
-  const storKey = `doc_coment_${clientId}_${secao}`;
+/** Leitura reativa da observação do consultor (persistida em localStorage).
+ *  Re-renderiza quem a usa sempre que o texto muda em qualquer instância. */
+export function useNotaConsultor(clientId: string, secao: string): string {
+  const storKey = chaveNota(clientId, secao);
   const [valor, setValor] = useState(() => {
     try { return localStorage.getItem(storKey) ?? ""; } catch { return ""; }
   });
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const det = (e as CustomEvent<{ key: string; value: string }>).detail;
+      if (det?.key === storKey) setValor(det.value);
+    };
+    window.addEventListener(EVENTO_SYNC, handler);
+    return () => window.removeEventListener(EVENTO_SYNC, handler);
+  }, [storKey]);
+  return valor;
+}
 
-  const update = (v: string) => {
-    setValor(v);
-    try { localStorage.setItem(storKey, v); } catch { /**/ }
-  };
+function salvarNota(clientId: string, secao: string, valor: string) {
+  const storKey = chaveNota(clientId, secao);
+  try { localStorage.setItem(storKey, valor); } catch { /**/ }
+  window.dispatchEvent(new CustomEvent(EVENTO_SYNC, { detail: { key: storKey, value: valor } }));
+}
 
-  const vazio = valor.trim().length === 0;
+const BORDA = "1px solid #FDE68A";
+const AMBAR_BG = "#FFFBEB";
 
+const LABEL_NOTA = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: DOC.ambar,
+  margin: "0 0 7px",
+} as const;
+
+/** Editor da observação — só na tela (na impressão são os parágrafos abaixo). */
+function NotaEditorTela({ clientId, secao, valor }: { clientId: string; secao: string; valor: string }) {
   return (
     <div
-      className={vazio ? "doc-vazio-no-print" : undefined}
+      className="doc-screen-only"
       style={{
-        background: "#FFFBEB",
-        border: "1px solid #FDE68A",
+        background: AMBAR_BG,
+        border: BORDA,
         borderLeft: "4px solid #F59E0B",
         borderRadius: 8,
         padding: "13px 18px",
@@ -38,30 +62,16 @@ export function CalloutConsultor({ clientId, secao }: Props) {
         boxSizing: "border-box",
       }}
     >
-      <p
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          color: DOC.ambar,
-          margin: "0 0 7px",
-        }}
-      >
-        Observações do Consultor
-      </p>
-
-      {/* Tela: editável */}
+      <p style={LABEL_NOTA}>Observações do Consultor</p>
       <textarea
-        className="doc-screen-only"
         value={valor}
-        onChange={(e) => update(e.target.value)}
+        onChange={(e) => salvarNota(clientId, secao, e.target.value)}
         placeholder="Adicione observações personalizadas para o cliente..."
         style={{
           width: "100%",
           minHeight: 64,
           padding: "6px 8px",
-          border: "1px solid #FDE68A",
+          border: BORDA,
           borderRadius: 6,
           fontSize: 12,
           lineHeight: 1.7,
@@ -73,14 +83,60 @@ export function CalloutConsultor({ clientId, secao }: Props) {
           background: "white",
         }}
       />
-
-      {/* Impressão: texto puro */}
-      <div
-        className="doc-print-only"
-        style={{ whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.75, color: "#43302B" }}
-      >
-        {valor}
-      </div>
     </div>
   );
+}
+
+/** Fragmento (parágrafo) da observação na impressão — caixa âmbar própria,
+ *  para que uma observação longa flua por várias folhas sem cortar. */
+function NotaParagrafoPrint({ texto, primeiro }: { texto: string; primeiro: boolean }) {
+  return (
+    <div
+      className="doc-print-only"
+      style={{
+        background: AMBAR_BG,
+        border: BORDA,
+        borderLeft: "4px solid #F59E0B",
+        borderRadius: 8,
+        padding: "12px 18px",
+        marginTop: primeiro ? 18 : 6,
+        boxSizing: "border-box",
+      }}
+    >
+      {primeiro && <p style={LABEL_NOTA}>Observações do Consultor</p>}
+      <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.75, color: "#43302B" }}>
+        {texto}
+      </p>
+    </div>
+  );
+}
+
+/** Divide a observação em parágrafos (por quebra de linha), descartando vazios. */
+function paragrafos(nota: string): string[] {
+  return nota
+    .split(/\r?\n/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+}
+
+/**
+ * Blocos da observação do consultor para a paginação fluida (PaginaDocFluida):
+ * um editor (só tela) + um bloco por parágrafo (só impressão). Como cada
+ * parágrafo é um bloco independente, o texto excedente flui para as folhas
+ * seguintes em vez de ser cortado.
+ */
+export function blocosNotaConsultor(clientId: string, secao: string, nota: string): BlocoDoc[] {
+  const blocos: BlocoDoc[] = [
+    {
+      chave: `nota-${secao}-editor`,
+      node: <NotaEditorTela clientId={clientId} secao={secao} valor={nota} />,
+    },
+  ];
+  paragrafos(nota).forEach((texto, i) => {
+    blocos.push({
+      chave: `nota-${secao}-p${i}`,
+      node: <NotaParagrafoPrint texto={texto} primeiro={i === 0} />,
+    });
+  });
+  return blocos;
 }

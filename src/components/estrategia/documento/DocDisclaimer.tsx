@@ -39,6 +39,33 @@ export function DocDisclaimer({ nomeCliente, config }: Props) {
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
       </div>
+
+      {/* Ouvidoria e Comunidade Simpla (referência v5) — os links ficam
+          clicáveis no PDF gerado pelo navegador */}
+      <div style={{ marginTop: "auto", paddingTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+          Ouvidoria Simpla: <strong style={{ color: DOC.ink }}>32 31982742</strong> ou clique{" "}
+          <a
+            href="https://wa.me/553231982742"
+            target="_blank"
+            rel="noreferrer"
+            style={{ fontWeight: 700, color: DOC.ink, textDecoration: "underline" }}
+          >
+            AQUI
+          </a>
+        </p>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+          Comunidade Simpla de Avisos clique{" "}
+          <a
+            href="https://chat.whatsapp.com/IyayLHuwHOK9xG9JImuMo9"
+            target="_blank"
+            rel="noreferrer"
+            style={{ fontWeight: 700, color: DOC.ink, textDecoration: "underline" }}
+          >
+            AQUI
+          </a>
+        </p>
+      </div>
     </PaginaDoc>
   );
 }

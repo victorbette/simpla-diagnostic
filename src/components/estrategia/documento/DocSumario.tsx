@@ -5,25 +5,18 @@ import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   nomeCliente: string;
+  /** Capítulos exibidos, na ordem do documento (seções desmarcadas no modal
+   *  de geração ficam de fora; a numeração se ajusta automaticamente) */
+  capitulos: readonly string[];
 }
 
-/** Capítulos do documento (a ordem real é definida pela composição em EstrategiaFinal) */
-const CAPITULOS = [
-  "Ponto de Partida",
-  "Liberdade Financeira",
-  "Asset Allocation",
-  "Proteção e Sucessão",
-  "Planejamento Tributário",
-  "Plano de Ação",
-] as const;
-
-export function DocSumario({ nomeCliente }: Props) {
+export function DocSumario({ nomeCliente, capitulos }: Props) {
   return (
     <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
       <HeaderSecao titulo="Sumário" />
 
       <div style={{ marginTop: 14 }}>
-        {CAPITULOS.map((label, i) => (
+        {capitulos.map((label, i) => (
           <div
             key={label}
             style={{

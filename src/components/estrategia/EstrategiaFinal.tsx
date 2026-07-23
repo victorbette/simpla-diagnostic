@@ -1,9 +1,15 @@
 import { useState, useCallback, useEffect } from "react";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { CONFIG_CONSULTOR_DEFAULT } from "@/lib/documentoConfig";
-import type { ConfigConsultor } from "@/lib/documentoConfig";
+import {
+  CONFIG_CONSULTOR_DEFAULT,
+  AREAS_DOCUMENTO,
+  carregarSelecaoSecoes,
+  salvarSelecaoSecoes,
+} from "@/lib/documentoConfig";
+import type { ConfigConsultor, SelecaoSecoes } from "@/lib/documentoConfig";
 import { gerarPDF } from "@/lib/gerarPDF";
+import { ModalSecoesPdf } from "./documento/ModalSecoesPdf";
 import { DocCapa } from "./documento/DocCapa";
 import { DocSumario } from "./documento/DocSumario";
 import { DocFinancialPlanning } from "./documento/DocFinancialPlanning";
@@ -52,6 +58,10 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
   // Config do consultor — persistida em localStorage
   const [salvando, setSalvando] = useState(false);
 
+  // Seções que entram no PDF — escolhidas no modal, persistidas por cliente
+  const [modalSecoesAberto, setModalSecoesAberto] = useState(false);
+  const [secoes, setSecoes] = useState<SelecaoSecoes>(() => carregarSelecaoSecoes(plan.clientId));
+
   const [config, setConfig] = useState<ConfigConsultor>(() => {
     try {
       const salvo = localStorage.getItem("config_consultor");
@@ -64,6 +74,22 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
   useEffect(() => {
     try { localStorage.setItem("config_consultor", JSON.stringify(config)); } catch { /**/ }
   }, [config]);
+
+  const handleGerarPdf = async (selecao: SelecaoSecoes) => {
+    setSecoes(selecao);
+    salvarSelecaoSecoes(plan.clientId, selecao);
+    setSalvando(true);
+    try {
+      await onConcluir?.();
+    } finally {
+      setSalvando(false);
+    }
+    setModalSecoesAberto(false);
+    // Aguarda o React aplicar a seleção ao documento antes do print síncrono
+    setTimeout(() => gerarPDF(clientName), 150);
+  };
+
+  const capitulosSumario = AREAS_DOCUMENTO.filter((a) => secoes[a.id]).map((a) => a.label);
 
   const dataCapa = dataCapaMesAno(resultados.estrategiaFinal?.dataGeracao);
 
@@ -105,12 +131,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         </div>
 
         <button
-          onClick={async () => {
-            setSalvando(true);
-            await onConcluir?.();
-            setSalvando(false);
-            gerarPDF(clientName);
-          }}
+          onClick={() => setModalSecoesAberto(true)}
           disabled={salvando}
           style={{
             display: "flex",
@@ -142,7 +163,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
         </button>
       </div>
 
-      {/* Documento — ordem da referência v4 */}
+      {/* Documento — ordem da referência v4; seções conforme seleção do modal */}
       <div className="doc-pages-wrap" style={{ padding: "32px 16px" }}>
         <DocCapa
           nomeCliente={clientName}
@@ -150,34 +171,58 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
           nomeConsultor={nomeConsultorCapa}
         />
 
-        <DocSumario nomeCliente={clientName} />
+        <DocSumario nomeCliente={clientName} capitulos={capitulosSumario} />
 
         <DocFinancialPlanning nomeCliente={clientName} />
 
-        <DivisoriaSecao titulo="Ponto de Partida" nomeCliente={clientName} />
-        <DocPontoDePartida nomeCliente={clientName} plan={plan} resultados={resultados} />
+        {secoes.ponto_partida && (
+          <>
+            <DivisoriaSecao titulo="Ponto de Partida" nomeCliente={clientName} />
+            <DocPontoDePartida nomeCliente={clientName} plan={plan} resultados={resultados} />
+          </>
+        )}
 
-        <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={clientName} />
-        <DocLiberdadeFinanceira nomeCliente={clientName} plan={plan} resultados={resultados} />
+        {secoes.liberdade_financeira && (
+          <>
+            <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={clientName} />
+            <DocLiberdadeFinanceira nomeCliente={clientName} plan={plan} resultados={resultados} />
+          </>
+        )}
 
-        <DivisoriaSecao titulo="Asset Allocation" nomeCliente={clientName} />
-        <DocAssetAllocation nomeCliente={clientName} plan={plan} resultados={resultados} />
-        <DocAlocacaoAtualProposta nomeCliente={clientName} plan={plan} resultados={resultados} />
-        <DocMovimentacoes nomeCliente={clientName} plan={plan} resultados={resultados} />
+        {secoes.asset_allocation && (
+          <>
+            <DivisoriaSecao titulo="Asset Allocation" nomeCliente={clientName} />
+            <DocAssetAllocation nomeCliente={clientName} plan={plan} resultados={resultados} />
+            <DocAlocacaoAtualProposta nomeCliente={clientName} plan={plan} resultados={resultados} />
+            <DocMovimentacoes nomeCliente={clientName} plan={plan} resultados={resultados} />
+          </>
+        )}
 
-        <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={clientName} />
-        <DocProtecaoSucessao nomeCliente={clientName} plan={plan} resultados={resultados} />
+        {secoes.protecao_sucessao && (
+          <>
+            <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={clientName} />
+            <DocProtecaoSucessao nomeCliente={clientName} plan={plan} resultados={resultados} />
+          </>
+        )}
 
-        <DivisoriaSecao titulo="Planejamento Tributário" nomeCliente={clientName} />
-        <DocPlanejamentoTributario nomeCliente={clientName} plan={plan} resultados={resultados} />
+        {secoes.planejamento_tributario && (
+          <>
+            <DivisoriaSecao titulo="Planejamento Tributário" nomeCliente={clientName} />
+            <DocPlanejamentoTributario nomeCliente={clientName} plan={plan} resultados={resultados} />
+          </>
+        )}
 
-        <DivisoriaSecao titulo="Plano de Ação" nomeCliente={clientName} />
-        <DocPlanoAcao
-          nomeCliente={clientName}
-          plan={plan}
-          resultados={resultados}
-          onResultadosChange={handleResultadosChange}
-        />
+        {secoes.plano_acao && (
+          <>
+            <DivisoriaSecao titulo="Plano de Ação" nomeCliente={clientName} />
+            <DocPlanoAcao
+              nomeCliente={clientName}
+              plan={plan}
+              resultados={resultados}
+              onResultadosChange={handleResultadosChange}
+            />
+          </>
+        )}
 
         <DocMaosAObra nomeCliente={clientName} config={config} />
 
@@ -185,6 +230,14 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
 
         <DocContracapa />
       </div>
+
+      <ModalSecoesPdf
+        aberto={modalSecoesAberto}
+        selecaoInicial={secoes}
+        gerando={salvando}
+        onCancelar={() => setModalSecoesAberto(false)}
+        onGerar={handleGerarPdf}
+      />
     </div>
   );
 }

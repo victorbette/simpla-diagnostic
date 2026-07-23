@@ -7,6 +7,7 @@ import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
 import { renderLabelPizza, type Fatia } from "@/components/shared/CardAlocacaoComparativa";
 import { DOC } from "@/lib/documentoStyles";
+import { empacotarPorAltura, orcamentoPagina, type ItemPaginavel } from "@/lib/paginacaoDoc";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
 import { RodapePagina } from "./RodapePagina";
@@ -99,21 +100,32 @@ function montarLinhas(ativos: Ativo[], macroMeta: Record<string, number>, patrim
   return linhas;
 }
 
-/** Divide as linhas em blocos por página sem deixar cabeçalho de grupo órfão no fim do bloco */
-function dividirLinhas(linhas: LinhaTabela[], capacidades: number[]): LinhaTabela[][] {
-  const blocos: LinhaTabela[][] = [];
-  let i = 0;
-  let pagina = 0;
-  while (i < linhas.length) {
-    const cap = capacidades[Math.min(pagina, capacidades.length - 1)];
-    let fim = Math.min(i + cap, linhas.length);
-    // não terminar bloco em cabeçalho de grupo/colunas
-    while (fim > i + 1 && fim < linhas.length && linhas[fim - 1].tipo !== "ativo") fim--;
-    blocos.push(linhas.slice(i, fim));
-    i = fim;
-    pagina++;
-  }
-  return blocos;
+/* Alturas estimadas (px) dos blocos fixos e de cada tipo de linha da tabela */
+const ALTURA_PIZZAS = 272;        // card com as duas pizzas + margem inferior
+const ALTURA_CHROME_TABELA = 64;  // cabeçalho do card + paddings internos
+const ALTURA_RODAPE_TOTAL = 36;   // linha "Total da carteira recomendada"
+
+function alturaLinha(linha: LinhaTabela): number {
+  if (linha.tipo === "grupo") return 34;
+  if (linha.tipo === "colunas") return 24;
+  // linha de ativo: nomes longos quebram em múltiplas linhas na coluna 2.5fr
+  const linhasNome = Math.max(1, Math.ceil(((linha.ativo.nome ?? "").length || 1) / 42));
+  return 26 + (linhasNome - 1) * 15;
+}
+
+/** Divide as linhas em blocos por página respeitando a altura da folha,
+ *  sem deixar cabeçalho de grupo/colunas órfão no fim do bloco */
+function dividirLinhas(linhas: LinhaTabela[]): LinhaTabela[][] {
+  const itens: ItemPaginavel<LinhaTabela>[] = linhas.map((linha) => ({
+    item: linha,
+    altura: alturaLinha(linha),
+    grudaNoProximo: linha.tipo !== "ativo",
+  }));
+  return empacotarPorAltura(itens, [
+    // Página 1 divide o espaço com as pizzas; continuações têm a folha inteira
+    orcamentoPagina(false) - ALTURA_PIZZAS - ALTURA_CHROME_TABELA - ALTURA_RODAPE_TOTAL,
+    orcamentoPagina(true) - ALTURA_CHROME_TABELA - ALTURA_RODAPE_TOTAL,
+  ]).map((pagina) => pagina.map(({ item }) => item));
 }
 
 function TabelaCarteiraFinal({
@@ -224,8 +236,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
 
   const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
   const linhas = montarLinhas(ativosFinal, rc.macroMeta ?? {}, patrimonioMeta);
-  // Página 1 divide o espaço com as pizzas; continuações têm a folha inteira
-  const blocos = linhas.length > 0 ? dividirLinhas(linhas, [16, 32]) : [];
+  const blocos = linhas.length > 0 ? dividirLinhas(linhas) : [];
 
   return (
     <>

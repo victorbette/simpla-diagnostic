@@ -2,6 +2,7 @@
  * fictícios — abrir /preview-doc.html no dev server (não entra no build). */
 import { createRoot } from "react-dom/client";
 import { EstrategiaFinal } from "@/components/estrategia/EstrategiaFinal";
+import { AREAS_DOCUMENTO } from "@/lib/documentoConfig";
 import { initialFinancialPlan } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
@@ -225,6 +226,17 @@ function PreviewShell() {
       </main>
     </div>
   );
+}
+
+/* ?sem=planejamento_tributario,plano_acao — simula a seleção de seções do
+ * modal (persistida por cliente) para testar o PDF sem interação manual */
+const sem = new URLSearchParams(location.search).get("sem");
+if (sem !== null) {
+  const excluidas = sem.split(",");
+  const selecao = Object.fromEntries(
+    AREAS_DOCUMENTO.map((a) => [a.id, !excluidas.includes(a.id)]),
+  );
+  localStorage.setItem("doc_secoes_preview-cliente", JSON.stringify(selecao));
 }
 
 const root = document.getElementById("root");
