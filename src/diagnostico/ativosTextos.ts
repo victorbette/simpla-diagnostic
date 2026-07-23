@@ -73,6 +73,24 @@ elevada. O cotista fica preso e sem poder sair quando precisa ou quando o mercad
 Não é a estrutura mais adequada para a maioria dos investidores.`,
   },
 
+  cri_cra: {
+    negativo: `CRI (Certificado de Recebíveis Imobiliários) e CRA (Certificado de Recebíveis do Agronegócio)
+são isentos de IR, mas escondem riscos que poucos percebem: não têm proteção do FGC, possuem
+baixíssima liquidez e dependem da saúde financeira dos emissores privados. Em momentos de crise,
+podem ser difíceis de vender e o risco de calote é real. A isenção fiscal não compensa esses
+riscos para a maioria dos investidores.`,
+    dica: `Se quiser ativos isentos de IR com mais segurança, prefira LCI ou LCA que têm proteção do FGC e maior liquidez.`,
+  },
+
+  debentures: {
+    negativo: `Debêntures são títulos de dívida emitidos por empresas privadas. Embora algumas debêntures
+incentivadas sejam isentas de IR, o risco de crédito da empresa emissora é elevado e não há proteção
+do FGC. A liquidez no mercado secundário costuma ser muito baixa, o que significa que você pode ficar
+preso no ativo se precisar do dinheiro antes do vencimento. Para a maioria dos investidores, o risco
+não compensa o retorno.`,
+    dica: `Prefira títulos públicos ou CDBs de bancos sólidos para renda fixa. Se quiser isenção de IR, LCI e LCA são mais seguras.`,
+  },
+
   produto_estruturado: {
     negativo: `Produtos estruturados geralmente combinam renda fixa com derivativos de forma
 complexa. As taxas são altas, a transparência é baixa e o risco pode ser maior do que aparenta.
@@ -101,6 +119,24 @@ dos imóveis no portfólio.`,
     positivo: `ETFs (Exchange Traded Funds) permitem investir em dezenas ou centenas de ativos
 com uma única compra, com taxas muito baixas. São uma das formas mais inteligentes e eficientes
 de diversificar a carteira, seguindo índices de mercado com custo mínimo.`,
+  },
+
+  fundo_acoes: {
+    negativo: `Fundos de ações cobram taxas de administração e performance elevadas que corroem
+significativamente os retornos ao longo do tempo. A grande maioria não consegue superar o índice
+de referência (Ibovespa) de forma consistente após os custos. Você paga caro por uma gestão que
+estatisticamente não entrega resultado superior ao que você obteria investindo diretamente em
+ações ou ETFs com custo muito menor.`,
+    dica: `Invista diretamente em ações de boas empresas ou em ETFs de ações com taxa de administração baixíssima — você tende a ter resultados melhores com menos custo.`,
+  },
+
+  fiagro: {
+    negativo: `FIAGROs (Fundos de Investimento nas Cadeias Produtivas do Agronegócio) são um produto
+relativamente novo, com histórico curto e riscos complexos ligados ao setor agrícola — inadimplência
+de produtores, variações climáticas e de commodity. Diferente dos FIIs imobiliários consolidados,
+os FIAGROs têm menor transparência, menos liquidez e um risco que a maioria dos investidores tem
+dificuldade de avaliar corretamente.`,
+    dica: `Se quiser exposição ao agronegócio, considere ações de empresas sólidas do setor com muito mais transparência e liquidez.`,
   },
 
   exterior: {

@@ -19,11 +19,15 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "fundo_alternativo",   label: "Fundos Alternativos",     classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
   { id: "fundo_cetipado",      label: "Fundos Cetipados",        classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
   { id: "produto_estruturado", label: "Produtos Estruturados",   classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "cri_cra",             label: "CRI / CRA",               classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "debentures",          label: "Debêntures",              classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
 
   // ─── RENDA VARIÁVEL ─────────────────────────────
   { id: "acoes",               label: "Ações",                   classe: "renda_variavel", qualidade: "bom", icone: "ti-trending-up",    cor: "#15803D" },
   { id: "fiis",                label: "Fundos Imobiliários (FIIs)", classe: "renda_variavel", qualidade: "bom", icone: "ti-building",    cor: "#15803D" },
   { id: "etfs",                label: "ETFs",                    classe: "renda_variavel", qualidade: "bom", icone: "ti-chart-bar",      cor: "#15803D" },
+  { id: "fundo_acoes",         label: "Fundos de Ações",         classe: "renda_variavel", qualidade: "ruim", icone: "ti-alert-circle",  cor: "#B91C1C" },
+  { id: "fiagro",              label: "Fiagro",                  classe: "renda_variavel", qualidade: "ruim", icone: "ti-alert-circle",  cor: "#B91C1C" },
 
   // ─── EXTERIOR ───────────────────────────────────
   { id: "exterior",            label: "Investimentos no Exterior", classe: "exterior",     qualidade: "bom", icone: "ti-world",          cor: "#B45309" },
