@@ -14,45 +14,7 @@ export function DocMaosAObra({ nomeCliente }: Props) {
 
   return (
     <PaginaDoc
-      marcaDagua
-      rodape={
-        <>
-          {/* Marca discreta acima do rodapé (padrão da referência) */}
-          <p
-            style={{
-              margin: "0 0 14px",
-              fontSize: 15,
-              fontWeight: 700,
-              letterSpacing: "0.14em",
-              color: "#D1D5DB",
-              textAlign: "right",
-            }}
-          >
-            SIMPLA INVEST
-          </p>
-          <div
-            style={{
-              borderTop: `1px solid ${DOC.linha}`,
-              paddingTop: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 16,
-              marginBottom: 8,
-            }}
-          >
-            <div>
-              <p style={{ margin: 0, fontSize: 10.5, color: DOC.hint }}>
-                Financial Planning elaborado por Simpla Invest
-              </p>
-              <p style={{ margin: "3px 0 0", fontSize: 10.5, color: DOC.hint }}>
-                Válido por 12 meses · Recomendamos revisão anual
-              </p>
-            </div>
-          </div>
-          <RodapePagina nomeCliente={nomeCliente} />
-        </>
-      }
+      rodape={<RodapePagina nomeCliente={nomeCliente} />}
     >
       <HeaderSecao titulo="Mãos à Obra" />
 
