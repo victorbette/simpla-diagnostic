@@ -116,20 +116,10 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         )}
 
         {etapaAtiva === "resultado" && (
-          <>
-            <DiagResultado
-              lead={lead}
-              onAtualizar={(patch) => onAtualizar({ ...lead, ...patch })}
-            />
-            <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => changeEtapa("relatorio")}
-                style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Ver Relatório →
-              </button>
-            </div>
-          </>
+          <DiagResultado
+            lead={lead}
+            onAtualizar={(patch) => onAtualizar({ ...lead, ...patch })}
+          />
         )}
 
         {etapaAtiva === "relatorio" && (

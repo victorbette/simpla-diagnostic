@@ -329,22 +329,6 @@ export function DiagResultado({ lead }: Props) {
           </div>
         ))}
 
-        {/* ── Botão imprimir ── */}
-        <div className="diag-no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 24 }}>
-          <button
-            onClick={() => window.print()}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: "#1E3A8A", color: "white",
-              border: "none", borderRadius: 8,
-              padding: "10px 24px", fontSize: 13,
-              fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
-            <i className="ti ti-printer" style={{ fontSize: 15 }} />
-            Imprimir Diagnóstico
-          </button>
-        </div>
 
       </div>
     </>
