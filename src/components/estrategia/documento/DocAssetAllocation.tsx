@@ -86,18 +86,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
 
   const nota = useNotaConsultor(plan.clientId, "aa");
 
-  const blocos: BlocoDoc[] = [
-    {
-      chave: "intro",
-      node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-          A alocação do seu portfólio foi desenhada sob um modelo de consultoria independente,
-          transparente e livre de conflitos de interesse, respeitando estritamente o seu perfil de
-          investidor e a sua tolerância ao risco.
-        </p>
-      ),
-    },
-  ];
+  const blocos: BlocoDoc[] = [];
 
   if (perfil) {
     blocos.push({
