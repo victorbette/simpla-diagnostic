@@ -321,7 +321,6 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
     "No mercado financeiro, dedicamos grande parte do nosso tempo focados na rentabilidade e na multiplicação do capital. No entanto, a construção de um patrimônio sólido é um processo assimétrico: leva-se décadas para acumular riqueza, mas ela pode ser severamente dilapidada em questão de meses devido a eventos não planejados.",
     "O pilar de Proteção e Sucessão existe para garantir que o seu planejamento financeiro seja à prova de falhas. O nosso trabalho nesta etapa não é prever o futuro, mas assegurar que você, o seu fluxo de renda e a sua família estejam blindados financeiramente caso o inesperado aconteça.",
     "A blindagem pessoal é o mecanismo pelo qual transferimos os riscos financeiros e imprevisíveis da sua vida para instituições robustas (seguradoras), protegendo a liquidez dos seus investimentos.",
-    "O planejamento sucessório aborda o que acontece com o seu patrimônio na sua ausência. Sem uma estrutura pré-definida, a transição de bens no Brasil é um processo burocrático, lento e extremamente custoso.",
     "Esse plano garante que as turbulências da vida não destruam o que você levou uma vida inteira para construir. É a tranquilidade de saber que, não importa o cenário, a sua dignidade e o bem-estar daqueles que você mais ama estão absolutamente garantidos.",
   ];
   narrativa.forEach((texto, i) => {
