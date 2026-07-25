@@ -5,6 +5,7 @@ interface Props {
   nomeCliente: string;
   dataEstrategia: string;
   nomeConsultor: string;
+  titulo?: string;
 }
 
 const LABEL_CAPA = {
@@ -16,14 +17,14 @@ const LABEL_CAPA = {
   margin: 0,
 };
 
-export function DocCapa({ nomeCliente, dataEstrategia, nomeConsultor }: Props) {
+export function DocCapa({ nomeCliente, dataEstrategia, nomeConsultor, titulo = "Financial Planning" }: Props) {
   return (
     <PaginaDoc escura paddingConteudo="16mm 18mm 12mm">
       <MarcaSimpla />
 
       {/* Bloco central */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <p style={{ ...LABEL_CAPA, marginBottom: 18 }}>Financial Planning</p>
+        <p style={{ ...LABEL_CAPA, marginBottom: 18 }}>{titulo}</p>
 
         <h1
           style={{

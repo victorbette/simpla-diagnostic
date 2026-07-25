@@ -3,13 +3,15 @@ import type { Lead, DadosColetaDiag, DadosLFDiag } from "./types";
 import { DiagColeta } from "./etapas/DiagColeta";
 import { DiagLiberdadeFinanceira } from "./etapas/DiagLiberdadeFinanceira";
 import { DiagResultado } from "./etapas/DiagResultado";
+import { DiagRelatorio } from "./etapas/DiagRelatorio";
 
-type Etapa = "coleta" | "lf" | "resultado";
+type Etapa = "coleta" | "lf" | "resultado" | "relatorio";
 
 const ABAS: { id: Etapa; label: string }[] = [
   { id: "coleta", label: "Coleta de Dados" },
   { id: "lf", label: "Liberdade Financeira" },
-  { id: "resultado", label: "Resultado" },
+  { id: "resultado", label: "Diagnóstico Inicial" },
+  { id: "relatorio", label: "Relatório" },
 ];
 
 interface Props {
@@ -22,7 +24,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
   const [etapaAtiva, setEtapaAtiva] = useState<Etapa>(() => {
     try {
       const saved = sessionStorage.getItem(`diag_etapa_${lead.id}`);
-      if (saved === "coleta" || saved === "lf" || saved === "resultado") return saved;
+      if (saved === "coleta" || saved === "lf" || saved === "resultado" || saved === "relatorio") return saved;
     } catch { /* ignore */ }
     return "coleta";
   });
@@ -90,7 +92,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
       </div>
 
       {/* Content */}
-      <main style={{ width: "100%", boxSizing: "border-box", padding: "24px 32px" }}>
+      <main style={{ width: "100%", boxSizing: "border-box", padding: etapaAtiva === "relatorio" ? 0 : "24px 32px" }}>
         {etapaAtiva === "coleta" && (
           <DiagColeta dados={lead.dadosColeta} onChange={atualizarColeta} />
         )}
@@ -107,17 +109,31 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
                 onClick={() => changeEtapa("resultado")}
                 style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
               >
-                Ver Resultado →
+                Ver Diagnóstico →
               </button>
             </div>
           </>
         )}
 
         {etapaAtiva === "resultado" && (
-          <DiagResultado
-            lead={lead}
-            onAtualizar={(patch) => onAtualizar({ ...lead, ...patch })}
-          />
+          <>
+            <DiagResultado
+              lead={lead}
+              onAtualizar={(patch) => onAtualizar({ ...lead, ...patch })}
+            />
+            <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => changeEtapa("relatorio")}
+                style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Ver Relatório →
+              </button>
+            </div>
+          </>
+        )}
+
+        {etapaAtiva === "relatorio" && (
+          <DiagRelatorio lead={lead} />
         )}
       </main>
     </div>
