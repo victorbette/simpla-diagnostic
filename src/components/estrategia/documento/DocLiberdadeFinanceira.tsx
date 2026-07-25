@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import { formatCurrency } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
+import { calcularProjecaoIF, TAXA_ACUM_ANUAL, type PontoProjecao } from "@/lib/financialFreedomCalc";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
@@ -13,18 +14,46 @@ interface Props {
   resultados: ResultadosEstrategia;
 }
 
+interface ObjGrafico {
+  id: string;
+  tipo: string;
+  mes: number;
+  ano: number;
+}
+
+const COR_APOSENTADORIA = "#0891B2";
+
+function iconeObjetivo(tipo: string): string {
+  const MAP: Record<string, string> = {
+    casa: "🏠", carro: "🚗", educacao: "🎓", viagem: "✈️",
+    trabalho: "💼", saude: "❤️", outros: "⭐",
+  };
+  return MAP[tipo] ?? "⭐";
+}
+
+function parseDateNasc(s: string): { ano: number; mes: number } | null {
+  if (!s) return null;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return { ano: Number(iso[1]), mes: Number(iso[2]) };
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return { ano: Number(br[3]), mes: Number(br[2]) };
+  return null;
+}
+
 /** SVG estático para impressão — sem Recharts/ResizeObserver, renderiza perfeitamente no PDF */
 function GraficoIFDoc({
   projecao,
   patrimonioNecessario,
   mesIF,
+  objetivos = [],
 }: {
   projecao: PontoProjecao[];
   patrimonioNecessario?: number;
   mesIF?: number;
+  objetivos?: ObjGrafico[];
 }) {
-  const W = 600, H = 200;
-  const P = { t: 20, r: 16, b: 28, l: 56 };
+  const W = 600, H = 220;
+  const P = { t: 50, r: 16, b: 28, l: 56 };
   const pw = W - P.l - P.r;
   const ph = H - P.t - P.b;
 
@@ -41,7 +70,6 @@ function GraficoIFDoc({
   const toY = (v: number) => P.t + ph * (1 - Math.min(v, yMax) / yMax);
   const baseY = P.t + ph;
 
-  // Sample every 6th month for a lighter path
   const sampled = pts.filter((_, i) => i % 6 === 0 || i === pts.length - 1);
   const pathD = sampled
     .map((p, i) => `${i === 0 ? "M" : "L"} ${toX(p.mes).toFixed(1)},${toY(Number(p.patrimonio)).toFixed(1)}`)
@@ -74,6 +102,12 @@ function GraficoIFDoc({
 
   const ifPt = mesIF !== undefined ? pts.find(p => p.mes === mesIF) : undefined;
   const metaY = patrimonioNecessario && patrimonioNecessario > 0 ? toY(patrimonioNecessario) : null;
+
+  // Map objectives to their projection point by calendar year+month
+  const objPts = objetivos.map(obj => {
+    const pt = pts.find(p => p.ano === obj.ano && p.mesDoAno === obj.mes);
+    return pt ? { obj, pt } : null;
+  }).filter(Boolean) as { obj: ObjGrafico; pt: PontoProjecao }[];
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: "block", overflow: "visible" }}>
@@ -109,15 +143,41 @@ function GraficoIFDoc({
 
       <text x={P.l + pw} y={baseY + 16} textAnchor="end" fontSize={9} fill="#9CA3AF">Idade</text>
 
-      {ifPt && (
-        <circle cx={toX(ifPt.mes)} cy={toY(Number(ifPt.patrimonio))} r={5} fill="white" stroke="#0891B2" strokeWidth={2} />
-      )}
-
       {metaY !== null && (
         <text x={P.l + pw - 4} y={metaY - 5} textAnchor="end" fontSize={8.5} fill="#1E3A8A">
           Meta (perpetuidade)
         </text>
       )}
+
+      {/* Ícones dos objetivos de vida */}
+      {objPts.map(({ obj, pt }) => {
+        const cx = toX(pt.mes);
+        const cy = toY(Number(pt.patrimonio));
+        const r = 14;
+        return (
+          <g key={obj.id}>
+            <circle cx={cx} cy={cy - r - 8} r={r} fill="white" stroke="#6B7280" strokeWidth={1.5} />
+            <text x={cx} y={cy - r - 8 + 5} textAnchor="middle" fontSize={13}>
+              {iconeObjetivo(obj.tipo)}
+            </text>
+            <circle cx={cx} cy={cy} r={4} fill="white" stroke="#374151" strokeWidth={1.5} />
+          </g>
+        );
+      })}
+
+      {/* Ícone de aposentadoria no ponto IF */}
+      {ifPt && (() => {
+        const cx = toX(ifPt.mes);
+        const cy = toY(Number(ifPt.patrimonio));
+        const r = 16;
+        return (
+          <g>
+            <circle cx={cx} cy={cy - r - 8} r={r} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
+            <text x={cx} y={cy - r - 8 + 6} textAnchor="middle" fontSize={14}>🏖️</text>
+            <circle cx={cx} cy={cy} r={5} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
+          </g>
+        );
+      })()}
     </svg>
   );
 }
@@ -132,6 +192,44 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const pi = plan.planejamentoIF;
   const rif = resultados.if;
 
+  const nota = useNotaConsultor(plan.clientId, "lf");
+
+  // Computa a projeção localmente quando rif.projecao não está disponível
+  // (ex.: DiagRelatorio onde resultados.if é null)
+  const projecaoData = useMemo((): { projecao: PontoProjecao[]; mesIF?: number } => {
+    if (rif?.projecao && rif.projecao.length > 0) {
+      return { projecao: rif.projecao, mesIF: rif.mesInicioRetirada };
+    }
+    if (!pi.rendaMensalDesejada || !pi.idadeMeta) return { projecao: [] };
+
+    const parsed = parseDateNasc(plan.dadosCliente.dataNascimento);
+    const anoNasc = parsed?.ano ?? (new Date().getFullYear() - (pi.idadeAtual || 35));
+    const mesNasc = parsed?.mes ?? 1;
+    const idadeAtual = parsed
+      ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
+      : (pi.idadeAtual || 35);
+
+    if (pi.idadeMeta <= idadeAtual) return { projecao: [] };
+
+    try {
+      const result = calcularProjecaoIF({
+        idadeAtual,
+        idadeMeta: pi.idadeMeta,
+        idadeMaxima: 90,
+        patrimonioInicial: pi.patrimonioAtual,
+        aporteMensal: pi.aporteMensal,
+        rendaMensalDesejada: pi.rendaMensalDesejada,
+        taxaRetornoAnual: TAXA_ACUM_ANUAL,
+        anoNascimento: anoNasc,
+        mesNascimento: mesNasc,
+        objetivos: [],
+      });
+      return { projecao: result.projecao, mesIF: result.mesInicioRetirada };
+    } catch {
+      return { projecao: [] };
+    }
+  }, [rif, pi, plan.dadosCliente.dataNascimento]);
+
   const simplesIF = !rif && pi.rendaMensalDesejada > 0 ? calcularIF(pi) : null;
   const patrimonioNecessario = rif?.patrimonioNecessario ?? simplesIF?.patrimonioNecessario ?? 0;
   const patrimonioNaIF = rif?.patrimonioAposentadoria ?? simplesIF?.patrimonioProjetado ?? 0;
@@ -140,13 +238,10 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const aporteNecessario = rif?.aporteAjustado ?? rif?.aporteAtual ?? pi.aporteMensal;
   const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
   const objetivos = rif?.objetivos ?? [];
-  const temDados = patrimonioNecessario > 0 || rif !== null;
+  const temDados = patrimonioNecessario > 0 || projecaoData.projecao.length > 0;
 
-  // Mesma semântica dos cards da ferramenta de Liberdade Financeira do app
   const metaAtingida = rendaDesejada > 0 && rendaSustentavel >= rendaDesejada;
   const aporteOk = aporteNecessario <= aporteAtual;
-
-  const nota = useNotaConsultor(plan.clientId, "lf");
 
   const blocos: BlocoDoc[] = [
     {
@@ -176,7 +271,6 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     {
       chave: "metricas",
       node: temDados ? (
-        /* Métricas principais — os 4 cards da ferramenta de LF (referência v5) */
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
             <p style={LABEL_CARD}>Patrimônio Necessário</p>
@@ -243,8 +337,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     },
     {
       chave: "grafico",
-      /* Projeção patrimonial */
-      node: rif?.projecao && rif.projecao.length > 0 ? (
+      node: projecaoData.projecao.length > 0 ? (
         <div style={{ marginBottom: 4 }}>
           <div
             className="doc-card"
@@ -257,9 +350,10 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
             }}
           >
             <GraficoIFDoc
-              projecao={rif.projecao}
+              projecao={projecaoData.projecao}
               patrimonioNecessario={patrimonioNecessario}
-              mesIF={rif.mesInicioRetirada}
+              mesIF={projecaoData.mesIF}
+              objetivos={objetivos as ObjGrafico[]}
             />
           </div>
         </div>
