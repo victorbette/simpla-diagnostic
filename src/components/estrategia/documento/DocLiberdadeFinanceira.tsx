@@ -73,11 +73,17 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     }
   }, [rif, pi, plan.dadosCliente.dataNascimento]);
 
-  const simplesIF = !rif && pi.rendaMensalDesejada > 0 ? calcularIF(pi) : null;
-  const patrimonioNecessario = rif?.patrimonioNecessario ?? simplesIF?.patrimonioNecessario ?? 0;
-  const patrimonioNaIF = rif?.patrimonioAposentadoria ?? simplesIF?.patrimonioProjetado ?? 0;
-  const rendaSustentavel = rif?.rendaSustentavel ?? 0;
   const rendaDesejada = rif?.rendaMensalDesejada ?? pi.rendaMensalDesejada;
+  // Perpetuidade IPCA+4% — mesma fórmula de calcularPatrimonioPerpetuidade usada na aba LF
+  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
+  const simplesIF = !rif && !projecaoData.projecao.length && pi.rendaMensalDesejada > 0
+    ? calcularIF(pi) : null;
+  const patrimonioNaIF = rif?.patrimonioAposentadoria
+    ?? (projecaoData.mesIF !== undefined && projecaoData.mesIF < projecaoData.projecao.length
+        ? (projecaoData.projecao[projecaoData.mesIF]?.patrimonio ?? 0)
+        : (simplesIF?.patrimonioProjetado ?? 0));
+  // Renda sustentável como perpetuidade (p × 0,04 / 12) — mesma fórmula da aba LF
+  const rendaSustentavel = (patrimonioNaIF * 0.04) / 12;
   const aporteNecessario = rif?.aporteAjustado ?? rif?.aporteAtual ?? pi.aporteMensal;
   const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
   const objetivos = rif?.objetivos ?? [];
