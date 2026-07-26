@@ -1,6 +1,5 @@
 import {
-  Briefcase, User, Building2, BadgeCheck,
-  DollarSign, PieChart, Plus, X,
+  User, DollarSign, PieChart, Plus, X,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -18,11 +17,13 @@ const UFS = [
   "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
 
-const VINCULO_OPTIONS: { key: DadosCliente["tipoTrabalho"]; label: string; Icon: React.ElementType }[] = [
-  { key: "clt", label: "CLT", Icon: Briefcase },
-  { key: "autonomo", label: "Autônomo", Icon: User },
-  { key: "empresario", label: "Empresário", Icon: Building2 },
-  { key: "concursado", label: "Concursado", Icon: BadgeCheck },
+const VINCULOS = [
+  { id: "clt",        label: "CLT" },
+  { id: "autonomo",   label: "Autônomo" },
+  { id: "empresario", label: "Empresário" },
+  { id: "servidor",   label: "Servidor Público" },
+  { id: "aposentado", label: "Aposentado" },
+  { id: "outro",      label: "Outro" },
 ];
 
 
@@ -78,6 +79,20 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
     onChange({ dadosCliente: { ...dados, filhos: newFilhos, numeroFilhos: newFilhos.length } });
 
   const calculatedAge = dados.dataNascimento ? calcularIdade(dados.dataNascimento) : null;
+
+  const vinculosAtuais: string[] = (() => {
+    const v = dados.vinculoProfissional;
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    return [v];
+  })();
+
+  const toggleVinculo = (id: string) => {
+    const novoArray = vinculosAtuais.includes(id)
+      ? vinculosAtuais.filter((v) => v !== id)
+      : [...vinculosAtuais, id];
+    setDados("vinculoProfissional", novoArray);
+  };
 
   const labelCls = "text-[13px] font-medium text-[#111827]";
   const fieldCls = "flex flex-col gap-1.5";
@@ -264,26 +279,38 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
 
         {/* Vínculo profissional */}
         <div style={{ marginTop: 20 }}>
-          <Label className={labelCls} style={{ display: "block", marginBottom: 10 }}>Vínculo profissional</Label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
-            {VINCULO_OPTIONS.map(({ key, label, Icon: VIcon }) => {
-              const selected = dados.tipoTrabalho === key;
+          <Label className={labelCls} style={{ display: "block", marginBottom: 8 }}>Vínculo profissional</Label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {VINCULOS.map(({ id, label }) => {
+              const selecionado = vinculosAtuais.includes(id);
               return (
                 <button
-                  key={key}
+                  key={id}
                   type="button"
-                  onClick={() => setDados("tipoTrabalho", key)}
-                  style={{ border: selected ? "2px solid #3B82F6" : "1.5px solid #BFDBFE", borderRadius: 10, padding: "14px 12px", backgroundColor: selected ? "#000000" : "white", color: selected ? "white" : "#111827", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, position: "relative", transition: "all 0.15s" }}
+                  onClick={() => toggleVinculo(id)}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 12,
+                    fontWeight: selecionado ? 600 : 400,
+                    border: selecionado ? "2px solid #2563EB" : "1px solid #E5E7EB",
+                    borderRadius: 99,
+                    background: selecionado ? "#EFF6FF" : "white",
+                    color: selecionado ? "#2563EB" : "#374151",
+                    cursor: "pointer",
+                    transition: "all 150ms",
+                    fontFamily: "inherit",
+                  }}
                 >
-                  {selected && (
-                    <span style={{ position: "absolute", top: 8, right: 8, backgroundColor: "#3B82F6", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#000000", fontWeight: 700 }}>✓</span>
-                  )}
-                  <VIcon size={22} />
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{label}</span>
+                  {label}
                 </button>
               );
             })}
           </div>
+          {vinculosAtuais.length > 1 && (
+            <div style={{ fontSize: 10, color: "#6B7280", marginTop: 6 }}>
+              {vinculosAtuais.length} vínculos selecionados
+            </div>
+          )}
         </div>
 
         {/* Profissão */}

@@ -79,6 +79,29 @@ export function DiagColeta({ dados, onChange }: Props) {
     onChange({ filhos: newFilhos });
   }
 
+  const VINCULOS = [
+    { id: "clt",        label: "CLT" },
+    { id: "autonomo",   label: "Autônomo" },
+    { id: "empresario", label: "Empresário" },
+    { id: "servidor",   label: "Servidor Público" },
+    { id: "aposentado", label: "Aposentado" },
+    { id: "outro",      label: "Outro" },
+  ];
+
+  const vinculosAtuais: string[] = (() => {
+    const v = dados.vinculoProfissional;
+    if (!v) return [];
+    if (Array.isArray(v)) return v;
+    return [v];
+  })();
+
+  const toggleVinculo = (id: string) => {
+    const novoArray = vinculosAtuais.includes(id)
+      ? vinculosAtuais.filter((v) => v !== id)
+      : [...vinculosAtuais, id];
+    onChange({ vinculoProfissional: novoArray });
+  };
+
   return (
     <div>
 
@@ -136,6 +159,44 @@ export function DiagColeta({ dados, onChange }: Props) {
               style={INP}
             />
           </div>
+        </div>
+
+        {/* Vínculo profissional */}
+        <div style={{ marginTop: 20 }}>
+          <label style={{ fontSize: 13, fontWeight: 500, color: "#111827", display: "block", marginBottom: 8 }}>
+            Vínculo profissional
+          </label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {VINCULOS.map(({ id, label }) => {
+              const selecionado = vinculosAtuais.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleVinculo(id)}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 12,
+                    fontWeight: selecionado ? 600 : 400,
+                    border: selecionado ? "2px solid #2563EB" : "1px solid #E5E7EB",
+                    borderRadius: 99,
+                    background: selecionado ? "#EFF6FF" : "white",
+                    color: selecionado ? "#2563EB" : "#374151",
+                    cursor: "pointer",
+                    transition: "all 150ms",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          {vinculosAtuais.length > 1 && (
+            <div style={{ fontSize: 10, color: "#6B7280", marginTop: 6 }}>
+              {vinculosAtuais.length} vínculos selecionados
+            </div>
+          )}
         </div>
 
         {/* Dados do Cônjuge */}

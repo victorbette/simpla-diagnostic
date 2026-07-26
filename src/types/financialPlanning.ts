@@ -574,6 +574,7 @@ export interface DadosCliente {
   temSeguroInvalidez: boolean;
   valorApoliceInvalidez: number;
   tipoTrabalho: "clt" | "autonomo" | "empresario" | "concursado" | "";
+  vinculoProfissional?: string | string[];
   profissao: string;
   suitabilityPerfil: PerfilRisco | null;
   filhos: Array<{ nome: string; idade: number }>;
