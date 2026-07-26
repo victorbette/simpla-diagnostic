@@ -286,9 +286,17 @@
 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  /* GraficoIF: garantir visibilidade de foreignObject (ícones lucide) em impressão */
+  /* GraficoIF: dimensões fixas + foreignObject visível na impressão */
   foreignObject { display: block !important; overflow: visible !important; }
+  .grafico-doc-lf {
+    height: 280px !important;
+    min-height: 280px !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
   .grafico-doc-lf .recharts-responsive-container { width: 100% !important; height: 260px !important; }
+  .grafico-doc-lf .recharts-wrapper { height: 260px !important; }
   .grafico-doc-lf svg.recharts-surface { width: 100% !important; height: 260px !important; }
 }
 

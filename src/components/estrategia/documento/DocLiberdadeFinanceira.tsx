@@ -195,7 +195,9 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
               border: `1px solid ${DOC.linha}`,
               borderRadius: 10,
               padding: "10px 8px 4px",
-              overflow: "hidden",
+              overflow: "visible",
+              height: 280,
+              minHeight: 280,
             }}
           >
             <GraficoIF
