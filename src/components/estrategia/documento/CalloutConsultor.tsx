@@ -87,24 +87,18 @@ function NotaEditorTela({ clientId, secao, valor }: { clientId: string; secao: s
   );
 }
 
-/** Fragmento (parágrafo) da observação na impressão — caixa âmbar própria,
- *  para que uma observação longa flua por várias folhas sem cortar. */
+/** Fragmento (parágrafo) da observação na impressão — texto simples, sem caixa âmbar. */
 function NotaParagrafoPrint({ texto, primeiro }: { texto: string; primeiro: boolean }) {
   return (
-    <div
-      className="doc-print-only"
-      style={{
-        background: AMBAR_BG,
-        border: BORDA,
-        borderLeft: "4px solid #F59E0B",
-        borderRadius: 8,
-        padding: "12px 18px",
-        marginTop: primeiro ? 18 : 6,
-        boxSizing: "border-box",
-      }}
-    >
-      {primeiro && <p style={LABEL_NOTA}>Observações do Consultor</p>}
-      <p style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: 12.5, lineHeight: 1.75, color: "#43302B" }}>
+    <div className="doc-print-only" style={{ marginTop: primeiro ? 16 : 4 }}>
+      <p style={{
+        margin: 0,
+        whiteSpace: "pre-wrap",
+        fontSize: 13,
+        lineHeight: 1.7,
+        color: "#374151",
+        fontStyle: "italic",
+      }}>
         {texto}
       </p>
     </div>
