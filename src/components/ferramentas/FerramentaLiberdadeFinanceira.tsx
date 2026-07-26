@@ -19,7 +19,7 @@ import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
-import { GraficoIF } from "@/components/shared/GraficoIF";
+import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
 
 interface Props {
@@ -549,21 +549,14 @@ export function FerramentaLiberdadeFinanceira({
       </div>
 
       {/* ── 4. GRÁFICO ──────────────────────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
-        <CardContent className="pt-5">
-          <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-            Projeção Patrimonial
-          </p>
-          <GraficoIF
-            projecao={dadosGrafico}
-            objetivos={objetivosAtivos}
-            height={420}
-            mesIF={mesIF}
-            mesNascimento={mesNascimento}
-            patrimonioNecessario={patrimonioPerpetuidade}
-          />
-        </CardContent>
-      </Card>
+      <CardProjecaoPatrimonial
+        projecao={dadosGrafico}
+        objetivos={objetivosAtivos}
+        height={420}
+        mesIF={mesIF}
+        mesNascimento={mesNascimento}
+        patrimonioNecessario={patrimonioPerpetuidade}
+      />
 
       {/* ── 5. ANÁLISE DE SENSIBILIDADE ─────────────────────────────────────── */}
       <Card style={cardGreenTop}>

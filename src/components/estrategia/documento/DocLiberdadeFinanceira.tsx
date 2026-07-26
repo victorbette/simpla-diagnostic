@@ -7,8 +7,7 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
-import { GraficoIF } from "@/components/shared/GraficoIF";
-import type { ObjetivoVida } from "@/types/objetivos";
+import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
 interface Props {
   nomeCliente: string;
@@ -30,115 +29,6 @@ const fmtInteiro = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   maximumFractionDigits: 0,
 });
-
-// ── SVG estático para impressão ───────────────────────────────
-// Usado apenas no PDF via classe doc-print-only. Na tela o GraficoIF
-// (Recharts) é exibido normalmente via doc-screen-only.
-// Razão: ResponsiveContainer inicia com width=0 e usa ResizeObserver
-// assíncrono; o navegador tira o snapshot do PDF antes de o React
-// flushar o setState → gráfico some no PDF.
-type DadoGrafico = { idade: number; patrimonio: number };
-
-function GraficoLFImpressao({
-  dados,
-  patrimonioNecessario,
-  objetivos,
-  idxIF,
-}: {
-  dados: DadoGrafico[];
-  patrimonioNecessario: number;
-  objetivos: ObjetivoVida[];
-  idxIF?: number;
-}) {
-  if (dados.length < 2) return null;
-
-  const W = 620;
-  const H = 240;
-  const PAD = { top: 20, right: 20, bottom: 30, left: 70 };
-  const innerW = W - PAD.left - PAD.right;
-  const innerH = H - PAD.top - PAD.bottom;
-
-  const maxVal =
-    Math.max(...dados.map((d) => d.patrimonio), patrimonioNecessario || 0) * 1.1;
-  if (maxVal <= 0) return null;
-
-  const scaleX = (idx: number) => PAD.left + (idx / (dados.length - 1)) * innerW;
-  const scaleY = (val: number) => PAD.top + innerH - (val / maxVal) * innerH;
-
-  const pathLinha = dados
-    .map((d, i) => `${i === 0 ? "M" : "L"} ${scaleX(i).toFixed(1)} ${scaleY(d.patrimonio).toFixed(1)}`)
-    .join(" ");
-
-  const pathArea =
-    pathLinha +
-    ` L ${scaleX(dados.length - 1).toFixed(1)} ${(PAD.top + innerH).toFixed(1)}` +
-    ` L ${PAD.left.toFixed(1)} ${(PAD.top + innerH).toFixed(1)} Z`;
-
-  const yMeta = scaleY(patrimonioNecessario);
-
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({
-    val: maxVal * f,
-    y: scaleY(maxVal * f),
-  }));
-
-  const xTicks = dados
-    .map((d, i) => ({ idade: d.idade, x: scaleX(i), i }))
-    .filter(({ i, idade }) => i === 0 || i === dados.length - 1 || Math.round(idade) % 5 === 0);
-
-  const formatBRL = (v: number) => {
-    if (v >= 1_000_000) return `R$${(v / 1_000_000).toFixed(1)}M`;
-    if (v >= 1_000) return `R$${(v / 1_000).toFixed(0)}k`;
-    return `R$${v.toFixed(0)}`;
-  };
-
-  const anoAtual = new Date().getFullYear();
-  const idxEmoji = idxIF !== undefined ? Math.min(idxIF, dados.length - 1) : dados.length - 1;
-
-  return (
-    <svg
-      width="100%"
-      viewBox={`0 0 ${W} ${H}`}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ display: "block", overflow: "visible" }}
-    >
-      {yTicks.map((t, i) => (
-        <line key={i} x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y} stroke="#F3F4F6" strokeWidth={1} />
-      ))}
-      <path d={pathArea} fill="#BFDBFE" opacity={0.6} />
-      <path d={pathLinha} fill="none" stroke="#2563EB" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      {patrimonioNecessario > 0 && yMeta >= PAD.top && yMeta <= PAD.top + innerH && (
-        <line x1={PAD.left} y1={yMeta} x2={W - PAD.right} y2={yMeta} stroke="#1E3A8A" strokeWidth={1.5} strokeDasharray="6 3" />
-      )}
-      <text x={scaleX(idxEmoji)} y={scaleY(dados[idxEmoji].patrimonio) - 12} textAnchor="middle" fontSize={16}>
-        🏖
-      </text>
-      {objetivos.map((obj, i) => {
-        const idx = Math.min(Math.max(0, Number(obj.ano) - anoAtual), dados.length - 1);
-        if (idx <= 0 || idx >= dados.length - 1) return null;
-        const emoji =
-          obj.tipo === "casa" ? "🏠" :
-          obj.tipo === "viagem" ? "✈️" :
-          obj.tipo === "educacao" ? "🎓" :
-          obj.tipo === "veiculo" ? "🚗" : "⭐";
-        return (
-          <text key={i} x={scaleX(idx)} y={scaleY(dados[idx].patrimonio) - 14} textAnchor="middle" fontSize={14}>
-            {emoji}
-          </text>
-        );
-      })}
-      {yTicks.filter((t) => t.val > 0).map((t, i) => (
-        <text key={i} x={PAD.left - 6} y={t.y + 4} textAnchor="end" fontSize={9} fill="#9CA3AF">
-          {formatBRL(t.val)}
-        </text>
-      ))}
-      {xTicks.map((t, i) => (
-        <text key={i} x={t.x} y={H - 6} textAnchor="middle" fontSize={9} fill="#9CA3AF">
-          {Math.round(t.idade)}a
-        </text>
-      ))}
-    </svg>
-  );
-}
 
 export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props) {
   const pi = plan.planejamentoIF;
@@ -180,19 +70,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     }
   }, [rif, pi, plan.dadosCliente.dataNascimento]);
 
-  // Amostras anuais para o SVG de impressão
-  const dadosGrafico = useMemo<DadoGrafico[]>(
-    () =>
-      projecaoData.projecao
-        .filter((_, i) => i % 12 === 0 || i === projecaoData.projecao.length - 1)
-        .map((p) => ({ idade: p.idade, patrimonio: p.patrimonio })),
-    [projecaoData.projecao]
-  );
-
-  const idxIF =
-    projecaoData.mesIF !== undefined
-      ? Math.min(Math.floor(projecaoData.mesIF / 12), dadosGrafico.length - 1)
-      : undefined;
+  const mesNascimento = parseDateNasc(plan.dadosCliente.dataNascimento)?.mes;
 
   const rendaDesejada = rif?.rendaMensalDesejada ?? pi.rendaMensalDesejada;
   const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
@@ -210,16 +88,6 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
 
   const metaAtingida = rendaDesejada > 0 && rendaSustentavel >= rendaDesejada;
   const aporteOk = aporteNecessario <= aporteAtual;
-
-  const containerGrafico = {
-    background: "#FBFCFE",
-    border: `1px solid ${DOC.linha}`,
-    borderRadius: 10,
-    padding: "10px 8px 4px",
-    overflow: "visible" as const,
-    height: 280,
-    minHeight: 280,
-  };
 
   const blocos: BlocoDoc[] = [
     {
@@ -309,29 +177,16 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     {
       chave: "grafico",
       node: projecaoData.projecao.length > 0 ? (
-        <div style={{ marginBottom: 4 }}>
-          {/* Tela: GraficoIF (Recharts) — ResponsiveContainer funciona normalmente */}
-          <div className="doc-screen-only doc-card grafico-doc-lf" style={containerGrafico}>
-            <GraficoIF
-              projecao={projecaoData.projecao}
-              patrimonioNecessario={patrimonioNecessario}
-              mesIF={projecaoData.mesIF}
-              objetivos={objetivos}
-              height={260}
-              interativo={false}
-            />
-          </div>
-          {/* Impressão: SVG puro — sem ResizeObserver, sempre correto no PDF */}
-          <div className="doc-print-only doc-card grafico-doc-lf" style={containerGrafico}>
-            {dadosGrafico.length > 1 && (
-              <GraficoLFImpressao
-                dados={dadosGrafico}
-                patrimonioNecessario={patrimonioNecessario}
-                objetivos={objetivos}
-                idxIF={idxIF}
-              />
-            )}
-          </div>
+        <div className="no-page-break" style={{ marginBottom: 4 }}>
+          <CardProjecaoPatrimonial
+            projecao={projecaoData.projecao}
+            patrimonioNecessario={patrimonioNecessario}
+            mesIF={projecaoData.mesIF}
+            mesNascimento={mesNascimento}
+            objetivos={objetivos}
+            height={260}
+            interativo={false}
+          />
         </div>
       ) : (
         <div style={{ ...CARD, background: DOC.blueSoft, border: `1px solid ${DOC.blueBorder}`, textAlign: "center", padding: "26px 20px" }}>

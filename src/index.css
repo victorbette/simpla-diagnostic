@@ -286,18 +286,14 @@
 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  /* GraficoIF: dimensões fixas + foreignObject visível na impressão */
+  /* GraficoIF: foreignObject e Recharts visíveis no PDF */
   foreignObject { display: block !important; overflow: visible !important; }
-  .grafico-doc-lf {
-    height: 280px !important;
-    min-height: 280px !important;
-    overflow: visible !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-  .grafico-doc-lf .recharts-responsive-container { width: 100% !important; height: 260px !important; }
-  .grafico-doc-lf .recharts-wrapper { height: 260px !important; }
-  .grafico-doc-lf svg.recharts-surface { width: 100% !important; height: 260px !important; }
+  .recharts-responsive-container { width: 100% !important; height: 260px !important; }
+  .recharts-wrapper { width: 100% !important; height: 260px !important; }
+  svg.recharts-surface { width: 100% !important; height: 260px !important; }
+  .recharts-area-area { fill-opacity: 0.6 !important; display: block !important; }
+  .recharts-layer { display: block !important; }
+  svg.recharts-surface path { display: block !important; visibility: visible !important; }
 }
 
 @keyframes spin {
