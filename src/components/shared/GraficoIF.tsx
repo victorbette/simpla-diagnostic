@@ -252,6 +252,19 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   const temCurvaIdeal = !!(curvaIdeal && curvaIdeal.length > 0);
 
   return (
+    <>
+    <style>{`
+      @media print {
+        linearGradient stop { stop-opacity: 1 !important; }
+        .recharts-area-area { fill-opacity: 1 !important; opacity: 1 !important; }
+        .recharts-area path { fill-opacity: 1 !important; opacity: 1 !important; }
+        .recharts-layer.recharts-area path {
+          display: block !important;
+          visibility: visible !important;
+          fill-opacity: 1 !important;
+        }
+      }
+    `}</style>
     <div>
       {/* Pills de zoom (canto direito, acima do gráfico) */}
       {interativo && (
@@ -435,5 +448,6 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
       </div>
       )}
     </div>
+    </>
   );
 }

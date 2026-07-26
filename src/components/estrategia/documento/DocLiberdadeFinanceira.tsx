@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import { formatCurrency } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
 import { calcularProjecaoIF, TAXA_ACUM_ANUAL, type PontoProjecao } from "@/lib/financialFreedomCalc";
@@ -177,7 +177,14 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     {
       chave: "grafico",
       node: projecaoData.projecao.length > 0 ? (
-        <div className="no-page-break" style={{ marginBottom: 4 }}>
+        <div
+          className="no-page-break"
+          style={{
+            marginBottom: 4,
+            WebkitPrintColorAdjust: "exact",
+            printColorAdjust: "exact",
+          } as CSSProperties}
+        >
           <CardProjecaoPatrimonial
             projecao={projecaoData.projecao}
             patrimonioNecessario={patrimonioNecessario}
