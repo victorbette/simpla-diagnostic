@@ -291,7 +291,7 @@
   .recharts-responsive-container { width: 100% !important; height: 260px !important; }
   .recharts-wrapper { width: 100% !important; height: 260px !important; }
   svg.recharts-surface { width: 100% !important; height: 260px !important; }
-  .recharts-area-area { fill-opacity: 0.6 !important; display: block !important; }
+  .recharts-area-area { fill-opacity: 1 !important; display: block !important; }
   .recharts-layer { display: block !important; }
   svg.recharts-surface path { display: block !important; visibility: visible !important; }
 }

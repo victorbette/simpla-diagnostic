@@ -255,14 +255,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     <>
     <style>{`
       @media print {
-        linearGradient stop { stop-opacity: 1 !important; }
-        .recharts-area-area { fill-opacity: 1 !important; opacity: 1 !important; }
-        .recharts-area path { fill-opacity: 1 !important; opacity: 1 !important; }
-        .recharts-layer.recharts-area path {
-          display: block !important;
-          visibility: visible !important;
-          fill-opacity: 1 !important;
-        }
+        .recharts-area-area { display: block !important; visibility: visible !important; }
+        .recharts-layer { display: block !important; }
       }
     `}</style>
     <div>
@@ -345,9 +339,9 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <Area
               type="monotone"
               dataKey="patrimonio"
-              stroke="none"
-              strokeWidth={0}
-              fill="url(#gradReal)"
+              stroke={interativo ? "none" : "#2563EB"}
+              strokeWidth={interativo ? 0 : 2}
+              fill={interativo ? "url(#gradReal)" : "#BFDBFE"}
               fillOpacity={1}
               dot={false}
               activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
