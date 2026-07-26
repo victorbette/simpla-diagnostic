@@ -44,7 +44,10 @@ export function PaginaDocFluida({ titulo, nomeCliente, blocos }: Props) {
   const [paginas, setPaginas] = useState<number[][]>([blocos.map((_, i) => i)]);
 
   useLayoutEffect(() => {
+    let pausado = false;
+
     const medir = () => {
+      if (pausado) return;
       const print = medidorPrintRef.current;
       if (!print) return;
       const wPrint = Array.from(print.children) as HTMLElement[];
@@ -55,17 +58,35 @@ export function PaginaDocFluida({ titulo, nomeCliente, blocos }: Props) {
         altura: wPrint[i].offsetHeight,
         grudaNoProximo: b.grudaNoProximo,
       }));
+      // Durante a impressão o medidor some (no-print) e todos os heights ficam 0;
+      // ignorar para não regredir a paginação enquanto o diálogo de impressão está aberto.
+      const todosZero = itens.every((it) => it.altura === 0);
+      if (todosZero) return;
+
       const novas = empacotarPorAltura(itens, [orcamentoPagina(false), orcamentoPagina(true)])
         .map((pagina) => pagina.map(({ item }) => item));
       setPaginas((prev) => (JSON.stringify(prev) === JSON.stringify(novas) ? prev : novas));
     };
 
+    const onBeforePrint = () => { pausado = true; };
+    const onAfterPrint  = () => { pausado = false; };
+
+    window.addEventListener("beforeprint", onBeforePrint);
+    window.addEventListener("afterprint",  onAfterPrint);
+
     medir();
     const print = medidorPrintRef.current;
-    if (!print) return;
+    if (!print) return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint",  onAfterPrint);
+    };
     const ro = new ResizeObserver(medir);
     for (const wrapper of Array.from(print.children)) ro.observe(wrapper);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint",  onAfterPrint);
+    };
   });
 
   return (
