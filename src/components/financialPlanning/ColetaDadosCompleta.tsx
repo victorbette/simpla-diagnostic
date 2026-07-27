@@ -27,10 +27,10 @@ const VINCULOS = [
 ];
 
 const PERFIS = [
-  { id: "conservador",          label: "Conservador" },
-  { id: "conservador_moderado", label: "Conservador Moderado" },
-  { id: "moderado",             label: "Moderado" },
-  { id: "arrojado",             label: "Arrojado" },
+  { id: "conservador",          label: "Conservador",          descricao: "Prioriza segurança e liquidez" },
+  { id: "conservador_moderado", label: "Conservador Moderado", descricao: "Equilíbrio com mais segurança" },
+  { id: "moderado",             label: "Moderado",             descricao: "Equilíbrio entre risco e retorno" },
+  { id: "arrojado",             label: "Arrojado",             descricao: "Aceita mais risco por mais retorno" },
 ];
 
 
@@ -446,11 +446,11 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
       <SecaoCard color="#1E40AF" Icon={PieChart} title="Investimentos" subtitle="Carteira atual e perfil de risco do cliente">
 
         {/* Perfil de Investidor */}
-        <div style={{ marginBottom: 20 }}>
-          <p style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
-            PERFIL DE INVESTIDOR
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, fontWeight: 600 }}>
+            Perfil de Investidor
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
             {PERFIS.map((p) => {
               const ativo = dados.suitabilityPerfil === p.id;
               return (
@@ -459,19 +459,22 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
                   type="button"
                   onClick={() => setDados("suitabilityPerfil", p.id as PerfilRisco)}
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    border: ativo ? "1.5px solid #3B82F6" : "1.5px solid #E5E7EB",
-                    background: ativo ? "#EFF6FF" : "#FFFFFF",
-                    color: ativo ? "#1D4ED8" : "#6B7280",
-                    fontWeight: ativo ? 600 : 400,
-                    fontSize: 13,
+                    border: ativo ? "2px solid #2563EB" : "1px solid #E5E7EB",
+                    borderRadius: 10,
+                    padding: "10px 14px",
                     cursor: "pointer",
-                    textAlign: "center",
-                    transition: "all 0.15s",
+                    background: ativo ? "#EFF6FF" : "white",
+                    textAlign: "left" as const,
+                    transition: "all 150ms",
+                    fontFamily: "inherit",
                   }}
                 >
-                  {p.label}
+                  <div style={{ fontSize: 12, fontWeight: ativo ? 700 : 500, color: ativo ? "#2563EB" : "#374151" }}>
+                    {p.label}
+                  </div>
+                  <div style={{ fontSize: 10, color: ativo ? "#3B82F6" : "#9CA3AF", marginTop: 2 }}>
+                    {p.descricao}
+                  </div>
                 </button>
               );
             })}

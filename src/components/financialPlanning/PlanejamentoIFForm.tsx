@@ -108,7 +108,7 @@ export function PlanejamentoIFForm({ value, onChange, dadosCliente }: Props) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Label className="text-[13px] font-medium text-[#111827]">Renda mensal atual</Label>
-              <p className="text-[13px] text-[#9CA3AF] italic">Informe na Coleta de Dados</p>
+              <p className="text-[13px] text-[#9CA3AF] italic">Informe na Situação Atual</p>
             </div>
           )}
 
