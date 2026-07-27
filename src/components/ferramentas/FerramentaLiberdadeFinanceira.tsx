@@ -117,7 +117,7 @@ export function FerramentaLiberdadeFinanceira({
   // ── "Da coleta" reference values ───────────────────────────────────────────
   const patrimonioColeta    = Number(dadosCliente?.patrimonioFinanceiroEstimado) || 0;
   const aporteColeta        = Number(dadosCliente?.aportesMensalMedio)           || 0;
-  const rendaDesejadaColeta = Number(planejamentoIF.rendaMensalDesejada)         || 0;
+  const rendaDesejadaColeta = Number(dadosCliente?.rendaDesejadaAposentadoria) || Number(planejamentoIF.rendaMensalDesejada) || 0;
 
   const initialParams: UIParams = {
     idadeAtual:         idadeAtualCalculada,
@@ -255,20 +255,38 @@ export function FerramentaLiberdadeFinanceira({
   const projecaoComAporteAtual = useMemo(() => {
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
     const meses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
-    if (!ajustes.usarCrescimentoAportes) {
-      const f = Math.pow(1 + taxaMensal, meses);
-      return params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal;
+
+    // Build objectives impact map (same calendar anchoring as calcularProjecaoIF)
+    const objByMesAno = new Map<string, number>();
+    for (const obj of objetivosAtivos) {
+      const sinal = isEntradaObjetivo(obj) ? 1 : -1;
+      const chave = `${obj.ano}-${obj.mes}`;
+      objByMesAno.set(chave, (objByMesAno.get(chave) ?? 0) + sinal * obj.valorBRL);
     }
+
+    const hoje = new Date();
+    let anoIter = hoje.getFullYear();
+    let mesIter = hoje.getMonth() + 1;
     let saldo = params.patrimonioInicial;
     let aporte = params.aporteMensal;
-    for (let m = 0; m < meses; m++) {
+
+    for (let m = 1; m <= meses; m++) {
+      mesIter++;
+      if (mesIter > 12) { mesIter = 1; anoIter++; }
+
+      const effect = objByMesAno.get(`${anoIter}-${mesIter}`) ?? 0;
+      if (effect !== 0) saldo = Math.max(0, saldo + effect);
+
       saldo = saldo * (1 + taxaMensal) + aporte;
-      aporte *= (1 + ajustesCalc.crescimentoMensal);
+
+      if (ajustes.usarCrescimentoAportes) {
+        aporte *= (1 + ajustesCalc.crescimentoMensal);
+      }
     }
-    return saldo;
+    return Math.max(0, Math.round(saldo));
   }, [
     params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria,
-    ajustesCalc, ajustes.usarCrescimentoAportes,
+    ajustesCalc, ajustes.usarCrescimentoAportes, objetivosAtivos,
   ]);
 
   const rendaSustentavel = useMemo(() => {
@@ -414,191 +432,168 @@ export function FerramentaLiberdadeFinanceira({
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── 1. GRID 2 COLUNAS: Parâmetros | Objetivos ─────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      {/* ── 1. CARD PARÂMETROS DA SIMULAÇÃO ────────────────────────────────── */}
+      <div style={{
+        background: "white", border: "0.5px solid #E5E7EB",
+        borderRadius: 12, padding: "20px 24px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 16px" }}>
+          Parâmetros da Simulação
+        </p>
 
-        {/* Parâmetros da Simulação */}
-        <div style={{
-          background: "white", border: "0.5px solid #E5E7EB",
-          borderRadius: 12, padding: "16px 20px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 10px" }}>
-            Parâmetros da simulação
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* 3 campos principais em linha */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
 
-            {/* Idade Atual + Aposentadoria */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Idade atual</label>
-                <div style={{ position: "relative" }}>
-                  <Input
-                    type="number"
-                    value={params.idadeAtual}
-                    readOnly
-                    style={{
-                      borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB",
-                      color: "#000000", backgroundColor: "#EFF6FF",
-                      cursor: "not-allowed", padding: "6px 10px", fontSize: 12,
-                    }}
-                  />
-                  <span style={{
-                    position: "absolute", top: 7, right: 6,
-                    fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none",
-                  }}>✓</span>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
-                <Input
-                  id="lf-apos"
-                  type="number"
-                  min={params.idadeAtual + 1}
-                  max={90}
-                  value={params.idadeAposentadoria}
-                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                  style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
-                />
-                <input
-                  type="range"
-                  min={params.idadeAtual + 1}
-                  max={80}
-                  step={1}
-                  value={params.idadeAposentadoria}
-                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                  className="w-full"
-                  style={{ accentColor: "#2563EB", marginTop: 4 }}
-                />
-                <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
-                  <span>{params.idadeAtual + 1} anos</span>
-                  <span>80 anos</span>
-                </div>
-              </div>
+          {/* Renda Mensal Desejada */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
+              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {rendaEditada && (
+                <button
+                  onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
             </div>
+            <CurrencyInput
+              value={params.rendaDesejada}
+              onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+            />
+          </div>
 
-            {/* Patrimônio Financeiro */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Financeiro</label>
-                {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                {patrimonioEditado && (
-                  <button
-                    onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                  >
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput
-                value={params.patrimonioInicial}
-                onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
-              />
+          {/* Aporte Mensal + slider */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
+              {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
+              {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
+                <button
+                  onClick={() => setP({ aporteMensal: aporteColeta })}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
             </div>
-
-            {/* Aporte Mensal */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
-                {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
-                {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
-                  <button
-                    onClick={() => setP({ aporteMensal: aporteColeta })}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                  >
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
-              <input
-                type="range"
-                min={0}
-                max={sliderAporteMax}
-                step={100}
-                value={params.aporteMensal}
-                onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
-                className="w-full"
-                style={{ accentColor: "#2563EB", marginTop: 4 }}
-              />
-              <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
-                <span>R$ 0</span>
-                <span>{formatCurrency(sliderAporteMax)}/mês</span>
-              </div>
+            <CurrencyInput value={params.aporteMensal} onChange={(v) => setP({ aporteMensal: v })} />
+            <input
+              type="range"
+              min={0}
+              max={sliderAporteMax}
+              step={100}
+              value={params.aporteMensal}
+              onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
+              className="w-full"
+              style={{ accentColor: "#2563EB", marginTop: 2 }}
+            />
+            <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+              <span>R$ 0</span>
+              <span>{formatCurrency(sliderAporteMax)}/mês</span>
             </div>
+          </div>
 
-            {/* Renda Mensal Desejada */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
-                {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                {rendaEditada && (
-                  <button
-                    onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                  >
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput
-                value={params.rendaDesejada}
-                onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
-              />
+          {/* Idade Aposentadoria + slider */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+            <Input
+              type="number"
+              min={params.idadeAtual + 1}
+              max={90}
+              value={params.idadeAposentadoria}
+              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+              style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
+            />
+            <input
+              type="range"
+              min={params.idadeAtual + 1}
+              max={80}
+              step={1}
+              value={params.idadeAposentadoria}
+              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+              className="w-full"
+              style={{ accentColor: "#2563EB", marginTop: 2 }}
+            />
+            <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+              <span>{params.idadeAtual + 1} anos</span>
+              <span>80 anos</span>
             </div>
           </div>
         </div>
 
-        {/* Objetivos de Vida */}
-        <div style={{
-          background: "white", border: "0.5px solid #E5E7EB",
-          borderRadius: 12, padding: "16px 20px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-        }}>
-          <ListaObjetivos
-            objetivos={objetivos}
-            onObjetivos={setObjetivos}
-            anoAtual={anoAtualCliente}
-            anoMeta={anoMetaCliente}
-          />
+        {/* Campos secundários: Patrimônio + Idade atual */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Financeiro</label>
+              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {patrimonioEditado && (
+                <button
+                  onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={params.patrimonioInicial}
+              onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Idade atual</label>
+            <div style={{ position: "relative" }}>
+              <Input
+                type="number"
+                value={params.idadeAtual}
+                readOnly
+                style={{
+                  borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB",
+                  color: "#000000", backgroundColor: "#EFF6FF",
+                  cursor: "not-allowed", padding: "6px 10px", fontSize: 12,
+                }}
+              />
+              <span style={{
+                position: "absolute", top: 7, right: 6,
+                fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none",
+              }}>✓</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* ── AJUSTES AVANÇADOS ──────────────────────────────────────────── */}
-      <div>
-        <button
-          onClick={() => setMostrarAjustes(v => !v)}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            background: "none", border: "0.5px solid #E5E7EB",
-            borderRadius: 8, padding: "6px 12px", cursor: "pointer",
-            fontSize: 12, fontWeight: 500, color: "#374151", fontFamily: "inherit",
-          }}
-        >
-          <i className="ti ti-settings-2" style={{ fontSize: 14, color: "#6B7280" }} />
-          Ajustes avançados
-          <i className={`ti ti-chevron-${mostrarAjustes ? "up" : "down"}`} style={{ fontSize: 12, color: "#9CA3AF" }} />
-          {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
-            <span style={{
-              background: "#2563EB", color: "white",
-              borderRadius: 9999, padding: "1px 6px", fontSize: 10, fontWeight: 600,
-            }}>
-              {[ajustes.usarTaxaCustom, ajustes.usarCrescimentoAportes].filter(Boolean).length}
-            </span>
-          )}
-        </button>
+        {/* Ajustes avançados — footer integrado */}
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "0.5px solid #F3F4F6" }}>
+          <button
+            onClick={() => setMostrarAjustes(v => !v)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: "none", border: "none", padding: 0,
+              cursor: "pointer", fontSize: 12,
+              color: mostrarAjustes ? "#2563EB" : "#6B7280",
+              fontFamily: "inherit",
+            }}
+          >
+            <i className="ti ti-adjustments-horizontal" style={{ fontSize: 14 }} />
+            Ajustes avançados
+            <i className={`ti ti-chevron-${mostrarAjustes ? "up" : "down"}`} style={{ fontSize: 11, marginLeft: 2 }} />
+            {ajustes.usarTaxaCustom && (
+              <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
+                IPCA+{ajustes.taxaCustomAnual}%
+              </span>
+            )}
+            {ajustes.usarCrescimentoAportes && (
+              <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
+                Crescimento {ajustes.crescimentoAportesAnual}%
+              </span>
+            )}
+          </button>
 
-        {mostrarAjustes && (
-          <div style={{
-            marginTop: 8, background: "white",
-            border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px",
-            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-          }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 14px" }}>
-              Ajustes avançados
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {mostrarAjustes && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 14 }}>
 
               {/* 1. Taxa de retorno personalizada */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -613,29 +608,20 @@ export function FerramentaLiberdadeFinanceira({
                       border: "none", cursor: "pointer", position: "relative",
                     }}
                   >
-                    <span style={{
-                      position: "absolute", top: 2,
-                      left: ajustes.usarTaxaCustom ? 18 : 2,
-                      width: 16, height: 16, borderRadius: "50%", background: "white",
-                    }} />
+                    <span style={{ position: "absolute", top: 2, left: ajustes.usarTaxaCustom ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
                   </button>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-                    Taxa de retorno personalizada
-                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Taxa de retorno personalizada</span>
                 </div>
                 {ajustes.usarTaxaCustom && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
                     <Input
-                      type="number"
-                      min={0} max={30} step={0.1}
+                      type="number" min={0} max={30} step={0.1}
                       value={ajustes.taxaCustomAnual}
                       onChange={(e) => setAjustes(a => ({ ...a, taxaCustomAnual: Number(e.target.value) }))}
                       style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
                     />
                     <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      (padrão: {(TAXA_ACUM_ANUAL * 100).toFixed(1)}%)
-                    </span>
+                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>(padrão: {(TAXA_ACUM_ANUAL * 100).toFixed(1)}%)</span>
                   </div>
                 )}
               </div>
@@ -655,39 +641,26 @@ export function FerramentaLiberdadeFinanceira({
                       border: "none", cursor: "pointer", position: "relative",
                     }}
                   >
-                    <span style={{
-                      position: "absolute", top: 2,
-                      left: ajustes.usarCrescimentoAportes ? 18 : 2,
-                      width: 16, height: 16, borderRadius: "50%", background: "white",
-                    }} />
+                    <span style={{ position: "absolute", top: 2, left: ajustes.usarCrescimentoAportes ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
                   </button>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-                    Crescimento real de aportes
-                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Crescimento real de aportes</span>
                 </div>
                 {ajustes.usarCrescimentoAportes && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
                     <Input
-                      type="number"
-                      min={0} max={20} step={0.1}
+                      type="number" min={0} max={20} step={0.1}
                       value={ajustes.crescimentoAportesAnual}
                       onChange={(e) => setAjustes(a => ({ ...a, crescimentoAportesAnual: Number(e.target.value) }))}
                       style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
                     />
                     <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>
-                      crescimento anual do aporte
-                    </span>
+                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>crescimento anual do aporte</span>
                   </div>
                 )}
               </div>
 
               {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
-                <div style={{
-                  padding: "8px 12px",
-                  background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8,
-                  fontSize: 11, color: "#1E40AF",
-                }}>
+                <div style={{ padding: "8px 12px", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8, fontSize: 11, color: "#1E40AF" }}>
                   Taxa efetiva anual: <strong>{(ajustesCalc.taxaAnualCombinada * 100).toFixed(2)}% a.a.</strong>
                   {ajustes.usarCrescimentoAportes && (
                     <> · Crescimento do aporte: <strong>{ajustes.crescimentoAportesAnual.toFixed(1)}% a.a.</strong></>
@@ -695,8 +668,8 @@ export function FerramentaLiberdadeFinanceira({
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── 2. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
@@ -800,8 +773,22 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioNecessario={patrimonioPerpetuidade}
       />
 
-      {/* ── 5. ANÁLISE DE SENSIBILIDADE ─────────────────────────────────────── */}
-      <Card style={cardGreenTop}>
+      {/* ── 5. OBJETIVOS DE VIDA ────────────────────────────────────────────── */}
+      <div style={{
+        background: "white", border: "0.5px solid #E5E7EB",
+        borderRadius: 12, padding: "16px 20px",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+      }}>
+        <ListaObjetivos
+          objetivos={objetivos}
+          onObjetivos={setObjetivos}
+          anoAtual={anoAtualCliente}
+          anoMeta={anoMetaCliente}
+        />
+      </div>
+
+      {/* ── 6. ANÁLISE DE SENSIBILIDADE (oculto) ────────────────────────────── */}
+      {false && <Card style={cardGreenTop}>
         <CardContent className="pt-5">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <p style={{ color: "#000000", fontSize: 15, fontWeight: 700, margin: 0 }}>
@@ -896,9 +883,9 @@ export function FerramentaLiberdadeFinanceira({
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
-      {/* ── 6. BOTÃO SALVAR ─────────────────────────────────────────────────── */}
+      {/* ── 7. BOTÃO SALVAR ─────────────────────────────────────────────────── */}
       <style>{`@keyframes lf-spin { to { transform: rotate(360deg); } }`}</style>
       <button
         onClick={handleSalvar}
