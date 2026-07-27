@@ -4,7 +4,7 @@ import type { PlanoAcaoItem } from "@/types/estrategiaResultados";
 /**
  * Monta a carteira final ativo a ativo a partir do plano de ação: aplica
  * aportes/resgates sobre os valores atuais e descarta resgates totais.
- * Usada na Etapa 2 (Seção Asset Allocation) e no documento impresso
+ * Usada na Etapa 2 (Seção Gestão de Ativos) e no documento impresso
  * ("Como sua carteira deverá ficar").
  */
 export function montarCarteiraFinal(

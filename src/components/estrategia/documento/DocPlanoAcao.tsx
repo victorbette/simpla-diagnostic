@@ -23,7 +23,7 @@ const PRIO_BADGE = {
 } as const;
 
 const AREAS = [
-  "Asset Allocation",
+  "Gestão de Ativos",
   "Liberdade Financeira",
   "Proteção e Sucessão",
   "Planejamento Tributário",

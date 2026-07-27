@@ -124,9 +124,9 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
           </div>
         </PrintSection>
 
-        {/* Asset Allocation */}
+        {/* Gestão de Ativos */}
         {alvo && (
-          <PrintSection title="Asset Allocation">
+          <PrintSection title="Gestão de Ativos">
             <p style={{ fontSize: 10, color: "#6b7280", marginBottom: 6 }}>
               Macroalocação alvo para o perfil {plan.suitability ? PERFIL_LABELS[plan.suitability.perfil] : ""}
             </p>

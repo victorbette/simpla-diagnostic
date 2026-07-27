@@ -64,7 +64,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
     ? -1
     : Math.min(100, Math.round((vlf.projecao / vlf.patrimonioNecessario) * 100));
 
-  // ── Asset Allocation ──────────────────────────────────────────────────────
+  // ── Gestão de Ativos ──────────────────────────────────────────────────────
   const aa = (() => {
     const temRendaFixa = Number(plan.ativosAtuais?.rendaFixa) > 0;
     const temAcoes     = Number(plan.ativosAtuais?.acoes) > 0;
@@ -217,7 +217,7 @@ export function gerarTextosAreas(
     const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
 
     if (comecandoDoZero || !aaTemDados) {
-      return `Você está dando os primeiros passos no mundo dos investimentos — e esse é, sem dúvida, o momento mais importante. Começar bem faz toda a diferença no longo prazo.\n\nTer uma estratégia bem definida desde o início evita os erros mais comuns: aplicar em produtos inadequados, concentrar tudo em um único ativo ou deixar o dinheiro parado sem render. Uma carteira estruturada — com renda fixa como base, ativos de crescimento e proteção cambial — é o que separa quem constrói patrimônio de forma consistente de quem não consegue evoluir.\n\nO próximo passo é definir o seu perfil de investidor e montar uma alocação adequada para a sua realidade. Isso será trabalhado na aba de Asset Allocation, onde você terá acesso a uma carteira recomendada personalizada para o seu momento de vida.`;
+      return `Você está dando os primeiros passos no mundo dos investimentos — e esse é, sem dúvida, o momento mais importante. Começar bem faz toda a diferença no longo prazo.\n\nTer uma estratégia bem definida desde o início evita os erros mais comuns: aplicar em produtos inadequados, concentrar tudo em um único ativo ou deixar o dinheiro parado sem render. Uma carteira estruturada — com renda fixa como base, ativos de crescimento e proteção cambial — é o que separa quem constrói patrimônio de forma consistente de quem não consegue evoluir.\n\nO próximo passo é definir o seu perfil de investidor e montar uma alocação adequada para a sua realidade. Isso será trabalhado na aba de Gestão de Ativos, onde você terá acesso a uma carteira recomendada personalizada para o seu momento de vida.`;
     }
 
     const ativos: string[] = [];
@@ -267,7 +267,7 @@ export function gerarTextosAreas(
         else if (i === ausentes.length - 1) texto += `; e ${a.nome} para ${a.motivo}`;
         else texto += `; ${a.nome} para ${a.motivo}`;
       });
-      texto += `. Esses ajustes podem ser trabalhados na aba de Asset Allocation, onde montamos o plano de ação para chegar na carteira ideal para o seu perfil.`;
+      texto += `. Esses ajustes podem ser trabalhados na aba de Gestão de Ativos, onde montamos o plano de ação para chegar na carteira ideal para o seu perfil.`;
     }
 
     return texto;

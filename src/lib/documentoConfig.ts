@@ -6,7 +6,7 @@
 export const AREAS_DOCUMENTO = [
   { id: "ponto_partida",           label: "Ponto de Partida",        icone: "ti-map-pin" },
   { id: "liberdade_financeira",    label: "Liberdade Financeira",    icone: "ti-sunset" },
-  { id: "asset_allocation",        label: "Asset Allocation",        icone: "ti-chart-pie" },
+  { id: "asset_allocation",        label: "Gestão de Ativos",        icone: "ti-chart-pie" },
   { id: "protecao_sucessao",       label: "Proteção e Sucessão",     icone: "ti-shield" },
   { id: "planejamento_tributario", label: "Planejamento Tributário", icone: "ti-receipt" },
   { id: "plano_acao",              label: "Plano de Ação",           icone: "ti-list-check" },

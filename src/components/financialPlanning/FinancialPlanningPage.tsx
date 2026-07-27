@@ -31,7 +31,7 @@ const ABAS = [
 // ── Abas da tela Financial Planning ──────────────────────────────────────────
 
 const ABAS_FP = [
-  { id: "asset_allocation", label: "Asset Allocation", icone: "ti-chart-pie" },
+  { id: "asset_allocation", label: "Gestão de Ativos", icone: "ti-chart-pie" },
   { id: "relatorio",        label: "Relatório",        icone: "ti-file-text" },
 ];
 
@@ -303,7 +303,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ── TELA: Financial Planning (Asset Allocation + Relatório) ──────────────
+  // ── TELA: Financial Planning (Gestão de Ativos + Relatório) ──────────────
   // ─────────────────────────────────────────────────────────────────────────
 
   if (mostrarFP) {

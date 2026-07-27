@@ -424,7 +424,7 @@ export function EstrategiaFinalPage({
               >
                 <PieChartIcon size={20} style={{ color: "#000000" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
-                  Asset Allocation
+                  Gestão de Ativos
                 </span>
                 {statusBadgeLocal("assetAllocation", estrategia)}
               </div>

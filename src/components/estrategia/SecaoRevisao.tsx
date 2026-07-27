@@ -396,7 +396,7 @@ export function SecaoRevisao({
     .filter((a) => a.prioridade === "alta" && !resultados.acoesConcluidas?.[a.id])
     .slice(0, 5);
 
-  // ── Asset Allocation data ──
+  // ── Gestão de Ativos data ──
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const alocAtualRaw = calcularAlocacaoAtual(plan.ativosAtuais);
   const alocAtualSlices = allocToSlices(alocAtualRaw as unknown as Record<string, number>);
@@ -470,13 +470,13 @@ export function SecaoRevisao({
 
       {/* ── BLOCO 1: Cards por área ── */}
 
-      {/* Card 1: Asset Allocation */}
+      {/* Card 1: Gestão de Ativos */}
       <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <PieChartIcon style={{ width: 20, height: 20, color: "#000000" }} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
-              Asset Allocation
+              Gestão de Ativos
             </span>
             {statusBadge("assetAllocation", estrategia)}
           </div>
@@ -631,7 +631,7 @@ export function SecaoRevisao({
               </div>
             </>
           ) : (
-            <Placeholder text="Carteira não mapeada — utilize a ferramenta de Asset Allocation" />
+            <Placeholder text="Carteira não mapeada — utilize a ferramenta de Gestão de Ativos" />
           )}
 
           <CommentArea

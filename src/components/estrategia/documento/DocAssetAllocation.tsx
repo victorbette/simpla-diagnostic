@@ -68,7 +68,7 @@ function FluxoRebalanceamento() {
   );
 }
 
-/** Página "Asset Allocation" — narrativa + tabela hierárquica da alocação proposta (v4 p.9) */
+/** Página "Gestão de Ativos" — narrativa + tabela hierárquica da alocação proposta (v4 p.9) */
 export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   const perfil = plan.dadosCliente.suitabilityPerfil;
   const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
@@ -104,7 +104,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
     chave: "estatistica",
     node: (
       <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-        Estatisticamente, a estratégia de Asset Allocation (alocação estrutural de ativos) é a
+        Estatisticamente, a estratégia de Gestão de Ativos (alocação estrutural de ativos) é a
         principal responsável pela performance de uma carteira no longo prazo. Classes de ativos
         descorrelacionadas trazem uma relação de risco x retorno mais inteligente, algo fundamental
         para o investidor.
@@ -243,5 +243,5 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "aa", nota));
 
-  return <PaginaDocFluida titulo="Asset Allocation" nomeCliente={nomeCliente} blocos={blocos} />;
+  return <PaginaDocFluida titulo="Gestão de Ativos" nomeCliente={nomeCliente} blocos={blocos} />;
 }

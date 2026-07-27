@@ -191,7 +191,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
 
         {secoes.asset_allocation && (
           <>
-            <DivisoriaSecao titulo="Asset Allocation" nomeCliente={clientName} />
+            <DivisoriaSecao titulo="Gestão de Ativos" nomeCliente={clientName} />
             <DocAssetAllocation nomeCliente={clientName} plan={plan} resultados={resultados} />
             <DocAlocacaoAtualProposta nomeCliente={clientName} plan={plan} resultados={resultados} />
             <DocMovimentacoes nomeCliente={clientName} plan={plan} resultados={resultados} />

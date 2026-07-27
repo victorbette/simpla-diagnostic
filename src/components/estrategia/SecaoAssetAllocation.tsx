@@ -160,7 +160,7 @@ export function SecaoAssetAllocation({
         <textarea
           value={comentario}
           onChange={(e) => onComentarioChange(e.target.value)}
-          placeholder="Descreva a estratégia de asset allocation recomendada: rebalanceamento, classes de ativos prioritários, instrumentos sugeridos..."
+          placeholder="Descreva a estratégia de gestão de ativos recomendada: rebalanceamento, classes de ativos prioritários, instrumentos sugeridos..."
           style={{ width: "100%", minHeight: 160, padding: "10px 12px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 13, color: "#000000", resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }}
         />
         <span style={{ position: "absolute", bottom: 8, right: 10, fontSize: 11, color: "#9CA3AF" }}>

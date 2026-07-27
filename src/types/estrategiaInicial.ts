@@ -38,7 +38,7 @@ export function initialEstrategia(clientId: string, financialPlanId?: string): E
     apresentacao: '',
     nomeConsultor: '',
     secoes: {
-      assetAllocation: initialSecao('assetAllocation', 'Asset Allocation'),
+      assetAllocation: initialSecao('assetAllocation', 'Gestão de Ativos'),
       aposentadoria: initialSecao('aposentadoria', 'Aposentadoria / IF'),
       protecao: initialSecao('protecao', 'Proteção'),
       fiscal: initialSecao('fiscal', 'Planejamento Tributário'),

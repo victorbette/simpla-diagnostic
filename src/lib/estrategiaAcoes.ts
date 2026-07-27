@@ -44,7 +44,7 @@ export function gerarAcoes(
           id: "aa_rebalancear",
           texto: "Rebalancear carteira conforme alocação recomendada",
           prioridade: "alta",
-          area: "Asset Allocation",
+          area: "Gestão de Ativos",
           areaColor: "#000000",
         });
       }
@@ -55,7 +55,7 @@ export function gerarAcoes(
         id: "aa_montar",
         texto: `Definir carteira inicial seguindo perfil ${perfilLabel}`,
         prioridade: "alta",
-        area: "Asset Allocation",
+        area: "Gestão de Ativos",
         areaColor: "#000000",
       });
     }
@@ -64,7 +64,7 @@ export function gerarAcoes(
       id: "aa_mapear",
       texto: "Montar carteira de investimentos detalhada",
       prioridade: "alta",
-      area: "Asset Allocation",
+      area: "Gestão de Ativos",
       areaColor: "#000000",
     });
   }

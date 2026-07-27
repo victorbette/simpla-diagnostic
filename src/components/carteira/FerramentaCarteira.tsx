@@ -248,7 +248,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   }
 
   function handleLimpar() {
-    if (window.confirm("Limpar todos os dados da carteira?\n\nIsso removerá também os dados de Asset Allocation da Estratégia.")) {
+    if (window.confirm("Limpar todos os dados da carteira?\n\nIsso removerá também os dados de Gestão de Ativos da Estratégia.")) {
       setAtivosAtuais([]);
       setAtivosRecomendados([]);
       setAlocacaoMeta(defaultAlocacao(clientProfile));

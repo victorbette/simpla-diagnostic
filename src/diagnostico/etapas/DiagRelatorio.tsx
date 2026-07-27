@@ -36,7 +36,7 @@ const PERFIS_VALIDOS: PerfilRisco[] = [
 
 const CAPITULOS = [
   "Liberdade Financeira",
-  "Asset Allocation",
+  "Gestão de Ativos",
   "Proteção e Sucessão",
   "Planejamento Tributário",
   "Plano de Ação",
@@ -159,7 +159,7 @@ export function DiagRelatorio({ lead }: Props) {
         <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={lead.nome} />
         <DocLiberdadeFinanceira nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
 
-        <DivisoriaSecao titulo="Asset Allocation" nomeCliente={lead.nome} />
+        <DivisoriaSecao titulo="Gestão de Ativos" nomeCliente={lead.nome} />
         <DocAssetAllocation nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
         <DocAlocacaoAtualProposta nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
         <DocMovimentacoes nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />

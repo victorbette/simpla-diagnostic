@@ -22,7 +22,7 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
 
   const areas = [
     { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     texto: textos.lf },
-    { icone: "ti-chart-pie", nome: "Asset Allocation",      score: scores.aa,     texto: textos.aa },
+    { icone: "ti-chart-pie", nome: "Gestão de Ativos",      score: scores.aa,     texto: textos.aa },
     { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     texto: textos.ps },
     { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, texto: textos.fiscal },
   ];

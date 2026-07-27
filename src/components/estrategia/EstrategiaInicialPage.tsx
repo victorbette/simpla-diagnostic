@@ -58,7 +58,7 @@ interface SecaoConfig {
 }
 
 const SECOES: SecaoConfig[] = [
-  { id: "assetAllocation",    label: "Asset Allocation",       icone: "ti-chart-pie"     },
+  { id: "assetAllocation",    label: "Gestão de Ativos",       icone: "ti-chart-pie"     },
   { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
   { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
   { id: "fiscal",             label: "Planejamento Tributário",    icone: "ti-receipt"       },
