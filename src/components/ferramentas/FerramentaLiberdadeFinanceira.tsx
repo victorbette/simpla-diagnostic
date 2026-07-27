@@ -28,8 +28,6 @@ interface Ajustes {
   taxaCustomAnual: number;
   usarCrescimentoAportes: boolean;
   crescimentoAportesAnual: number;
-  usarIR: boolean;
-  aliquotaIR: number;
 }
 
 const initialAjustes: Ajustes = {
@@ -37,8 +35,6 @@ const initialAjustes: Ajustes = {
   taxaCustomAnual: 4.5,
   usarCrescimentoAportes: false,
   crescimentoAportesAnual: 3.0,
-  usarIR: false,
-  aliquotaIR: 15,
 };
 
 interface Props {
@@ -196,18 +192,13 @@ export function FerramentaLiberdadeFinanceira({
 
   // ── Ajustes avançados — derived rates ─────────────────────────────────────
   const ajustesCalc = useMemo(() => {
-    const taxaAnualEfetiva = ajustes.usarTaxaCustom
+    const taxaAnualCombinada = ajustes.usarTaxaCustom
       ? ajustes.taxaCustomAnual / 100
       : TAXA_ACUM_ANUAL;
-    const taxaMensalEfetiva = Math.pow(1 + taxaAnualEfetiva, 1 / 12) - 1;
     const crescimentoMensal = ajustes.usarCrescimentoAportes
       ? Math.pow(1 + ajustes.crescimentoAportesAnual / 100, 1 / 12) - 1
       : 0;
-    const fatorIR = ajustes.usarIR ? (1 - ajustes.aliquotaIR / 100) : 1;
-    const taxaAnualCombinada = ajustes.usarIR
-      ? Math.pow(1 + taxaMensalEfetiva * fatorIR, 12) - 1
-      : taxaAnualEfetiva;
-    return { taxaAnualCombinada, taxaMensalEfetiva, crescimentoMensal };
+    return { taxaAnualCombinada, crescimentoMensal };
   }, [ajustes]);
 
   const patrimonioPerpetuidade = useMemo(() => {
@@ -244,25 +235,26 @@ export function FerramentaLiberdadeFinanceira({
 
   const aporteNecessario = useMemo(() => {
     if (patrimonioPerpetuidade <= 0) return 0;
-    const n = Math.max(1, (params.idadeAposentadoria - params.idadeAtual) * 12);
-    const f = Math.pow(1 + TAXA_ACUM_MENSAL, n);
+    const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
+    const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const f = Math.pow(1 + taxaMensal, n);
     const fvSemAporte = params.patrimonioInicial * f;
     const anoCard = new Date().getFullYear();
     const mesCard = new Date().getMonth() + 1;
     const vpObjetivos = objetivosAtivos.reduce((soma, obj) => {
       const mesesAteObj = Math.max(0, (obj.ano - anoCard) * 12 + (obj.mes - mesCard));
-      const vp = (Number(obj.valorBRL) || 0) / Math.pow(1 + TAXA_ACUM_MENSAL, mesesAteObj);
+      const vp = (Number(obj.valorBRL) || 0) / Math.pow(1 + taxaMensal, mesesAteObj);
       return isEntradaObjetivo(obj) ? soma - vp : soma + vp;
     }, 0);
     const metaAjustada = Math.max(0, patrimonioPerpetuidade + vpObjetivos);
     if (metaAjustada <= fvSemAporte) return 0;
-    return Math.max(0, (metaAjustada - fvSemAporte) * TAXA_ACUM_MENSAL / (f - 1));
+    return Math.max(0, (metaAjustada - fvSemAporte) * taxaMensal / (f - 1));
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
-      patrimonioPerpetuidade, objetivosAtivos]);
+      patrimonioPerpetuidade, objetivosAtivos, ajustesCalc]);
 
   const projecaoComAporteAtual = useMemo(() => {
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const meses = Math.max(1, (params.idadeAposentadoria - params.idadeAtual) * 12);
+    const meses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
     if (!ajustes.usarCrescimentoAportes) {
       const f = Math.pow(1 + taxaMensal, meses);
       return params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal;
@@ -289,45 +281,72 @@ export function FerramentaLiberdadeFinanceira({
       return result?.projecao ?? [];
     }
     const taxaMensalAcum = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const mesesAcum = Math.max(1, (params.idadeAposentadoria - params.idadeAtual) * 12);
+    const mesesAcum = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
     const pontos: PontoProjecao[] = [];
     let saldo = params.patrimonioInicial;
     let aporte = params.aporteMensal;
-    for (let m = 0; m <= mesesAcum; m++) {
-      const anoCalendario = anoNascimento + params.idadeAtual + Math.floor(m / 12);
-      const mesDoAno = ((mesNascimento - 1 + m) % 12) + 1;
+
+    // Build objectives impact map — same approach as calcularProjecaoIF
+    const objByMesAno = new Map<string, number>();
+    for (const obj of objetivosAtivos) {
+      const sinal = isEntradaObjetivo(obj) ? 1 : -1;
+      const key = `${obj.ano}-${obj.mes}`;
+      objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
+    }
+
+    // Anchor to today's calendar position (same as calcularProjecaoIF)
+    const hoje = new Date();
+    let anoAtual = hoje.getFullYear();
+    let mesAtual = hoje.getMonth() + 1;
+
+    pontos.push({
+      mes: 0, ano: anoAtual, mesDoAno: mesAtual,
+      idade: Math.round(params.idadeAtual * 10) / 10,
+      patrimonio: Math.max(0, Math.round(saldo)),
+      fase: "acumulacao",
+    });
+
+    for (let m = 1; m <= mesesAcum; m++) {
+      mesAtual++;
+      if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
+
+      // Apply objectives before growth (spec requirement)
+      const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
+      if (effect !== 0) saldo = Math.max(0, saldo + effect);
+
+      saldo = saldo * (1 + taxaMensalAcum) + aporte;
+      aporte *= (1 + ajustesCalc.crescimentoMensal);
+
       pontos.push({
-        mes: m, ano: anoCalendario, mesDoAno,
-        idade: params.idadeAtual + m / 12,
-        patrimonio: Math.max(0, saldo),
+        mes: m, ano: anoAtual, mesDoAno: mesAtual,
+        idade: Math.round((params.idadeAtual + m / 12) * 10) / 10,
+        patrimonio: Math.max(0, Math.round(saldo)),
         fase: "acumulacao",
       });
-      if (m < mesesAcum) {
-        saldo = saldo * (1 + taxaMensalAcum) + aporte;
-        aporte *= (1 + ajustesCalc.crescimentoMensal);
-      }
     }
-    // Withdrawal phase from the retirement patrimônio
+
+    // Withdrawal phase using standard 4% real rate
     let saldoRet = saldo;
     const mesesRet = (100 - params.idadeAposentadoria) * 12;
     for (let m = 1; m <= mesesRet && saldoRet > 0; m++) {
+      mesAtual++;
+      if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
       saldoRet = saldoRet * (1 + TAXA_RET_MENSAL) - params.rendaDesejada;
       const totalMes = mesesAcum + m;
-      const anoCalendario = anoNascimento + params.idadeAtual + Math.floor(totalMes / 12);
-      const mesDoAno = ((mesNascimento - 1 + totalMes) % 12) + 1;
       pontos.push({
-        mes: totalMes, ano: anoCalendario, mesDoAno,
-        idade: params.idadeAtual + totalMes / 12,
-        patrimonio: Math.max(0, saldoRet),
+        mes: totalMes, ano: anoAtual, mesDoAno: mesAtual,
+        idade: Math.round((params.idadeAtual + totalMes / 12) * 10) / 10,
+        patrimonio: Math.max(0, Math.round(saldoRet)),
         fase: "decumulacao",
       });
     }
+
     return pontos;
   }, [
     ajustes.usarCrescimentoAportes, result,
     params.patrimonioInicial, params.aporteMensal, params.idadeAtual,
     params.idadeAposentadoria, params.rendaDesejada,
-    ajustesCalc, anoNascimento, mesNascimento,
+    ajustesCalc, objetivosAtivos,
   ]);
 
   const sensAporteScenarios = useMemo(() => {
@@ -560,12 +579,12 @@ export function FerramentaLiberdadeFinanceira({
           <i className="ti ti-settings-2" style={{ fontSize: 14, color: "#6B7280" }} />
           Ajustes avançados
           <i className={`ti ti-chevron-${mostrarAjustes ? "up" : "down"}`} style={{ fontSize: 12, color: "#9CA3AF" }} />
-          {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes || ajustes.usarIR) && (
+          {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
             <span style={{
               background: "#2563EB", color: "white",
               borderRadius: 9999, padding: "1px 6px", fontSize: 10, fontWeight: 600,
             }}>
-              {[ajustes.usarTaxaCustom, ajustes.usarCrescimentoAportes, ajustes.usarIR].filter(Boolean).length}
+              {[ajustes.usarTaxaCustom, ajustes.usarCrescimentoAportes].filter(Boolean).length}
             </span>
           )}
         </button>
@@ -663,47 +682,7 @@ export function FerramentaLiberdadeFinanceira({
                 )}
               </div>
 
-              <div style={{ borderTop: "0.5px solid #F3F4F6" }} />
-
-              {/* 3. IR sobre rendimentos */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button
-                    role="switch"
-                    aria-checked={ajustes.usarIR}
-                    onClick={() => setAjustes(a => ({ ...a, usarIR: !a.usarIR }))}
-                    style={{
-                      width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
-                      background: ajustes.usarIR ? "#2563EB" : "#D1D5DB",
-                      border: "none", cursor: "pointer", position: "relative",
-                    }}
-                  >
-                    <span style={{
-                      position: "absolute", top: 2,
-                      left: ajustes.usarIR ? 18 : 2,
-                      width: 16, height: 16, borderRadius: "50%", background: "white",
-                    }} />
-                  </button>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-                    IR sobre rendimentos
-                  </span>
-                </div>
-                {ajustes.usarIR && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
-                    <Input
-                      type="number"
-                      min={0} max={27.5} step={0.5}
-                      value={ajustes.aliquotaIR}
-                      onChange={(e) => setAjustes(a => ({ ...a, aliquotaIR: Number(e.target.value) }))}
-                      style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
-                    />
-                    <span style={{ fontSize: 12, color: "#6B7280" }}>%</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>alíquota efetiva de IR</span>
-                  </div>
-                )}
-              </div>
-
-              {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes || ajustes.usarIR) && (
+              {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
                 <div style={{
                   padding: "8px 12px",
                   background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8,
