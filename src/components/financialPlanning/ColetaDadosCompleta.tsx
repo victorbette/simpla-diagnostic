@@ -39,6 +39,9 @@ interface Props {
   plan: FinancialPlan;
   onChange: (patch: Partial<FinancialPlan>) => void;
   onColetaComplete: (dadosCliente: DadosCliente) => void;
+  onSalvar?: () => Promise<void>;
+  salvando?: boolean;
+  salvo?: boolean;
 }
 
 function SecaoCard({
@@ -74,7 +77,7 @@ function SecaoCard({
   );
 }
 
-export function ColetaDadosCompleta({ plan, onChange }: Props) {
+export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo }: Props) {
   const dados = plan.dadosCliente;
 
   const setDados = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
@@ -337,7 +340,7 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
       {/* ─── SEÇÃO 2: Situação Financeira ─── */}
       <SecaoCard color="#15803D" Icon={DollarSign} title="Situação Financeira e Patrimonial" subtitle="Patrimônio, renda, fluxo mensal e hábitos financeiros">
 
-        {/* 6 currency fields */}
+        {/* campos financeiros */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {([
             { label: "Patrimônio total estimado", key: "patrimonioTotalEstimado", hint: "Inclui imóveis e bens" },
@@ -345,6 +348,32 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
             { label: "Renda mensal", key: "rendaMensal" },
             { label: "Custo de vida mensal", key: "custoDeVidaMensal" },
             { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal" },
+          ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
+            <div key={key} className={fieldCls}>
+              <Label className={labelCls}>{label}</Label>
+              <CurrencyInput
+                value={dados[key] as number}
+                onChange={(v) => setDados(key, v as DadosCliente[typeof key])}
+              />
+              {hint && <p className="text-[11px] text-[#9CA3AF] italic">{hint}</p>}
+            </div>
+          ))}
+
+          {/* Idade de Aposentadoria */}
+          <div className={fieldCls}>
+            <label style={{ fontSize: 11, color: "#6B7280" }}>Idade de Aposentadoria</label>
+            <input
+              type="number"
+              value={dados.idadeMeta ?? 60}
+              min={40}
+              max={80}
+              onChange={(e) => setDados("idadeMeta", Number(e.target.value))}
+              style={{ width: "100%", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, fontFamily: "inherit", boxSizing: "border-box" }}
+            />
+            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>Idade alvo para conquistar a liberdade financeira</div>
+          </div>
+
+          {([
             { label: "Renda Mensal Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria", hint: "Quanto deseja receber por mês na aposentadoria" },
             { label: "Gasto mensal no cartão (familiar)", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
           ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
@@ -491,6 +520,42 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
 
       </SecaoCard>
 
+      {/* Botão Salvar */}
+      {onSalvar && (
+        <div style={{ padding: "20px 0 4px", display: "flex", justifyContent: "flex-end" }}>
+          <button
+            onClick={onSalvar}
+            disabled={salvando}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: salvo ? "#15803D" : "#2563EB",
+              color: "white", border: "none",
+              borderRadius: 8, padding: "10px 24px",
+              fontSize: 13, fontWeight: 600,
+              cursor: salvando ? "not-allowed" : "pointer",
+              transition: "background 300ms",
+              fontFamily: "inherit",
+            }}
+          >
+            {salvando ? (
+              <>
+                <i className="ti ti-loader-2" style={{ fontSize: 14 }} />
+                Salvando...
+              </>
+            ) : salvo ? (
+              <>
+                <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+                Salvo!
+              </>
+            ) : (
+              <>
+                <i className="ti ti-device-floppy" style={{ fontSize: 14 }} />
+                Salvar Situação Atual
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
     </div>
   );

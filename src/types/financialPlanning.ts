@@ -589,6 +589,7 @@ export interface DadosCliente {
   saldoPrevidencia: number;
   comecandoDoZero: boolean;
   rendaDesejadaAposentadoria: number;
+  idadeMeta?: number;
   nomeConjuge?: string;
   dataNascimentoConjuge?: string;
 }
@@ -631,6 +632,7 @@ export const initialDadosCliente: DadosCliente = {
   saldoPrevidencia: 0,
   comecandoDoZero: false,
   rendaDesejadaAposentadoria: 0,
+  idadeMeta: 60,
 };
 
 // ─── Financial Plan (raiz) ────────────────────────────────────────────────────

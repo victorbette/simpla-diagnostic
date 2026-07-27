@@ -54,6 +54,8 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
+  const [salvandoColeta, setSalvandoColeta] = useState(false);
+  const [salvoColeta, setSalvoColeta] = useState(false);
   const planInitialized = useRef(false);
 
   // ── Strategy state (localStorage-backed) ─────────────────────────────────
@@ -170,6 +172,27 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       console.error("handleSave failed:", err);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSalvarColeta() {
+    setSalvandoColeta(true);
+    try {
+      // Sync dc.idadeMeta → planejamentoIF.idadeMeta so the LF tool picks it up
+      const planToSave = plan.dadosCliente.idadeMeta
+        ? { ...plan, planejamentoIF: { ...plan.planejamentoIF, idadeMeta: plan.dadosCliente.idadeMeta } }
+        : plan;
+      const saved = await store.savePlan(planToSave);
+      setPlan(saved);
+      setDirty(false);
+      setUltimoSalvo(new Date());
+      setSalvoColeta(true);
+      setTimeout(() => setSalvoColeta(false), 2500);
+    } catch (err) {
+      const supaErr = err as { message?: string };
+      toast.error(`Erro ao salvar: ${supaErr.message ?? "Erro desconhecido"}`);
+    } finally {
+      setSalvandoColeta(false);
     }
   }
 
@@ -546,6 +569,9 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
               plan={plan}
               onChange={updatePlan}
               onColetaComplete={handleColetaComplete}
+              onSalvar={handleSalvarColeta}
+              salvando={salvandoColeta}
+              salvo={salvoColeta}
             />
           )}
 

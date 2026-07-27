@@ -25,7 +25,7 @@ function varsLF(plan: FinancialPlan) {
   const patrimonioAtual = Number(dc.patrimonioFinanceiroEstimado) || 0;
   const aporteMensal    = Number(dc.aportesMensalMedio) || 0;
   const rendaDesejada   = Number(dc.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta       = Number(plan.planejamentoIF.idadeMeta) || 60;
+  const idadeMeta       = Number(dc.idadeMeta) || Number(plan.planejamentoIF.idadeMeta) || 60;
   const idadeAtual      = dc.dataNascimento
     ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
@@ -169,7 +169,7 @@ export function gerarTextosAreas(
     const v = varsLF(plan);
 
     if (!v.temDados) {
-      return `Para analisarmos sua jornada rumo à liberdade financeira, precisamos de algumas informações básicas ainda não preenchidas: patrimônio atual, valor que você investe por mês, renda desejada na aposentadoria e a idade em que deseja se aposentar.\n\nPreencha esses dados na Coleta de Dados e voltamos aqui com a análise completa.`;
+      return `Para analisarmos sua jornada rumo à liberdade financeira, precisamos de algumas informações básicas ainda não preenchidas: patrimônio atual, valor que você investe por mês, renda desejada na aposentadoria e a idade em que deseja se aposentar.\n\nPreencha esses dados na aba Situação Atual e voltamos aqui com a análise completa.`;
     }
 
     if (v.projecao >= v.patrimonioNecessario) {
@@ -212,8 +212,10 @@ export function gerarTextosAreas(
     const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
 
     const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
-    if (!aaTemDados) {
-      return `Os valores da carteira de investimentos ainda não foram informados na Coleta de Dados. Para obter uma análise completa da composição da carteira, acesse a aba de Coleta de Dados, informe os valores de cada classe de ativo e selecione o perfil de investidor.`;
+    const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
+
+    if (comecandoDoZero || !aaTemDados) {
+      return `Você está dando os primeiros passos no mundo dos investimentos — e esse é, sem dúvida, o momento mais importante. Começar bem faz toda a diferença no longo prazo.\n\nTer uma estratégia bem definida desde o início evita os erros mais comuns: aplicar em produtos inadequados, concentrar tudo em um único ativo ou deixar o dinheiro parado sem render. Uma carteira estruturada — com renda fixa como base, ativos de crescimento e proteção cambial — é o que separa quem constrói patrimônio de forma consistente de quem não consegue evoluir.\n\nO próximo passo é definir o seu perfil de investidor e montar uma alocação adequada para a sua realidade. Isso será trabalhado na aba de Asset Allocation, onde você terá acesso a uma carteira recomendada personalizada para o seu momento de vida.`;
     }
 
     const ativos: string[] = [];
