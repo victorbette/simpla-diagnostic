@@ -22,7 +22,7 @@ const GOLD = "#3B82F6";
 // ── Abas principais (4) ───────────────────────────────────────────────────────
 
 const ABAS = [
-  { id: "coleta",                  label: "Coleta de Dados",         icone: "ti-clipboard-list" },
+  { id: "coleta",                  label: "Situação Atual",          icone: "ti-clipboard-list" },
   { id: "protecao_sucessorio",     label: "Proteção e Sucessório",   icone: "ti-shield"          },
   { id: "planejamento_tributario", label: "Planejamento Tributário", icone: "ti-receipt"         },
   { id: "liberdade_financeira",    label: "Liberdade Financeira",    icone: "ti-beach"           },

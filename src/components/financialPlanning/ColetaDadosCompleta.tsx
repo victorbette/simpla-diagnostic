@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "./AtivoForm";
-import type { FinancialPlan, DadosCliente } from "@/types/financialPlanning";
+import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
 import { calcularIdade } from "@/lib/format";
 
 const UFS = [
@@ -24,6 +24,13 @@ const VINCULOS = [
   { id: "servidor",   label: "Servidor Público" },
   { id: "aposentado", label: "Aposentado" },
   { id: "outro",      label: "Outro" },
+];
+
+const PERFIS = [
+  { id: "conservador",          label: "Conservador" },
+  { id: "conservador_moderado", label: "Conservador Moderado" },
+  { id: "moderado",             label: "Moderado" },
+  { id: "arrojado",             label: "Arrojado" },
 ];
 
 
@@ -437,6 +444,39 @@ export function ColetaDadosCompleta({ plan, onChange }: Props) {
 
       {/* ─── SEÇÃO 3: Investimentos ─── */}
       <SecaoCard color="#1E40AF" Icon={PieChart} title="Investimentos" subtitle="Carteira atual e perfil de risco do cliente">
+
+        {/* Perfil de Investidor */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
+            PERFIL DE INVESTIDOR
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {PERFIS.map((p) => {
+              const ativo = dados.suitabilityPerfil === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setDados("suitabilityPerfil", p.id as PerfilRisco)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: ativo ? "1.5px solid #3B82F6" : "1.5px solid #E5E7EB",
+                    background: ativo ? "#EFF6FF" : "#FFFFFF",
+                    color: ativo ? "#1D4ED8" : "#6B7280",
+                    fontWeight: ativo ? 600 : 400,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    textAlign: "center",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <AtivoForm
           value={plan.ativosAtuais}
