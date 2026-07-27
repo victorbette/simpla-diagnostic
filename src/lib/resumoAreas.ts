@@ -73,6 +73,8 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
     const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
 
     const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
+    const comecandoDoZero = dc.comecandoDoZero === true;
+    if (comecandoDoZero) return 0;
     if (!aaTemDados) return -1;
 
     const perfil = dc.suitabilityPerfil ?? '';
