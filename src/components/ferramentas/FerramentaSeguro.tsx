@@ -747,17 +747,35 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+        <div style={{ marginBottom: 14, border: "0.5px solid #F3F4F6", borderRadius: 8, overflow: "hidden" }}>
           {[
             { label: "Necessidades Imediatas", value: calc.totalImediato },
-            { label: "Necessidades Contínuas", value: calc.subtotalContinuo },
-            { label: "Coberturas em Vida",     value: calc.totalCoberturasVida },
           ].map(({ label, value }) => (
-            <div key={label} style={{ backgroundColor: "#F9FAFB", borderRadius: 6, padding: "8px 10px" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 10, color: "#9CA3AF" }}>{label}</p>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#374151" }}>{formatCurrency(value)}</p>
+            <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
+              <span style={{ fontSize: 13, color: "#374151" }}>{label}</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(value)}</span>
             </div>
           ))}
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
+            <span style={{ fontSize: 13, color: "#374151" }}>Necessidades Contínuas — Família</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalContinuo)}</span>
+          </div>
+          {calc.totalFilhos > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
+              <span style={{ fontSize: 13, color: "#374151" }}>Necessidades Contínuas — Filhos</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalFilhos)}</span>
+            </div>
+          )}
+          {calc.saldoPrevidencia > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
+              <span style={{ fontSize: 13, color: "#15803D" }}>(-) Saldo Previdência</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#15803D" }}>-{formatCurrency(calc.saldoPrevidencia)}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F9FAFB" }}>
+            <span style={{ fontSize: 13, color: "#374151" }}>Coberturas em Vida</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
+          </div>
         </div>
 
         {calc.capitalNecessario > 0 && (
