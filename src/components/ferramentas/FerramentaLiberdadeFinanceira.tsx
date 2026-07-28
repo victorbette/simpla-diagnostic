@@ -420,6 +420,7 @@ export function FerramentaLiberdadeFinanceira({
   };
 
   const sliderAporteMax = Math.max(Math.round(aporteNecessario * 2 / 100) * 100, 20000);
+  const maxRendaSlider = Math.max(params.rendaDesejada * 2, 50000);
 
   if (!result) {
     return (
@@ -443,12 +444,12 @@ export function FerramentaLiberdadeFinanceira({
         </p>
 
         {/* 3 campos principais em linha */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, alignItems: "start" }}>
 
           {/* Renda Mensal Desejada */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
+              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Renda desejada</label>
               {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {rendaEditada && (
                 <button
@@ -463,12 +464,26 @@ export function FerramentaLiberdadeFinanceira({
               value={params.rendaDesejada}
               onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
             />
+            <input
+              type="range"
+              min={0}
+              max={maxRendaSlider}
+              step={500}
+              value={params.rendaDesejada}
+              onChange={(e) => { setP({ rendaDesejada: Number(e.target.value) }); setRendaEditada(Number(e.target.value) !== rendaDesejadaColeta); }}
+              className="w-full"
+              style={{ accentColor: "#2563EB", marginTop: 4 }}
+            />
+            <div className="flex justify-between" style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1 }}>
+              <span>R$ 0</span>
+              <span>{maxRendaSlider.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}</span>
+            </div>
           </div>
 
           {/* Aporte Mensal + slider */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
+              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Aporte mensal</label>
               {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
               {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
                 <button
@@ -498,7 +513,7 @@ export function FerramentaLiberdadeFinanceira({
 
           {/* Idade Aposentadoria + slider */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+            <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, lineHeight: 1, minHeight: 14, display: "flex", alignItems: "center" }}>Aposentadoria</label>
             <Input
               type="number"
               min={params.idadeAtual + 1}
@@ -672,7 +687,17 @@ export function FerramentaLiberdadeFinanceira({
         </div>
       </div>
 
-      {/* ── 2. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
+      {/* ── 2. GRÁFICO ──────────────────────────────────────────────────────── */}
+      <CardProjecaoPatrimonial
+        projecao={dadosGrafico}
+        objetivos={objetivosAtivos}
+        height={420}
+        mesIF={mesIF}
+        mesNascimento={mesNascimento}
+        patrimonioNecessario={patrimonioPerpetuidade}
+      />
+
+      {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
@@ -762,16 +787,6 @@ export function FerramentaLiberdadeFinanceira({
           </CardContent>
         </Card>
       </div>
-
-      {/* ── 4. GRÁFICO ──────────────────────────────────────────────────────── */}
-      <CardProjecaoPatrimonial
-        projecao={dadosGrafico}
-        objetivos={objetivosAtivos}
-        height={420}
-        mesIF={mesIF}
-        mesNascimento={mesNascimento}
-        patrimonioNecessario={patrimonioPerpetuidade}
-      />
 
       {/* ── 5. OBJETIVOS DE VIDA ────────────────────────────────────────────── */}
       <div style={{
