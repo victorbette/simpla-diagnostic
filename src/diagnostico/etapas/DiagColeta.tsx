@@ -63,6 +63,17 @@ const CURRENCY_KEYS = [
   { label: "Renda Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria" },
 ] as const;
 
+const VALOR_POR_CLASSE: Record<string, { label: string; key: string }[]> = {
+  renda_fixa:    [{ label: "Valor em Renda Fixa (R$)",   key: "valorRendaFixa" }],
+  renda_variavel:[
+    { label: "Valor em Ações (R$)", key: "valorAcoes" },
+    { label: "Valor em FIIs (R$)",  key: "valorFIIs" },
+  ],
+  exterior:      [{ label: "Valor no Exterior (R$)",     key: "valorExterior" }],
+  cripto:        [{ label: "Valor em Cripto (R$)",       key: "valorCripto" }],
+  alternativos:  [{ label: "Valor em Alternativos (R$)", key: "valorAlternativos" }],
+};
+
 interface Props {
   dados: DadosColetaDiag;
   onChange: (patch: Partial<DadosColetaDiag>) => void;
@@ -311,6 +322,41 @@ export function DiagColeta({ dados, onChange }: Props) {
           </div>
         </div>
 
+        {/* Previdência Privada */}
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>Tem Previdência Privada?</div>
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>PGBL, VGBL ou previdência corporativa</div>
+            </div>
+            <label style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={dados.temPrevidencia ?? false}
+                onChange={e => onChange({
+                  temPrevidencia: e.target.checked,
+                  saldoPrevidencia: e.target.checked ? dados.saldoPrevidencia : undefined,
+                })}
+                style={{ display: "none" }}
+              />
+              <div style={{ width: 40, height: 22, borderRadius: 99, background: dados.temPrevidencia ? "#2563EB" : "#D1D5DB", position: "relative" as const, transition: "background 200ms" }}>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute" as const, top: 3, left: dados.temPrevidencia ? 21 : 3, transition: "left 200ms" }} />
+              </div>
+            </label>
+          </div>
+          {dados.temPrevidencia && (
+            <div style={{ background: "#F0FDF4", border: "0.5px solid #BBF7D0", borderRadius: 8, padding: "12px 14px", marginTop: 4 }}>
+              <label style={{ fontSize: 11, color: "#15803D", fontWeight: 500, display: "block", marginBottom: 6 }}>
+                Saldo Atual da Previdência (R$)
+              </label>
+              <CurrencyInput
+                value={dados.saldoPrevidencia ?? 0}
+                onChange={(v: number) => onChange({ saldoPrevidencia: v })}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Seguro */}
         <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -324,26 +370,6 @@ export function DiagColeta({ dados, onChange }: Props) {
             </div>
           </div>
 
-          {dados.possuiSeguro && (
-            <div style={{ background: "#F0FDF4", border: "0.5px solid #BBF7D0", borderRadius: 10, padding: "14px 16px", marginTop: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#15803D", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                <i className="ti ti-shield-check" style={{ fontSize: 14 }} />
-                Detalhes do Seguro
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>
-                  Valor Total das Apólices (R$)
-                </label>
-                <CurrencyInput
-                  value={dados.valorApolice ?? 0}
-                  onChange={(v: number) => onChange({ valorApolice: v })}
-                />
-                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>
-                  Soma do capital segurado de vida e invalidez
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </SecaoCard>
 
@@ -362,7 +388,7 @@ export function DiagColeta({ dados, onChange }: Props) {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
-                  const marcado = dados.ativosInvestimento?.[ativo.id] ?? false;
+                  const marcado = !!(dados.ativosInvestimento?.[ativo.id]);
                   const t = ATIVOS_TEXTOS[ativo.id];
                   const snippet = marcado
                     ? (ativo.qualidade === "bom"
@@ -441,6 +467,20 @@ export function DiagColeta({ dados, onChange }: Props) {
                   );
                 })}
               </div>
+              {(VALOR_POR_CLASSE[classe] ?? []).map(({ label: vLabel, key }) => (
+                <div key={key} style={{ marginTop: 8, padding: "8px 12px", background: "#F8FAFF", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" as const, minWidth: 140 }}>{vLabel}</span>
+                  <CurrencyInput
+                    value={(dados.ativosInvestimento?.[key] as number | undefined) ?? 0}
+                    onChange={(v: number) => onChange({
+                      ativosInvestimento: {
+                        ...dados.ativosInvestimento,
+                        [key]: v,
+                      },
+                    })}
+                  />
+                </div>
+              ))}
             </div>
           ))}
         </div>

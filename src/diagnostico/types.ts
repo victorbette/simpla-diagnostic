@@ -28,12 +28,14 @@ export interface DadosColetaDiag {
   idadeMeta?: number;
   suitabilityPerfil?: string;
   ativosAtuais?: AtivoAtual;
-  ativosInvestimento?: Record<string, boolean>;
+  ativosInvestimento?: Record<string, boolean | number>;
   comecandoDoZero?: boolean;
   contribuiINSS?: boolean;
   valorINSS?: number;
   possuiSeguro?: boolean;
   valorApolice?: number;
+  temPrevidencia?: boolean;
+  saldoPrevidencia?: number;
 }
 
 export interface DadosLFDiag {

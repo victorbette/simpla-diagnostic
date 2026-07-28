@@ -1,7 +1,7 @@
 export interface AtivoInvestimento {
   id: string;
   label: string;
-  classe: "renda_fixa" | "renda_variavel" | "exterior" | "cripto";
+  classe: "renda_fixa" | "renda_variavel" | "exterior" | "cripto" | "alternativos";
   qualidade: "bom" | "ruim";
   icone: string;
   cor: string;
@@ -14,11 +14,6 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "lci_lca",             label: "LCI / LCA",               classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
   { id: "fundo_rf",            label: "Fundos de Renda Fixa",    classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
   { id: "poupanca",            label: "Poupança",                classe: "renda_fixa",    qualidade: "ruim", icone: "ti-piggy-bank",     cor: "#B91C1C" },
-  { id: "coe",                 label: "COE",                     classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
-  { id: "fundo_multimercado",  label: "Fundos Multimercado",     classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
-  { id: "fundo_alternativo",   label: "Fundos Alternativos",     classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
-  { id: "fundo_cetipado",      label: "Fundos Cetipados",        classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
-  { id: "produto_estruturado", label: "Produtos Estruturados",   classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
   { id: "cri_cra",             label: "CRI / CRA",               classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
   { id: "debentures",          label: "Debêntures",              classe: "renda_fixa",    qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
 
@@ -33,7 +28,14 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "exterior",            label: "Investimentos no Exterior", classe: "exterior",     qualidade: "bom", icone: "ti-world",          cor: "#B45309" },
 
   // ─── CRIPTO ─────────────────────────────────────
-  { id: "cripto",              label: "Criptomoedas",            classe: "cripto",         qualidade: "bom", icone: "ti-currency-bitcoin", cor: "#6D28D9" },
+  { id: "cripto",              label: "Criptomoedas",            classe: "cripto",         qualidade: "bom",  icone: "ti-currency-bitcoin", cor: "#6D28D9" },
+
+  // ─── ALTERNATIVOS ────────────────────────────────
+  { id: "fundo_multimercado",  label: "Fundos Multimercado",     classe: "alternativos",  qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "fundo_cetipado",      label: "Fundos Cetipados",        classe: "alternativos",  qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "fundo_alternativo",   label: "Fundos Alternativos",     classe: "alternativos",  qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "produto_estruturado", label: "Produtos Estruturados",   classe: "alternativos",  qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
+  { id: "coe",                 label: "COE",                     classe: "alternativos",  qualidade: "ruim", icone: "ti-alert-circle",   cor: "#B91C1C" },
 ];
 
 export const CLASSES_INVESTIMENTO: {
@@ -45,4 +47,5 @@ export const CLASSES_INVESTIMENTO: {
   { classe: "renda_variavel", label: "Renda Variável", cor: "#15803D" },
   { classe: "exterior",      label: "Exterior",        cor: "#B45309" },
   { classe: "cripto",        label: "Cripto",          cor: "#6D28D9" },
+  { classe: "alternativos",  label: "Alternativos",    cor: "#B91C1C" },
 ];
