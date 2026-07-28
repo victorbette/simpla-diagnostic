@@ -1,6 +1,5 @@
 import type { Lead } from "../types";
 import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
-import { ATIVOS_TEXTOS, TEXTOS_DIVERSIFICACAO } from "../ativosTextos";
 
 const TAXA_MENSAL_SCORE = Math.pow(1.045, 1 / 12) - 1;
 
@@ -18,13 +17,20 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
   return null;
 }
 
-function nivelScore(score: number): { label: string; cor: string; bg: string } {
-  if (score < 0)   return { label: "Não avaliado",      cor: "#9CA3AF", bg: "#F3F4F6" };
-  if (score === 0) return { label: "Atenção urgente",   cor: "#B91C1C", bg: "#FEE2E2" };
-  if (score <= 40) return { label: "Precisa melhorar",  cor: "#B91C1C", bg: "#FEE2E2" };
-  if (score <= 60) return { label: "Em desenvolvimento",cor: "#B45309", bg: "#FEF3C7" };
-  if (score <= 80) return { label: "No caminho certo",  cor: "#2563EB", bg: "#DBEAFE" };
-  return             { label: "Muito bem!",             cor: "#15803D", bg: "#DCFCE7" };
+function nivelScore(score: number): { label: string; cor: string; bg: string; emoji: string } {
+  if (score < 0)
+    return { label: "Não avaliado",       cor: "#9CA3AF", bg: "#F3F4F6", emoji: "—"  };
+  if (score === 0)
+    return { label: "Situação Crítica",   cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
+  if (score <= 30)
+    return { label: "Atenção Urgente",    cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
+  if (score <= 50)
+    return { label: "Precisa Melhorar",   cor: "#C2410C", bg: "#FEF3C7", emoji: "🟠" };
+  if (score <= 70)
+    return { label: "Em Desenvolvimento", cor: "#B45309", bg: "#FEF9C3", emoji: "🟡" };
+  if (score <= 85)
+    return { label: "No Caminho Certo",   cor: "#1D4ED8", bg: "#DBEAFE", emoji: "🔵" };
+  return   { label: "Excelente",          cor: "#15803D", bg: "#DCFCE7", emoji: "🟢" };
 }
 
 function GaugeDiag({
@@ -180,75 +186,58 @@ export function DiagResultado({ lead }: Props) {
   // ── Textos humanizados ──
   function gerarTextoInvestimentos(): string {
     if (!aaTemDados) {
-      return "Ainda não foram informados os investimentos. Informe na Coleta de Dados quais ativos você já possui para receber uma análise completa.";
+      return "Não identificamos nenhum investimento em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real — o custo dos juros compostos trabalhando para outros em vez de para você. Se você já investe mas não sabe exatamente onde, isso é igualmente preocupante: dinheiro sem estratégia raramente cresce como deveria.";
     }
 
-    const norm = (s: string) => s.replace(/\n/g, " ").trim();
+    if (ativosRuins.length > 0 && ativosBons.length === 0) {
+      return `Identificamos apenas produtos considerados não recomendados em sua carteira: ${ativosRuins.map(a => a.label).join(", ")}. Esses produtos costumam beneficiar mais quem os vende do que quem os compra — com taxas elevadas, baixa transparência e retornos abaixo do mercado.\n\nIsso significa que, enquanto você trabalha para construir patrimônio, uma parcela significativa do rendimento pode estar sendo consumida por custos desnecessários. Uma revisão completa da carteira pode fazer uma diferença enorme no longo prazo.`;
+    }
+
+    if (ativosRuins.length > 0 && ativosBons.length > 0) {
+      return `Você já tem boas escolhas na carteira (${ativosBons.map(a => a.label).join(", ")}), mas identificamos também produtos que merecem atenção: ${ativosRuins.map(a => a.label).join(", ")}. Uma revisão estratégica pode elevar significativamente a eficiência da sua carteira.`;
+    }
+
+    if (ativosRuins.length === 0 && !temRV && !temExt) {
+      return "Sua carteira está em produtos de qualidade, mas muito concentrada em renda fixa. Sem ativos de crescimento (ações, FIIs) e sem diversificação internacional, o patrimônio tende a crescer abaixo do potencial no longo prazo. Uma estratégia completa combina proteção com crescimento.";
+    }
+
     const partes: string[] = [];
-
     if (ativosBons.length > 0) {
-      const linhas = ["O que você já faz bem:"];
-      for (const a of ativosBons) {
-        const t = ATIVOS_TEXTOS[a.id];
-        const positivo = t?.positivo ? norm(t.positivo) : "";
-        const dica = t?.dica ? ` ${norm(t.dica)}` : "";
-        if (positivo) linhas.push(`• ${a.label}: ${positivo}${dica}`);
-      }
-      if (linhas.length > 1) partes.push(linhas.join("\n"));
+      partes.push(`Você já tem excelentes produtos na carteira: ${ativosBons.map(a => a.label).join(", ")}.`);
     }
-
-    if (ativosRuins.length > 0) {
-      const linhas = ["Pontos de atenção:"];
-      for (const a of ativosRuins) {
-        const t = ATIVOS_TEXTOS[a.id];
-        const negativo = t?.negativo ? norm(t.negativo) : "";
-        const dica = t?.dica ? ` ${norm(t.dica)}` : "";
-        if (negativo) linhas.push(`• ${a.label}: ${negativo}${dica}`);
-      }
-      if (linhas.length > 1) partes.push(linhas.join("\n"));
-    }
-
-    const totalClassesBoas = [temRF, temRV, temExt].filter(Boolean).length;
-    const linhasDiversif: string[] = ["Análise da diversificação:"];
-    if (!temRF)  linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semRF));
-    if (!temRV)  linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semRV));
-    if (!temExt) linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.semExt));
-    if (totalClassesBoas >= 3) {
-      linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.excelenteDiversificacao));
-    } else if (totalClassesBoas === 2) {
-      linhasDiversif.push(norm(TEXTOS_DIVERSIFICACAO.boaDiversificacao));
-    }
-    if (linhasDiversif.length > 1) partes.push(linhasDiversif.join("\n"));
-
-    return partes.join("\n\n");
+    if (!temRV)  partes.push("Incluir ativos de renda variável (ações, FIIs, ETFs) pode aumentar significativamente o potencial de crescimento do seu patrimônio no longo prazo.");
+    if (!temExt) partes.push("A diversificação internacional protege contra riscos específicos do Brasil e abre oportunidades em mercados globais.");
+    return partes.join(" ");
   }
 
   function gerarTexto(area: string): string {
     if (area === "lf") {
       if (!lfTemDados) {
-        return "Para visualizar como está sua jornada rumo à aposentadoria, precisamos de algumas informações ainda não preenchidas. Volte à Coleta de Dados e informe seu patrimônio atual, quanto investe por mês e a renda que deseja ter no futuro.";
-      }
-      if (projecao >= patrimonioNecessario) {
-        return "Ótima notícia! Com o ritmo atual de investimentos e o patrimônio que você já construiu, você está no caminho para ter a renda que deseja na aposentadoria.\n\nSe mantiver a consistência nos aportes mensais, a projeção indica que você chegará ao seu objetivo. O segredo agora é não parar — cada mês de investimento conta muito no longo prazo.";
+        return "Ainda não conseguimos calcular sua projeção de aposentadoria — e isso, por si só, já é um sinal importante. Quem não sabe para onde está indo financeiramente tende a chegar a algum lugar que não planejou. Complete os dados de patrimônio, aporte mensal e renda desejada para descobrir onde você realmente está.";
       }
       const pct = Math.round(projecao / patrimonioNecessario * 100);
-      return `Você já começou sua jornada de investimentos, o que é ótimo! Com o ritmo atual, você está chegando a ${pct}% da renda que deseja ter na aposentadoria.\n\nA diferença pode ser reduzida aumentando um pouco o valor investido por mês ou ajustando a data da aposentadoria. Pequenos ajustes hoje fazem uma diferença enorme lá na frente.`;
+      if (projecao >= patrimonioNecessario) {
+        return "Parabéns — você está no grupo seleto de pessoas que, mantendo a disciplina atual, chegará à aposentadoria com patrimônio suficiente para gerar a renda que deseja para sempre.\n\nO desafio agora é proteger o que construiu, otimizar a rentabilidade e garantir que nenhum imprevisto desfaça o que anos de dedicação construíram. Uma estratégia bem estruturada protege e acelera esse resultado.";
+      }
+      if (pct < 30) {
+        return `Esse resultado exige atenção imediata. Com a trajetória atual, você chegará à aposentadoria com apenas ${pct}% do patrimônio necessário para manter seu padrão de vida — o que significa depender de terceiros, reduzir drasticamente o estilo de vida ou continuar trabalhando por muito mais tempo do que deseja.\n\nA boa notícia é que você tem tempo para mudar isso — mas o tempo é o seu ativo mais valioso agora. Cada mês que passa sem ajustar a estratégia representa uma diferença enorme lá na frente. Pequenas mudanças hoje geram resultados enormes em 10, 15 ou 20 anos.\n\nEsse é exatamente o momento de agir.`;
+      }
+      if (pct < 70) {
+        return `Você está no caminho, mas ainda há uma lacuna significativa a preencher. Com a estratégia atual, sua projeção atinge ${pct}% da renda que você deseja ter na aposentadoria.\n\nIsso significa que, sem ajustes, parte do seu futuro ainda depende de circunstâncias fora do seu controle. A diferença entre chegar lá com tranquilidade ou com aperto está nas decisões que você toma nos próximos meses.\n\nUma estratégia bem estruturada pode mudar esse cenário completamente.`;
+      }
+      return `Você já construiu uma base sólida — está a ${pct}% da meta de aposentadoria que definiu para si mesmo. Isso demonstra disciplina e consistência.\n\nAgora é hora de otimizar: pequenos ajustes na rentabilidade da carteira ou no valor dos aportes podem antecipar em anos a sua data de liberdade financeira. Você está próximo — e com a estratégia certa, pode chegar muito antes do que imagina.`;
     }
 
     if (area === "inv") return gerarTextoInvestimentos();
 
     if (area === "blind") {
       if (!blindagemTemDados) {
-        return "Para analisarmos sua proteção financeira, precisamos saber quanto você gasta por mês. Preencha esse dado na Coleta de Dados.";
+        return "Não conseguimos avaliar sua proteção patrimonial sem saber suas despesas mensais. Complete esse dado para descobrir se sua família estaria protegida em caso de imprevistos.";
       }
-      if (capitalAtualBlindagem === 0) {
-        return "Identificamos que você não possui seguro de vida ou invalidez no momento. Isso é um ponto de atenção importante: caso algo inesperado aconteça, sua família poderia enfrentar dificuldades financeiras.\n\nUm seguro de vida é uma das formas mais simples e acessíveis de proteger quem você ama. Vale muito a pena avaliar essa possibilidade.";
+      if (dadosColeta.possuiSeguro !== true) {
+        return "Esse é o ponto mais crítico do seu diagnóstico. Você não possui nenhuma apólice de seguro de vida ou invalidez — o que significa que, se algo inesperado acontecer com você amanhã, sua família enfrentaria a dor emocional e, simultaneamente, uma crise financeira devastadora.\n\nPense nisso de forma concreta: em caso de falecimento, quem pagaria o aluguel, a escola dos filhos, as contas do dia a dia? Em caso de invalidez — que é estatisticamente mais provável do que o falecimento precoce — como sua família manteria o padrão de vida por meses ou anos sem a sua renda?\n\nUm seguro de vida adequado é uma das decisões mais importantes e mais acessíveis que você pode tomar hoje. O custo de não ter é infinitamente maior do que o custo de ter.";
       }
-      if (capitalAtualBlindagem < capitalNecessarioBlindagem) {
-        const pct = Math.round(capitalAtualBlindagem / capitalNecessarioBlindagem * 100);
-        return `Você já tem um seguro de vida — isso é muito importante e mostra que você pensa no futuro da sua família.\n\nA análise indica que a cobertura atual representa ${pct}% do valor recomendado para proteger o padrão de vida da sua família. Pode valer a pena avaliar se o valor da apólice ainda está adequado para a sua situação atual.`;
-      }
-      return "Excelente! Você possui uma cobertura de seguro adequada para proteger sua família. Sua blindagem patrimonial está bem estruturada.\n\nLembre-se de revisar o valor da apólice periodicamente, especialmente quando houver mudanças na sua renda ou estrutura familiar.";
+      return "Você já deu um passo importante ao contratar um seguro de vida — isso demonstra que você pensa no futuro da sua família.\n\nLembre-se de revisar anualmente: à medida que seu patrimônio e suas responsabilidades crescem, a cobertura também deve acompanhar esse crescimento. Avaliar a inclusão de coberturas em vida — invalidez e doenças graves — pode adicionar uma camada extra de segurança para o que você mais valoriza.";
     }
 
     return "";
@@ -268,24 +257,49 @@ export function DiagResultado({ lead }: Props) {
 
         {/* ── Header com score geral ── */}
         <div style={{
-          background: "#1E3A8A", borderRadius: 12, padding: "24px 28px",
-          color: "white", marginBottom: 20,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%)",
+          borderRadius: 16,
+          padding: "28px 32px",
+          color: "white",
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxShadow: "0 4px 24px rgba(30,58,138,0.18)",
         }}>
           <div>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>Diagnóstico Financeiro</div>
-            <div style={{ fontSize: 22, fontWeight: 700 }}>{lead.nome}</div>
-          </div>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, fontWeight: 800, lineHeight: 1 }}>{scoreGeral}</div>
-            <div style={{ fontSize: 11, opacity: 0.7 }}>pontos de 100</div>
-            <span style={{
-              fontSize: 11, fontWeight: 600,
-              background: "rgba(255,255,255,0.2)",
-              padding: "3px 12px", borderRadius: 99,
-              marginTop: 6, display: "inline-block",
+            <div style={{
+              fontSize: 11, opacity: 0.7,
+              textTransform: "uppercase" as const,
+              letterSpacing: "0.1em",
+              marginBottom: 6,
             }}>
-              {nivelScore(scoreGeral).label}
+              Diagnóstico Financeiro
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
+              {lead.nome}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.65, marginTop: 6 }}>
+              {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+            </div>
+          </div>
+          <div style={{ textAlign: "center" as const }}>
+            <div style={{
+              fontSize: 64, fontWeight: 900, lineHeight: 1,
+              color: scoreGeral >= 70 ? "#4ADE80" : scoreGeral >= 50 ? "#FCD34D" : "#F87171",
+            }}>
+              {scoreGeral}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 6 }}>
+              de 100 pontos
+            </div>
+            <span style={{
+              fontSize: 11, fontWeight: 700,
+              background: "rgba(255,255,255,0.15)",
+              padding: "4px 14px", borderRadius: 99,
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}>
+              {nivelScore(scoreGeral).emoji}{" "}{nivelScore(scoreGeral).label}
             </span>
           </div>
         </div>
