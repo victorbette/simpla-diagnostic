@@ -176,48 +176,47 @@ export function DiagResultado({ lead }: Props) {
   })();
 
   // ── Textos humanizados ──
+  const nome = lead.nome.split(" ")[0];
+
   function gerarTextoInvestimentos(): string {
     if (!aaTemDados) {
-      return "Não identificamos nenhum investimento em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real — o custo dos juros compostos trabalhando para outros em vez de para você. Se você já investe mas não sabe exatamente onde, isso é igualmente preocupante: dinheiro sem estratégia raramente cresce como deveria.";
+      return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.\n\nSe você já investe mas não tem clareza de onde e em quê, isso é igualmente preocupante. Dinheiro sem estratégia raramente cresce como deveria — e muitas vezes está gerando retorno para outros em vez de para você.";
     }
 
+    const nomesRuins = ativosRuins.map(a => a.label);
+    const nomesBons  = ativosBons.map(a => a.label);
+
     if (ativosRuins.length > 0 && ativosBons.length === 0) {
-      return `Identificamos apenas produtos considerados não recomendados em sua carteira: ${ativosRuins.map(a => a.label).join(", ")}. Esses produtos costumam beneficiar mais quem os vende do que quem os compra — com taxas elevadas, baixa transparência e retornos abaixo do mercado.\n\nIsso significa que, enquanto você trabalha para construir patrimônio, uma parcela significativa do rendimento pode estar sendo consumida por custos desnecessários. Uma revisão completa da carteira pode fazer uma diferença enorme no longo prazo.`;
+      return `A análise da sua carteira acendeu um alerta importante. Todos os produtos identificados — ${nomesRuins.join(", ")} — estão na categoria de investimentos não recomendados: produtos com taxas elevadas, baixa transparência e retornos que historicamente ficam abaixo do mercado.\n\nIsso significa que, enquanto você trabalha para construir patrimônio, uma parcela dos seus rendimentos pode estar sendo consumida desnecessariamente por custos que não aparecem de forma clara no extrato.\n\nUma revisão estratégica da carteira pode representar uma diferença enorme ao longo dos anos — sem precisar assumir mais risco, apenas alocando melhor o que você já tem.`;
     }
 
     if (ativosRuins.length > 0 && ativosBons.length > 0) {
-      return `Você já tem boas escolhas na carteira (${ativosBons.map(a => a.label).join(", ")}), mas identificamos também produtos que merecem atenção: ${ativosRuins.map(a => a.label).join(", ")}. Uma revisão estratégica pode elevar significativamente a eficiência da sua carteira.`;
+      return `Sua carteira tem pontos positivos: você já investe em ${nomesBons.join(", ")}, o que demonstra que você está no caminho.\n\nNo entanto, identificamos também produtos que merecem atenção: ${nomesRuins.join(", ")}. Esses produtos costumam gerar mais resultado para quem os distribui do que para quem os compra — e podem estar comprometendo a eficiência da sua carteira de forma silenciosa.\n\nCom uma revisão estratégica, é possível manter o que funciona, eliminar o que drena e construir uma carteira muito mais eficiente — sem precisar mudar sua tolerância ao risco.`;
     }
 
     if (ativosRuins.length === 0 && !temRV && !temExt) {
-      return "Sua carteira está em produtos de qualidade, mas muito concentrada em renda fixa. Sem ativos de crescimento (ações, FIIs) e sem diversificação internacional, o patrimônio tende a crescer abaixo do potencial no longo prazo. Uma estratégia completa combina proteção com crescimento.";
+      return `Você faz boas escolhas dentro da renda fixa — os produtos que identificamos são sólidos e adequados como base.\n\nMas uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo. Sem ativos de crescimento — como ações e fundos imobiliários — e sem diversificação internacional, o patrimônio tende a crescer significativamente abaixo do seu potencial.\n\nO equilíbrio entre proteção e crescimento é o que diferencia uma carteira que preserva de uma carteira que multiplica. Você já tem a base — agora é hora de construir sobre ela.`;
     }
 
-    const partes: string[] = [];
-    if (ativosBons.length > 0) {
-      partes.push(`Você já tem excelentes produtos na carteira: ${ativosBons.map(a => a.label).join(", ")}.`);
-    }
-    if (!temRV)  partes.push("Incluir ativos de renda variável (ações, FIIs, ETFs) pode aumentar significativamente o potencial de crescimento do seu patrimônio no longo prazo.");
-    if (!temExt) partes.push("A diversificação internacional protege contra riscos específicos do Brasil e abre oportunidades em mercados globais.");
-    return partes.join(" ");
+    return `Sua carteira demonstra uma visão estratégica consistente. Com ${nomesBons.join(", ")}, você tem exposição a classes de ativos que trabalham juntas para crescer, gerar renda e proteger contra riscos.\n\nO próximo nível é otimizar os percentuais de cada classe para o seu perfil e objetivos específicos — garantindo que cada real esteja alocado da forma mais eficiente possível.\n\nCom uma carteira bem estruturada e revisada periodicamente, você maximiza retornos sem precisar assumir riscos desnecessários.`;
   }
 
   function gerarTexto(area: string): string {
     if (area === "lf") {
       if (!lfTemDados) {
-        return "Ainda não conseguimos calcular sua projeção de aposentadoria — e isso, por si só, já é um sinal importante. Quem não sabe para onde está indo financeiramente tende a chegar a algum lugar que não planejou. Complete os dados de patrimônio, aporte mensal e renda desejada para descobrir onde você realmente está.";
+        return "Ainda não foi possível calcular sua projeção de aposentadoria — e isso, por si só, já é um sinal de alerta. A maioria das pessoas não sabe quanto precisa acumular para se aposentar com o padrão de vida que deseja. Essa falta de clareza tem um custo enorme ao longo do tempo.\n\nComplete seus dados de patrimônio, aporte mensal e renda desejada para descobrir onde você está de verdade — e o que precisa mudar para chegar onde quer.";
       }
-      const pct = Math.round(projecao / patrimonioNecessario * 100);
-      if (projecao >= patrimonioNecessario) {
-        return "Parabéns — você está no grupo seleto de pessoas que, mantendo a disciplina atual, chegará à aposentadoria com patrimônio suficiente para gerar a renda que deseja para sempre.\n\nO desafio agora é proteger o que construiu, otimizar a rentabilidade e garantir que nenhum imprevisto desfaça o que anos de dedicação construíram. Uma estratégia bem estruturada protege e acelera esse resultado.";
+      const pct = Math.min(100, Math.round(projecao / patrimonioNecessario * 100));
+      if (pct <= 30) {
+        return `${nome}, o resultado desta análise exige atenção imediata. Com a trajetória atual, você chegará à aposentadoria com apenas ${pct}% do patrimônio necessário para manter seu padrão de vida. Isso significa, na prática, uma aposentadoria com privações, dependência financeira de terceiros ou a necessidade de continuar trabalhando muito além do que você deseja.\n\nO tempo é o ativo mais valioso que existe nos investimentos — e ele não para. Cada mês que passa sem uma estratégia clara representa uma diferença real e irreversível no seu futuro. Quem começa a agir hoje tem uma vantagem enorme sobre quem decide esperar.\n\nEsse é o momento de parar, olhar para os números com seriedade e construir um plano que mude essa trajetória. Ainda há tempo — mas ele precisa ser usado agora.`;
       }
-      if (pct < 30) {
-        return `Esse resultado exige atenção imediata. Com a trajetória atual, você chegará à aposentadoria com apenas ${pct}% do patrimônio necessário para manter seu padrão de vida — o que significa depender de terceiros, reduzir drasticamente o estilo de vida ou continuar trabalhando por muito mais tempo do que deseja.\n\nA boa notícia é que você tem tempo para mudar isso — mas o tempo é o seu ativo mais valioso agora. Cada mês que passa sem ajustar a estratégia representa uma diferença enorme lá na frente. Pequenas mudanças hoje geram resultados enormes em 10, 15 ou 20 anos.\n\nEsse é exatamente o momento de agir.`;
+      if (pct <= 50) {
+        return `${nome}, sua projeção atual atinge ${pct}% da renda que você deseja ter na aposentadoria. Isso significa que, sem mudanças, você chegará nessa fase com menos da metade do necessário — e a diferença será sentida no dia a dia, nas escolhas que precisará fazer, no que terá que abrir mão.\n\nA boa notícia é que você ainda tem tempo de mudar esse cenário de forma significativa. Mas essa mudança exige decisão agora. Cada ano de postergação aumenta o esforço necessário para chegar ao mesmo resultado — e reduz as opções disponíveis.\n\nUma estratégia bem estruturada pode acelerar essa jornada de forma surpreendente. O caminho existe — o que falta é traçar o plano correto e começar a seguir.`;
       }
-      if (pct < 70) {
-        return `Você está no caminho, mas ainda há uma lacuna significativa a preencher. Com a estratégia atual, sua projeção atinge ${pct}% da renda que você deseja ter na aposentadoria.\n\nIsso significa que, sem ajustes, parte do seu futuro ainda depende de circunstâncias fora do seu controle. A diferença entre chegar lá com tranquilidade ou com aperto está nas decisões que você toma nos próximos meses.\n\nUma estratégia bem estruturada pode mudar esse cenário completamente.`;
+      if (pct <= 90) {
+        return `${nome}, você está no caminho — sua projeção já atinge ${pct}% da meta de aposentadoria. Isso demonstra disciplina e consistência, qualidades raras.\n\nMas atenção: estar "quase lá" sem a estratégia certa pode custar caro. Rentabilidade abaixo do potencial, carteira mal diversificada ou decisões erradas nos próximos anos podem comprometer o que você levou tanto tempo para construir.\n\nO momento agora é de otimizar e proteger — garantir que esses ${pct}% se tornem 100%, e que o resultado chegue no tempo que você planejou, com segurança e sem surpresas.`;
       }
-      return `Você já construiu uma base sólida — está a ${pct}% da meta de aposentadoria que definiu para si mesmo. Isso demonstra disciplina e consistência.\n\nAgora é hora de otimizar: pequenos ajustes na rentabilidade da carteira ou no valor dos aportes podem antecipar em anos a sua data de liberdade financeira. Você está próximo — e com a estratégia certa, pode chegar muito antes do que imagina.`;
+      return `${nome}, você faz parte de um grupo seleto: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja.\n\nMas construir é só metade do trabalho. O outro desafio — e muitas vezes o mais crítico — é proteger o que foi conquistado. Volatilidade, decisões erradas no momento errado, falta de proteção adequada: esses são os riscos reais para quem já chegou tão longe.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com tranquilidade, eficiência e proteção para tudo que você construiu.`;
     }
 
     if (area === "inv") return gerarTextoInvestimentos();
