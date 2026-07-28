@@ -35,6 +35,19 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
 
   const blocos: BlocoDoc[] = [];
 
+  // Narrativa introdutória — contexto antes das tabelas
+  const narrativa = [
+    "Proteger o que você construiu é tão importante quanto construir. Um plano financeiro sólido não está completo sem uma estrutura de proteção que garanta que — independente do que aconteça — sua família continuará com a vida que você planejou para ela.",
+    "Além do seguro de vida tradicional, as coberturas em vida são frequentemente negligenciadas e, paradoxalmente, são as mais utilizadas: a probabilidade de ser diagnosticado com uma doença grave ou sofrer uma invalidez ao longo da vida é significativamente maior do que a probabilidade de falecer prematuramente. Uma doença grave sem cobertura adequada pode comprometer anos de patrimônio acumulado em meses de tratamento. A invalidez permanente, por sua vez, exige uma estrutura de capital que permita manter o padrão de vida sem a capacidade de geração de renda.",
+    "No aspecto sucessório, a ausência de planejamento transforma a transmissão do patrimônio em um processo lento, burocrático e extremamente custoso — com ITCMD, custas cartorárias e honorários que podem consumir parte expressiva do que foi construído ao longo de toda uma vida.",
+  ];
+  narrativa.forEach((texto, i) => {
+    blocos.push({
+      chave: `narrativa-${i}`,
+      node: <p style={{ ...TEXTO_CORPO, fontSize: 12.5, marginBottom: 12 }}>{texto}</p>,
+    });
+  });
+
   if (rs) {
     /* ── Resultado da Análise — KPI tiles ── */
     blocos.push({
@@ -177,20 +190,6 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
       ),
     });
   }
-
-  // Narrativa
-  const narrativa = [
-    "No mercado financeiro, dedicamos grande parte do nosso tempo focados na rentabilidade e na multiplicação do capital. No entanto, a construção de um patrimônio sólido é um processo assimétrico: leva-se décadas para acumular riqueza, mas ela pode ser severamente dilapidada em questão de meses devido a eventos não planejados.",
-    "O pilar de Proteção e Sucessão existe para garantir que o seu planejamento financeiro seja à prova de falhas. O nosso trabalho nesta etapa não é prever o futuro, mas assegurar que você, o seu fluxo de renda e a sua família estejam blindados financeiramente caso o inesperado aconteça.",
-    "A blindagem pessoal é o mecanismo pelo qual transferimos os riscos financeiros e imprevisíveis da sua vida para instituições robustas (seguradoras), protegendo a liquidez dos seus investimentos.",
-    "Esse plano garante que as turbulências da vida não destruam o que você levou uma vida inteira para construir. É a tranquilidade de saber que, não importa o cenário, a sua dignidade e o bem-estar daqueles que você mais ama estão absolutamente garantidos.",
-  ];
-  narrativa.forEach((texto, i) => {
-    blocos.push({
-      chave: `narrativa-${i}`,
-      node: <p style={{ ...TEXTO_CORPO, fontSize: 12.5, marginBottom: 12 }}>{texto}</p>,
-    });
-  });
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "ps", nota));
 

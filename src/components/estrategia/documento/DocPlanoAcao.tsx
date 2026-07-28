@@ -83,9 +83,10 @@ function gerarPassosIniciais(plan: FinancialPlan, resultados: ResultadosEstrateg
   return passos;
 }
 
-function formatarMesAno(valor: string): string {
-  const [ano, mes] = (valor ?? "").split("-");
-  return ano && mes ? `${mes}/${ano}` : "—";
+function formatarData(valor: string): string {
+  if (!valor) return "—";
+  const [ano, mes, dia] = valor.split("-");
+  return ano && mes && dia ? `${dia}/${mes}/${ano}` : "—";
 }
 
 function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChange: (u: ProximoPasso) => void; onRemove: () => void }) {
@@ -152,15 +153,14 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
         <div style={{ flexShrink: 0 }}>
           <p style={{ margin: "0 0 2px", fontSize: 9, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em" }}>Previsão</p>
           <input
-            type="month"
+            type="date"
             className="doc-screen-only"
             value={passo.dataPrevisao}
             onChange={(e) => onChange({ ...passo, dataPrevisao: e.target.value })}
-            style={{ fontSize: 12, color: "#374151", border: "1px solid #E5E7EB", borderRadius: 5, padding: "3px 7px", fontFamily: "inherit", outline: "none", background: "white" }}
+            style={{ border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "#374151", background: "white", fontFamily: "inherit", outline: "none" }}
           />
-          {/* Impressão: "mm/aaaa" em vez do valor bruto "aaaa-mm" do input */}
-          <span className="doc-print-only" style={{ fontSize: 12, color: "#374151" }}>
-            {formatarMesAno(passo.dataPrevisao)}
+          <span className="doc-print-only" style={{ fontSize: 11, color: "#6B7280" }}>
+            {passo.dataPrevisao ? `📅 ${formatarData(passo.dataPrevisao)}` : ""}
           </span>
         </div>
       </div>
