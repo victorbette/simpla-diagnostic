@@ -249,47 +249,48 @@ export function DiagResultado({ lead }: Props) {
 
         {/* ── Header com score geral ── */}
         <div style={{
-          background: "linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%)",
-          borderRadius: 16,
-          padding: "28px 32px",
-          color: "white",
-          marginBottom: 24,
+          background: "white",
+          border: "0.5px solid #E5E7EB",
+          borderRadius: 12,
+          padding: "24px 28px",
+          marginBottom: 20,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          boxShadow: "0 4px 24px rgba(30,58,138,0.18)",
         }}>
           <div>
             <div style={{
-              fontSize: 11, opacity: 0.7,
+              fontSize: 10,
+              color: "#9CA3AF",
               textTransform: "uppercase" as const,
-              letterSpacing: "0.1em",
-              marginBottom: 6,
+              letterSpacing: "0.08em",
+              marginBottom: 4,
             }}>
               Diagnóstico Financeiro
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1.1 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>
               {lead.nome}
             </div>
-            <div style={{ fontSize: 12, opacity: 0.65, marginTop: 6 }}>
+            <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
               {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
             </div>
           </div>
           <div style={{ textAlign: "center" as const }}>
             <div style={{
-              fontSize: 64, fontWeight: 900, lineHeight: 1,
-              color: scoreGeral >= 91 ? "#4ADE80" : scoreGeral >= 51 ? "#FCD34D" : scoreGeral >= 31 ? "#FB923C" : "#F87171",
+              fontSize: 52, fontWeight: 900, lineHeight: 1,
+              color: nivelScore(scoreGeral).cor,
             }}>
               {scoreGeral}
             </div>
-            <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 6 }}>
+            <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 6 }}>
               de 100 pontos
             </div>
             <span style={{
-              fontSize: 11, fontWeight: 700,
-              background: "rgba(255,255,255,0.15)",
-              padding: "4px 14px", borderRadius: 99,
-              border: "1px solid rgba(255,255,255,0.2)",
+              fontSize: 10, fontWeight: 700,
+              color: nivelScore(scoreGeral).cor,
+              background: nivelScore(scoreGeral).bg,
+              padding: "3px 12px", borderRadius: 99,
+              display: "inline-block",
             }}>
               {nivelScore(scoreGeral).label}
             </span>
