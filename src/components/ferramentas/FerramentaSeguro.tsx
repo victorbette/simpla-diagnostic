@@ -34,7 +34,7 @@ interface FormData {
   // Cobertura Atual
   seguroVidaAtual: number;
   seguroInvalidezAtual: number;
-  outrosSeguroAtual: number;
+  seguroDoencasGravesAtual: number;
 }
 
 interface Props {
@@ -187,9 +187,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       filhos:              initialFilhos,
       capitalInvalidez:    Number(df.capitalInvalidez)    || 0,
       capitalDoencaGrave:  Number(df.capitalDoencaGrave)  || 0,
-      seguroVidaAtual:     Number(df.seguroVidaAtual)     || 0,
-      seguroInvalidezAtual: Number(df.seguroInvalidezAtual) || 0,
-      outrosSeguroAtual:   Number(df.outrosSeguroAtual)   || 0,
+      seguroVidaAtual:          Number(df.seguroVidaAtual)          || 0,
+      seguroInvalidezAtual:     Number(df.seguroInvalidezAtual)     || 0,
+      seguroDoencasGravesAtual: Number(df.seguroDoencasGravesAtual) || 0,
     };
   });
 
@@ -243,9 +243,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
     const totalCoberturasVida = capitalInvalidezEfetivo + capitalDoencaGraveEfetivo;
     const capitalNecessario   = totalImediato + subtotalContinuo + totalCoberturasVida;
     const capitalAtual =
-      (Number(data.seguroVidaAtual)      || 0) +
-      (Number(data.seguroInvalidezAtual) || 0) +
-      (Number(data.outrosSeguroAtual)    || 0);
+      (Number(data.seguroVidaAtual)          || 0) +
+      (Number(data.seguroInvalidezAtual)     || 0) +
+      (Number(data.seguroDoencasGravesAtual) || 0);
     const gap          = Math.max(0, capitalNecessario - capitalAtual);
     const coberturaPct = capitalNecessario > 0
       ? Math.min(100, Math.round(capitalAtual / capitalNecessario * 100))
@@ -321,6 +321,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
     }
   }
 
+  const seguroVidaNecessario = calc.totalImediato + calc.subtotalContinuo;
   const adequado = calc.capitalAtual >= calc.capitalNecessario && calc.capitalNecessario > 0;
   const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
   const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiro) || 0;
@@ -697,8 +698,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             <CurrencyInput value={data.seguroInvalidezAtual} onChange={(v) => upd({ seguroInvalidezAtual: v })} />
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Outros Seguros (empresarial, grupo...)</label>
-            <CurrencyInput value={data.outrosSeguroAtual} onChange={(v) => upd({ outrosSeguroAtual: v })} />
+            <label style={LABEL}>Seguro de Doenças Graves Atual (R$)</label>
+            <CurrencyInput value={data.seguroDoencasGravesAtual} onChange={(v) => upd({ seguroDoencasGravesAtual: v })} />
+            <span style={HINT}>Capital segurado para doenças graves</span>
           </div>
         </div>
 
@@ -747,34 +749,70 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
         </div>
 
-        <div style={{ marginBottom: 14, border: "0.5px solid #F3F4F6", borderRadius: 8, overflow: "hidden" }}>
-          {[
-            { label: "Necessidades Imediatas", value: calc.totalImediato },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
-              <span style={{ fontSize: 13, color: "#374151" }}>{label}</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(value)}</span>
+        {/* Composição das Necessidades */}
+        <div style={{ marginBottom: 14 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px" }}>
+            Composição das Necessidades
+          </p>
+
+          {/* Bloco 1 — Seguro de Vida */}
+          <div style={{ background: "#F8FAFF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "14px 16px", marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-heart" style={{ fontSize: 14, color: "#2563EB" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF" }}>Seguro de Vida</span>
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 700, color: "#1E40AF" }}>{formatCurrency(seguroVidaNecessario)}</span>
             </div>
-          ))}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
-            <span style={{ fontSize: 13, color: "#374151" }}>Necessidades Contínuas — Família</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalContinuo)}</span>
+            <div style={{ borderTop: "0.5px solid #DBEAFE", paddingTop: 8, display: "flex", flexDirection: "column" as const, gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                <span>Custo de Inventário</span>
+                <span>{formatCurrency(calc.totalImediato)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                <span>Família</span>
+                <span>{formatCurrency(calc.totalContinuo)}</span>
+              </div>
+              {calc.totalFilhos > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                  <span>Educação dos Filhos</span>
+                  <span>{formatCurrency(calc.totalFilhos)}</span>
+                </div>
+              )}
+              {calc.saldoPrevidencia > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#15803D" }}>
+                  <span>(-) Saldo Previdência</span>
+                  <span>-{formatCurrency(calc.saldoPrevidencia)}</span>
+                </div>
+              )}
+            </div>
           </div>
-          {calc.totalFilhos > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
-              <span style={{ fontSize: 13, color: "#374151" }}>Necessidades Contínuas — Filhos</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalFilhos)}</span>
+
+          {/* Bloco 2 — Coberturas em Vida */}
+          <div style={{ background: "#FFFBEB", border: "0.5px solid #FCD34D", borderRadius: 10, padding: "14px 16px", marginBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-shield" style={{ fontSize: 14, color: "#B45309" }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#B45309" }}>Coberturas em Vida</span>
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 700, color: "#B45309" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
             </div>
-          )}
-          {calc.saldoPrevidencia > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderBottom: "0.5px solid #F3F4F6", backgroundColor: "#F9FAFB" }}>
-              <span style={{ fontSize: 13, color: "#15803D" }}>(-) Saldo Previdência</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#15803D" }}>-{formatCurrency(calc.saldoPrevidencia)}</span>
+            <div style={{ borderTop: "0.5px solid #FDE68A", paddingTop: 8, display: "flex", flexDirection: "column" as const, gap: 4 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                <span>Invalidez Permanente</span>
+                <span>{formatCurrency(calc.capitalInvalidezEfetivo)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                <span>Doenças Graves</span>
+                <span>{formatCurrency(calc.capitalDoencaGraveEfetivo)}</span>
+              </div>
             </div>
-          )}
-          <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "#F9FAFB" }}>
-            <span style={{ fontSize: 13, color: "#374151" }}>Coberturas em Vida</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#111827" }}>{formatCurrency(calc.totalCoberturasVida)}</span>
+          </div>
+
+          {/* Total geral */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#F0F7FF", borderRadius: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Capital Total Necessário</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: "#1E3A8A" }}>{formatCurrency(calc.capitalNecessario)}</span>
           </div>
         </div>
 
