@@ -500,12 +500,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalContinuo)}</span>
         </div>
 
-        {calc.saldoPrevidencia > 0 && (
-          <div style={{ fontSize: 12, color: "#15803D", marginTop: 4 }}>
-            Saldo previdência descontado: -{formatCurrency(calc.saldoPrevidencia)}
-          </div>
-        )}
-
         {/* Filhos */}
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -566,17 +560,35 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             </div>
           ))}
 
-          {calc.totalFilhos > 0 && (
-            <div style={{ ...SUBTOTAL, marginTop: 8 }}>
-              <span style={{ fontSize: 12, color: "#6B7280" }}>Subtotal filhos</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.totalFilhos)}</span>
-            </div>
-          )}
         </div>
 
-        <div style={SECTION_SUBTOTAL}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Subtotal Necessidades Contínuas</span>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.subtotalContinuo)}</span>
+        {/* Breakdown + subtotal */}
+        <div style={{ background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", padding: "12px 16px", marginTop: 16 }}>
+          {calc.totalFilhos > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+              <span>Família</span>
+              <span>{formatCurrency(calc.totalContinuo)}</span>
+            </div>
+          )}
+          {calc.totalFilhos > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280", marginBottom: 4 }}>
+              <span>Filhos</span>
+              <span>+{formatCurrency(calc.totalFilhos)}</span>
+            </div>
+          )}
+          {calc.saldoPrevidencia > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#15803D", marginBottom: 4 }}>
+              <span>Saldo previdência</span>
+              <span>-{formatCurrency(calc.saldoPrevidencia)}</span>
+            </div>
+          )}
+          {(calc.totalFilhos > 0 || calc.saldoPrevidencia > 0) && (
+            <div style={{ borderTop: "0.5px solid #E5E7EB", marginBottom: 8, marginTop: 4 }} />
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Subtotal Necessidades Contínuas</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatCurrency(calc.subtotalContinuo)}</span>
+          </div>
         </div>
       </div>
 
