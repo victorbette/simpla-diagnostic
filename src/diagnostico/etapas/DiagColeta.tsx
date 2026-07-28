@@ -2,7 +2,6 @@ import {
   User, DollarSign, PieChart,
   X, Plus,
 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
@@ -63,15 +62,12 @@ const CURRENCY_KEYS = [
   { label: "Renda Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria" },
 ] as const;
 
-const VALOR_POR_CLASSE: Record<string, { label: string; key: string }[]> = {
-  renda_fixa:    [{ label: "Valor em Renda Fixa (R$)",   key: "valorRendaFixa" }],
-  renda_variavel:[
-    { label: "Valor em Ações (R$)", key: "valorAcoes" },
-    { label: "Valor em FIIs (R$)",  key: "valorFIIs" },
-  ],
-  exterior:      [{ label: "Valor no Exterior (R$)",     key: "valorExterior" }],
-  cripto:        [{ label: "Valor em Cripto (R$)",       key: "valorCripto" }],
-  alternativos:  [{ label: "Valor em Alternativos (R$)", key: "valorAlternativos" }],
+const VALOR_POR_CLASSE: Record<string, { label: string; key: string; hint?: string }[]> = {
+  renda_fixa:    [{ label: "Valor em Renda Fixa (R$)",      key: "valorRendaFixa" }],
+  renda_variavel:[{ label: "Valor em Renda Variável (R$)",  key: "valorRendaVariavel", hint: "Total em ações, FIIs e ETFs" }],
+  exterior:      [{ label: "Valor no Exterior (R$)",        key: "valorExterior" }],
+  cripto:        [{ label: "Valor em Cripto (R$)",          key: "valorCripto" }],
+  alternativos:  [{ label: "Valor em Alternativos (R$)",    key: "valorAlternativos" }],
 };
 
 interface Props {
@@ -359,17 +355,23 @@ export function DiagColeta({ dados, onChange }: Props) {
 
         {/* Seguro */}
         <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Switch
-              checked={!!(dados.possuiSeguro ?? false)}
-              onCheckedChange={(v) => onChange({ possuiSeguro: v })}
-            />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui Seguro de Vida ou Invalidez?</p>
-              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>Apólices de seguro de vida ou invalidez permanente</p>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>Possui Seguro de Vida ou Invalidez?</div>
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>Seguro de vida, invalidez ou doenças graves</div>
             </div>
+            <label style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={dados.possuiSeguro ?? false}
+                onChange={e => onChange({ possuiSeguro: e.target.checked })}
+                style={{ display: "none" }}
+              />
+              <div style={{ width: 40, height: 22, borderRadius: 99, background: dados.possuiSeguro ? "#2563EB" : "#D1D5DB", position: "relative" as const, transition: "background 200ms" }}>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute" as const, top: 3, left: dados.possuiSeguro ? 21 : 3, transition: "left 200ms" }} />
+              </div>
+            </label>
           </div>
-
         </div>
       </SecaoCard>
 
@@ -467,9 +469,12 @@ export function DiagColeta({ dados, onChange }: Props) {
                   );
                 })}
               </div>
-              {(VALOR_POR_CLASSE[classe] ?? []).map(({ label: vLabel, key }) => (
+              {(VALOR_POR_CLASSE[classe] ?? []).map(({ label: vLabel, key, hint }) => (
                 <div key={key} style={{ marginTop: 8, padding: "8px 12px", background: "#F8FAFF", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" as const, minWidth: 140 }}>{vLabel}</span>
+                  <div style={{ minWidth: 140 }}>
+                    <div style={{ fontSize: 11, color: "#6B7280", whiteSpace: "nowrap" as const }}>{vLabel}</div>
+                    {hint && <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1 }}>{hint}</div>}
+                  </div>
                   <CurrencyInput
                     value={(dados.ativosInvestimento?.[key] as number | undefined) ?? 0}
                     onChange={(v: number) => onChange({
