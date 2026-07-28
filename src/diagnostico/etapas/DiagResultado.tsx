@@ -19,18 +19,14 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
 
 function nivelScore(score: number): { label: string; cor: string; bg: string; emoji: string } {
   if (score < 0)
-    return { label: "Não avaliado",       cor: "#9CA3AF", bg: "#F3F4F6", emoji: "—"  };
-  if (score === 0)
-    return { label: "Situação Crítica",   cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
+    return { label: "Não avaliado",      cor: "#9CA3AF", bg: "#F3F4F6", emoji: "—"  };
   if (score <= 30)
-    return { label: "Atenção Urgente",    cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
+    return { label: "Crítico",           cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
   if (score <= 50)
-    return { label: "Precisa Melhorar",   cor: "#C2410C", bg: "#FEF3C7", emoji: "🟠" };
-  if (score <= 70)
-    return { label: "Em Desenvolvimento", cor: "#B45309", bg: "#FEF9C3", emoji: "🟡" };
-  if (score <= 85)
-    return { label: "No Caminho Certo",   cor: "#1D4ED8", bg: "#DBEAFE", emoji: "🔵" };
-  return   { label: "Excelente",          cor: "#15803D", bg: "#DCFCE7", emoji: "🟢" };
+    return { label: "Atenção Urgente",   cor: "#C2410C", bg: "#FFEDD5", emoji: "🟠" };
+  if (score <= 90)
+    return { label: "Precisa Desenvolver", cor: "#B45309", bg: "#FEF3C7", emoji: "🟡" };
+  return   { label: "Caminho Certo",     cor: "#15803D", bg: "#DCFCE7", emoji: "🟢" };
 }
 
 function GaugeDiag({
@@ -286,7 +282,7 @@ export function DiagResultado({ lead }: Props) {
           <div style={{ textAlign: "center" as const }}>
             <div style={{
               fontSize: 64, fontWeight: 900, lineHeight: 1,
-              color: scoreGeral >= 70 ? "#4ADE80" : scoreGeral >= 50 ? "#FCD34D" : "#F87171",
+              color: scoreGeral >= 91 ? "#4ADE80" : scoreGeral >= 51 ? "#FCD34D" : scoreGeral >= 31 ? "#FB923C" : "#F87171",
             }}>
               {scoreGeral}
             </div>
