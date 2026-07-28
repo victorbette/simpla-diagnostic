@@ -17,16 +17,12 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
   return null;
 }
 
-function nivelScore(score: number): { label: string; cor: string; bg: string; emoji: string } {
-  if (score < 0)
-    return { label: "Não avaliado",      cor: "#9CA3AF", bg: "#F3F4F6", emoji: "—"  };
-  if (score <= 30)
-    return { label: "Crítico",           cor: "#B91C1C", bg: "#FEE2E2", emoji: "🔴" };
-  if (score <= 50)
-    return { label: "Atenção Urgente",   cor: "#C2410C", bg: "#FFEDD5", emoji: "🟠" };
-  if (score <= 90)
-    return { label: "Precisa Desenvolver", cor: "#B45309", bg: "#FEF3C7", emoji: "🟡" };
-  return   { label: "Caminho Certo",     cor: "#15803D", bg: "#DCFCE7", emoji: "🟢" };
+function nivelScore(score: number): { label: string; cor: string; bg: string } {
+  if (score < 0)  return { label: "Não avaliado",       cor: "#9CA3AF", bg: "#F3F4F6" };
+  if (score <= 30) return { label: "Crítico",            cor: "#B91C1C", bg: "#FEE2E2" };
+  if (score <= 50) return { label: "Atenção Urgente",    cor: "#C2410C", bg: "#FFEDD5" };
+  if (score <= 90) return { label: "Precisa Desenvolver", cor: "#B45309", bg: "#FEF3C7" };
+  return            { label: "Caminho Certo",             cor: "#15803D", bg: "#DCFCE7" };
 }
 
 function GaugeDiag({
@@ -295,7 +291,7 @@ export function DiagResultado({ lead }: Props) {
               padding: "4px 14px", borderRadius: 99,
               border: "1px solid rgba(255,255,255,0.2)",
             }}>
-              {nivelScore(scoreGeral).emoji}{" "}{nivelScore(scoreGeral).label}
+              {nivelScore(scoreGeral).label}
             </span>
           </div>
         </div>
