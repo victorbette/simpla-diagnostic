@@ -1,4 +1,3 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaSeguro } from "@/components/ferramentas/FerramentaSeguro";
@@ -23,31 +22,6 @@ const CARD: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-// ── Horizontal bar ─────────────────────────────────────────────────────────────
-
-function NeedBar({ label, need, coverage, total }: { label: string; need: number; coverage: number; total: number }) {
-  const t = total || 1;
-  const needPct = Math.min(100, (need / t) * 100);
-  const covPct = Math.min(needPct, (coverage / t) * 100);
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-        <span style={{ color: "#6B7280" }}>{label}</span>
-        <span style={{ fontWeight: 600, color: "#000000" }}>{formatCurrency(need)}</span>
-      </div>
-      <div style={{ height: 8, backgroundColor: "#F0F7FF", borderRadius: 4, overflow: "hidden", position: "relative" }}>
-        <div style={{ height: "100%", width: `${needPct}%`, backgroundColor: "#BFDBFE", borderRadius: 4 }} />
-        <div style={{
-          position: "absolute", top: 0, left: 0,
-          height: "100%", width: `${covPct}%`,
-          backgroundColor: covPct >= needPct - 1 ? "#15803D" : "#3B82F6",
-          borderRadius: 4,
-        }} />
-      </div>
-    </div>
-  );
-}
-
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function SecaoProtecaoSucessorio({
@@ -60,12 +34,6 @@ export function SecaoProtecaoSucessorio({
   onResultadoSeguro,
 }: Props) {
   const rs = resultadoSeguro;
-  const pieCoverage = rs
-    ? [
-        { name: "Coberto", value: rs.totalCoverage, color: "#15803D" },
-        { name: "Gap", value: rs.gap, color: "#B91C1C" },
-      ].filter((d) => d.value > 0)
-    : [];
 
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
@@ -133,156 +101,140 @@ export function SecaoProtecaoSucessorio({
         }}
       />
 
-      {/* Summary cards — shown after analysis is saved */}
-      {rs && (
-        <>
-          {/* Card 2 — Donut + breakdown */}
+      {/* Summary card — shown after analysis is saved */}
+      {rs && (() => {
+        const capitalNecessario  = rs.capitalNecessario || rs.totalNeed || 0;
+        const capitalAtual       = rs.capitalAtual || rs.totalCoverage || 0;
+        const coberturaPct       = capitalNecessario > 0 ? Math.min(100, Math.round(capitalAtual / capitalNecessario * 100)) : (rs.scoreProtecao || 0);
+        const adequado           = capitalAtual >= capitalNecessario && capitalNecessario > 0;
+        const imediato           = rs.capitalImediato || rs.immediateTotal || 0;
+        const continuo           = rs.capitalContinuo || 0;
+        const filhos             = rs.capitalFilhos || rs.educationTotal || 0;
+        const familia            = rs.ongoingTotal || 0;
+        const saldoPrev          = Math.max(0, familia + filhos - continuo);
+        const seguroVidaNec      = imediato + continuo;
+        const coberturasVida     = rs.capitalCoberturasVida || (rs.disabilityTotal + rs.criticalIllnessTotal) || 0;
+
+        return (
           <div style={CARD}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              Composição das Necessidades
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 24, alignItems: "center" }}>
-              <div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie
-                      data={pieCoverage}
-                      dataKey="value"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={48}
-                      outerRadius={76}
-                      strokeWidth={2}
-                      stroke="white"
-                    >
-                      {pieCoverage.map((d, i) => <Cell key={i} fill={d.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(v) => formatCurrency(v as number)} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
-                  {pieCoverage.map((d) => (
-                    <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#6B7280" }}>
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: d.color, flexShrink: 0 }} />
-                      {d.name}: {formatCurrency(d.value)}
-                    </div>
-                  ))}
-                </div>
+            {/* KPI tiles */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div style={{ backgroundColor: "#F8FAFF", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Capital Necessário</p>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#111827" }}>{formatCurrency(capitalNecessario)}</p>
               </div>
-
-              <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 12px" }}>
-                  Necessidades vs Cobertura
-                </p>
-                <NeedBar
-                  label="Necessidades imediatas"
-                  need={rs.immediateTotal}
-                  coverage={rs.totalCoverage > rs.ongoingTotal ? rs.totalCoverage - rs.ongoingTotal : 0}
-                  total={rs.totalNeed}
-                />
-                <NeedBar
-                  label="Necessidades contínuas"
-                  need={rs.ongoingTotal}
-                  coverage={rs.totalCoverage > rs.immediateTotal ? rs.totalCoverage - rs.immediateTotal : 0}
-                  total={rs.totalNeed}
-                />
-                {rs.immediateTotal > 0 && (
-                  <div style={{ marginTop: 8, padding: "8px 12px", backgroundColor: "#F0F7FF", borderRadius: 6 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 2 }}>
-                      <span style={{ color: "#6B7280" }}>↳ Custo de inventário</span>
-                      <span style={{ fontWeight: 600 }}>{formatCurrency(rs.inventoryCost)}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                      <span style={{ color: "#6B7280" }}>↳ Educação dos filhos</span>
-                      <span style={{ fontWeight: 600 }}>{formatCurrency(rs.educationTotal)}</span>
-                    </div>
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
-                    <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#15803D" }} />
-                    Coberto
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
-                    <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#3B82F6" }} />
-                    Parcial
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#6B7280" }}>
-                    <span style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: "#BFDBFE" }} />
-                    Necessário
-                  </div>
-                </div>
+              <div style={{ backgroundColor: adequado ? "#F0FDF4" : "#FFF5F5", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Capital Atual</p>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: adequado ? "#15803D" : "#B91C1C" }}>{formatCurrency(capitalAtual)}</p>
+              </div>
+              <div style={{ backgroundColor: "#F8FAFF", borderRadius: 8, padding: "12px 14px" }}>
+                <p style={{ margin: "0 0 4px", fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>Cobertura</p>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 700, color: adequado ? "#15803D" : "#B91C1C" }}>{coberturaPct}%</p>
               </div>
             </div>
-          </div>
 
-          {/* Card 3 — Coberturas em vida */}
-          {(rs.disabilityTotal > 0 || rs.criticalIllnessTotal > 0) && (
-            <div style={CARD}>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#000000", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                Coberturas em Vida
+            {/* Composição — 2 blocos */}
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase" as const, letterSpacing: "0.05em", margin: "0 0 10px" }}>
+                Composição das Necessidades
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                {rs.disabilityTotal > 0 && (
-                  <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "14px 16px" }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", margin: "0 0 10px" }}>
-                      Invalidez
-                    </p>
-                    {[
-                      { label: "Necessário", value: rs.disabilityTotal, color: "#000000" },
-                      { label: "Coberto", value: rs.disabilityCoverage, color: "#15803D" },
-                      { label: "Gap", value: rs.disabilityGap, color: rs.disabilityGap > 0 ? "#B91C1C" : "#15803D" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                        <span style={{ color: "#6B7280" }}>{label}</span>
-                        <span style={{ fontWeight: 600, color }}>{formatCurrency(value)}</span>
-                      </div>
-                    ))}
-                    <div style={{ marginTop: 8, height: 6, backgroundColor: "#BFDBFE", borderRadius: 3, overflow: "hidden" }}>
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${rs.disabilityTotal > 0 ? Math.min(100, (rs.disabilityCoverage / rs.disabilityTotal) * 100) : 0}%`,
-                          backgroundColor: rs.disabilityGap > 0 ? "#3B82F6" : "#15803D",
-                          borderRadius: 3,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
 
-                {rs.criticalIllnessTotal > 0 && (
-                  <div style={{ backgroundColor: "#F0F7FF", borderRadius: 8, padding: "14px 16px" }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", textTransform: "uppercase", margin: "0 0 10px" }}>
-                      Doença Grave
-                    </p>
-                    {[
-                      { label: "Necessário", value: rs.criticalIllnessTotal, color: "#000000" },
-                      { label: "Coberto", value: rs.criticalIllnessCoverage, color: "#15803D" },
-                      { label: "Gap", value: rs.criticalIllnessGap, color: rs.criticalIllnessGap > 0 ? "#B91C1C" : "#15803D" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
-                        <span style={{ color: "#6B7280" }}>{label}</span>
-                        <span style={{ fontWeight: 600, color }}>{formatCurrency(value)}</span>
-                      </div>
-                    ))}
-                    <div style={{ marginTop: 8, height: 6, backgroundColor: "#BFDBFE", borderRadius: 3, overflow: "hidden" }}>
-                      <div
-                        style={{
-                          height: "100%",
-                          width: `${rs.criticalIllnessTotal > 0 ? Math.min(100, (rs.criticalIllnessCoverage / rs.criticalIllnessTotal) * 100) : 0}%`,
-                          backgroundColor: rs.criticalIllnessGap > 0 ? "#3B82F6" : "#15803D",
-                          borderRadius: 3,
-                        }}
-                      />
-                    </div>
+              {/* Bloco azul — Seguro de Vida */}
+              <div style={{ background: "#F8FAFF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "14px 16px", marginBottom: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <i className="ti ti-heart" style={{ fontSize: 14, color: "#2563EB" }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF" }}>Seguro de Vida</span>
                   </div>
-                )}
+                  <span style={{ fontSize: 15, fontWeight: 700, color: "#1E40AF" }}>{formatCurrency(seguroVidaNec)}</span>
+                </div>
+                <div style={{ borderTop: "0.5px solid #DBEAFE", paddingTop: 8, display: "flex", flexDirection: "column" as const, gap: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                    <span>Custo de Inventário</span>
+                    <span>{formatCurrency(imediato)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                    <span>Família</span>
+                    <span>{formatCurrency(familia)}</span>
+                  </div>
+                  {filhos > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                      <span>Educação dos Filhos</span>
+                      <span>{formatCurrency(filhos)}</span>
+                    </div>
+                  )}
+                  {saldoPrev > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#15803D" }}>
+                      <span>(-) Saldo Previdência</span>
+                      <span>-{formatCurrency(saldoPrev)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bloco âmbar — Coberturas em Vida */}
+              {coberturasVida > 0 && (
+                <div style={{ background: "#FFFBEB", border: "0.5px solid #FCD34D", borderRadius: 10, padding: "14px 16px", marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <i className="ti ti-shield" style={{ fontSize: 14, color: "#B45309" }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#B45309" }}>Coberturas em Vida</span>
+                    </div>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: "#B45309" }}>{formatCurrency(coberturasVida)}</span>
+                  </div>
+                  <div style={{ borderTop: "0.5px solid #FDE68A", paddingTop: 8, display: "flex", flexDirection: "column" as const, gap: 4 }}>
+                    {rs.disabilityTotal > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                        <span>Invalidez Permanente</span>
+                        <span>{formatCurrency(rs.disabilityTotal)}</span>
+                      </div>
+                    )}
+                    {rs.criticalIllnessTotal > 0 && (
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6B7280" }}>
+                        <span>Doenças Graves</span>
+                        <span>{formatCurrency(rs.criticalIllnessTotal)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Total geral */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#F0F7FF", borderRadius: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Capital Total Necessário</span>
+                <span style={{ fontSize: 18, fontWeight: 800, color: "#1E3A8A" }}>{formatCurrency(capitalNecessario)}</span>
               </div>
             </div>
-          )}
-        </>
-      )}
+
+            {/* Adequacy indicator */}
+            {capitalNecessario > 0 && (
+              adequado ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "#DCFCE7", border: "1px solid #A7C9AB", borderRadius: 8, padding: "12px 16px" }}>
+                  <i className="ti ti-circle-check" style={{ fontSize: 18, color: "#15803D", flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#15803D" }}>Cobertura adequada</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "#166534" }}>
+                      A apólice cobre {coberturaPct}% do capital necessário. Revise periodicamente.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "#FEE2E2", border: "1px solid #FCA5A5", borderRadius: 8, padding: "12px 16px" }}>
+                  <i className="ti ti-alert-circle" style={{ fontSize: 18, color: "#B91C1C", flexShrink: 0 }} />
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#B91C1C" }}>
+                      Gap de {formatCurrency(Math.max(0, capitalNecessario - capitalAtual))}
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "#991B1B" }}>
+                      A cobertura atual ({coberturaPct}%) é insuficiente. Avalie a contratação de seguro adicional.
+                    </p>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        );
+      })()}
 
       {commentCard}
     </div>
