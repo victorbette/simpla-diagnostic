@@ -435,20 +435,20 @@ export function FerramentaLiberdadeFinanceira({
       {/* ── 1. CARD PARÂMETROS DA SIMULAÇÃO ────────────────────────────────── */}
       <div style={{
         background: "white", border: "0.5px solid #E5E7EB",
-        borderRadius: 12, padding: "20px 24px",
+        borderRadius: 12, padding: "14px 20px",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 16px" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 10px" }}>
           Parâmetros da Simulação
         </p>
 
         {/* 3 campos principais em linha */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
 
           {/* Renda Mensal Desejada */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
+              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
               {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {rendaEditada && (
                 <button
@@ -468,12 +468,12 @@ export function FerramentaLiberdadeFinanceira({
           {/* Aporte Mensal + slider */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
+              <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
               {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
               {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
                 <button
                   onClick={() => setP({ aporteMensal: aporteColeta })}
-                  style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  style={{ marginLeft: 8, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                 >
                   ↺ Restaurar
                 </button>
@@ -488,9 +488,9 @@ export function FerramentaLiberdadeFinanceira({
               value={params.aporteMensal}
               onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
               className="w-full"
-              style={{ accentColor: "#2563EB", marginTop: 2 }}
+              style={{ accentColor: "#2563EB", marginTop: 4 }}
             />
-            <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+            <div className="flex justify-between" style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1 }}>
               <span>R$ 0</span>
               <span>{formatCurrency(sliderAporteMax)}/mês</span>
             </div>
@@ -498,7 +498,7 @@ export function FerramentaLiberdadeFinanceira({
 
           {/* Idade Aposentadoria + slider */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+            <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
             <Input
               type="number"
               min={params.idadeAtual + 1}
@@ -515,9 +515,9 @@ export function FerramentaLiberdadeFinanceira({
               value={params.idadeAposentadoria}
               onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
               className="w-full"
-              style={{ accentColor: "#2563EB", marginTop: 2 }}
+              style={{ accentColor: "#2563EB", marginTop: 4 }}
             />
-            <div className="flex justify-between" style={{ fontSize: 10, color: "#9CA3AF" }}>
+            <div className="flex justify-between" style={{ fontSize: 9, color: "#9CA3AF", marginTop: 1 }}>
               <span>{params.idadeAtual + 1} anos</span>
               <span>80 anos</span>
             </div>
@@ -566,7 +566,7 @@ export function FerramentaLiberdadeFinanceira({
         </div>
 
         {/* Ajustes avançados — footer integrado */}
-        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "0.5px solid #F3F4F6" }}>
+        <div style={{ marginTop: 10, paddingTop: 8, borderTop: "0.5px solid #F3F4F6" }}>
           <button
             onClick={() => setMostrarAjustes(v => !v)}
             style={{
@@ -593,7 +593,7 @@ export function FerramentaLiberdadeFinanceira({
           </button>
 
           {mostrarAjustes && (
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
 
               {/* 1. Taxa de retorno personalizada */}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
