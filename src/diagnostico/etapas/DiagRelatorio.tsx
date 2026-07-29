@@ -80,7 +80,7 @@ export function DiagRelatorio({ lead }: Props) {
           <span style={{ fontSize: 12, color: "#9CA3AF" }}>· {lead.nome}</span>
         </div>
         <button
-          onClick={() => gerarPDF(lead.nome)}
+          onClick={() => gerarPDF(lead.nome, "Diagnostico_Financeiro")}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "#1E3A8A", color: "white", border: "none",

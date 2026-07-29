@@ -155,6 +155,7 @@
   /* Ocultar interface — mostrar apenas o documento */
   body { background: white !important; }
   .no-print { display: none !important; }
+  .diag-no-print { display: none !important; }
   .app-main-header { display: none !important; }
   .estrategia-abas-topo { display: none !important; }
   .doc-screen-only { display: none !important; }
@@ -180,6 +181,10 @@
     height: auto !important;
     overflow: visible !important;
     background: white !important;
+  }
+  .diag-flow-root {
+    background: white !important;
+    min-height: 0 !important;
   }
   /* Página Financial Planning (HomePage → FinancialPlanningPage → aba
      "Financial Planning"): raiz e <main> usam 100vh + overflow:hidden na
