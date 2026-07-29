@@ -1,99 +1,27 @@
 import { useMemo } from "react";
 import type { Lead } from "../types";
 import {
-  initialFinancialPlan,
-  initialAtivoAtual,
-  type FinancialPlan,
-  type PerfilRisco,
-} from "@/types/financialPlanning";
-import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import {
   CONFIG_CONSULTOR_DEFAULT,
   type ConfigConsultor,
 } from "@/lib/documentoConfig";
 import { gerarPDF } from "@/lib/gerarPDF";
 import { DocCapa } from "@/components/estrategia/documento/DocCapa";
-import { DocSumario } from "@/components/estrategia/documento/DocSumario";
-import { DocLiberdadeFinanceira } from "@/components/estrategia/documento/DocLiberdadeFinanceira";
-import { DocAssetAllocation } from "@/components/estrategia/documento/DocAssetAllocation";
-import { DocAlocacaoAtualProposta } from "@/components/estrategia/documento/DocAlocacaoAtualProposta";
-import { DocMovimentacoes } from "@/components/estrategia/documento/DocMovimentacoes";
-import { DocProtecaoSucessao } from "@/components/estrategia/documento/DocProtecaoSucessao";
-import { DocPlanejamentoTributario } from "@/components/estrategia/documento/DocPlanejamentoTributario";
-import { DocPlanoAcao } from "@/components/estrategia/documento/DocPlanoAcao";
-import { DocMaosAObra } from "@/components/estrategia/documento/DocMaosAObra";
-import { DocDisclaimer } from "@/components/estrategia/documento/DocDisclaimer";
-import { DivisoriaSecao } from "@/components/estrategia/documento/DivisoriaSecao";
+import { DocDisclaimerDiag } from "../documento/DocDisclaimerDiag";
+import { DocDiagnosticoInicial } from "../documento/DocDiagnosticoInicial";
+import { DocGestaoAtivos } from "../documento/DocGestaoAtivos";
+import { DocProximosPassosDiag } from "../documento/DocProximosPassosDiag";
+import { DocMaosAObraDiag } from "../documento/DocMaosAObraDiag";
 
 const MESES_PT = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
 ];
 
-const PERFIS_VALIDOS: PerfilRisco[] = [
-  "conservador", "conservador_moderado", "moderado", "arrojado",
-];
-
-const CAPITULOS = [
-  "Liberdade Financeira",
-  "Gestão de Ativos",
-  "Proteção e Sucessão",
-  "Planejamento Tributário",
-  "Plano de Ação",
-];
-
-const RESULTADOS_VAZIOS: ResultadosEstrategia = {
-  carteira: null,
-  if: null,
-  seguro: null,
-  fiscal: null,
-};
-
 interface Props {
   lead: Lead;
 }
 
 export function DiagRelatorio({ lead }: Props) {
-  const plan = useMemo((): FinancialPlan => {
-    const base = initialFinancialPlan(lead.id);
-    const c = lead.dadosColeta;
-    const lf = lead.dadosLF;
-
-    return {
-      ...base,
-      dadosCliente: {
-        ...base.dadosCliente,
-        dataNascimento: c.dataNascimento ?? "",
-        profissao: c.profissao ?? "",
-        gastoCartaoMensal: c.gastoCartaoMensal ?? 0,
-        rendaMensal: c.rendaMensal ?? 0,
-        custoDeVidaMensal: c.custoVidaMensal ?? 0,
-        aportesMensalMedio: c.aporteMensal ?? 0,
-        patrimonioFinanceiroEstimado: c.patrimonioFinanceiro ?? 0,
-        temFilhos: (c.filhos?.length ?? 0) > 0,
-        numeroFilhos: c.filhos?.length ?? 0,
-        filhos: c.filhos ?? [],
-        contribuiINSS: c.contribuiINSS ?? false,
-        valorINSS: c.valorINSS ?? 0,
-        comecandoDoZero: c.comecandoDoZero ?? false,
-        rendaDesejadaAposentadoria: c.rendaDesejadaAposentadoria ?? 0,
-        temSeguroVida: c.possuiSeguro ?? false,
-        valorApoliceVida: c.valorApolice ?? 0,
-        suitabilityPerfil: c.suitabilityPerfil && PERFIS_VALIDOS.includes(c.suitabilityPerfil as PerfilRisco)
-          ? (c.suitabilityPerfil as PerfilRisco)
-          : null,
-      },
-      ativosAtuais: c.ativosAtuais ?? { ...initialAtivoAtual },
-      planejamentoIF: {
-        ...base.planejamentoIF,
-        patrimonioAtual: c.patrimonioFinanceiro ?? lf.patrimonioInicial ?? 0,
-        aporteMensal: c.aporteMensal ?? lf.aporteMensal ?? 0,
-        idadeMeta: c.idadeMeta ?? lf.idadeAlvo ?? 60,
-        rendaMensalDesejada: c.rendaDesejadaAposentadoria ?? lf.rendaDesejada ?? 0,
-      },
-    };
-  }, [lead]);
-
   const config: ConfigConsultor = useMemo(() => {
     try {
       const salvo = localStorage.getItem("config_consultor");
@@ -110,6 +38,23 @@ export function DiagRelatorio({ lead }: Props) {
 
   return (
     <div style={{ background: "#EFF6FF", minHeight: "100vh" }}>
+      <style>{`
+        @media print {
+          .data-reuniao-edit { display: none !important; }
+          .data-reuniao-print { display: inline !important; }
+          .no-print { display: none !important; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          @page { size: A4; margin: 0; }
+        }
+        @media screen {
+          .data-reuniao-print { display: none !important; }
+        }
+      `}</style>
+
+      {/* Barra de ação (não imprime) */}
       <div
         className="no-print"
         style={{
@@ -146,7 +91,9 @@ export function DiagRelatorio({ lead }: Props) {
         </button>
       </div>
 
+      {/* Páginas do documento */}
       <div className="doc-pages-wrap" style={{ padding: "32px 16px" }}>
+        {/* Página 1 — Capa */}
         <DocCapa
           nomeCliente={lead.nome}
           dataEstrategia={dataCapa}
@@ -154,32 +101,20 @@ export function DiagRelatorio({ lead }: Props) {
           titulo="Diagnóstico Financeiro"
         />
 
-        <DocSumario nomeCliente={lead.nome} capitulos={CAPITULOS} />
+        {/* Página 2 — Disclaimer */}
+        <DocDisclaimerDiag nomeCliente={lead.nome} config={config} />
 
-        <DivisoriaSecao titulo="Liberdade Financeira" nomeCliente={lead.nome} />
-        <DocLiberdadeFinanceira nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
+        {/* Página 3 — Diagnóstico Inicial */}
+        <DocDiagnosticoInicial lead={lead} />
 
-        <DivisoriaSecao titulo="Gestão de Ativos" nomeCliente={lead.nome} />
-        <DocAssetAllocation nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
-        <DocAlocacaoAtualProposta nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
-        <DocMovimentacoes nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
+        {/* Página 4 — Gestão de Ativos */}
+        <DocGestaoAtivos lead={lead} />
 
-        <DivisoriaSecao titulo="Proteção e Sucessão" nomeCliente={lead.nome} />
-        <DocProtecaoSucessao nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
+        {/* Página 5 — Próximos Passos */}
+        <DocProximosPassosDiag nomeCliente={lead.nome} />
 
-        <DivisoriaSecao titulo="Planejamento Tributário" nomeCliente={lead.nome} />
-        <DocPlanejamentoTributario nomeCliente={lead.nome} plan={plan} resultados={RESULTADOS_VAZIOS} />
-
-        <DivisoriaSecao titulo="Plano de Ação" nomeCliente={lead.nome} />
-        <DocPlanoAcao
-          nomeCliente={lead.nome}
-          plan={plan}
-          resultados={RESULTADOS_VAZIOS}
-          onResultadosChange={() => { /* passos não persistidos no diagnóstico */ }}
-        />
-
-        <DocMaosAObra nomeCliente={lead.nome} config={config} />
-        <DocDisclaimer nomeCliente={lead.nome} config={config} />
+        {/* Página 6 — Mãos à Obra */}
+        <DocMaosAObraDiag nomeCliente={lead.nome} />
       </div>
     </div>
   );
