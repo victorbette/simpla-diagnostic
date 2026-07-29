@@ -1,29 +1,17 @@
 import type { Lead } from "../types";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
-function formatBRL(v: number): string {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-}
-
 interface Props { lead: Lead; }
 
 export function DocBlindagemPatrimonial({ lead }: Props) {
   const { dadosColeta } = lead;
 
-  const temFilhos       = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
-  const temSeguro       = dadosColeta.possuiSeguro === true;
-  const temPrevidencia  = dadosColeta.temPrevidencia === true;
+  const temFilhos        = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
+  const temSeguro        = dadosColeta.possuiSeguro === true;
+  const temPrevidencia   = dadosColeta.temPrevidencia === true;
   const saldoPrevidencia = Number(dadosColeta.saldoPrevidencia) || 0;
-  const estadoCivil     = dadosColeta.estadoCivil ?? "";
-  const temConjuge      = estadoCivil === "casado" || estadoCivil === "uniao_estavel";
-
-  const despesas          = Number(dadosColeta.custoVidaMensal) || 0;
-  const capitalNecessario = despesas * 12 * 20;
-  const capitalAtual      = temSeguro ? (Number(dadosColeta.valorApolice) || 0) : 0;
-  const blindagemTemDados = despesas > 0;
-  const coberturaPct      = blindagemTemDados && capitalNecessario > 0
-    ? Math.min(100, Math.round(capitalAtual / capitalNecessario * 100))
-    : 0;
+  const estadoCivil      = dadosColeta.estadoCivil ?? "";
+  const temConjuge       = estadoCivil === "casado" || estadoCivil === "uniao_estavel";
 
   function gerarTextoBlindagem(): string {
     let texto = "";
@@ -63,84 +51,22 @@ Um seguro de vida adequado é uma das decisões mais importantes — e mais aces
     return texto;
   }
 
-  const blocos: BlocoDoc[] = [];
-
-  blocos.push({
-    chave: "texto",
-    grudaNoProximo: blindagemTemDados,
-    node: (
-      <p style={{
-        fontSize: 12,
-        color: "#374151",
-        lineHeight: 2,
-        margin: 0,
-        whiteSpace: "pre-line" as const,
-      }}>
-        {gerarTextoBlindagem()}
-      </p>
-    ),
-  });
-
-  if (blindagemTemDados) {
-    blocos.push({
-      chave: "cards",
-      grudaNoProximo: !temSeguro,
+  const blocos: BlocoDoc[] = [
+    {
+      chave: "texto",
       node: (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20 }}>
-          <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-              Despesa Mensal
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>
-              {formatBRL(despesas)}/mês
-            </div>
-            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Custo de vida atual</div>
-          </div>
-
-          <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-              Capital Necessário
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>
-              {formatBRL(capitalNecessario)}
-            </div>
-            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>20 anos de despesas</div>
-          </div>
-
-          <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-              Cobertura Atual
-            </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: temSeguro && coberturaPct >= 80 ? "#15803D" : "#B91C1C" }}>
-              {temSeguro ? `${formatBRL(capitalAtual)}` : "Não possui"}
-            </div>
-            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>
-              {temSeguro ? `${coberturaPct}% do necessário` : "Sem cobertura"}
-            </div>
-          </div>
-        </div>
-      ),
-    });
-  }
-
-  if (!temSeguro) {
-    blocos.push({
-      chave: "alerta",
-      node: (
-        <div style={{
-          background: "#FFF5F5", border: "0.5px solid #FCA5A5",
-          borderRadius: 8, padding: "12px 16px", marginTop: 16,
+        <p style={{
+          fontSize: 12,
+          color: "#374151",
+          lineHeight: 2,
+          margin: 0,
+          whiteSpace: "pre-line" as const,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#B91C1C", marginBottom: 6 }}>
-            ⚠ Atenção — Família desprotegida
-          </div>
-          <div style={{ fontSize: 11, color: "#374151" }}>
-            Sem seguro de vida, qualquer imprevisto pode comprometer permanentemente o futuro financeiro da sua família. Esta é uma prioridade imediata.
-          </div>
-        </div>
+          {gerarTextoBlindagem()}
+        </p>
       ),
-    });
-  }
+    },
+  ];
 
   return (
     <PaginaDocFluidaDiag
