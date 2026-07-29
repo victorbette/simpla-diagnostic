@@ -1,9 +1,9 @@
-import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
+import { DOC } from "@/lib/documentoStyles";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { GaugeSemiCircular, nivelScoreGauge } from "@/components/shared/GaugeSemiCircular";
-import { calcularScoresAreas, gerarTextosAreas } from "@/lib/resumoAreas";
+import { calcularScoresAreas } from "@/lib/resumoAreas";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
 
 interface Props {
@@ -12,46 +12,90 @@ interface Props {
   resultados: ResultadosEstrategia;
 }
 
-/** Página "Ponto de Partida" — resumo do diagnóstico das quatro áreas (referência v4 p.5) */
+/** Página "Ponto de Partida" — score geral, 4 gauges e texto único personalizado */
 export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
-  const scores = calcularScoresAreas(plan, resultados);
-  const textos = gerarTextosAreas(plan, resultados, nomeCliente);
-  const perfil = plan.dadosCliente.suitabilityPerfil;
+  const scores     = calcularScoresAreas(plan, resultados);
+  const perfil     = plan.dadosCliente.suitabilityPerfil;
   const nivelGeral = nivelScoreGauge(scores.geral ?? -1);
-  const dataDiagnostico = new Date().toLocaleDateString("pt-BR");
+  const dataHoje   = new Date().toLocaleDateString("pt-BR");
+
+  const nome           = nomeCliente.split(" ")[0];
+  const scoreLF        = scores.lf;
+  const scoreAA        = scores.aa;
+  const scoreProtecao  = scores.ps;
+  const scoreTributario = scores.fiscal;
 
   const areas = [
-    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf,     texto: textos.lf },
-    { icone: "ti-chart-pie", nome: "Gestão de Ativos",      score: scores.aa,     texto: textos.aa },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps,     texto: textos.ps },
-    { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal, texto: textos.fiscal },
+    { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreLF        },
+    { icone: "ti-chart-pie", nome: "Gestão de Ativos",      score: scoreAA        },
+    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao  },
+    { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario },
   ];
+
+  // ── Descrições por área ───────────────────────────────────────────────────
+
+  const descricaoLF =
+    scoreLF < 0
+      ? "a jornada rumo à liberdade financeira ainda precisa ser mapeada"
+      : scoreLF <= 30
+      ? "a projeção atual indica uma lacuna significativa para a aposentadoria desejada"
+      : scoreLF <= 50
+      ? "a projeção atual cobre menos da metade do patrimônio necessário para a aposentadoria"
+      : scoreLF <= 90
+      ? `a projeção já atinge ${scoreLF}% da meta de aposentadoria — um bom começo, mas ainda há caminho`
+      : "a projeção indica que você está no caminho certo para a aposentadoria desejada";
+
+  const descricaoAA =
+    scoreAA < 0
+      ? "a composição da carteira ainda precisa ser avaliada"
+      : scoreAA <= 30
+      ? "a carteira atual precisa de uma revisão profunda em sua composição e qualidade"
+      : scoreAA <= 50
+      ? "há oportunidades claras de melhoria na diversificação e nos ativos escolhidos"
+      : scoreAA <= 90
+      ? "a carteira tem bons fundamentos, mas ainda pode ser otimizada"
+      : "a carteira demonstra boa diversificação e qualidade de ativos";
+
+  const descricaoProtecao =
+    scoreProtecao < 0
+      ? "a proteção patrimonial ainda não foi analisada"
+      : scoreProtecao === 0
+      ? "não há cobertura de seguro identificada — esse é o ponto mais crítico do diagnóstico"
+      : scoreProtecao <= 50
+      ? "a cobertura atual protege parcialmente a família em caso de imprevistos"
+      : scoreProtecao <= 90
+      ? "a proteção está parcialmente estruturada, mas ainda há lacunas importantes"
+      : "a proteção patrimonial está bem estruturada";
+
+  const descricaoTributario =
+    scoreTributario < 0
+      ? "o planejamento tributário ainda não foi analisado"
+      : scoreTributario <= 30
+      ? "há oportunidades fiscais significativas que ainda não estão sendo aproveitadas"
+      : scoreTributario <= 50
+      ? "o planejamento tributário pode ser otimizado para reduzir a carga fiscal"
+      : scoreTributario <= 90
+      ? "há boas práticas fiscais, mas ainda há espaço para melhorar a eficiência"
+      : "o planejamento tributário está bem estruturado e eficiente";
+
+  const texto = `${nome}, este documento representa o ponto de partida de uma jornada que vai muito além dos números. Ele é o resultado de um olhar honesto sobre quatro pilares que definem o futuro financeiro de qualquer família — e que, quando bem estruturados, trabalham juntos para construir algo que poucas pessoas conseguem: liberdade de verdade.
+
+Na análise da Liberdade Financeira, ${descricaoLF}. Esse é o pilar que define quando e como você poderá viver de forma completamente independente do trabalho — e ele exige atenção e consistência desde agora.
+
+Na Gestão de Ativos, ${descricaoAA}. A forma como o patrimônio está alocado determina o ritmo com que ele cresce e o quanto resiste às turbulências do mercado.
+
+Na Proteção Patrimonial, ${descricaoProtecao}. Nenhum plano financeiro está completo sem a certeza de que, independente do que aconteça, a família continuará protegida.
+
+No Planejamento Tributário, ${descricaoTributario}. Pagar menos imposto de forma legal e estratégica é uma das alavancas mais subestimadas na construção de patrimônio.
+
+Nas páginas a seguir, você encontrará o direcionamento específico para cada uma dessas áreas — com análises, recomendações e os próximos passos para que cada pilar esteja alinhado com os seus objetivos. Este é apenas o começo.`;
+
+  // ── Blocos ────────────────────────────────────────────────────────────────
 
   const blocos: BlocoDoc[] = [
     {
-      chave: "intro-1",
-      node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-          Para que qualquer planejamento estratégico seja bem-sucedido, o passo fundamental é
-          realizar um mapeamento preciso, técnico e realista do cenário atual. Antes de definirmos
-          onde você vai chegar, precisamos estabelecer com clareza onde você está.
-        </p>
-      ),
-    },
-    {
-      chave: "intro-2",
-      node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16 }}>
-          O Ponto de Partida consolida o diagnóstico das quatro áreas essenciais da sua vida
-          financeira. Este raio-X evidencia as fortalezas do patrimônio que você já construiu, mas,
-          acima de tudo, joga luz sobre as ineficiências e vulnerabilidades que precisam ser
-          corrigidas para destravar o seu verdadeiro potencial de acumulação.
-        </p>
-      ),
-    },
-    {
       chave: "resumo",
-      /* Bloco-resumo do diagnóstico */
+      grudaNoProximo: true,
       node: (
         <div
           className="doc-card"
@@ -67,15 +111,10 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
             <div>
               <p style={{ fontSize: 14, fontWeight: 700, color: DOC.ink, margin: 0 }}>{nomeCliente}</p>
               <p style={{ fontSize: 10.5, color: DOC.muted, margin: "3px 0 8px" }}>
-                Diagnóstico · {dataDiagnostico}
+                Diagnóstico · {dataHoje}
               </p>
               {perfil && (
-                <span
-                  style={{
-                    fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                    backgroundColor: "#DBEAFE", color: "#1E40AF",
-                  }}
-                >
+                <span style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 999, backgroundColor: "#DBEAFE", color: "#1E40AF" }}>
                   Perfil: {PERFIL_LABELS[perfil]}
                 </span>
               )}
@@ -102,16 +141,16 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
     },
     {
       chave: "gauges",
-      /* 4 gauges semicirculares */
+      grudaNoProximo: true,
       node: (
         <div className="doc-card" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 12 }}>
-          {areas.map(({ icone, nome, score }) => {
+          {areas.map(({ icone, nome: nomeArea, score }) => {
             const n = nivelScoreGauge(score);
             return (
               <GaugeSemiCircular
-                key={nome}
+                key={nomeArea}
                 score={score}
-                label={nome}
+                label={nomeArea}
                 icone={icone}
                 nivel={n}
                 compact
@@ -121,48 +160,15 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
         </div>
       ),
     },
-  ];
-
-  // Cards analíticos por área — um card por bloco (texto de tamanho variável)
-  areas.forEach(({ icone, nome, score, texto }) => {
-    const n = nivelScoreGauge(score);
-    const nomeCard = nome === "Tributário" ? "Planejamento Tributário" : nome;
-    blocos.push({
-      chave: `area-${nome}`,
+    {
+      chave: "texto",
       node: (
-        <div
-          className="doc-card"
-          style={{ background: "white", border: `0.5px solid ${DOC.linha}`, borderRadius: 10, padding: "10px 14px", marginBottom: 8 }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, paddingBottom: 6, borderBottom: `0.5px solid ${DOC.linhaSoft}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <i className={`ti ${icone}`} style={{ fontSize: 13, color: DOC.blue }} aria-hidden="true" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: DOC.ink }}>{nomeCard}</span>
-            </div>
-            <span style={{ fontSize: 9, fontWeight: 600, color: n.cor, background: n.bg, padding: "2px 9px", borderRadius: 99 }}>
-              {n.label}
-            </span>
-          </div>
-          <p style={{ fontSize: 10.5, color: DOC.texto, lineHeight: 1.6, margin: 0, whiteSpace: "pre-line" }}>
-            {texto}
-          </p>
-        </div>
+        <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "8px 0 0", whiteSpace: "pre-line" as const }}>
+          {texto}
+        </p>
       ),
-    });
-  });
-
-  blocos.push({
-    chave: "fecho",
-    node: (
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginTop: 8 }}>
-        Este diagnóstico não é um veredito, mas o alicerce técnico sobre o qual construiremos a sua
-        estratégia. Identificar essas lacunas é o primeiro passo para corrigi-las. A partir deste
-        ponto de partida, todas as soluções, realocações e próximos passos propostos neste
-        relatório terão um único objetivo: transformar as ineficiências de hoje na segurança e na
-        liberdade do seu amanhã.
-      </p>
-    ),
-  });
+    },
+  ];
 
   return <PaginaDocFluida titulo="Ponto de Partida" nomeCliente={nomeCliente} blocos={blocos} />;
 }
