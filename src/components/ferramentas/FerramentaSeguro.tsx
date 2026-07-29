@@ -35,6 +35,10 @@ interface FormData {
   seguroVidaAtual: number;
   seguroInvalidezAtual: number;
   seguroDoencasGravesAtual: number;
+  // Dados de Saúde
+  altura: string | number;
+  peso: string | number;
+  fumante: boolean | null;
 }
 
 interface Props {
@@ -190,6 +194,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       seguroVidaAtual:          Number(df.seguroVidaAtual)          || 0,
       seguroInvalidezAtual:     Number(df.seguroInvalidezAtual)     || 0,
       seguroDoencasGravesAtual: Number(df.seguroDoencasGravesAtual) || 0,
+      altura:   df.altura  ?? "",
+      peso:     df.peso    ?? "",
+      fumante:  df.fumante ?? null,
     };
   });
 
@@ -707,6 +714,60 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             <label style={LABEL}>Seguro de Doenças Graves Atual (R$)</label>
             <CurrencyInput value={data.seguroDoencasGravesAtual} onChange={(v) => upd({ seguroDoencasGravesAtual: v })} />
             <span style={HINT}>Capital segurado para doenças graves</span>
+          </div>
+        </div>
+
+        <div style={DIVIDER} />
+
+        <span style={SECTION_LABEL}>Dados de Saúde</span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Altura (m)</label>
+            <input
+              type="text"
+              value={data.altura as string}
+              onChange={(e) => upd({ altura: e.target.value })}
+              style={NUMBER_INPUT}
+              placeholder="Ex: 1,75"
+            />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Peso (kg)</label>
+            <input
+              type="text"
+              value={data.peso as string}
+              onChange={(e) => upd({ peso: e.target.value })}
+              style={NUMBER_INPUT}
+              placeholder="Ex: 80"
+            />
+          </div>
+          <div style={FIELD_WRAP}>
+            <label style={LABEL}>Fuma?</label>
+            <div style={{ display: "flex", gap: 6 }}>
+              {([true, false, null] as (boolean | null)[]).map((val) => {
+                const label = val === true ? "Sim" : val === false ? "Não" : "N/I";
+                const active = data.fumante === val;
+                return (
+                  <button
+                    key={String(val)}
+                    onClick={() => upd({ fumante: val })}
+                    style={{
+                      flex: 1,
+                      padding: "8px 0",
+                      fontSize: 12,
+                      fontWeight: active ? 700 : 400,
+                      border: `1px solid ${active ? "#2563EB" : "#E5E7EB"}`,
+                      borderRadius: 8,
+                      background: active ? "#EFF6FF" : "white",
+                      color: active ? "#2563EB" : "#374151",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

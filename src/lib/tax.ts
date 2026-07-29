@@ -19,11 +19,11 @@ export const DESCONTO_SIMPLIFICADO_ANUAL = 16754.34;
 
 // Tabela progressiva anual IRPF 2026
 const faixasAnuais = [
-  { limite: 29145.60,  aliquota: 0,     deduzir: 0        },
-  { limite: 33919.80,  aliquota: 0.075, deduzir: 2185.92  },
-  { limite: 45012.60,  aliquota: 0.15,  deduzir: 4729.91  },
-  { limite: 55976.16,  aliquota: 0.225, deduzir: 8105.85  },
-  { limite: Infinity,  aliquota: 0.275, deduzir: 10904.66 },
+  { limite: 26963.20,  aliquota: 0,     deduzir: 0        },
+  { limite: 33919.80,  aliquota: 0.075, deduzir: 2022.24  },
+  { limite: 45012.60,  aliquota: 0.15,  deduzir: 4566.23  },
+  { limite: 55976.16,  aliquota: 0.225, deduzir: 7942.17  },
+  { limite: Infinity,  aliquota: 0.275, deduzir: 10740.98 },
 ];
 
 export function calcularRedutorAnual2026(

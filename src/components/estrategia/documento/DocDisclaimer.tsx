@@ -1,4 +1,4 @@
-import { DOC, TEXTO_CORPO, LABEL_SUBSECAO } from "@/lib/documentoStyles";
+import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
@@ -10,19 +10,20 @@ interface Props {
   onConfigChange?: (c: ConfigConsultor) => void;
 }
 
-export function DocDisclaimer({ nomeCliente, config }: Props) {
+export function DocDisclaimer({ nomeCliente }: Props) {
   return (
     <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
       <HeaderSecao titulo="Disclaimer" />
 
-      <div style={{ ...TEXTO_CORPO, fontSize: 13, whiteSpace: "pre-line" }}>
-        {config.textoDisclaimer}
-      </div>
-
-      <div style={{ borderTop: `1px solid ${DOC.linha}`, margin: "28px 0" }} />
-
-      <p style={LABEL_SUBSECAO()}>Sobre o Consultor</p>
-      <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>{config.descricao}</p>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        Este documento foi elaborado por um Consultor de Valores Mobiliários devidamente autorizado pela Comissão de Valores Mobiliários (CVM), em conformidade com a Resolução CVM n.º 19/2021. As informações aqui contidas têm caráter exclusivamente informativo e educacional, não constituindo oferta, solicitação, recomendação ou aconselhamento de investimento.
+      </p>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        O planejamento financeiro apresentado é baseado nas informações fornecidas pelo cliente e em premissas que podem não se concretizar. Rentabilidades passadas não são garantia de resultados futuros. O investidor deve considerar seus próprios objetivos, situação financeira e necessidades antes de tomar qualquer decisão de investimento.
+      </p>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+        Este material não deve ser reproduzido, distribuído ou publicado por qualquer pessoa para qualquer finalidade sem o prévio consentimento da Simpla Invest. Em caso de dúvidas, entre em contato com o consultor responsável ou com a ouvidoria da Simpla Invest.
+      </p>
 
       {/* Selos de certificação */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 18 }}>
