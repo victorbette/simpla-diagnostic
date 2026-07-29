@@ -3,7 +3,6 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import {
   CONFIG_CONSULTOR_DEFAULT,
-  AREAS_DOCUMENTO,
   carregarSelecaoSecoes,
   salvarSelecaoSecoes,
 } from "@/lib/documentoConfig";
@@ -11,7 +10,6 @@ import type { ConfigConsultor, SelecaoSecoes } from "@/lib/documentoConfig";
 import { gerarPDF } from "@/lib/gerarPDF";
 import { ModalSecoesPdf } from "./documento/ModalSecoesPdf";
 import { DocCapa } from "./documento/DocCapa";
-import { DocSumario } from "./documento/DocSumario";
 import { DocFinancialPlanning } from "./documento/DocFinancialPlanning";
 import { DocPontoDePartida } from "./documento/DocPontoDePartida";
 import { DivisoriaSecao } from "./documento/DivisoriaSecao";
@@ -88,8 +86,6 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
     // Aguarda o React aplicar a seleção ao documento antes do print síncrono
     setTimeout(() => gerarPDF(clientName), 150);
   };
-
-  const capitulosSumario = AREAS_DOCUMENTO.filter((a) => secoes[a.id]).map((a) => a.label);
 
   const dataCapa = dataCapaMesAno(resultados.estrategiaFinal?.dataGeracao);
 
@@ -170,8 +166,6 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
           dataEstrategia={dataCapa}
           nomeConsultor={nomeConsultorCapa}
         />
-
-        <DocSumario nomeCliente={clientName} capitulos={capitulosSumario} />
 
         <DocFinancialPlanning nomeCliente={clientName} />
 
