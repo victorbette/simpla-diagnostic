@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   User, DollarSign, PieChart,
   X, Plus,
@@ -73,9 +74,43 @@ const VALOR_POR_CLASSE: Record<string, { label: string; key: string; hint?: stri
 interface Props {
   dados: DadosColetaDiag;
   onChange: (patch: Partial<DadosColetaDiag>) => void;
+  onSalvar: () => void;
 }
 
-export function DiagColeta({ dados, onChange }: Props) {
+function BotaoSalvar({ onSalvar, rotulo = "Salvar" }: { onSalvar: () => void; rotulo?: string }) {
+  const [estado, setEstado] = useState<"idle" | "salvando" | "salvo">("idle");
+  const handleClick = () => {
+    setEstado("salvando");
+    onSalvar();
+    setTimeout(() => {
+      setEstado("salvo");
+      setTimeout(() => setEstado("idle"), 2000);
+    }, 400);
+  };
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", padding: "20px 0 4px" }}>
+      <button
+        onClick={handleClick}
+        disabled={estado === "salvando"}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          background: estado === "salvo" ? "#15803D" : "#2563EB",
+          color: "white", border: "none", borderRadius: 8,
+          padding: "10px 24px", fontSize: 13, fontWeight: 600,
+          cursor: estado === "salvando" ? "not-allowed" : "pointer",
+          transition: "background 300ms", fontFamily: "inherit",
+        }}
+      >
+        {estado === "salvando" && <i className="ti ti-loader-2" style={{ fontSize: 14 }} />}
+        {estado === "salvo" && <i className="ti ti-circle-check" style={{ fontSize: 14 }} />}
+        {estado === "idle" && <i className="ti ti-device-floppy" style={{ fontSize: 14 }} />}
+        {estado === "salvando" ? "Salvando..." : estado === "salvo" ? "Salvo!" : rotulo}
+      </button>
+    </div>
+  );
+}
+
+export function DiagColeta({ dados, onChange, onSalvar }: Props) {
   const filhos = dados.filhos ?? [];
   const idadeAtual = dados.dataNascimento
     ? Math.floor((Date.now() - new Date(dados.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
@@ -490,6 +525,7 @@ export function DiagColeta({ dados, onChange }: Props) {
           ))}
         </div>
       </SecaoCard>
+      <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Coleta de Dados" />
     </div>
   );
 }

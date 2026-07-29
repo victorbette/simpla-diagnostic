@@ -26,6 +26,40 @@ interface Props {
   dadosColeta: DadosColetaDiag;
   dadosLF: DadosLFDiag;
   onChange: (patch: Partial<DadosLFDiag>) => void;
+  onSalvar: () => void;
+}
+
+function BotaoSalvar({ onSalvar, rotulo = "Salvar" }: { onSalvar: () => void; rotulo?: string }) {
+  const [estado, setEstado] = useState<"idle" | "salvando" | "salvo">("idle");
+  const handleClick = () => {
+    setEstado("salvando");
+    onSalvar();
+    setTimeout(() => {
+      setEstado("salvo");
+      setTimeout(() => setEstado("idle"), 2000);
+    }, 400);
+  };
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", padding: "20px 0 4px" }}>
+      <button
+        onClick={handleClick}
+        disabled={estado === "salvando"}
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          background: estado === "salvo" ? "#15803D" : "#2563EB",
+          color: "white", border: "none", borderRadius: 8,
+          padding: "10px 24px", fontSize: 13, fontWeight: 600,
+          cursor: estado === "salvando" ? "not-allowed" : "pointer",
+          transition: "background 300ms", fontFamily: "inherit",
+        }}
+      >
+        {estado === "salvando" && <i className="ti ti-loader-2" style={{ fontSize: 14 }} />}
+        {estado === "salvo" && <i className="ti ti-circle-check" style={{ fontSize: 14 }} />}
+        {estado === "idle" && <i className="ti ti-device-floppy" style={{ fontSize: 14 }} />}
+        {estado === "salvando" ? "Salvando..." : estado === "salvo" ? "Salvo!" : rotulo}
+      </button>
+    </div>
+  );
 }
 
 const cardStyle: React.CSSProperties = {
@@ -57,7 +91,7 @@ function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
-export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Props) {
+export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalvar }: Props) {
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
   const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
   const mesNascimento = parsed?.mes ?? 1;
@@ -367,6 +401,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
         </div>
       </div>
 
+      <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Liberdade Financeira" />
     </div>
   );
 }

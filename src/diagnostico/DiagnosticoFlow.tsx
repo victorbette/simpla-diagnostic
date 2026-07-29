@@ -42,6 +42,10 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
     onAtualizar({ ...lead, dadosLF: { ...lead.dadosLF, ...patch } });
   }
 
+  function handleSalvar() {
+    onAtualizar(lead);
+  }
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#F0F7FF" }}>
 
@@ -94,7 +98,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
       {/* Content */}
       <main style={{ width: "100%", boxSizing: "border-box", padding: etapaAtiva === "relatorio" ? 0 : "24px 32px" }}>
         {etapaAtiva === "coleta" && (
-          <DiagColeta dados={lead.dadosColeta} onChange={atualizarColeta} />
+          <DiagColeta dados={lead.dadosColeta} onChange={atualizarColeta} onSalvar={handleSalvar} />
         )}
 
         {etapaAtiva === "lf" && (
@@ -103,6 +107,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
               dadosColeta={lead.dadosColeta}
               dadosLF={lead.dadosLF}
               onChange={atualizarLF}
+              onSalvar={handleSalvar}
             />
             <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
               <button
