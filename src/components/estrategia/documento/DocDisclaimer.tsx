@@ -1,4 +1,3 @@
-import { TEXTO_CORPO } from "@/lib/documentoStyles";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
@@ -10,19 +9,19 @@ interface Props {
   onConfigChange?: (c: ConfigConsultor) => void;
 }
 
+const textoDisclaimer = `Todas as recomendações aqui apresentadas foram elaboradas com objetivo de orientar e auxiliar em suas decisões financeiras e de investimento; portanto, o material não se constitui em oferta de compra e venda de nenhum título ou valor mobiliário contido. O investidor será responsável, de forma exclusiva, pelas suas decisões de investimento e implementação de estratégias financeiras.
+
+A Simpla Invest segue as regras de conduta expressas nos termos da Resolução CVM nº 19/2021. Além disso, não está em situação que possa afetar a imparcialidade do relatório ou que possa configurar conflito de interesse.
+
+A elaboração desse material se deu de maneira independente e individualizada, e o conteúdo nele divulgado não pode ser copiado, reproduzido ou distribuído, no todo ou em parte, a terceiros, sem autorização prévia.`;
+
 export function DocDisclaimer({ nomeCliente }: Props) {
   return (
     <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
       <HeaderSecao titulo="Disclaimer" />
 
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-        Este documento foi elaborado em conformidade com a Resolução CVM n.º 19/2021. As informações aqui contidas têm caráter exclusivamente informativo e educacional, não constituindo oferta, solicitação, recomendação ou aconselhamento de investimento.
-      </p>
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-        O planejamento financeiro apresentado é baseado nas informações fornecidas pelo cliente e em premissas que podem não se concretizar. Rentabilidades passadas não são garantia de resultados futuros. O investidor deve considerar seus próprios objetivos, situação financeira e necessidades antes de tomar qualquer decisão de investimento.
-      </p>
-      <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-        Este material não deve ser reproduzido, distribuído ou publicado por qualquer pessoa para qualquer finalidade sem o prévio consentimento da Simpla Invest. Em caso de dúvidas, entre em contato com o consultor responsável ou com a ouvidoria da Simpla Invest.
+      <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: "0 0 20px", whiteSpace: "pre-line" as const }}>
+        {textoDisclaimer}
       </p>
 
       {/* Logo CVM */}
