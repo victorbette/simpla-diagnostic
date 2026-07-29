@@ -1,7 +1,5 @@
 import type { Lead } from "../types";
-import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
-import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
-import { RodapePaginaDiag } from "./RodapePaginaDiag";
+import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 function formatBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -31,18 +29,26 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
     return "Você já deu um passo importante ao contratar um seguro de vida — isso demonstra que você pensa no futuro da sua família.\n\nLembre-se de revisar anualmente: à medida que seu patrimônio e suas responsabilidades crescem, a cobertura também deve acompanhar esse crescimento. Avaliar a inclusão de coberturas em vida — invalidez e doenças graves — pode adicionar uma camada extra de segurança para o que você mais valoriza.";
   }
 
-  return (
-    <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
-      <HeaderSecao titulo="Blindagem Patrimonial" />
+  const blocos: BlocoDoc[] = [];
 
+  blocos.push({
+    chave: "texto",
+    grudaNoProximo: blindagemTemDados,
+    node: (
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 1.8,
         marginBottom: 20, whiteSpace: "pre-line" as const,
       }}>
         {gerarTextoBlind()}
       </p>
+    ),
+  });
 
-      {blindagemTemDados && (
+  if (blindagemTemDados) {
+    blocos.push({
+      chave: "cards",
+      grudaNoProximo: !possuiSeguro,
+      node: (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
             <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
@@ -76,9 +82,14 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
             </div>
           </div>
         </div>
-      )}
+      ),
+    });
+  }
 
-      {!possuiSeguro && (
+  if (!possuiSeguro) {
+    blocos.push({
+      chave: "alerta",
+      node: (
         <div style={{
           background: "#FFF5F5", border: "0.5px solid #FCA5A5",
           borderRadius: 8, padding: "12px 16px", marginTop: 16,
@@ -90,7 +101,15 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
             Sem seguro de vida, qualquer imprevisto pode comprometer permanentemente o futuro financeiro da sua família. Esta é uma prioridade imediata.
           </div>
         </div>
-      )}
-    </PaginaDoc>
+      ),
+    });
+  }
+
+  return (
+    <PaginaDocFluidaDiag
+      titulo="Blindagem Patrimonial"
+      nomeCliente={lead.nome}
+      blocos={blocos}
+    />
   );
 }

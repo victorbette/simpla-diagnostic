@@ -1,8 +1,6 @@
 import type { Lead } from "../types";
 import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
-import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
-import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
-import { RodapePaginaDiag } from "./RodapePaginaDiag";
+import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 const TAXA_MENSAL = Math.pow(1.045, 1 / 12) - 1;
 
@@ -160,54 +158,69 @@ ${paragrafoFinal}
 
 Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
 
-  return (
-    <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
-      <HeaderSecao titulo="Diagnóstico Inicial" />
-
-      {/* Card score geral */}
-      <div style={{
-        background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-        padding: "20px 24px", marginBottom: 14,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div>
-          <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 3 }}>
-            Diagnóstico Financeiro
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>{lead.nome}</div>
-          <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
-            {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-          </div>
-        </div>
-        <div style={{ textAlign: "center" as const }}>
-          <div style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
-          <div style={{ fontSize: 10, color: "#9CA3AF" }}>de 100 pontos</div>
-          <span style={{
-            fontSize: 10, fontWeight: 700, color: nv.cor, background: nv.bg,
-            padding: "2px 10px", borderRadius: 99, display: "inline-block",
+  const blocos: BlocoDoc[] = [
+    {
+      chave: "hero",
+      grudaNoProximo: true,
+      node: (
+        <>
+          {/* Card score geral */}
+          <div style={{
+            background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
+            padding: "20px 24px", marginBottom: 14,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
-            {nv.label}
-          </span>
-        </div>
-      </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 3 }}>
+                Diagnóstico Financeiro
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>{lead.nome}</div>
+              <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
+                {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+              </div>
+            </div>
+            <div style={{ textAlign: "center" as const }}>
+              <div style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
+              <div style={{ fontSize: 10, color: "#9CA3AF" }}>de 100 pontos</div>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: nv.cor, background: nv.bg,
+                padding: "2px 10px", borderRadius: 99, display: "inline-block",
+              }}>
+                {nv.label}
+              </span>
+            </div>
+          </div>
 
-      {/* Grid 3 gauges */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 0 }}>
-        <GaugeDiag score={scoreLF}    label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
-        <GaugeDiag score={scoreInv}   label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
-        <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"    nivel={nivelScore(scoreBlind)} />
-      </div>
+          {/* Grid 3 gauges */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            <GaugeDiag score={scoreLF}    label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
+            <GaugeDiag score={scoreInv}   label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
+            <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"    nivel={nivelScore(scoreBlind)} />
+          </div>
+        </>
+      ),
+    },
+    {
+      chave: "texto",
+      node: (
+        <p style={{
+          fontSize: 12,
+          color: "#374151",
+          lineHeight: 2,
+          margin: "20px 0 0",
+          whiteSpace: "pre-line" as const,
+        }}>
+          {textoEmocional}
+        </p>
+      ),
+    },
+  ];
 
-      {/* Texto emocional */}
-      <p style={{
-        fontSize: 12,
-        color: "#374151",
-        lineHeight: 2,
-        margin: "20px 0 0",
-        whiteSpace: "pre-line" as const,
-      }}>
-        {textoEmocional}
-      </p>
-    </PaginaDoc>
+  return (
+    <PaginaDocFluidaDiag
+      titulo="Diagnóstico Inicial"
+      nomeCliente={lead.nome}
+      blocos={blocos}
+    />
   );
 }

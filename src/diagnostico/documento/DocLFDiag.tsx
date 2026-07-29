@@ -5,9 +5,7 @@ import {
   type ProjecaoIFParams,
 } from "@/lib/financialFreedomCalc";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
-import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
-import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
-import { RodapePaginaDiag } from "./RodapePaginaDiag";
+import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 const TAXA_ANUAL_DIAG = 0.045;
 const TAXA_MENSAL_DIAG = Math.pow(1 + TAXA_ANUAL_DIAG, 1 / 12) - 1;
@@ -114,20 +112,26 @@ export function DocLFDiag({ lead }: Props) {
     return { delta, idadeC, pctMeta };
   });
 
-  return (
-    <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
-      <HeaderSecao titulo="Liberdade Financeira" />
+  const blocos: BlocoDoc[] = [];
 
-      {/* Texto explicativo */}
+  blocos.push({
+    chave: "texto",
+    grudaNoProximo: result !== null,
+    node: (
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 1.8,
         marginBottom: 14, whiteSpace: "pre-line" as const,
       }}>
         {gerarTextoLF()}
       </p>
+    ),
+  });
 
-      {/* Gráfico de projeção */}
-      {result && (
+  if (result) {
+    blocos.push({
+      chave: "grafico",
+      grudaNoProximo: true,
+      node: (
         <div style={{ marginBottom: 14 }}>
           <CardProjecaoPatrimonial
             projecao={result.projecao}
@@ -139,9 +143,14 @@ export function DocLFDiag({ lead }: Props) {
             interativo={false}
           />
         </div>
-      )}
+      ),
+    });
+  }
 
-      {/* 2 cards de métricas */}
+  blocos.push({
+    chave: "cards",
+    grudaNoProximo: lfTemDados,
+    node: (
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
         <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
           <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
@@ -163,9 +172,13 @@ export function DocLFDiag({ lead }: Props) {
           <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Com a projeção atual</div>
         </div>
       </div>
+    ),
+  });
 
-      {/* Análise de Sensibilidade */}
-      {lfTemDados && (
+  if (lfTemDados) {
+    blocos.push({
+      chave: "sensibilidade",
+      node: (
         <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 12 }}>
             Análise de Sensibilidade
@@ -218,7 +231,15 @@ export function DocLFDiag({ lead }: Props) {
 
           </div>
         </div>
-      )}
-    </PaginaDoc>
+      ),
+    });
+  }
+
+  return (
+    <PaginaDocFluidaDiag
+      titulo="Liberdade Financeira"
+      nomeCliente={lead.nome}
+      blocos={blocos}
+    />
   );
 }

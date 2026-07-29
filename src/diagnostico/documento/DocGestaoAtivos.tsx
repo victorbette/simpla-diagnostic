@@ -2,9 +2,7 @@ import type { Lead } from "../types";
 import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
 import { ATIVOS_TEXTOS } from "../ativosTextos";
 import { DOC } from "@/lib/documentoStyles";
-import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
-import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
-import { RodapePaginaDiag } from "./RodapePaginaDiag";
+import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 function formatBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -46,20 +44,24 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
   ];
   const classes = allClasses.filter(c => c.valor > 0);
 
-  return (
-    <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
-      <HeaderSecao titulo="Gestão de Ativos" />
+  const blocos: BlocoDoc[] = [];
 
-      {/* Texto explicativo */}
+  blocos.push({
+    chave: "intro",
+    node: (
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 2,
         marginBottom: 20, whiteSpace: "pre-line" as const,
       }}>
         {texto}
       </p>
+    ),
+  });
 
-      {/* Seção: O que você já faz bem */}
-      {ativosBons.length > 0 && (
+  if (ativosBons.length > 0) {
+    blocos.push({
+      chave: "bons",
+      node: (
         <div style={{ marginBottom: 20 }}>
           <div style={{
             fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 10,
@@ -83,10 +85,14 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             );
           })}
         </div>
-      )}
+      ),
+    });
+  }
 
-      {/* Seção: Pontos que merecem atenção */}
-      {ativosRuins.length > 0 && (
+  if (ativosRuins.length > 0) {
+    blocos.push({
+      chave: "ruins",
+      node: (
         <div style={{ marginBottom: 20 }}>
           <div style={{
             fontSize: 12, fontWeight: 700, color: "#B91C1C", marginBottom: 10,
@@ -110,9 +116,13 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             );
           })}
         </div>
-      )}
+      ),
+    });
+  }
 
-      {/* Tabela de alocação */}
+  blocos.push({
+    chave: "tabela",
+    node: (
       <div style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -153,9 +163,13 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           )}
         </table>
       </div>
+    ),
+  });
 
-      {/* Aviso se nenhum ativo foi mapeado */}
-      {ativosDoLead.length === 0 && (
+  if (ativosDoLead.length === 0) {
+    blocos.push({
+      chave: "aviso",
+      node: (
         <div style={{
           background: "#FFF7ED", border: "0.5px solid #FCD34D",
           borderRadius: 8, padding: "12px 16px", marginTop: 12,
@@ -163,7 +177,15 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
         }}>
           Nenhum investimento foi mapeado na coleta de dados. A análise de alocação será realizada na reunião inicial.
         </div>
-      )}
-    </PaginaDoc>
+      ),
+    });
+  }
+
+  return (
+    <PaginaDocFluidaDiag
+      titulo="Gestão de Ativos"
+      nomeCliente={lead.nome}
+      blocos={blocos}
+    />
   );
 }
