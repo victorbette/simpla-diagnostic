@@ -3,7 +3,6 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import {
   CONFIG_CONSULTOR_DEFAULT,
-  AREAS_DOCUMENTO,
   carregarSelecaoSecoes,
   salvarSelecaoSecoes,
 } from "@/lib/documentoConfig";
@@ -89,8 +88,6 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
     setTimeout(() => gerarPDF(clientName), 150);
   };
 
-  const capitulosSumario = AREAS_DOCUMENTO.filter((a) => secoes[a.id]).map((a) => a.label);
-
   const dataCapa = dataCapaMesAno(resultados.estrategiaFinal?.dataGeracao);
 
   // Nome curto do consultor para a capa (sem credenciais entre parênteses)
@@ -171,7 +168,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
           nomeConsultor={nomeConsultorCapa}
         />
 
-        <DocSumario nomeCliente={clientName} capitulos={capitulosSumario} />
+        <DocSumario nomeCliente={clientName} plan={plan} resultados={resultados} />
 
         <DocFinancialPlanning nomeCliente={clientName} />
 
