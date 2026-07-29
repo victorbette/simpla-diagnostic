@@ -109,7 +109,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       chave: "separador",
       grudaNoProximo: true,
       node: (
-        <div style={{ borderTop: "0.5px solid #E5E7EB", marginTop: 24, marginBottom: 24 }} />
+        <div style={{ marginTop: 28 }} />
       ),
     });
   }
