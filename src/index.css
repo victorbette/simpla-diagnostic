@@ -236,6 +236,16 @@
     page-break-inside: avoid;
   }
 
+  /* Rodapé sempre ancorado no fundo — nunca cortado mesmo com overflow de conteúdo */
+  .pagina-doc-conteudo {
+    overflow: hidden !important;
+  }
+  .pagina-doc-rodape {
+    position: absolute !important;
+    bottom: 0 !important;
+    display: block !important;
+  }
+
   /* Cada página do documento em folha própria.
      Altura travada em exatamente 297mm: sem a trava, conteúdo que excede a
      folha faz a div crescer e o navegador a divide em duas folhas físicas —

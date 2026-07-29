@@ -67,6 +67,7 @@ export function PaginaDoc({
 
       {/* Conteúdo */}
       <div
+        className="pagina-doc-conteudo"
         style={{
           position: "relative",
           zIndex: 1,
@@ -74,12 +75,30 @@ export function PaginaDoc({
           display: "flex",
           flexDirection: "column",
           padding: paddingConteudo,
+          paddingBottom: rodape ? 44 : undefined,
           boxSizing: "border-box",
         }}
       >
         {children}
-        {rodape && <div style={{ marginTop: "auto", paddingTop: 18 }}>{rodape}</div>}
       </div>
+
+      {/* Rodapé — sempre ancorado ao bottom da página */}
+      {rodape && (
+        <div
+          className="pagina-doc-rodape"
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: "16mm",
+            right: "16mm",
+            paddingTop: 8,
+            paddingBottom: 10,
+            zIndex: 2,
+          }}
+        >
+          {rodape}
+        </div>
+      )}
     </div>
   );
 }
