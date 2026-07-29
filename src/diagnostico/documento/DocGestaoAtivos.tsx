@@ -14,7 +14,6 @@ interface Props { lead: Lead; }
 
 export function DocGestaoAtivos({ lead }: Props) {
   const ativosMap = lead.dadosColeta.ativosInvestimento ?? {};
-  const nome = lead.nome.split(" ")[0];
 
   const valorRF     = Number(ativosMap.valorRendaFixa)    || 0;
   const valorRV     = Number(ativosMap.valorRendaVariavel) || 0;
@@ -36,8 +35,7 @@ A tabela abaixo mostra a composição atual da sua carteira. Ela é o retrato fi
 Uma alocação bem definida não é apenas sobre maximizar retorno. É sobre ter clareza em qualquer cenário: quando o mercado sobe, você sabe o que fazer. Quando o mercado cai, você sabe o que fazer. Quando sobra dinheiro para investir, você sabe exatamente onde alocar. Essa clareza tem um valor que vai muito além dos números — ela elimina as decisões por impulso, o medo de errar e a paralisia que faz as pessoas ficarem paradas enquanto o tempo passa.
 
 Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. Ela combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, o efeito dos juros compostos amplifique cada decisão certa que foi tomada hoje.
-
-${nome}, o próximo passo é transformar essa fotografia atual em uma estratégia. Uma alocação que reflita o seu momento de vida, o seu perfil e os seus objetivos — e que te dê a clareza necessária para agir com convicção, independente do que o mercado fizer.`;
+`;
 
   const allClasses: { label: string; valor: number }[] = [
     { label: "Renda Fixa",     valor: valorRF     },
