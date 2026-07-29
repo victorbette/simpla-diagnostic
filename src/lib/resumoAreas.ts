@@ -2,7 +2,6 @@
  * o FinancialPlanDashboard (tela) e o documento "Estratégia Pronta" (página
  * Ponto de Partida). Área sem análise recebe score -1 ("Não analisado") e é
  * excluída da média do score geral. */
-import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 
@@ -160,182 +159,113 @@ export interface TextosAreas {
 export function gerarTextosAreas(
   plan: FinancialPlan,
   resultados: ResultadosEstrategia,
-  clientName?: string,
+  _clientName?: string,
 ): TextosAreas {
-  const seguroSalvo = resultados.seguro;
-  const fiscalSalvo = resultados.fiscal;
-  const nome        = clientName?.split(' ')[0] ?? 'Cliente';
+  const scores = calcularScoresAreas(plan, resultados);
 
   // ── LF ────────────────────────────────────────────────────────────────────
   const lf = (() => {
-    const v = varsLF(plan);
-
-    if (!v.temDados) {
-      return `Para analisarmos sua jornada rumo à liberdade financeira, precisamos de algumas informações básicas ainda não preenchidas: patrimônio atual, valor que você investe por mês, renda desejada na aposentadoria e a idade em que deseja se aposentar.\n\nPreencha esses dados na aba Situação Atual e voltamos aqui com a análise completa.`;
-    }
-
-    if (v.projecao >= v.patrimonioNecessario) {
-      let texto = `${nome}, sua situação em relação à liberdade financeira é muito positiva. `;
-      if (v.patrimonioAtual > 0) {
-        texto += `Você já construiu um patrimônio de ${formatCurrency(v.patrimonioAtual)}, o que representa um ótimo ponto de partida para a sua jornada. `;
-      }
-      if (v.aporteMensal > 0) {
-        texto += `Além disso, você está investindo ${formatCurrency(v.aporteMensal)} por mês — um hábito fundamental para quem quer conquistar a independência financeira. `;
-      }
-      texto += `\n\nCom a sua estratégia atual, a projeção indica que você chegará à aposentadoria aos ${v.idadeMeta} anos com um patrimônio estimado de ${formatCurrency(v.projecao)}, suficiente para gerar uma renda mensal de ${formatCurrency(v.rendaDesejada)} para sempre, sem precisar consumir o que acumulou. `;
-      texto += `\n\nContinue nessa direção! O mais importante agora é manter a consistência nos aportes e garantir que seu patrimônio esteja bem alocado para render ao longo dos anos.`;
-      return texto;
-    }
-
-    const pct          = Math.round((v.projecao / v.patrimonioNecessario) * 100);
-    const anosRestantes = Math.max(0, v.idadeMeta - v.idadeAtual);
-    let texto = '';
-
-    if (v.patrimonioAtual > 0 || v.aporteMensal > 0) {
-      texto += `Você já está no caminho certo `;
-      if (v.patrimonioAtual > 0) texto += `— tem ${formatCurrency(v.patrimonioAtual)} acumulados `;
-      if (v.aporteMensal > 0)   texto += `e investe ${formatCurrency(v.aporteMensal)}/mês, `;
-      texto += `o que é muito positivo. `;
-    } else {
-      texto += `Sua jornada de acumulação ainda está no início. `;
-    }
-
-    texto += `\n\nPara conquistar a renda de ${formatCurrency(v.rendaDesejada)}/mês na aposentadoria aos ${v.idadeMeta} anos, você precisará de um patrimônio de ${formatCurrency(v.patrimonioNecessario)}. Com o ritmo atual, a projeção aponta para ${formatCurrency(v.projecao)} — equivalente a ${pct}% da meta. `;
-    texto += `\n\nA boa notícia é que você ainda tem ${anosRestantes} anos pela frente, tempo suficiente para ajustar a estratégia e chegar lá. As principais alavancas disponíveis são: aumentar o valor investido por mês, otimizar a rentabilidade da sua carteira e eventualmente ajustar a data ou a renda desejada na aposentadoria. Veja no Simulador de Liberdade Financeira como pequenos ajustes fazem uma diferença enorme ao longo do tempo.`;
-    return texto;
+    const s = scores.lf;
+    if (s < 0) return (
+      `A jornada rumo à liberdade financeira ainda precisa ser mapeada com mais detalhes. Para ter uma visão completa de onde você está e para onde pode chegar, precisamos consolidar os dados da sua situação atual.\n\n` +
+      `Na aba de Liberdade Financeira, vamos juntos simular diferentes cenários, definir metas claras e traçar o caminho mais eficiente para a aposentadoria que você deseja — com clareza sobre o que precisa acontecer a partir de agora.`
+    );
+    if (s <= 30) return (
+      `O resultado desta análise exige atenção imediata. Com a trajetória atual, chegar à aposentadoria com o padrão de vida desejado vai exigir mudanças significativas na estratégia.\n\n` +
+      `Cada mês que passa sem um plano estruturado representa uma diferença real no resultado final. O tempo é o ativo mais poderoso nos investimentos — e ele não para.\n\n` +
+      `No Financial Planning, vamos estruturar um plano concreto para reverter esse cenário: ajustes nos aportes, otimização da carteira e metas claras para cada etapa da jornada.`
+    );
+    if (s <= 50) return (
+      `A projeção atual mostra que há um caminho sendo construído, mas ainda existe uma lacuna importante a ser preenchida para garantir a aposentadoria no padrão desejado.\n\n` +
+      `A boa notícia é que ainda há tempo e margem para ajustar a rota. Pequenas mudanças consistentes ao longo dos próximos anos podem transformar completamente esse cenário.\n\n` +
+      `O Financial Planning vai mapear exatamente quais alavancas precisam ser acionadas — seja no valor investido, na rentabilidade da carteira ou no prazo — para que a meta se torne alcançável dentro do tempo planejado.`
+    );
+    if (s <= 90) return (
+      `Você está claramente no caminho certo. A disciplina e a consistência nos investimentos já produziram resultados concretos — e isso é motivo de reconhecimento.\n\n` +
+      `O próximo passo é otimizar: garantir que a carteira está posicionada da forma mais eficiente possível, que os aportes seguem uma estratégia clara e que nenhum imprevisto coloque em risco o que foi construído.\n\n` +
+      `No Financial Planning, vamos refinar essa estratégia para que a chegada aconteça exatamente no tempo e no padrão planejado.`
+    );
+    return (
+      `Parabéns — você chegou a um nível de planejamento que a maioria das pessoas nunca alcança. A projeção indica que, mantendo a consistência atual, a aposentadoria no padrão desejado é uma realidade concreta.\n\n` +
+      `O desafio agora muda de natureza: não se trata mais de acumular, mas de proteger, otimizar e garantir que o que foi construído se mantenha independente do que aconteça.\n\n` +
+      `O Financial Planning vai estruturar essa próxima fase com foco em preservação, eficiência fiscal e proteção do patrimônio.`
+    );
   })();
 
   // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
-    const temRendaFixa = Number(plan.ativosAtuais?.rendaFixa) > 0;
-    const temAcoes     = Number(plan.ativosAtuais?.acoes) > 0;
-    const temFIIs      = Number(plan.ativosAtuais?.fiis) > 0;
-    const temExterior  = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
-    const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
-
-    const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
-    const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
-
-    if (comecandoDoZero || !aaTemDados) {
-      return `Você está dando os primeiros passos no mundo dos investimentos — e esse é, sem dúvida, o momento mais importante. Começar bem faz toda a diferença no longo prazo.\n\nTer uma estratégia bem definida desde o início evita os erros mais comuns: aplicar em produtos inadequados, concentrar tudo em um único ativo ou deixar o dinheiro parado sem render. Uma carteira estruturada — com renda fixa como base, ativos de crescimento e proteção cambial — é o que separa quem constrói patrimônio de forma consistente de quem não consegue evoluir.\n\nO próximo passo é definir o seu perfil de investidor e montar uma alocação adequada para a sua realidade. Isso será trabalhado na aba de Gestão de Ativos, onde você terá acesso a uma carteira recomendada personalizada para o seu momento de vida.`;
-    }
-
-    const ativos: string[] = [];
-    const ausentes: { nome: string; motivo: string }[] = [];
-
-    if (temRendaFixa) ativos.push('renda fixa');
-    else ausentes.push({ nome: 'renda fixa', motivo: 'base de segurança e liquidez da carteira' });
-
-    if (temAcoes) ativos.push('ações');
-    else ausentes.push({ nome: 'ações', motivo: 'crescimento patrimonial no longo prazo' });
-
-    if (temFIIs) ativos.push('fundos imobiliários');
-    else ausentes.push({ nome: 'fundos imobiliários', motivo: 'geração de renda passiva mensal' });
-
-    if (temExterior) ativos.push('investimentos no exterior');
-    else ausentes.push({ nome: 'exterior', motivo: 'diversificação e proteção cambial' });
-
-    let texto = '';
-    if (ativos.length === 0) {
-      texto = 'A carteira não registra investimentos nas classes principais. ';
-    } else if (ativos.length === 1) {
-      texto = `Sua carteira está concentrada em ${ativos[0]}. `;
-    } else {
-      const ultimo = ativos[ativos.length - 1];
-      const anteriores = ativos.slice(0, -1);
-      texto = `Sua carteira já inclui ${anteriores.join(', ')} e ${ultimo} — uma boa base para construir patrimônio. `;
-    }
-
-    if (temAcoes && temFIIs && temExterior) {
-      texto += `\n\nA diversificação entre ações, fundos imobiliários e exterior é excelente: você tem ativos voltados para crescimento, renda passiva e proteção cambial ao mesmo tempo. Essa combinação é justamente o que diferencia os investidores que constroem patrimônio sólido no longo prazo.`;
-    } else {
-      if (temAcoes) {
-        texto += `\n\nTer ações na carteira é um ponto muito positivo — são elas que costumam impulsionar o crescimento do patrimônio ao longo dos anos.`;
-      }
-      if (temFIIs) {
-        texto += `\n\nOs fundos imobiliários contribuem com renda passiva mensal, ajudando a antecipar parte da renda que você terá na aposentadoria.`;
-      }
-      if (temExterior) {
-        texto += `\n\nTer parte do patrimônio no exterior reduz a dependência do mercado brasileiro e protege contra variações do câmbio.`;
-      }
-    }
-
-    if (ausentes.length > 0) {
-      texto += `\n\nOportunidades de melhoria: `;
-      ausentes.forEach((a, i) => {
-        if (i === 0) texto += `Incluir ${a.nome} na carteira traria ${a.motivo}`;
-        else if (i === ausentes.length - 1) texto += `; e ${a.nome} para ${a.motivo}`;
-        else texto += `; ${a.nome} para ${a.motivo}`;
-      });
-      texto += `. Esses ajustes podem ser trabalhados na aba de Gestão de Ativos, onde montamos o plano de ação para chegar na carteira ideal para o seu perfil.`;
-    }
-
-    return texto;
+    const s = scores.aa;
+    if (s < 0) return (
+      `A composição da carteira ainda não foi avaliada em detalhes. Para ter uma visão completa de como o patrimônio está alocado e se está bem posicionado para crescer, precisamos analisar cada classe de ativo.\n\n` +
+      `Na aba de Gestão de Ativos, vamos estruturar uma alocação personalizada para o seu perfil — com foco em eficiência, diversificação e alinhamento com os seus objetivos de longo prazo.`
+    );
+    if (s === 0) return (
+      `Identificamos que os investimentos ainda estão no início da jornada. Esse é um ponto de partida valioso: começar com a estratégia certa desde o início é o que faz toda a diferença no resultado de longo prazo.\n\n` +
+      `Na aba de Gestão de Ativos, vamos montar uma carteira estruturada do zero — com diversificação adequada ao seu perfil e os melhores produtos disponíveis para cada objetivo.`
+    );
+    if (s <= 50) return (
+      `A análise da carteira revelou pontos importantes que precisam ser endereçados. Produtos inadequados, falta de diversificação ou concentração excessiva em uma única classe de ativo podem estar limitando o crescimento do patrimônio de forma silenciosa.\n\n` +
+      `Uma revisão estratégica da carteira pode representar uma diferença significativa no resultado ao longo dos anos — sem precisar assumir mais risco, apenas alocando melhor o que já existe.\n\n` +
+      `No Financial Planning, vamos reestruturar a alocação de forma personalizada, com cada ativo cumprindo um papel específico na estratégia.`
+    );
+    if (s <= 90) return (
+      `A carteira apresenta bons fundamentos e demonstra que você já entende a importância da diversificação. Há claramente uma estratégia em curso — e isso é um diferencial importante.\n\n` +
+      `O próximo nível é a otimização: garantir que os percentuais de cada classe estão corretos para o momento atual, que os produtos escolhidos são os mais eficientes e que a carteira está preparada para diferentes cenários de mercado.`
+    );
+    return (
+      `A carteira demonstra uma diversificação e qualidade de ativos que coloca você em um patamar diferenciado. A combinação de classes de ativos está bem estruturada e alinhada com uma estratégia de longo prazo.\n\n` +
+      `O trabalho agora é de manutenção e refinamento: rebalanceamento periódico, acompanhamento dos ativos e ajustes pontuais conforme o cenário econômico evolui.`
+    );
   })();
 
   // ── PS ────────────────────────────────────────────────────────────────────
   const ps = (() => {
-    if (!seguroSalvo) {
-      return `A análise de proteção ainda não foi realizada. Acesse a aba Proteção e Sucessório para mapear as necessidades da sua família em caso de imprevistos.\n\nEssa etapa é fundamental para garantir que, independente do que aconteça com você, sua família esteja financeiramente protegida.`;
-    }
-
-    const capitalNecessario = Number(seguroSalvo.capitalNecessario) || Number(seguroSalvo.totalNeed) || 0;
-    const capitalAtual      = capitalAtualSeguro(seguroSalvo);
-    const gap               = Math.max(0, capitalNecessario - capitalAtual);
-    const coberturaPct      = capitalNecessario > 0 ? Math.round((capitalAtual / capitalNecessario) * 100) : 0;
-
-    let texto = '';
-
-    if (capitalAtual === 0) {
-      texto = `No momento, não identificamos nenhuma apólice de seguro de vida ou invalidez em vigor. Isso representa um risco importante: em caso de falecimento ou incapacidade, sua família precisaria de aproximadamente ${formatCurrency(capitalNecessario)} para cobrir as despesas imediatas e manter o padrão de vida pelos próximos anos. `;
-      texto += `\n\nContratar um seguro de vida é uma das medidas mais importantes e acessíveis que você pode tomar hoje para proteger quem você ama.`;
-    } else if (gap <= 0) {
-      texto = `Boa notícia: sua cobertura atual de ${formatCurrency(capitalAtual)} é suficiente para proteger sua família. Isso inclui a cobertura das despesas imediatas, a manutenção da renda familiar pelo período necessário e as coberturas em vida. `;
-      texto += `\n\nMantenha suas apólices em dia e revise anualmente para garantir que a cobertura acompanhe as mudanças na sua situação familiar.`;
-    } else {
-      texto = `Você já deu um passo importante ao contratar uma cobertura de ${formatCurrency(capitalAtual)}. No entanto, a análise indica que seria ideal ter uma cobertura total de ${formatCurrency(capitalNecessario)} para garantir a proteção completa da sua família em qualquer cenário. `;
-      texto += `\n\nA cobertura atual representa ${coberturaPct}% do recomendado. Avaliar um reforço na apólice de seguro seria uma medida prudente para dar mais tranquilidade para você e sua família.`;
-    }
-
-    return texto;
+    const s = scores.ps;
+    if (s < 0) return (
+      `A análise de proteção ainda não foi realizada. Esse é um dos pilares mais importantes do planejamento financeiro — e frequentemente o mais negligenciado.\n\n` +
+      `Na aba de Proteção e Sucessório, vamos mapear as necessidades reais de cobertura para garantir que, independente do que aconteça, a família continuará protegida e o patrimônio preservado.`
+    );
+    if (s === 0) return (
+      `Este é o ponto mais crítico do diagnóstico. Não há cobertura de proteção identificada — o que significa que, em caso de falecimento ou invalidez, a família ficaria exposta a uma crise financeira simultânea à dor emocional.\n\n` +
+      `Nenhum plano financeiro está completo sem a certeza de que o patrimônio e os dependentes estão protegidos. Essa é uma decisão que precisa ser tomada com urgência.\n\n` +
+      `No Financial Planning, vamos calcular a cobertura ideal para cada situação e estruturar o plano de proteção adequado para a sua realidade.`
+    );
+    if (s <= 50) return (
+      `A análise indica que existe alguma cobertura em vigor, mas ainda há lacunas significativas na proteção patrimonial. Em caso de imprevistos, a família poderia enfrentar dificuldades financeiras que o seguro atual não conseguiria cobrir completamente.\n\n` +
+      `Proteção não é um luxo — é a fundação que sustenta tudo o que está sendo construído. Sem ela, anos de acumulação podem ser comprometidos em um único evento inesperado.\n\n` +
+      `No Financial Planning, vamos mapear as necessidades reais e estruturar uma cobertura que proteja de forma completa.`
+    );
+    if (s <= 90) return (
+      `A proteção patrimonial está parcialmente estruturada — há consciência sobre a importância do tema e alguma cobertura em vigor. Isso já coloca você à frente da maioria das pessoas.\n\n` +
+      `O próximo passo é garantir que a cobertura está adequada para a realidade atual: família, patrimônio e padrão de vida tendem a crescer, e a proteção precisa acompanhar esse crescimento.\n\n` +
+      `No Financial Planning, vamos revisar e ajustar a estratégia de proteção.`
+    );
+    return (
+      `A proteção patrimonial está bem estruturada — você tem a tranquilidade de saber que, independente do que aconteça, a família estará financeiramente protegida.\n\n` +
+      `O trabalho agora é de revisão periódica: garantir que a cobertura acompanha as mudanças na situação familiar e patrimonial ao longo dos anos.`
+    );
   })();
 
   // ── Fiscal ────────────────────────────────────────────────────────────────
   const fiscal = (() => {
-    if (!fiscalSalvo) {
-      return `O planejamento tributário ainda não foi analisado. Acesse a aba Planejamento Tributário para simular o impacto do seu Imposto de Renda e identificar oportunidades de redução legal da carga fiscal.\n\nEsse é um dos ajustes que pode gerar mais resultado com menos esforço.`;
-    }
-
-    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
-    const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
-    const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
-    const economia        = Number(fiscalSalvo.economiaAnual) || 0;
-
-    let texto = '';
-
-    if (tipoDeclaracao === 'nao_sei') {
-      texto = `O primeiro passo é definir qual o modelo de declaração mais vantajoso para o seu caso — completo ou simplificado. Essa escolha impacta diretamente quanto você pode economizar no IR e se vale a pena utilizar a previdência privada como estratégia de redução de imposto. Nossa equipe pode ajudar a definir o melhor caminho para você.`;
-    } else if (tipoDeclaracao === 'simplificada') {
-      texto = `Você utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, o aporte em previdência privada do tipo PGBL não gera dedução adicional no IR. `;
-      texto += `\n\nSe seus rendimentos crescerem ou você passar a ter mais despesas dedutíveis, pode valer a pena reavaliar o modelo de declaração. Mantenha esse ponto em revisão anualmente.`;
-    } else if (tipoDeclaracao === 'completa') {
-      if (aporteAnualPGBL > 0 && economia > 0) {
-        const aproveitamentoPct = tetoPGBL > 0 ? Math.round((aporteAnualPGBL / tetoPGBL) * 100) : 0;
-        const espacoMensal      = tetoPGBL > 0 ? Math.max(0, (tetoPGBL - aporteAnualPGBL) / 12) : 0;
-        texto = `Ótima notícia: você utiliza a declaração completa e já contribui com ${formatCurrency(aporteAnualPGBL / 12)}/mês em previdência privada, o que reduz legalmente o valor do seu Imposto de Renda em ${formatCurrency(economia)} por ano — isso equivale a ${formatCurrency(economia / 12)}/mês que ficam no seu bolso em vez de ir para o fisco. `;
-        if (aproveitamentoPct < 100 && espacoMensal > 0) {
-          texto += `\n\nVocê está aproveitando ${aproveitamentoPct}% do benefício disponível. Aumentando a contribuição em ${formatCurrency(espacoMensal)}/mês, seria possível maximizar ainda mais a redução do imposto e fortalecer o patrimônio para a aposentadoria ao mesmo tempo.`;
-        } else {
-          texto += `\n\nVocê está aproveitando ao máximo o benefício fiscal disponível — parabéns pela estratégia tributária bem estruturada!`;
-        }
-      } else if (aporteAnualPGBL === 0 && tetoPGBL > 0) {
-        texto = `Você utiliza a declaração completa, o que é muito positivo. No entanto, identificamos uma oportunidade ainda não aproveitada: contribuindo com ${formatCurrency(tetoPGBL / 12)}/mês em previdência privada do tipo PGBL, você poderia reduzir legalmente seu Imposto de Renda de forma significativa. Além disso, esse valor ficaria investido e rendendo para a sua aposentadoria. É uma estratégia que ganha nos dois lados.`;
-      } else {
-        texto = `Declaração completa identificada. Verifique se o aporte no PGBL foi preenchido e se a renda bruta está correta na calculadora tributária para apurar a economia fiscal potencial.`;
-      }
-    }
-
-    return texto;
+    const s = scores.fiscal;
+    if (s < 0) return (
+      `O planejamento tributário ainda não foi analisado. Essa é uma das alavancas mais subestimadas na construção de patrimônio: pagar menos imposto de forma legal e estratégica pode representar uma diferença significativa no resultado final ao longo dos anos.\n\n` +
+      `Na aba de Planejamento Tributário, vamos identificar as oportunidades disponíveis e estruturar uma estratégia fiscal eficiente para a sua situação.`
+    );
+    if (s <= 50) return (
+      `A análise tributária revelou oportunidades importantes que ainda não estão sendo aproveitadas. Isso significa que parte do que poderia estar sendo reinvestido e acumulando patrimônio está sendo destinado ao fisco desnecessariamente.\n\n` +
+      `Uma estratégia fiscal bem estruturada não é apenas para grandes fortunas — é uma ferramenta acessível que pode acelerar significativamente a construção de patrimônio para qualquer investidor.\n\n` +
+      `No Financial Planning, vamos identificar e implementar as estratégias mais adequadas para a sua situação.`
+    );
+    if (s <= 90) return (
+      `Há boas práticas fiscais em curso, o que demonstra consciência sobre a importância do planejamento tributário. Ainda assim, existem oportunidades que podem ser melhor aproveitadas para aumentar a eficiência fiscal e liberar mais recursos para investimento.\n\n` +
+      `No Financial Planning, vamos refinar a estratégia e garantir que cada oportunidade disponível esteja sendo utilizada de forma otimizada.`
+    );
+    return (
+      `O planejamento tributário está bem estruturado e eficiente. As estratégias em uso demonstram uma gestão fiscal cuidadosa — o que significa que mais recursos estão disponíveis para investimento e construção de patrimônio.\n\n` +
+      `O trabalho agora é de manutenção e atualização: a legislação fiscal muda, e a estratégia precisa acompanhar essas mudanças para manter a eficiência atual.`
+    );
   })();
 
   return { lf, aa, ps, fiscal };
