@@ -33,8 +33,10 @@ export function DiagnosticoPage({ onVoltar }: Props) {
       <DiagnosticoFlow
         lead={leadAtivo}
         onAtualizar={(leadAtualizado) => {
-          setLeads(prev => prev.map(l => l.id === leadAtualizado.id ? leadAtualizado : l));
+          const novosLeads = leads.map(l => l.id === leadAtualizado.id ? leadAtualizado : l);
+          setLeads(novosLeads);
           setLeadAtivo(leadAtualizado);
+          salvarLeads(novosLeads);
         }}
         onVoltar={() => setLeadAtivo(null)}
       />
@@ -44,7 +46,7 @@ export function DiagnosticoPage({ onVoltar }: Props) {
   return (
     <LeadsList
       leads={leads}
-      onSelecionar={setLeadAtivo}
+      onSelecionar={(lead) => setLeadAtivo(leads.find(l => l.id === lead.id) ?? lead)}
       onCadastrar={(novoLead) => {
         setLeads(prev => [...prev, novoLead]);
         setLeadAtivo(novoLead);

@@ -113,9 +113,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   };
 
   const [params, setParams] = useState<UIParams>(initialParams);
-  const [patrimonioEditado, setPatrimonioEditado] = useState(false);
-  const [aporteEditado, setAporteEditado] = useState(false);
-  const [rendaEditada, setRendaEditada] = useState(false);
+  const [patrimonioEditado, setPatrimonioEditado] = useState(
+    Number(dadosLF.patrimonioInicial) > 0 && Number(dadosLF.patrimonioInicial) !== patrimonioColeta
+  );
+  const [aporteEditado, setAporteEditado] = useState(
+    Number(dadosLF.aporteMensal) > 0 && Number(dadosLF.aporteMensal) !== aporteColeta
+  );
+  const [rendaEditada, setRendaEditada] = useState(
+    Number(dadosLF.rendaDesejada) > 0 && Number(dadosLF.rendaDesejada) !== rendaDesejadaColeta
+  );
 
   const isFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
