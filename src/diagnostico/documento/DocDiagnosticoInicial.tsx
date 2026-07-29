@@ -104,7 +104,6 @@ export function DocDiagnosticoInicial({ lead }: Props) {
   const projecao         = nMeses > 0 ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL : patrimonioAtual;
   const lfTemDados       = patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
   const scoreLF          = !lfTemDados ? -1 : Math.min(100, Math.round(projecao / patrimonioNec * 100));
-  const pctLF            = lfTemDados ? Math.min(100, Math.round(projecao / patrimonioNec * 100)) : 0;
 
   // ── Score Investimentos ──
   const ativosMap    = dadosColeta.ativosInvestimento ?? {};
@@ -135,57 +134,37 @@ export function DocDiagnosticoInicial({ lead }: Props) {
   const scoreGeral = scoreLista.length === 0 ? 0 : Math.round(scoreLista.reduce((a, b) => a + b, 0) / scoreLista.length);
   const nv = nivelScore(scoreGeral);
 
-  // ── Textos completos (mesmas versões de DiagResultado, truncados para 220 chars) ──
-  function textoLF(): string {
-    if (!lfTemDados) return "A liberdade financeira começa com clareza — e clareza começa com números.\n\nA maioria das pessoas passa a vida trabalhando sem saber exatamente para quê: quanto precisa acumular para parar quando quiser, viajar sem culpa, dar a melhor educação para os filhos ou simplesmente acordar de manhã sem a pressão de ter que trabalhar por necessidade.";
-    if (pctLF <= 30) return `${nome}, este número precisa ser dito com clareza: a trajetória atual coloca você em uma situação de risco real no longo prazo.\n\nPense nos projetos que você tem para a sua família — a escola dos filhos, a casa própria, as viagens que ainda não fez, a aposentadoria tranquila que imagina para você e para quem você ama.`;
-    if (pctLF <= 50) return `${nome}, sua projeção atual cobre ${pctLF}% da renda que você imaginou ter na aposentadoria. Esse número tem um significado concreto: sem mudanças, você chegará nessa fase com menos da metade do que precisa para viver com o padrão que deseja.`;
-    if (pctLF <= 90) return `${nome}, você está mais perto do que a maioria das pessoas — sua projeção já atinge ${pctLF}% da meta que você definiu para si mesmo. Isso é resultado de disciplina e consistência, e merece reconhecimento.`;
-    return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja.`;
-  }
+  const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
 
-  function textoInv(): string {
-    if (!aaTemDados) return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.";
-    const nomesRuins = ativosRuins.map(a => a.label);
-    const nomesBons  = ativosBons.map(a => a.label);
-    if (ativosRuins.length > 0 && ativosBons.length === 0) return `A análise da sua carteira acendeu um alerta importante. Todos os produtos identificados — ${nomesRuins.join(", ")} — estão na categoria de investimentos não recomendados: produtos com taxas elevadas, baixa transparência e retornos historicamente abaixo do mercado.`;
-    if (ativosRuins.length > 0) return `Sua carteira tem pontos positivos: você já investe em ${nomesBons.join(", ")}, o que demonstra que você está no caminho. No entanto, identificamos também produtos que merecem atenção: ${nomesRuins.join(", ")}.`;
-    if (!temRV && !temExt) return "Você faz boas escolhas dentro da renda fixa — os produtos que identificamos são sólidos e adequados como base. Mas uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo.";
-    return `Sua carteira demonstra uma visão estratégica consistente. Com ${nomesBons.join(", ")}, você tem exposição a classes de ativos que trabalham juntas para crescer, gerar renda e proteger contra riscos.`;
-  }
+  const pilarBlindagem = temFilhos
+    ? ", e a proteção que você tem para garantir que sua família esteja segura independente do que aconteça"
+    : ", e a blindagem do patrimônio que você está construindo";
 
-  function textoBlind(): string {
-    if (!blindTemDad) return "Não conseguimos avaliar sua proteção patrimonial sem saber suas despesas mensais. Complete esse dado para descobrir se sua família estaria protegida em caso de imprevistos.";
-    if (dadosColeta.possuiSeguro !== true) return "Esse é o ponto mais crítico do seu diagnóstico. Você não possui nenhuma apólice de seguro de vida ou invalidez — o que significa que, se algo inesperado acontecer com você amanhã, sua família enfrentaria a dor emocional e, simultaneamente, uma crise financeira devastadora.";
-    return "Você já deu um passo importante ao contratar um seguro de vida — isso demonstra que você pensa no futuro da sua família.\n\nLembre-se de revisar anualmente: à medida que seu patrimônio e suas responsabilidades crescem, a cobertura também deve acompanhar esse crescimento.";
-  }
+  const paragrafoFinal = temFilhos
+    ? `Pense nos seus filhos. Pense no futuro que você quer construir para eles — a educação, a segurança, a tranquilidade de saber que, aconteça o que acontecer, eles estarão protegidos. Esse futuro não se constrói sozinho. Ele é resultado de decisões tomadas hoje, com consistência e com acompanhamento.`
+    : `Pense no futuro que você quer construir — a liberdade de acordar sem a pressão do trabalho por obrigação, de tomar decisões com base no que deseja, não no que precisa. Esse futuro não se constrói sozinho. Ele é resultado de decisões tomadas hoje, com consistência e com acompanhamento.`;
 
-  const areas = [
-    { key: "lf",    score: scoreLF,   icone: "ti-beach",     titulo: "Liberdade Financeira",    texto: textoLF() },
-    { key: "inv",   score: scoreInv,  icone: "ti-chart-pie", titulo: "Investimentos",            texto: textoInv() },
-    { key: "blind", score: scoreBlind, icone: "ti-shield",   titulo: "Blindagem de Patrimônio",  texto: textoBlind() },
-  ];
+  const textoEmocional = `${nome}, você está segurando em mãos algo que poucas pessoas têm coragem de buscar: a verdade sobre a própria situação financeira.
+
+A maioria das pessoas vive anos — décadas — sem jamais parar para olhar de frente para os números que vão definir o futuro delas. Evitam essa conversa porque ela exige honestidade. Porque ela revela que o tempo passa, que as decisões têm consequências, e que adiar é uma escolha — com um custo real que ninguém coloca no extrato.
+
+Você fez diferente.
+
+Este diagnóstico analisou três pilares fundamentais da sua vida financeira: a sua jornada rumo à liberdade financeira, a qualidade e a eficiência dos seus investimentos${pilarBlindagem}. Cada um desses pilares tem um impacto direto no tipo de vida que você terá daqui a 10, 20 ou 30 anos.
+
+O resultado que você vê acima não é um julgamento. É uma bússola. Ele mostra onde você está hoje — e mais importante do que isso, revela o caminho para onde você precisa chegar. A pontuação não é o destino: é o ponto de partida.
+
+Mas aqui está o que mais importa: clareza sem ação não transforma nada. O maior erro que alguém pode cometer após um diagnóstico como este é guardar esse documento na gaveta e continuar exatamente como estava. Cada semana sem uma estratégia estruturada é uma semana em que os juros compostos não estão trabalhando para você da forma que poderiam. Cada mês de atraso tem um custo que não aparece em nenhum extrato — mas que se acumula silenciosamente e se torna cada vez mais difícil de recuperar.
+
+${paragrafoFinal}
+
+Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
 
   return (
     <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
       <HeaderSecao titulo="Diagnóstico Inicial" />
 
-      {/* Texto introdutório */}
-      <p style={{
-        fontSize: 12, color: "#374151",
-        lineHeight: 1.9, marginBottom: 16,
-        whiteSpace: "pre-line" as const,
-      }}>
-        {`Este diagnóstico não é apenas um documento — é um espelho da sua realidade financeira.
-
-Pouquíssimas pessoas param para olhar de frente para os números que definem o seu futuro. Você fez diferente. E isso já coloca você à frente da maioria.
-
-Mas a clareza que este diagnóstico traz só tem valor se for seguida de ação. Cada área analisada aqui representa uma alavanca: quando bem ajustada, ela acelera a construção da sua liberdade financeira. Quando ignorada, ela silenciosamente compromete o futuro que você imagina para si e para sua família.
-
-A Liberdade Financeira não é um destino reservado para poucos. É o resultado de decisões consistentes, tomadas com clareza e acompanhamento adequado. Este diagnóstico é o primeiro passo dessa jornada. O próximo passo é seu.`}
-      </p>
-
-      {/* Header com score geral */}
+      {/* Card score geral */}
       <div style={{
         background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
         padding: "20px 24px", marginBottom: 14,
@@ -212,41 +191,23 @@ A Liberdade Financeira não é um destino reservado para poucos. É o resultado 
         </div>
       </div>
 
-      {/* 3 Gauges */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
-        <GaugeDiag score={scoreLF}   label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
-        <GaugeDiag score={scoreInv}  label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
-        <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"   nivel={nivelScore(scoreBlind)} />
+      {/* Grid 3 gauges */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 0 }}>
+        <GaugeDiag score={scoreLF}    label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
+        <GaugeDiag score={scoreInv}   label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
+        <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"    nivel={nivelScore(scoreBlind)} />
       </div>
 
-      {/* 3 cards de texto — layout horizontal com ícone à esquerda */}
-      {areas.map(({ key, score, icone, titulo, texto }) => (
-        <div key={key} style={{
-          border: "0.5px solid #E5E7EB", borderRadius: 8,
-          padding: "12px 16px", marginBottom: 8,
-          display: "flex", gap: 12, alignItems: "flex-start",
-        }}>
-          <i
-            className={`ti ${icone}`}
-            style={{ fontSize: 16, color: nivelScore(score).cor, marginTop: 2, flexShrink: 0 }}
-          />
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
-              {titulo}
-              <span style={{
-                fontSize: 9, fontWeight: 600,
-                color: nivelScore(score).cor, background: nivelScore(score).bg,
-                padding: "1px 8px", borderRadius: 99, marginLeft: 8,
-              }}>
-                {nivelScore(score).label}
-              </span>
-            </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.6, margin: 0 }}>
-              {texto.slice(0, 220).trim()}…
-            </p>
-          </div>
-        </div>
-      ))}
+      {/* Texto emocional */}
+      <p style={{
+        fontSize: 12,
+        color: "#374151",
+        lineHeight: 2,
+        margin: "20px 0 0",
+        whiteSpace: "pre-line" as const,
+      }}>
+        {textoEmocional}
+      </p>
     </PaginaDoc>
   );
 }
