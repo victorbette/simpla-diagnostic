@@ -136,7 +136,7 @@ export function DocLFDiag({ lead }: Props) {
           <CardProjecaoPatrimonial
             projecao={result.projecao}
             objetivos={[]}
-            height={200}
+            height={220}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
             patrimonioNecessario={patrimonioNecessario}

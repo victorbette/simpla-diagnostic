@@ -104,64 +104,69 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
     ),
   });
 
-  if (ativosBons.length > 0 || ativosRuins.length > 0) {
+  if (ativosBons.length > 0) {
     blocos.push({
-      chave: "analise",
+      chave: "bons_label",
+      grudaNoProximo: true,
       node: (
-        <div style={{ marginTop: 28 }}>
-          {ativosBons.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{
-                fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 10,
-                display: "flex", alignItems: "center", gap: 6,
-              }}>
-                <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
-                O que você já faz bem
-              </div>
-              {ativosBons.map(ativo => {
-                const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-                if (!textoAtivo?.positivo) return null;
-                return (
-                  <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-                      {ativo.label}
-                    </div>
-                    <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
-                      {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {ativosRuins.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{
-                fontSize: 12, fontWeight: 700, color: "#B91C1C", marginBottom: 10,
-                display: "flex", alignItems: "center", gap: 6,
-              }}>
-                <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
-                Pontos que merecem atenção
-              </div>
-              {ativosRuins.map(ativo => {
-                const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-                if (!textoAtivo?.negativo) return null;
-                return (
-                  <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-                      {ativo.label}
-                    </div>
-                    <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
-                      {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+        <div style={{
+          marginTop: 28, fontSize: 12, fontWeight: 700, color: "#15803D",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+          O que você já faz bem
         </div>
       ),
+    });
+    ativosBons.forEach((ativo) => {
+      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+      if (!textoAtivo?.positivo) return;
+      blocos.push({
+        chave: `bom_${ativo.id}`,
+        node: (
+          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+              {ativo.label}
+            </div>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+              {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
+            </p>
+          </div>
+        ),
+      });
+    });
+  }
+
+  if (ativosRuins.length > 0) {
+    blocos.push({
+      chave: "ruins_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: ativosBons.length > 0 ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B91C1C",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
+          Pontos que merecem atenção
+        </div>
+      ),
+    });
+    ativosRuins.forEach((ativo) => {
+      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+      if (!textoAtivo?.negativo) return;
+      blocos.push({
+        chave: `ruim_${ativo.id}`,
+        node: (
+          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+              {ativo.label}
+            </div>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+              {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
+            </p>
+          </div>
+        ),
+      });
     });
   }
 

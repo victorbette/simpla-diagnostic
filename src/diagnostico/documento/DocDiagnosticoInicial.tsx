@@ -146,8 +146,6 @@ export function DocDiagnosticoInicial({ lead }: Props) {
 
 A maioria das pessoas vive anos — décadas — sem jamais parar para olhar de frente para os números que vão definir o futuro delas. Evitam essa conversa porque ela exige honestidade. Porque ela revela que o tempo passa, que as decisões têm consequências, e que adiar é uma escolha — com um custo real que ninguém coloca no extrato.
 
-Você fez diferente.
-
 Este diagnóstico analisou três pilares fundamentais da sua vida financeira: a sua jornada rumo à liberdade financeira, a qualidade e a eficiência dos seus investimentos${pilarBlindagem}. Cada um desses pilares tem um impacto direto no tipo de vida que você terá daqui a 10, 20 ou 30 anos.
 
 O resultado que você vê acima não é um julgamento. É uma bússola. Ele mostra onde você está hoje — e mais importante do que isso, revela o caminho para onde você precisa chegar. A pontuação não é o destino: é o ponto de partida.

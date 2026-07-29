@@ -51,22 +51,27 @@ Um seguro de vida adequado é uma das decisões mais importantes — e mais aces
     return texto;
   }
 
-  const blocos: BlocoDoc[] = [
-    {
-      chave: "texto",
+  const paragrafos = gerarTextoBlindagem().split("\n\n").filter(p => p.trim().length > 0);
+  const blocos: BlocoDoc[] = [];
+  for (let i = 0; i < paragrafos.length; i += 2) {
+    const par1 = paragrafos[i];
+    const par2 = paragrafos[i + 1];
+    const texto = par2 ? `${par1}\n\n${par2}` : par1;
+    blocos.push({
+      chave: `texto_${i}`,
       node: (
         <p style={{
           fontSize: 12,
           color: "#374151",
           lineHeight: 2,
-          margin: 0,
+          margin: i === 0 ? 0 : "16px 0 0",
           whiteSpace: "pre-line" as const,
         }}>
-          {gerarTextoBlindagem()}
+          {texto}
         </p>
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <PaginaDocFluidaDiag
