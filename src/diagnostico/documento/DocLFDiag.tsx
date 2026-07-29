@@ -1,0 +1,151 @@
+import type { Lead } from "../types";
+import {
+  calcularProjecaoIF,
+  calcularPatrimonioPerpetuidade,
+  type ProjecaoIFParams,
+} from "@/lib/financialFreedomCalc";
+import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
+import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
+import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
+import { RodapePaginaDiag } from "./RodapePaginaDiag";
+
+const TAXA_ANUAL_DIAG = 0.045;
+
+function parseDateNasc(s: string): { ano: number; mes: number } | null {
+  if (!s) return null;
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return { ano: Number(iso[1]), mes: Number(iso[2]) };
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (br) return { ano: Number(br[3]), mes: Number(br[2]) };
+  return null;
+}
+
+function formatBRL(v: number): string {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+}
+
+interface Props { lead: Lead; }
+
+export function DocLFDiag({ lead }: Props) {
+  const { dadosColeta, dadosLF } = lead;
+  const nome = lead.nome.split(" ")[0];
+
+  const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
+  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
+  const mesNascimento = parsed?.mes ?? 1;
+
+  const idadeAtual = parsed
+    ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
+    : 30;
+
+  const patrimonioInicial  = Number(dadosLF.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro)       || 0;
+  const aporteMensal       = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)               || 0;
+  const rendaDesejada      = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta          = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 60;
+  const patrimonioNecessario = rendaDesejada > 0 ? calcularPatrimonioPerpetuidade(rendaDesejada) : 0;
+
+  const projecaoParams: ProjecaoIFParams = {
+    idadeAtual,
+    idadeMeta,
+    idadeMaxima: 100,
+    patrimonioInicial,
+    aporteMensal,
+    rendaMensalDesejada: rendaDesejada,
+    taxaRetornoAnual: TAXA_ANUAL_DIAG,
+    anoNascimento,
+    mesNascimento,
+    objetivos: [],
+  };
+
+  let result: ReturnType<typeof calcularProjecaoIF> | null = null;
+  try { result = calcularProjecaoIF(projecaoParams); } catch { /* sem dados suficientes */ }
+
+  const projecaoNaIF     = result ? result.patrimonioNaIF : 0;
+  const rendaSustentavel = result ? (result.patrimonioNaIF * 0.04) / 12 : 0;
+  const mesIF = result
+    ? result.mesInicioRetirada
+    : Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
+
+  const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
+  const pct = lfTemDados && patrimonioNecessario > 0
+    ? Math.min(100, Math.round(projecaoNaIF / patrimonioNecessario * 100))
+    : 0;
+
+  function gerarTextoLF(): string {
+    if (!lfTemDados) {
+      return "A liberdade financeira começa com clareza — e clareza começa com números.\n\nA maioria das pessoas passa a vida trabalhando sem saber exatamente para quê: quanto precisa acumular para parar quando quiser, viajar sem culpa, dar a melhor educação para os filhos ou simplesmente acordar de manhã sem a pressão de ter que trabalhar por necessidade.\n\nEssa falta de clareza não é inocente — ela tem um custo enorme. Cada ano sem um plano definido é um ano em que os juros compostos poderiam estar trabalhando a seu favor, mas não estão. Complete os seus dados e descubra onde você realmente está e o que precisa mudar para construir a vida que você imagina para a sua família.";
+    }
+    if (pct <= 30) {
+      return `${nome}, este número precisa ser dito com clareza: a trajetória atual coloca você em uma situação de risco real no longo prazo.\n\nPense nos projetos que você tem para a sua família — a escola dos filhos, a casa própria, as viagens que ainda não fez, a aposentadoria tranquila que imagina para você e para quem você ama. Tudo isso depende de um patrimônio que, com o ritmo atual, chegará a apenas ${pct}% do necessário. Isso significa escolhas dolorosas no futuro: abrir mão de projetos, reduzir o padrão de vida ou continuar trabalhando por obrigação muito além do que desejaria.\n\nO que dói mais não é a realidade dos números — é saber que isso ainda pode ser mudado, mas que cada mês de atraso torna a mudança mais difícil e mais cara. O tempo nos investimentos é insubstituível. Quem começa a agir hoje, mesmo com pequenos ajustes, tem uma vantagem enorme sobre quem decide esperar o "momento certo" — que raramente chega sozinho.\n\nVocê ainda tem tempo de reescrever esse cenário. Mas essa decisão precisa ser tomada agora — não amanhã, não no próximo mês. Agora.`;
+    }
+    if (pct <= 50) {
+      return `${nome}, sua projeção atual cobre ${pct}% da renda que você imaginou ter na aposentadoria. Esse número tem um significado concreto: sem mudanças, você chegará nessa fase com menos da metade do que precisa para viver com o padrão que deseja — e isso se traduz em escolhas que você não quer fazer.\n\nPense nos sonhos que você tem para a sua família. A viagem que sempre adiou. A faculdade dos filhos em uma boa instituição. A possibilidade de se aposentar quando quiser, não quando for obrigado. Todos esses projetos têm um preço — e esse preço precisa estar no plano.\n\nA boa notícia é que você está em um momento em que ainda é possível mudar de forma significativa. Mas a janela vai se fechando. Cada ano que passa sem uma estratégia clara aumenta o esforço necessário para chegar ao mesmo resultado — e reduz as opções disponíveis.\n\nUma estratégia bem estruturada pode acelerar essa jornada de forma surpreendente. Pequenos ajustes no valor investido, na rentabilidade da carteira ou na forma como o patrimônio está alocado podem fazer uma diferença enorme em 10 ou 15 anos. O caminho existe — o que falta é traçar o plano e começar a seguir.`;
+    }
+    if (pct <= 90) {
+      return `${nome}, você está mais perto do que a maioria das pessoas — sua projeção já atinge ${pct}% da meta que você definiu para si mesmo. Isso é resultado de disciplina e consistência, e merece reconhecimento.\n\nMas "quase lá" sem a estratégia certa pode custar caro. São os últimos percentuais que mais exigem atenção: uma carteira mal diversificada, uma rentabilidade abaixo do potencial por alguns anos, ou uma decisão errada em um momento de volatilidade — e o que levou anos para construir pode demorar muito mais para recuperar.\n\nPense no que esse resultado representa para a sua família: a diferença entre uma aposentadoria com liberdade total — para viajar, para estar presente, para apoiar os filhos nos projetos deles — e uma aposentadoria com restrições que você não planejou. Esse intervalo entre ${pct}% e 100% é exatamente o que separa esses dois cenários.\n\nAgora é o momento de otimizar e proteger — garantir que esses ${pct}% se tornem 100%, que a data de chegada seja a que você escolheu, e que nenhum imprevisto coloque em risco o que você levou tanto tempo para construir.`;
+    }
+    return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja — para sempre.\n\nIsso significa liberdade de verdade: acordar de manhã e escolher como usar o seu tempo, não por obrigação, mas por vontade. Significa poder estar presente nos momentos que importam para a sua família, apoiar os projetos dos seus filhos, viver as experiências que sempre planejou — sem a pressão financeira que acompanha a maioria das pessoas ao longo da vida.\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro da sua família está resguardado, independente do que aconteça.`;
+  }
+
+  return (
+    <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
+      <HeaderSecao titulo="Liberdade Financeira" />
+
+      {/* Texto explicativo */}
+      <p style={{
+        fontSize: 12, color: "#374151", lineHeight: 1.8,
+        marginBottom: 20, whiteSpace: "pre-line" as const,
+      }}>
+        {gerarTextoLF()}
+      </p>
+
+      {/* 3 cards de métricas */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
+            Patrimônio Necessário
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
+            {formatBRL(patrimonioNecessario)}
+          </div>
+          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>
+            Para gerar {formatBRL(rendaDesejada)}/mês
+          </div>
+        </div>
+
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
+            Projeção Atual
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario ? "#15803D" : "#111827" }}>
+            {formatBRL(projecaoNaIF)}
+          </div>
+          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Aos {idadeMeta} anos</div>
+        </div>
+
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
+            Renda Sustentável
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: rendaSustentavel >= rendaDesejada && rendaSustentavel > 0 ? "#15803D" : "#111827" }}>
+            {rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "—"}
+          </div>
+          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Com a projeção atual</div>
+        </div>
+      </div>
+
+      {/* Gráfico de projeção */}
+      {result && (
+        <CardProjecaoPatrimonial
+          projecao={result.projecao}
+          objetivos={[]}
+          height={220}
+          mesIF={mesIF}
+          mesNascimento={mesNascimento}
+          patrimonioNecessario={patrimonioNecessario}
+          interativo={false}
+        />
+      )}
+    </PaginaDoc>
+  );
+}

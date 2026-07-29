@@ -42,26 +42,21 @@ function GaugeDiag({
   const largeArc = sc > 50 ? 1 : 0;
 
   const pathFundo = [
-    `M ${CX - R_EXT} ${CY}`,
-    `A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY}`,
-    `L ${CX + R_INT} ${CY}`,
-    `A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY}`,
-    "Z",
+    `M ${CX - R_EXT} ${CY}`, `A ${R_EXT} ${R_EXT} 0 0 1 ${CX + R_EXT} ${CY}`,
+    `L ${CX + R_INT} ${CY}`, `A ${R_INT} ${R_INT} 0 0 0 ${CX - R_INT} ${CY}`, "Z",
   ].join(" ");
 
   const pathFill = sc > 0 ? [
     `M ${CX - R_EXT} ${CY}`,
     `A ${R_EXT} ${R_EXT} 0 ${largeArc} 1 ${xFimExt} ${yFimExt}`,
     `L ${xFimInt} ${yFimInt}`,
-    `A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY}`,
-    "Z",
+    `A ${R_INT} ${R_INT} 0 ${largeArc} 0 ${CX - R_INT} ${CY}`, "Z",
   ].join(" ") : "";
 
   return (
     <div style={{
       background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-      padding: "18px 14px 14px", display: "flex", flexDirection: "column",
-      alignItems: "center",
+      padding: "18px 14px 14px", display: "flex", flexDirection: "column", alignItems: "center",
     }}>
       <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`} style={{ overflow: "visible" }}>
         <path d={pathFundo} fill="#F3F4F6" />
@@ -92,22 +87,24 @@ interface Props { lead: Lead; }
 
 export function DocDiagnosticoInicial({ lead }: Props) {
   const { dadosColeta, dadosLF } = lead;
+  const nome = lead.nome.split(" ")[0];
 
   // ── Score Liberdade Financeira ──
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
   const idadeAtual = parsed
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
-  const patrimonioAtual  = Number(dadosLF.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro)        || 0;
-  const aporteMensal     = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)                || 0;
-  const rendaDesejada    = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria)  || 0;
-  const idadeMeta        = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                   || 60;
+  const patrimonioAtual  = Number(dadosLF.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro)       || 0;
+  const aporteMensal     = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)               || 0;
+  const rendaDesejada    = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta        = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 60;
   const patrimonioNec    = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
   const nMeses           = Math.max(0, (idadeMeta - idadeAtual) * 12);
   const f                = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
   const projecao         = nMeses > 0 ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL : patrimonioAtual;
   const lfTemDados       = patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
   const scoreLF          = !lfTemDados ? -1 : Math.min(100, Math.round(projecao / patrimonioNec * 100));
+  const pctLF            = lfTemDados ? Math.min(100, Math.round(projecao / patrimonioNec * 100)) : 0;
 
   // ── Score Investimentos ──
   const ativosMap    = dadosColeta.ativosInvestimento ?? {};
@@ -134,34 +131,40 @@ export function DocDiagnosticoInicial({ lead }: Props) {
   const scoreBlind  = !blindTemDad ? -1 : capNec > 0 ? Math.min(100, Math.round(capAtual / capNec * 100)) : 0;
 
   // ── Score Geral ──
-  const scores = [scoreLF, scoreInv, scoreBlind].filter(s => s >= 0);
-  const scoreGeral = scores.length === 0 ? 0 : Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+  const scoreLista = [scoreLF, scoreInv, scoreBlind].filter(s => s >= 0);
+  const scoreGeral = scoreLista.length === 0 ? 0 : Math.round(scoreLista.reduce((a, b) => a + b, 0) / scoreLista.length);
+  const nv = nivelScore(scoreGeral);
 
-  // ── Textos resumidos ──
+  // ── Textos completos (mesmas versões de DiagResultado, truncados para 220 chars) ──
   function textoLF(): string {
-    if (!lfTemDados) return "Dados insuficientes para calcular a projeção de liberdade financeira. Complete as informações de patrimônio, aporte mensal e renda desejada na aposentadoria.";
-    const pct = Math.min(100, Math.round(projecao / patrimonioNec * 100));
-    if (pct <= 30) return `A projeção atual cobre apenas ${pct}% do patrimônio necessário. A trajetória exige ajustes significativos para garantir a renda desejada na aposentadoria.`;
-    if (pct <= 50) return `Com cobertura de ${pct}% da meta, há um gap importante a endereçar. Uma estratégia estruturada pode acelerar significativamente a jornada rumo à liberdade financeira.`;
-    if (pct <= 90) return `A projeção atinge ${pct}% da meta — bom progresso. O foco deve ser na otimização da carteira e na proteção do patrimônio já construído.`;
-    return "A projeção indica que a meta de liberdade financeira será alcançada com a disciplina atual. O próximo passo é proteger e otimizar o patrimônio já construído.";
+    if (!lfTemDados) return "A liberdade financeira começa com clareza — e clareza começa com números.\n\nA maioria das pessoas passa a vida trabalhando sem saber exatamente para quê: quanto precisa acumular para parar quando quiser, viajar sem culpa, dar a melhor educação para os filhos ou simplesmente acordar de manhã sem a pressão de ter que trabalhar por necessidade.";
+    if (pctLF <= 30) return `${nome}, este número precisa ser dito com clareza: a trajetória atual coloca você em uma situação de risco real no longo prazo.\n\nPense nos projetos que você tem para a sua família — a escola dos filhos, a casa própria, as viagens que ainda não fez, a aposentadoria tranquila que imagina para você e para quem você ama.`;
+    if (pctLF <= 50) return `${nome}, sua projeção atual cobre ${pctLF}% da renda que você imaginou ter na aposentadoria. Esse número tem um significado concreto: sem mudanças, você chegará nessa fase com menos da metade do que precisa para viver com o padrão que deseja.`;
+    if (pctLF <= 90) return `${nome}, você está mais perto do que a maioria das pessoas — sua projeção já atinge ${pctLF}% da meta que você definiu para si mesmo. Isso é resultado de disciplina e consistência, e merece reconhecimento.`;
+    return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja.`;
   }
 
   function textoInv(): string {
-    if (!aaTemDados)                             return "Nenhum investimento mapeado. Cada mês sem estratégia tem um custo real de rentabilidade não obtida.";
-    if (ativosRuins.length > 0 && ativosBons.length === 0) return "A carteira contém apenas produtos com taxas elevadas e baixa eficiência. Uma revisão estratégica pode melhorar significativamente os resultados.";
-    if (ativosRuins.length > 0)                  return "A carteira tem pontos positivos, mas contém produtos que reduzem sua eficiência. Uma curadoria estratégica pode otimizar os resultados sem alterar o perfil de risco.";
-    if (!temRV && !temExt)                       return "A concentração em renda fixa limita o potencial de crescimento de longo prazo. A diversificação em renda variável e exterior pode ampliar os retornos.";
-    return "A carteira demonstra boa diversificação entre as principais classes de ativos, com exposição a crescimento e proteção simultâneos.";
+    if (!aaTemDados) return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.";
+    const nomesRuins = ativosRuins.map(a => a.label);
+    const nomesBons  = ativosBons.map(a => a.label);
+    if (ativosRuins.length > 0 && ativosBons.length === 0) return `A análise da sua carteira acendeu um alerta importante. Todos os produtos identificados — ${nomesRuins.join(", ")} — estão na categoria de investimentos não recomendados: produtos com taxas elevadas, baixa transparência e retornos historicamente abaixo do mercado.`;
+    if (ativosRuins.length > 0) return `Sua carteira tem pontos positivos: você já investe em ${nomesBons.join(", ")}, o que demonstra que você está no caminho. No entanto, identificamos também produtos que merecem atenção: ${nomesRuins.join(", ")}.`;
+    if (!temRV && !temExt) return "Você faz boas escolhas dentro da renda fixa — os produtos que identificamos são sólidos e adequados como base. Mas uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo.";
+    return `Sua carteira demonstra uma visão estratégica consistente. Com ${nomesBons.join(", ")}, você tem exposição a classes de ativos que trabalham juntas para crescer, gerar renda e proteger contra riscos.`;
   }
 
   function textoBlind(): string {
-    if (!blindTemDad)                    return "Sem dados de despesas mensais, não foi possível avaliar a proteção patrimonial. Complete esse campo para uma análise completa.";
-    if (dadosColeta.possuiSeguro !== true) return "Sem cobertura de seguro identificada. A família fica exposta a riscos financeiros graves em caso de imprevistos com o provedor de renda.";
-    return "A existência de seguro de vida é um passo importante para a proteção da família. Revisar as coberturas periodicamente garante que acompanhem o crescimento do patrimônio.";
+    if (!blindTemDad) return "Não conseguimos avaliar sua proteção patrimonial sem saber suas despesas mensais. Complete esse dado para descobrir se sua família estaria protegida em caso de imprevistos.";
+    if (dadosColeta.possuiSeguro !== true) return "Esse é o ponto mais crítico do seu diagnóstico. Você não possui nenhuma apólice de seguro de vida ou invalidez — o que significa que, se algo inesperado acontecer com você amanhã, sua família enfrentaria a dor emocional e, simultaneamente, uma crise financeira devastadora.";
+    return "Você já deu um passo importante ao contratar um seguro de vida — isso demonstra que você pensa no futuro da sua família.\n\nLembre-se de revisar anualmente: à medida que seu patrimônio e suas responsabilidades crescem, a cobertura também deve acompanhar esse crescimento.";
   }
 
-  const nv = nivelScore(scoreGeral);
+  const areas = [
+    { key: "lf",    score: scoreLF,   icone: "ti-beach",     titulo: "Liberdade Financeira",    texto: textoLF() },
+    { key: "inv",   score: scoreInv,  icone: "ti-chart-pie", titulo: "Investimentos",            texto: textoInv() },
+    { key: "blind", score: scoreBlind, icone: "ti-shield",   titulo: "Blindagem de Patrimônio",  texto: textoBlind() },
+  ];
 
   return (
     <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
@@ -170,24 +173,24 @@ export function DocDiagnosticoInicial({ lead }: Props) {
       {/* Header com score geral */}
       <div style={{
         background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-        padding: "18px 22px", marginBottom: 14,
+        padding: "20px 24px", marginBottom: 14,
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div>
-          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 3 }}>
+          <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 3 }}>
             Diagnóstico Financeiro
           </div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{lead.nome}</div>
-          <div style={{ fontSize: 10, color: "#6B7280", marginTop: 3 }}>
+          <div style={{ fontSize: 20, fontWeight: 700, color: "#111827" }}>{lead.nome}</div>
+          <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
             {new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
           </div>
         </div>
         <div style={{ textAlign: "center" as const }}>
-          <div style={{ fontSize: 44, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
-          <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 5 }}>de 100 pontos</div>
+          <div style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
+          <div style={{ fontSize: 10, color: "#9CA3AF" }}>de 100 pontos</div>
           <span style={{
-            fontSize: 9, fontWeight: 700, color: nv.cor, background: nv.bg,
-            padding: "3px 10px", borderRadius: 99, display: "inline-block",
+            fontSize: 10, fontWeight: 700, color: nv.cor, background: nv.bg,
+            padding: "2px 10px", borderRadius: 99, display: "inline-block",
           }}>
             {nv.label}
           </span>
@@ -196,38 +199,37 @@ export function DocDiagnosticoInicial({ lead }: Props) {
 
       {/* 3 Gauges */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 14 }}>
-        <GaugeDiag score={scoreLF}  label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
-        <GaugeDiag score={scoreInv} label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
-        <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"  nivel={nivelScore(scoreBlind)} />
+        <GaugeDiag score={scoreLF}   label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
+        <GaugeDiag score={scoreInv}  label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
+        <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"   nivel={nivelScore(scoreBlind)} />
       </div>
 
-      {/* 3 Cards analíticos resumidos */}
-      {[
-        { area: "lf",    score: scoreLF,   icone: "ti-beach",     titulo: "Liberdade Financeira",    texto: textoLF() },
-        { area: "inv",   score: scoreInv,  icone: "ti-chart-pie", titulo: "Investimentos",            texto: textoInv() },
-        { area: "blind", score: scoreBlind, icone: "ti-shield",   titulo: "Blindagem de Patrimônio",  texto: textoBlind() },
-      ].map(({ area, score, icone, titulo, texto }) => (
-        <div key={area} style={{
-          background: "white", border: "0.5px solid #E5E7EB", borderRadius: 10,
-          padding: "12px 16px", marginBottom: 10,
+      {/* 3 cards de texto — layout horizontal com ícone à esquerda */}
+      {areas.map(({ key, score, icone, titulo, texto }) => (
+        <div key={key} style={{
+          border: "0.5px solid #E5E7EB", borderRadius: 8,
+          padding: "12px 16px", marginBottom: 8,
+          display: "flex", gap: 12, alignItems: "flex-start",
         }}>
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            marginBottom: 8, paddingBottom: 8, borderBottom: "0.5px solid #F3F4F6",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <i className={`ti ${icone}`} style={{ fontSize: 14, color: "#2563EB" }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{titulo}</span>
+          <i
+            className={`ti ${icone}`}
+            style={{ fontSize: 16, color: nivelScore(score).cor, marginTop: 2, flexShrink: 0 }}
+          />
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
+              {titulo}
+              <span style={{
+                fontSize: 9, fontWeight: 600,
+                color: nivelScore(score).cor, background: nivelScore(score).bg,
+                padding: "1px 8px", borderRadius: 99, marginLeft: 8,
+              }}>
+                {nivelScore(score).label}
+              </span>
             </div>
-            <span style={{
-              fontSize: 10, fontWeight: 600,
-              color: nivelScore(score).cor, background: nivelScore(score).bg,
-              padding: "2px 8px", borderRadius: 99,
-            }}>
-              {nivelScore(score).label}
-            </span>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.6, margin: 0 }}>
+              {texto.slice(0, 220).trim()}…
+            </p>
           </div>
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.7, margin: 0 }}>{texto}</p>
         </div>
       ))}
     </PaginaDoc>

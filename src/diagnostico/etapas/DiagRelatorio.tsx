@@ -11,6 +11,8 @@ import { DocDiagnosticoInicial } from "../documento/DocDiagnosticoInicial";
 import { DocGestaoAtivos } from "../documento/DocGestaoAtivos";
 import { DocProximosPassosDiag } from "../documento/DocProximosPassosDiag";
 import { DocMaosAObraDiag } from "../documento/DocMaosAObraDiag";
+import { ContracapaDiag } from "../documento/ContracapaDiag";
+import { DocLFDiag } from "../documento/DocLFDiag";
 
 const MESES_PT = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -101,20 +103,44 @@ export function DiagRelatorio({ lead }: Props) {
           titulo="Diagnóstico Financeiro"
         />
 
-        {/* Página 2 — Disclaimer */}
-        <DocDisclaimerDiag nomeCliente={lead.nome} config={config} />
-
-        {/* Página 3 — Diagnóstico Inicial */}
+        {/* Página 2 — Diagnóstico Inicial */}
         <DocDiagnosticoInicial lead={lead} />
 
-        {/* Página 4 — Gestão de Ativos */}
+        {/* Página 3 — Contra Capa Liberdade Financeira */}
+        <ContracapaDiag
+          titulo="Liberdade Financeira"
+          subtitulo="Entenda onde você está e o que precisa para conquistar a independência financeira."
+          icone="ti-beach"
+        />
+
+        {/* Página 4 — Liberdade Financeira */}
+        <DocLFDiag lead={lead} />
+
+        {/* Página 5 — Contra Capa Gestão de Ativos */}
+        <ContracapaDiag
+          titulo="Gestão de Ativos"
+          subtitulo="A composição da sua carteira atual e o caminho para uma alocação mais eficiente."
+          icone="ti-chart-pie"
+        />
+
+        {/* Página 6 — Gestão de Ativos */}
         <DocGestaoAtivos lead={lead} />
 
-        {/* Página 5 — Próximos Passos */}
+        {/* Página 7 — Contra Capa Próximos Passos */}
+        <ContracapaDiag
+          titulo="Próximos Passos"
+          subtitulo="O diagnóstico trouxe clareza. Agora é hora de agir."
+          icone="ti-rocket"
+        />
+
+        {/* Página 8 — Mãos à Obra */}
+        <DocMaosAObraDiag nomeCliente={lead.nome} />
+
+        {/* Página 9 — Próximos Passos */}
         <DocProximosPassosDiag nomeCliente={lead.nome} />
 
-        {/* Página 6 — Mãos à Obra */}
-        <DocMaosAObraDiag nomeCliente={lead.nome} />
+        {/* Página 10 — Disclaimer */}
+        <DocDisclaimerDiag nomeCliente={lead.nome} config={config} />
       </div>
     </div>
   );

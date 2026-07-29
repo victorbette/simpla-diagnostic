@@ -20,15 +20,37 @@ interface Props { lead: Lead; }
 export function DocGestaoAtivos({ lead }: Props) {
   const ativosMap = lead.dadosColeta.ativosInvestimento ?? {};
 
-  const valorRF     = Number(ativosMap.valorRendaFixa)     || 0;
-  const valorRV     = Number(ativosMap.valorRendaVariavel)  || 0;
-  const valorExt    = Number(ativosMap.valorExterior)       || 0;
-  const valorCripto = Number(ativosMap.valorCripto)         || 0;
-  const valorAlt    = Number(ativosMap.valorAlternativos)   || 0;
+  const valorRF     = Number(ativosMap.valorRendaFixa)    || 0;
+  const valorRV     = Number(ativosMap.valorRendaVariavel) || 0;
+  const valorExt    = Number(ativosMap.valorExterior)      || 0;
+  const valorCripto = Number(ativosMap.valorCripto)        || 0;
+  const valorAlt    = Number(ativosMap.valorAlternativos)  || 0;
   const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
 
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
+  const aaTemDados   = ativosDoLead.length > 0;
+  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
   const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
+  const temRV        = ativosBons.some(a => a.classe === "renda_variavel");
+  const temExt       = ativosBons.some(a => a.classe === "exterior");
+
+  function gerarTextoInvestimentos(): string {
+    if (!aaTemDados) {
+      return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.\n\nSe você já investe mas não tem clareza de onde e em quê, isso é igualmente preocupante. Dinheiro sem estratégia raramente cresce como deveria — e muitas vezes está gerando retorno para outros em vez de para você.";
+    }
+    const nomesRuins = ativosRuins.map(a => a.label);
+    const nomesBons  = ativosBons.map(a => a.label);
+    if (ativosRuins.length > 0 && ativosBons.length === 0) {
+      return `A análise da sua carteira acendeu um alerta importante. Todos os produtos identificados — ${nomesRuins.join(", ")} — estão na categoria de investimentos não recomendados: produtos com taxas elevadas, baixa transparência e retornos que historicamente ficam abaixo do mercado.\n\nIsso significa que, enquanto você trabalha para construir patrimônio, uma parcela dos seus rendimentos pode estar sendo consumida desnecessariamente por custos que não aparecem de forma clara no extrato.\n\nUma revisão estratégica da carteira pode representar uma diferença enorme ao longo dos anos — sem precisar assumir mais risco, apenas alocando melhor o que você já tem.`;
+    }
+    if (ativosRuins.length > 0 && ativosBons.length > 0) {
+      return `Sua carteira tem pontos positivos: você já investe em ${nomesBons.join(", ")}, o que demonstra que você está no caminho.\n\nNo entanto, identificamos também produtos que merecem atenção: ${nomesRuins.join(", ")}. Esses produtos costumam gerar mais resultado para quem os distribui do que para quem os compra — e podem estar comprometendo a eficiência da sua carteira de forma silenciosa.\n\nCom uma revisão estratégica, é possível manter o que funciona, eliminar o que drena e construir uma carteira muito mais eficiente — sem precisar mudar sua tolerância ao risco.`;
+    }
+    if (!temRV && !temExt) {
+      return `Você faz boas escolhas dentro da renda fixa — os produtos que identificamos são sólidos e adequados como base.\n\nMas uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo. Sem ativos de crescimento — como ações e fundos imobiliários — e sem diversificação internacional, o patrimônio tende a crescer significativamente abaixo do seu potencial.\n\nO equilíbrio entre proteção e crescimento é o que diferencia uma carteira que preserva de uma carteira que multiplica. Você já tem a base — agora é hora de construir sobre ela.`;
+    }
+    return `Sua carteira demonstra uma visão estratégica consistente. Com ${nomesBons.join(", ")}, você tem exposição a classes de ativos que trabalham juntas para crescer, gerar renda e proteger contra riscos.\n\nO próximo nível é otimizar os percentuais de cada classe para o seu perfil e objetivos específicos — garantindo que cada real esteja alocado da forma mais eficiente possível.\n\nCom uma carteira bem estruturada e revisada periodicamente, você maximiza retornos sem precisar assumir riscos desnecessários.`;
+  }
 
   const allClasses: { label: string; valor: number; status: Status }[] = [
     { label: "Renda Fixa",     valor: valorRF,     status: "bom" as Status },
@@ -43,10 +65,12 @@ export function DocGestaoAtivos({ lead }: Props) {
     <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
       <HeaderSecao titulo="Gestão de Ativos" />
 
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 20 }}>
-        A alocação de ativos é um dos pilares mais importantes de uma estratégia financeira sólida. Uma carteira bem estruturada equilibra crescimento, proteção e liquidez — adaptada ao seu perfil e objetivos de longo prazo.
+      {/* Texto explicativo completo */}
+      <p style={{ ...TEXTO_CORPO, fontSize: 12, lineHeight: 1.8, marginBottom: 20, whiteSpace: "pre-line" as const }}>
+        {gerarTextoInvestimentos()}
       </p>
 
+      {/* Tabela de alocação */}
       <div style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -76,8 +100,7 @@ export function DocGestaoAtivos({ lead }: Props) {
                   <td style={{ padding: "8px 12px", textAlign: "right" as const }}>
                     <span style={{
                       fontSize: 9, fontWeight: 600,
-                      color: STATUS_COR[c.status],
-                      background: STATUS_BG[c.status],
+                      color: STATUS_COR[c.status], background: STATUS_BG[c.status],
                       padding: "2px 8px", borderRadius: 99,
                     }}>
                       {STATUS_LABEL[c.status]}
