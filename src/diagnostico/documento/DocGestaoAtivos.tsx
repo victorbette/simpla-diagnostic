@@ -104,6 +104,16 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
     ),
   });
 
+  if (ativosBons.length > 0 || ativosRuins.length > 0) {
+    blocos.push({
+      chave: "separador",
+      grudaNoProximo: true,
+      node: (
+        <div style={{ borderTop: "0.5px solid #E5E7EB", marginTop: 24, marginBottom: 24 }} />
+      ),
+    });
+  }
+
   if (ativosBons.length > 0) {
     blocos.push({
       chave: "bons",
