@@ -108,11 +108,6 @@ ${nome}, o próximo passo é transformar essa fotografia atual em uma estratégi
                 <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
                   {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
                 </p>
-                {textoAtivo.dica && (
-                  <p style={{ fontSize: 10, color: "#B45309", lineHeight: 1.6, margin: "4px 0 0", fontStyle: "italic" }}>
-                    💡 {textoAtivo.dica.replace(/\n\s+/g, " ").trim()}
-                  </p>
-                )}
               </div>
             );
           })}
