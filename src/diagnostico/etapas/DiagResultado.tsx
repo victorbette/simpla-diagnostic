@@ -46,7 +46,7 @@ function GaugeDiag({
   const yFimExt = CY - R_EXT * Math.sin(rad);
   const xFimInt = CX + R_INT * Math.cos(rad);
   const yFimInt = CY - R_INT * Math.sin(rad);
-  const largeArc = scoreClamped > 50 ? 1 : 0;
+  const largeArc = 0;
 
   const pathFundo = [
     `M ${CX - R_EXT} ${CY}`,
