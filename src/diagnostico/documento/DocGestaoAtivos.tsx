@@ -106,71 +106,60 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
 
   if (ativosBons.length > 0 || ativosRuins.length > 0) {
     blocos.push({
-      chave: "separador",
-      grudaNoProximo: true,
+      chave: "analise",
       node: (
-        <div style={{ marginTop: 28 }} />
-      ),
-    });
-  }
-
-  if (ativosBons.length > 0) {
-    blocos.push({
-      chave: "bons",
-      node: (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{
-            fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 10,
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-            <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
-            O que você já faz bem
-          </div>
-          {ativosBons.map(ativo => {
-            const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-            if (!textoAtivo?.positivo) return null;
-            return (
-              <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-                  {ativo.label}
-                </div>
-                <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
-                  {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
-                </p>
+        <div style={{ marginTop: 28 }}>
+          {ativosBons.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 10,
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+                O que você já faz bem
               </div>
-            );
-          })}
-        </div>
-      ),
-    });
-  }
+              {ativosBons.map(ativo => {
+                const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+                if (!textoAtivo?.positivo) return null;
+                return (
+                  <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+                      {ativo.label}
+                    </div>
+                    <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+                      {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-  if (ativosRuins.length > 0) {
-    blocos.push({
-      chave: "ruins",
-      node: (
-        <div style={{ marginBottom: 20 }}>
-          <div style={{
-            fontSize: 12, fontWeight: 700, color: "#B91C1C", marginBottom: 10,
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-            <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
-            Pontos que merecem atenção
-          </div>
-          {ativosRuins.map(ativo => {
-            const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-            if (!textoAtivo?.negativo) return null;
-            return (
-              <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-                  {ativo.label}
-                </div>
-                <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
-                  {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
-                </p>
+          {ativosRuins.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={{
+                fontSize: 12, fontWeight: 700, color: "#B91C1C", marginBottom: 10,
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
+                Pontos que merecem atenção
               </div>
-            );
-          })}
+              {ativosRuins.map(ativo => {
+                const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+                if (!textoAtivo?.negativo) return null;
+                return (
+                  <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+                      {ativo.label}
+                    </div>
+                    <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+                      {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       ),
     });
