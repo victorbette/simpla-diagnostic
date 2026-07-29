@@ -3,19 +3,9 @@
  * fixas — seguro para impressão (sem recharts/ResponsiveContainer).
  * score < 0 significa "não analisado" (renderiza "—" sem preenchimento). */
 
-export interface NivelScore {
-  label: string;
-  cor: string;
-  bg: string;
-}
-
-export function nivelScoreGauge(score: number): NivelScore {
-  if (score < 0)    return { label: "Não analisado", cor: "#9CA3AF", bg: "#F3F4F6" };
-  if (score <= 40)  return { label: "Em risco",      cor: "#B91C1C", bg: "#FEE2E2" };
-  if (score <= 60)  return { label: "Atenção",       cor: "#B45309", bg: "#FEF3C7" };
-  if (score <= 80)  return { label: "Adequado",      cor: "#2563EB", bg: "#DBEAFE" };
-  return              { label: "Excelente",     cor: "#15803D", bg: "#DCFCE7" };
-}
+import type { NivelScore } from "@/lib/nivelScore";
+export type { NivelScore } from "@/lib/nivelScore";
+export { nivelScore as nivelScoreGauge } from "@/lib/nivelScore";
 
 interface GaugeProps {
   score: number;

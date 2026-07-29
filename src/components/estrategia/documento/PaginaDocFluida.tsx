@@ -17,6 +17,8 @@ interface Props {
   titulo: string;
   nomeCliente: string;
   blocos: BlocoDoc[];
+  /** Badge exibido ao lado do título apenas na primeira página */
+  badgeNode?: ReactNode;
 }
 
 /* Réplica do miolo do PaginaDoc: 210mm menos 2×16mm de padding lateral,
@@ -39,7 +41,7 @@ const ESTILO_COLUNA: CSSProperties = {
  * o excesso é cortado). Na tela a página só tem minHeight 297mm e cresce com
  * o conteúdo, então não corta — daí bastar medir o modo impressão.
  */
-export function PaginaDocFluida({ titulo, nomeCliente, blocos }: Props) {
+export function PaginaDocFluida({ titulo, nomeCliente, blocos, badgeNode }: Props) {
   const medidorPrintRef = useRef<HTMLDivElement>(null);
   const [paginas, setPaginas] = useState<number[][]>([blocos.map((_, i) => i)]);
 
@@ -107,7 +109,7 @@ export function PaginaDocFluida({ titulo, nomeCliente, blocos }: Props) {
 
       {paginas.map((indices, p) => (
         <PaginaDoc key={p} rodape={<RodapePagina nomeCliente={nomeCliente} />}>
-          <HeaderSecao titulo={titulo} subtitulo={p > 0 ? "continuação" : undefined} />
+          <HeaderSecao titulo={titulo} subtitulo={p > 0 ? "continuação" : undefined} badgeNode={p === 0 ? badgeNode : undefined} />
           {indices
             .filter((i) => i < blocos.length)
             .map((i) => (

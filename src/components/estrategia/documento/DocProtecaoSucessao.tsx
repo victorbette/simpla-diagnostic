@@ -3,6 +3,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
+import { nivelScore } from "@/lib/nivelScore";
+import { calcularScoresAreas } from "@/lib/resumoAreas";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
 
 interface Props {
@@ -193,5 +195,12 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "ps", nota));
 
-  return <PaginaDocFluida titulo="Proteção e Sucessão" nomeCliente={nomeCliente} blocos={blocos} />;
+  const nPS = nivelScore(calcularScoresAreas(plan, resultados).ps);
+  const badgePS = (
+    <span style={{ fontSize: 10, fontWeight: 700, color: nPS.cor, background: nPS.bg, padding: "2px 10px", borderRadius: 99, display: "inline-block", marginLeft: 8 }}>
+      {nPS.label}
+    </span>
+  );
+
+  return <PaginaDocFluida titulo="Proteção e Sucessão" nomeCliente={nomeCliente} blocos={blocos} badgeNode={badgePS} />;
 }

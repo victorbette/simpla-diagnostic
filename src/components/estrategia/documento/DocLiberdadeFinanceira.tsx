@@ -6,6 +6,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
+import { nivelScore } from "@/lib/nivelScore";
+import { calcularScoresAreas } from "@/lib/resumoAreas";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
@@ -244,5 +246,12 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "lf", nota));
 
-  return <PaginaDocFluida titulo="Liberdade Financeira" nomeCliente={nomeCliente} blocos={blocos} />;
+  const nLF = nivelScore(calcularScoresAreas(plan, resultados).lf);
+  const badgeLF = (
+    <span style={{ fontSize: 10, fontWeight: 700, color: nLF.cor, background: nLF.bg, padding: "2px 10px", borderRadius: 99, display: "inline-block", marginLeft: 8 }}>
+      {nLF.label}
+    </span>
+  );
+
+  return <PaginaDocFluida titulo="Liberdade Financeira" nomeCliente={nomeCliente} blocos={blocos} badgeNode={badgeLF} />;
 }

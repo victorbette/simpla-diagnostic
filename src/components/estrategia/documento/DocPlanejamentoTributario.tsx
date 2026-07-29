@@ -5,6 +5,8 @@ import { simularDeclaracaoIRPF } from "@/lib/simularDeclaracao";
 import type { DeclaracaoResult } from "@/lib/simularDeclaracao";
 import { DOC, TEXTO_CORPO, CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
+import { nivelScore } from "@/lib/nivelScore";
+import { calcularScoresAreas } from "@/lib/resumoAreas";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
 
 interface Props {
@@ -238,5 +240,12 @@ export function DocPlanejamentoTributario({ nomeCliente, plan, resultados }: Pro
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "fiscal", nota));
 
-  return <PaginaDocFluida titulo="Planejamento Tributário" nomeCliente={nomeCliente} blocos={blocos} />;
+  const nFiscal = nivelScore(calcularScoresAreas(plan, resultados).fiscal);
+  const badgeFiscal = (
+    <span style={{ fontSize: 10, fontWeight: 700, color: nFiscal.cor, background: nFiscal.bg, padding: "2px 10px", borderRadius: 99, display: "inline-block", marginLeft: 8 }}>
+      {nFiscal.label}
+    </span>
+  );
+
+  return <PaginaDocFluida titulo="Planejamento Tributário" nomeCliente={nomeCliente} blocos={blocos} badgeNode={badgeFiscal} />;
 }

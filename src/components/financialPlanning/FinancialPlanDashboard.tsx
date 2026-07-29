@@ -1,7 +1,8 @@
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { GaugeSemiCircular, nivelScoreGauge } from "@/components/shared/GaugeSemiCircular";
+import { GaugeSemiCircular } from "@/components/shared/GaugeSemiCircular";
+import { nivelScore } from "@/lib/nivelScore";
 import { calcularScoresAreas, gerarTextosAreas } from "@/lib/resumoAreas";
 
 // ─ Props ─────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export function FinancialPlanDashboard({
   const textos = gerarTextosAreas(plan, resultados, clientName);
 
   const scoreGeral = scores.geral;
-  const nivelGeral = nivelScoreGauge(scoreGeral ?? -1);
+  const nivelGeral = nivelScore(scoreGeral ?? -1);
   const hoje = new Date().toLocaleDateString("pt-BR");
   const perfil = dc.suitabilityPerfil;
 
@@ -87,7 +88,7 @@ export function FinancialPlanDashboard({
       {/* ── 4 GAUGES SEMICIRCULARES ──────────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
         {gauges.map(({ icone, nome, score }) => {
-          const n = nivelScoreGauge(score);
+          const n = nivelScore(score);
           return (
             <GaugeSemiCircular
               key={nome}
@@ -102,7 +103,7 @@ export function FinancialPlanDashboard({
 
       {/* ── CARDS ANALÍTICOS POR ÁREA ─────────────────────────────────────────── */}
       {textCards.map(({ icone, nome, texto, score }) => {
-        const n = nivelScoreGauge(score);
+        const n = nivelScore(score);
         return (
           <div
             key={nome}
