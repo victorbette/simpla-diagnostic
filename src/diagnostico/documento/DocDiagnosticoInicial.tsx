@@ -170,6 +170,21 @@ export function DocDiagnosticoInicial({ lead }: Props) {
     <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
       <HeaderSecao titulo="Diagnóstico Inicial" />
 
+      {/* Texto introdutório */}
+      <p style={{
+        fontSize: 12, color: "#374151",
+        lineHeight: 1.9, marginBottom: 16,
+        whiteSpace: "pre-line" as const,
+      }}>
+        {`Este diagnóstico não é apenas um documento — é um espelho da sua realidade financeira.
+
+Pouquíssimas pessoas param para olhar de frente para os números que definem o seu futuro. Você fez diferente. E isso já coloca você à frente da maioria.
+
+Mas a clareza que este diagnóstico traz só tem valor se for seguida de ação. Cada área analisada aqui representa uma alavanca: quando bem ajustada, ela acelera a construção da sua liberdade financeira. Quando ignorada, ela silenciosamente compromete o futuro que você imagina para si e para sua família.
+
+A Liberdade Financeira não é um destino reservado para poucos. É o resultado de decisões consistentes, tomadas com clareza e acompanhamento adequado. Este diagnóstico é o primeiro passo dessa jornada. O próximo passo é seu.`}
+      </p>
+
       {/* Header com score geral */}
       <div style={{
         background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,

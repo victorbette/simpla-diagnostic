@@ -10,6 +10,11 @@ import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
 import { RodapePaginaDiag } from "./RodapePaginaDiag";
 
 const TAXA_ANUAL_DIAG = 0.045;
+const TAXA_MENSAL_DIAG = Math.pow(1 + TAXA_ANUAL_DIAG, 1 / 12) - 1;
+
+function corMeta(pct: number): string {
+  return pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
+}
 
 function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -87,6 +92,28 @@ export function DocLFDiag({ lead }: Props) {
     return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja — para sempre.\n\nIsso significa liberdade de verdade: acordar de manhã e escolher como usar o seu tempo, não por obrigação, mas por vontade. Significa poder estar presente nos momentos que importam para a sua família, apoiar os projetos dos seus filhos, viver as experiências que sempre planejou — sem a pressão financeira que acompanha a maioria das pessoas ao longo da vida.\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro da sua família está resguardado, independente do que aconteça.`;
   }
 
+  // ── Análise de Sensibilidade ──
+  const nMesesBase = Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
+
+  const cenariosAporte = [-40, -20, 0, 20, 40].map(pctVariacao => {
+    const aporteC = Math.max(0, aporteMensal * (1 + pctVariacao / 100));
+    const f = Math.pow(1 + TAXA_MENSAL_DIAG, nMesesBase);
+    const fv = patrimonioInicial * f + aporteC * (f - 1) / TAXA_MENSAL_DIAG;
+    const pctMeta = patrimonioNecessario > 0
+      ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
+    return { pctVariacao, aporteC, pctMeta };
+  });
+
+  const cenariosIdade = [-5, -2, 0, 2, 5].map(delta => {
+    const idadeC = Math.max(idadeAtual + 1, idadeMeta + delta);
+    const n = Math.max(1, Math.round((idadeC - idadeAtual) * 12));
+    const f = Math.pow(1 + TAXA_MENSAL_DIAG, n);
+    const fv = patrimonioInicial * f + aporteMensal * (f - 1) / TAXA_MENSAL_DIAG;
+    const pctMeta = patrimonioNecessario > 0
+      ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
+    return { delta, idadeC, pctMeta };
+  });
+
   return (
     <PaginaDoc rodape={<RodapePaginaDiag nomeCliente={lead.nome} />}>
       <HeaderSecao titulo="Liberdade Financeira" />
@@ -94,30 +121,33 @@ export function DocLFDiag({ lead }: Props) {
       {/* Texto explicativo */}
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 1.8,
-        marginBottom: 20, whiteSpace: "pre-line" as const,
+        marginBottom: 14, whiteSpace: "pre-line" as const,
       }}>
         {gerarTextoLF()}
       </p>
 
-      {/* 3 cards de métricas */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-            Patrimônio Necessário
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>
-            {formatBRL(patrimonioNecessario)}
-          </div>
-          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>
-            Para gerar {formatBRL(rendaDesejada)}/mês
-          </div>
+      {/* Gráfico de projeção */}
+      {result && (
+        <div style={{ marginBottom: 14 }}>
+          <CardProjecaoPatrimonial
+            projecao={result.projecao}
+            objetivos={[]}
+            height={200}
+            mesIF={mesIF}
+            mesNascimento={mesNascimento}
+            patrimonioNecessario={patrimonioNecessario}
+            interativo={false}
+          />
         </div>
+      )}
 
+      {/* 2 cards de métricas */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
         <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
           <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
             Projeção Atual
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario ? "#15803D" : "#111827" }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
             {formatBRL(projecaoNaIF)}
           </div>
           <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Aos {idadeMeta} anos</div>
@@ -134,17 +164,60 @@ export function DocLFDiag({ lead }: Props) {
         </div>
       </div>
 
-      {/* Gráfico de projeção */}
-      {result && (
-        <CardProjecaoPatrimonial
-          projecao={result.projecao}
-          objetivos={[]}
-          height={220}
-          mesIF={mesIF}
-          mesNascimento={mesNascimento}
-          patrimonioNecessario={patrimonioNecessario}
-          interativo={false}
-        />
+      {/* Análise de Sensibilidade */}
+      {lfTemDados && (
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 12 }}>
+            Análise de Sensibilidade
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+                Variando Aporte
+              </div>
+              {cenariosAporte.map(c => (
+                <div key={c.pctVariacao} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "5px 6px", borderBottom: "0.5px solid #F3F4F6",
+                  background: c.pctVariacao === 0 ? "#F8FAFF" : "transparent",
+                  borderRadius: c.pctVariacao === 0 ? 4 : 0,
+                }}>
+                  <span style={{ fontSize: 10, color: "#374151" }}>
+                    {c.pctVariacao === 0 ? "Atual" : c.pctVariacao > 0 ? `+${c.pctVariacao}%` : `${c.pctVariacao}%`}
+                    {" "}<span style={{ color: "#9CA3AF", fontSize: 9 }}>({formatBRL(c.aporteC)}/mês)</span>
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: corMeta(c.pctMeta) }}>
+                    {c.pctMeta}% da meta
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+                Variando Prazo
+              </div>
+              {cenariosIdade.map(c => (
+                <div key={c.delta} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "5px 6px", borderBottom: "0.5px solid #F3F4F6",
+                  background: c.delta === 0 ? "#F8FAFF" : "transparent",
+                  borderRadius: c.delta === 0 ? 4 : 0,
+                }}>
+                  <span style={{ fontSize: 10, color: "#374151" }}>
+                    {c.delta === 0 ? "Atual" : c.delta > 0 ? `+${c.delta} anos` : `${c.delta} anos`}
+                    {" "}<span style={{ color: "#9CA3AF", fontSize: 9 }}>({c.idadeC} anos)</span>
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: corMeta(c.pctMeta) }}>
+                    {c.pctMeta}% da meta
+                  </span>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
       )}
     </PaginaDoc>
   );

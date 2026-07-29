@@ -8,11 +8,11 @@ import { gerarPDF } from "@/lib/gerarPDF";
 import { DocCapa } from "@/components/estrategia/documento/DocCapa";
 import { DocDisclaimerDiag } from "../documento/DocDisclaimerDiag";
 import { DocDiagnosticoInicial } from "../documento/DocDiagnosticoInicial";
+import { DocLFDiag } from "../documento/DocLFDiag";
 import { DocGestaoAtivos } from "../documento/DocGestaoAtivos";
+import { DocBlindagemPatrimonial } from "../documento/DocBlindagemPatrimonial";
 import { DocProximosPassosDiag } from "../documento/DocProximosPassosDiag";
 import { DocMaosAObraDiag } from "../documento/DocMaosAObraDiag";
-import { ContracapaDiag } from "../documento/ContracapaDiag";
-import { DocLFDiag } from "../documento/DocLFDiag";
 
 const MESES_PT = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -106,40 +106,22 @@ export function DiagRelatorio({ lead }: Props) {
         {/* Página 2 — Diagnóstico Inicial */}
         <DocDiagnosticoInicial lead={lead} />
 
-        {/* Página 3 — Contra Capa Liberdade Financeira */}
-        <ContracapaDiag
-          titulo="Liberdade Financeira"
-          subtitulo="Entenda onde você está e o que precisa para conquistar a independência financeira."
-          icone="ti-beach"
-        />
-
-        {/* Página 4 — Liberdade Financeira */}
+        {/* Página 3 — Liberdade Financeira */}
         <DocLFDiag lead={lead} />
 
-        {/* Página 5 — Contra Capa Gestão de Ativos */}
-        <ContracapaDiag
-          titulo="Gestão de Ativos"
-          subtitulo="A composição da sua carteira atual e o caminho para uma alocação mais eficiente."
-          icone="ti-chart-pie"
-        />
-
-        {/* Página 6 — Gestão de Ativos */}
+        {/* Página 4 — Gestão de Ativos */}
         <DocGestaoAtivos lead={lead} />
 
-        {/* Página 7 — Contra Capa Próximos Passos */}
-        <ContracapaDiag
-          titulo="Próximos Passos"
-          subtitulo="O diagnóstico trouxe clareza. Agora é hora de agir."
-          icone="ti-rocket"
-        />
+        {/* Página 5 — Blindagem Patrimonial */}
+        <DocBlindagemPatrimonial lead={lead} />
 
-        {/* Página 8 — Mãos à Obra */}
-        <DocMaosAObraDiag nomeCliente={lead.nome} />
-
-        {/* Página 9 — Próximos Passos */}
+        {/* Página 6 — Próximos Passos */}
         <DocProximosPassosDiag nomeCliente={lead.nome} />
 
-        {/* Página 10 — Disclaimer */}
+        {/* Página 7 — Mãos à Obra */}
+        <DocMaosAObraDiag nomeCliente={lead.nome} />
+
+        {/* Página 8 — Disclaimer */}
         <DocDisclaimerDiag nomeCliente={lead.nome} config={config} />
       </div>
     </div>
