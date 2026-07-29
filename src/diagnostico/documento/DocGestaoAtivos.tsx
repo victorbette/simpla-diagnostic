@@ -58,6 +58,52 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
     ),
   });
 
+  blocos.push({
+    chave: "tabela",
+    node: (
+      <div style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "#F8FAFF" }}>
+              <th style={{ textAlign: "left",  padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Classe de Ativo</th>
+              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Valor (R$)</th>
+              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Alocação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {classes.length === 0 ? (
+              <tr>
+                <td colSpan={3} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
+                  Nenhum valor de investimento informado
+                </td>
+              </tr>
+            ) : classes.map((c, i) => {
+              const pct = totalPatrimonio > 0
+                ? ((c.valor / totalPatrimonio) * 100).toFixed(1)
+                : "0.0";
+              return (
+                <tr key={i} style={{ borderBottom: "0.5px solid #F3F4F6" }}>
+                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827" }}>{c.label}</td>
+                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827", textAlign: "right" as const }}>{formatBRL(c.valor)}</td>
+                  <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right" as const, fontWeight: 600, color: "#2563EB" }}>{pct}%</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          {classes.length > 0 && (
+            <tfoot>
+              <tr style={{ background: "#F0F7FF" }}>
+                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</td>
+                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(totalPatrimonio)}</td>
+                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>100%</td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    ),
+  });
+
   if (ativosBons.length > 0) {
     blocos.push({
       chave: "bons",
@@ -119,52 +165,6 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       ),
     });
   }
-
-  blocos.push({
-    chave: "tabela",
-    node: (
-      <div style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ background: "#F8FAFF" }}>
-              <th style={{ textAlign: "left",  padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Classe de Ativo</th>
-              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Valor (R$)</th>
-              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Alocação</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classes.length === 0 ? (
-              <tr>
-                <td colSpan={3} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
-                  Nenhum valor de investimento informado
-                </td>
-              </tr>
-            ) : classes.map((c, i) => {
-              const pct = totalPatrimonio > 0
-                ? ((c.valor / totalPatrimonio) * 100).toFixed(1)
-                : "0.0";
-              return (
-                <tr key={i} style={{ borderBottom: "0.5px solid #F3F4F6" }}>
-                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827" }}>{c.label}</td>
-                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827", textAlign: "right" as const }}>{formatBRL(c.valor)}</td>
-                  <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right" as const, fontWeight: 600, color: "#2563EB" }}>{pct}%</td>
-                </tr>
-              );
-            })}
-          </tbody>
-          {classes.length > 0 && (
-            <tfoot>
-              <tr style={{ background: "#F0F7FF" }}>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</td>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(totalPatrimonio)}</td>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>100%</td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-    ),
-  });
 
   if (ativosDoLead.length === 0) {
     blocos.push({
