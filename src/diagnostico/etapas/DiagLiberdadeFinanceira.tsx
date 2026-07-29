@@ -9,14 +9,7 @@ import {
   type ProjecaoIFParams,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
-import type { ObjetivoVida } from "@/types/objetivos";
-import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
-import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
-import {
-  ComposedChart, Bar, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ReferenceLine,
-} from "recharts";
+import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
 const TAXA_ANUAL_DIAG = 0.045;
 const TAXA_MENSAL_DIAG = Math.pow(1 + TAXA_ANUAL_DIAG, 1 / 12) - 1;
@@ -51,8 +44,6 @@ const badgeColetaStyle: React.CSSProperties = {
   marginLeft: 6,
 };
 
-const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
-
 function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
   const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -62,23 +53,8 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
   return null;
 }
 
-function migrateObjetivo(
-  o: Record<string, unknown>,
-  anoNascimento: number,
-  mesNascimento: number,
-): ObjetivoVida {
-  if (typeof o.mes === "number" && typeof o.ano === "number" && typeof o.valorBRL === "number") {
-    return o as unknown as ObjetivoVida;
-  }
-  const idadeReal = Number(o.idadeRealizacao) || 0;
-  return {
-    id: String(o.id ?? Math.random().toString(36).substring(2, 9)),
-    tipo: o.tipo as ObjetivoVida["tipo"],
-    label: String(o.nome ?? o.label ?? "Objetivo"),
-    mes: mesNascimento,
-    ano: anoNascimento + Math.floor(idadeReal),
-    valorBRL: Number(o.valor ?? o.valorBRL ?? 0),
-  };
+function fmtBRL(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
 export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Props) {
@@ -106,12 +82,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
   const [patrimonioEditado, setPatrimonioEditado] = useState(false);
   const [aporteEditado, setAporteEditado] = useState(false);
   const [rendaEditada, setRendaEditada] = useState(false);
-  const [objetivos, setObjetivos] = useState<ObjetivoVida[]>(() => {
-    const raw = dadosLF.objetivos ?? [];
-    return (raw as Record<string, unknown>[])
-      .map((o) => migrateObjetivo(o, anoNascimento, mesNascimento))
-      .filter((o) => VALID_TIPOS.has(o.tipo));
-  });
 
   const isFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
@@ -124,10 +94,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
       aporteMensal: params.aporteMensal,
       idadeAlvo: params.idadeAposentadoria,
       rendaDesejada: params.rendaDesejada,
-      objetivos: objetivos as unknown[],
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, objetivos]);
+  }, [params]);
 
   useEffect(() => {
     setParams((prev) => ({
@@ -141,8 +110,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
   }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
-
-  const objetivosAtivos = useMemo(() => objetivos.filter(o => o.ativo !== false), [objetivos]);
 
   const patrimonioPerpetuidade = useMemo(() => {
     if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
@@ -159,15 +126,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     taxaRetornoAnual: TAXA_ANUAL_DIAG,
     anoNascimento,
     mesNascimento,
-    objetivos: objetivosAtivos,
-  }), [params, objetivosAtivos, anoNascimento, mesNascimento]);
+    objetivos: [],
+  }), [params, anoNascimento, mesNascimento]);
 
   const result = useMemo(() => {
-    try {
-      return calcularProjecaoIF(projecaoParams);
-    } catch {
-      return null;
-    }
+    try { return calcularProjecaoIF(projecaoParams); }
+    catch { return null; }
   }, [projecaoParams]);
 
   const rendaSustentavel = useMemo(() => {
@@ -175,57 +139,30 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     return (result.patrimonioNaIF * 0.04) / 12;
   }, [result]);
 
-  const anoAtualCliente = anoNascimento + params.idadeAtual;
-  const anoMetaCliente = anoNascimento + params.idadeAposentadoria;
+  const mesIF = result
+    ? result.mesInicioRetirada
+    : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
 
-  const dadosGrafico = useMemo(() => {
-    const dados: {
-      ano: number;
-      idade: number;
-      patrimonioProjeto: number;
-      patrimonioComObjetivos: number;
-      temObjetivo: boolean;
-    }[] = [];
-    const anoAtual = new Date().getFullYear();
-    const nAnos = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
+  // ── Análise de Sensibilidade ──
+  const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
+    const aporteC = Math.max(0, params.aporteMensal * (1 + pct / 100));
+    const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const f = Math.pow(1 + TAXA_MENSAL_DIAG, n);
+    const fv = params.patrimonioInicial * f + aporteC * (f - 1) / TAXA_MENSAL_DIAG;
+    const pctMeta = patrimonioPerpetuidade > 0
+      ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
+    return { pctVariacao: pct, aporteC, pctMeta };
+  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, patrimonioPerpetuidade]);
 
-    let patrimonioSemObjetivos = params.patrimonioInicial;
-    let patrimonioComObj = params.patrimonioInicial;
-    const fatorAnual = Math.pow(1 + TAXA_MENSAL_DIAG, 12);
-    const aporteAnual = params.aporteMensal * 12;
-
-    for (let ano = 0; ano <= nAnos; ano++) {
-      const idadeAno = params.idadeAtual + ano;
-      const anoCalendario = anoAtual + ano;
-
-      const objetivosAno = objetivos.filter(o =>
-        o.ativo !== false &&
-        Number(o.ano) === anoCalendario
-      );
-
-      if (ano > 0) {
-        patrimonioSemObjetivos = patrimonioSemObjetivos * fatorAnual + aporteAnual;
-        patrimonioComObj = patrimonioComObj * fatorAnual + aporteAnual;
-        objetivosAno.forEach(o => {
-          const valor = Number(o.valorBRL) || 0;
-          if (isEntradaObjetivo(o)) {
-            patrimonioComObj += valor;
-          } else {
-            patrimonioComObj = Math.max(0, patrimonioComObj - valor);
-          }
-        });
-      }
-
-      dados.push({
-        ano: anoCalendario,
-        idade: idadeAno,
-        patrimonioProjeto: Math.round(patrimonioSemObjetivos),
-        patrimonioComObjetivos: Math.round(patrimonioComObj),
-        temObjetivo: objetivosAno.length > 0,
-      });
-    }
-    return dados;
-  }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, objetivos]);
+  const cenariosIdade = useMemo(() => [-5, -2, 0, 2, 5].map(delta => {
+    const idadeC = Math.max(params.idadeAtual + 1, params.idadeAposentadoria + delta);
+    const n = Math.max(1, Math.round((idadeC - params.idadeAtual) * 12));
+    const f = Math.pow(1 + TAXA_MENSAL_DIAG, n);
+    const fv = params.patrimonioInicial * f + params.aporteMensal * (f - 1) / TAXA_MENSAL_DIAG;
+    const pctMeta = patrimonioPerpetuidade > 0
+      ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
+    return { delta, idadeC, pctMeta };
+  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade]);
 
   if (!result) {
     return (
@@ -235,106 +172,106 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
     );
   }
 
-  const temObjetivosAtivos = objetivosAtivos.length > 0;
+  const corMeta = (pct: number) =>
+    pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
 
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Parâmetros | Objetivos ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 10px" }}>
-            Parâmetros da simulação
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {/* ── 1. Parâmetros ── */}
+      <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px" }}>
+          Parâmetros da simulação
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Idade atual</label>
-                <div style={{ position: "relative" }}>
-                  <Input
-                    type="number"
-                    value={params.idadeAtual}
-                    readOnly
-                    style={{ borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB", color: "#000000", backgroundColor: "#EFF6FF", cursor: "not-allowed", padding: "6px 10px", fontSize: 12 }}
-                  />
-                  <span style={{ position: "absolute", top: 7, right: 6, fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none" }}>✓</span>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
-                <Input
-                  type="number"
-                  min={params.idadeAtual + 1}
-                  max={90}
-                  value={params.idadeAposentadoria}
-                  onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-                  style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Financeiro</label>
-                {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                {patrimonioEditado && (
-                  <button onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput
-                value={params.patrimonioInicial}
-                onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, minHeight: 14, lineHeight: 1 }}>Idade atual</label>
+            <div style={{ position: "relative" }}>
+              <Input
+                type="number"
+                value={params.idadeAtual}
+                readOnly
+                style={{ borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB", color: "#000000", backgroundColor: "#EFF6FF", cursor: "not-allowed", padding: "6px 10px", fontSize: 12 }}
               />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte mensal</label>
-                {aporteColeta > 0 && !aporteEditado && <span style={badgeColetaStyle}>Da coleta</span>}
-                {aporteEditado && (
-                  <button onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput value={params.aporteMensal} onChange={(v) => { setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }} />
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda desejada</label>
-                {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
-                {rendaEditada && (
-                  <button onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
-                    style={{ marginLeft: 8, fontSize: 11, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                    ↺ Restaurar
-                  </button>
-                )}
-              </div>
-              <CurrencyInput
-                value={params.rendaDesejada}
-                onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
-              />
+              <span style={{ position: "absolute", top: 7, right: 6, fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none" }}>✓</span>
             </div>
           </div>
-        </div>
 
-        <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <ListaObjetivos
-            objetivos={objetivos}
-            onObjetivos={setObjetivos}
-            anoAtual={anoAtualCliente}
-            anoMeta={anoMetaCliente}
-          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, minHeight: 14, lineHeight: 1 }}>Aposentadoria</label>
+            <Input
+              type="number"
+              min={params.idadeAtual + 1}
+              max={90}
+              value={params.idadeAposentadoria}
+              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+              style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
+            />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Patrimônio</label>
+              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {patrimonioEditado && (
+                <button onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                  ↺
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={params.patrimonioInicial}
+              onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+            />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Aporte mensal</label>
+              {aporteColeta > 0 && !aporteEditado && <span style={badgeColetaStyle}>Da coleta</span>}
+              {aporteEditado && (
+                <button onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
+                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                  ↺
+                </button>
+              )}
+            </div>
+            <CurrencyInput value={params.aporteMensal} onChange={(v) => { setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Renda desejada</label>
+              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
+              {rendaEditada && (
+                <button onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
+                  ↺
+                </button>
+              )}
+            </div>
+            <CurrencyInput
+              value={params.rendaDesejada}
+              onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+            />
+          </div>
+
         </div>
       </div>
 
-      {/* ── Cards de resultado ── */}
+      {/* ── 2. Gráfico ── */}
+      <CardProjecaoPatrimonial
+        projecao={result.projecao}
+        objetivos={[]}
+        height={320}
+        mesIF={mesIF}
+        mesNascimento={mesNascimento}
+        patrimonioNecessario={patrimonioPerpetuidade}
+      />
+
+      {/* ── 3. Cards de resultado ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
@@ -372,110 +309,62 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange }: Prop
         </Card>
       </div>
 
-      {/* ── Gráfico ── */}
+      {/* ── 4. Análise de Sensibilidade ── */}
       <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "#111827", marginBottom: 16 }}>
-          Projeção Patrimonial
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 16 }}>
+          Análise de Sensibilidade
         </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
 
-        <ResponsiveContainer width="100%" height={320}>
-          <ComposedChart
-            data={dadosGrafico}
-            margin={{ top: 10, right: 20, bottom: 0, left: 20 }}
-            barCategoryGap="20%"
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#F3F4F6"
-              vertical={false}
-            />
+          {/* Variando Aporte */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+              Variando Aporte
+            </div>
+            {cenariosAporte.map(c => (
+              <div key={c.pctVariacao} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "6px 8px", borderBottom: "0.5px solid #F3F4F6",
+                background: c.pctVariacao === 0 ? "#F8FAFF" : "transparent",
+                borderRadius: c.pctVariacao === 0 ? 4 : 0,
+              }}>
+                <span style={{ fontSize: 11, color: "#374151" }}>
+                  {c.pctVariacao === 0 ? "Atual" : c.pctVariacao > 0 ? `+${c.pctVariacao}%` : `${c.pctVariacao}%`}
+                  {" "}
+                  <span style={{ color: "#9CA3AF", fontSize: 10 }}>({fmtBRL(c.aporteC)}/mês)</span>
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: corMeta(c.pctMeta) }}>
+                  {c.pctMeta}% da meta
+                </span>
+              </div>
+            ))}
+          </div>
 
-            <XAxis
-              dataKey="ano"
-              tick={{ fontSize: 10, fill: "#9CA3AF" }}
-              tickFormatter={(v) => `${v}`}
-              axisLine={false}
-              tickLine={false}
-              interval="preserveStartEnd"
-            />
+          {/* Variando Prazo */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.04em" }}>
+              Variando Prazo
+            </div>
+            {cenariosIdade.map(c => (
+              <div key={c.delta} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "6px 8px", borderBottom: "0.5px solid #F3F4F6",
+                background: c.delta === 0 ? "#F8FAFF" : "transparent",
+                borderRadius: c.delta === 0 ? 4 : 0,
+              }}>
+                <span style={{ fontSize: 11, color: "#374151" }}>
+                  {c.delta === 0 ? "Atual" : c.delta > 0 ? `+${c.delta} anos` : `${c.delta} anos`}
+                  {" "}
+                  <span style={{ color: "#9CA3AF", fontSize: 10 }}>({c.idadeC} anos)</span>
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: corMeta(c.pctMeta) }}>
+                  {c.pctMeta}% da meta
+                </span>
+              </div>
+            ))}
+          </div>
 
-            <YAxis
-              tick={{ fontSize: 10, fill: "#9CA3AF" }}
-              tickFormatter={(v: number) => {
-                if (v >= 1000000) return `R$${(v / 1000000).toFixed(1)}M`;
-                if (v >= 1000) return `R$${(v / 1000).toFixed(0)}k`;
-                return `R$${v}`;
-              }}
-              axisLine={false}
-              tickLine={false}
-              width={70}
-            />
-
-            <Tooltip
-              formatter={(value, name) => [
-                (value as number).toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                  maximumFractionDigits: 0,
-                }),
-                name === "patrimonioProjeto"
-                  ? "Patrimônio Projetado"
-                  : "Com Objetivos de Vida",
-              ]}
-              labelFormatter={(v) => `${v}`}
-              contentStyle={{
-                fontSize: 12,
-                borderRadius: 8,
-                border: "0.5px solid #E5E7EB",
-              }}
-            />
-
-            <Legend
-              formatter={(value) =>
-                value === "patrimonioProjeto"
-                  ? "Patrimônio Projetado"
-                  : "Com Objetivos de Vida"
-              }
-              wrapperStyle={{ fontSize: 12 }}
-            />
-
-            <Bar
-              dataKey="patrimonioProjeto"
-              fill="#2563EB"
-              stroke="#1D4ED8"
-              strokeWidth={0}
-              radius={[3, 3, 0, 0]}
-              name="patrimonioProjeto"
-            />
-
-            {temObjetivosAtivos && (
-              <Line
-                type="monotone"
-                dataKey="patrimonioComObjetivos"
-                stroke="#4ADE80"
-                strokeWidth={2.5}
-                dot={false}
-                activeDot={{
-                  r: 4,
-                  fill: "#4ADE80",
-                  stroke: "white",
-                  strokeWidth: 2,
-                }}
-                name="patrimonioComObjetivos"
-              />
-            )}
-
-            <ReferenceLine
-              y={patrimonioPerpetuidade}
-              stroke="#15803D"
-              strokeWidth={2}
-              strokeDasharray="6 3"
-              label={false}
-              ifOverflow="extendDomain"
-            />
-
-          </ComposedChart>
-        </ResponsiveContainer>
+        </div>
       </div>
 
     </div>
