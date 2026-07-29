@@ -1,4 +1,4 @@
-import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
+import { TEXTO_CORPO } from "@/lib/documentoStyles";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { PaginaDoc } from "./PaginaDoc";
 import { HeaderSecao } from "./HeaderSecao";
@@ -16,7 +16,7 @@ export function DocDisclaimer({ nomeCliente }: Props) {
       <HeaderSecao titulo="Disclaimer" />
 
       <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
-        Este documento foi elaborado por um Consultor de Valores Mobiliários devidamente autorizado pela Comissão de Valores Mobiliários (CVM), em conformidade com a Resolução CVM n.º 19/2021. As informações aqui contidas têm caráter exclusivamente informativo e educacional, não constituindo oferta, solicitação, recomendação ou aconselhamento de investimento.
+        Este documento foi elaborado em conformidade com a Resolução CVM n.º 19/2021. As informações aqui contidas têm caráter exclusivamente informativo e educacional, não constituindo oferta, solicitação, recomendação ou aconselhamento de investimento.
       </p>
       <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
         O planejamento financeiro apresentado é baseado nas informações fornecidas pelo cliente e em premissas que podem não se concretizar. Rentabilidades passadas não são garantia de resultados futuros. O investidor deve considerar seus próprios objetivos, situação financeira e necessidades antes de tomar qualquer decisão de investimento.
@@ -25,47 +25,51 @@ export function DocDisclaimer({ nomeCliente }: Props) {
         Este material não deve ser reproduzido, distribuído ou publicado por qualquer pessoa para qualquer finalidade sem o prévio consentimento da Simpla Invest. Em caso de dúvidas, entre em contato com o consultor responsável ou com a ouvidoria da Simpla Invest.
       </p>
 
-      {/* Selos de certificação */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 18 }}>
+      {/* Logo CVM */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
         <img
           src="/logocvm.png"
           alt="CVM — Comissão de Valores Mobiliários"
           style={{ height: 42, objectFit: "contain" }}
           onError={(e) => { e.currentTarget.style.display = "none"; }}
         />
-        <img
-          src="/logoanbimacea.png"
-          alt="ANBIMA Professional CEA"
-          style={{ height: 42, objectFit: "contain" }}
-          onError={(e) => { e.currentTarget.style.display = "none"; }}
-        />
       </div>
 
-      {/* Ouvidoria e Comunidade Simpla (referência v5) — os links ficam
-          clicáveis no PDF gerado pelo navegador */}
-      <div style={{ marginTop: "auto", paddingTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-          Ouvidoria Simpla: <strong style={{ color: DOC.ink }}>32 31982742</strong> ou clique{" "}
-          <a
-            href="https://wa.me/553231982742"
-            target="_blank"
-            rel="noreferrer"
-            style={{ fontWeight: 700, color: DOC.ink, textDecoration: "underline" }}
-          >
-            AQUI
-          </a>
-        </p>
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
-          Comunidade Simpla de Avisos clique{" "}
-          <a
-            href="https://chat.whatsapp.com/IyayLHuwHOK9xG9JImuMo9"
-            target="_blank"
-            rel="noreferrer"
-            style={{ fontWeight: 700, color: DOC.ink, textDecoration: "underline" }}
-          >
-            AQUI
-          </a>
-        </p>
+      {/* Cards Ouvidoria e Comunidade */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+        <div style={{ background: "#F0F7FF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <i className="ti ti-headset" style={{ fontSize: 16, color: "#2563EB" }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Ouvidoria Simpla</span>
+          </div>
+          <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.7 }}>
+            <div style={{ marginBottom: 4 }}>
+              <span style={{ color: "#6B7280" }}>Telefone:</span>{" "}
+              <strong>(11) 99999-9999</strong>
+            </div>
+            <div>
+              <span style={{ color: "#6B7280" }}>Link:</span>{" "}
+              <span style={{ color: "#2563EB", textDecoration: "underline" }}>
+                ouvidoria.simplainvest.com.br
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ background: "#F0F7FF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <i className="ti ti-users" style={{ fontSize: 16, color: "#2563EB" }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Comunidade Simpla</span>
+          </div>
+          <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.7 }}>
+            <div>
+              <span style={{ color: "#6B7280" }}>Link:</span>{" "}
+              <span style={{ color: "#2563EB", textDecoration: "underline" }}>
+                comunidade.simplainvest.com.br
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </PaginaDoc>
   );
