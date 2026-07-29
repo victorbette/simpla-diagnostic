@@ -1,5 +1,6 @@
 import type { Lead } from "../types";
 import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
+import { ATIVOS_TEXTOS } from "../ativosTextos";
 import { DOC } from "@/lib/documentoStyles";
 import { PaginaDoc } from "@/components/estrategia/documento/PaginaDoc";
 import { HeaderSecao } from "@/components/estrategia/documento/HeaderSecao";
@@ -23,6 +24,7 @@ export function DocGestaoAtivos({ lead }: Props) {
   const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
 
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
+  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
   const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
 
   const texto = `A forma como você investe define muito mais do que o retorno do seu dinheiro. Ela define o ritmo com que você se aproxima — ou se afasta — da vida que você quer construir.
@@ -57,6 +59,65 @@ ${nome}, o próximo passo é transformar essa fotografia atual em uma estratégi
       }}>
         {texto}
       </p>
+
+      {/* Seção: O que você já faz bem */}
+      {ativosBons.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 10,
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+            O que você já faz bem
+          </div>
+          {ativosBons.map(ativo => {
+            const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+            if (!textoAtivo?.positivo) return null;
+            return (
+              <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+                  {ativo.label}
+                </div>
+                <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+                  {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Seção: Pontos que merecem atenção */}
+      {ativosRuins.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            fontSize: 12, fontWeight: 700, color: "#B91C1C", marginBottom: 10,
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
+            Pontos que merecem atenção
+          </div>
+          {ativosRuins.map(ativo => {
+            const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+            if (!textoAtivo?.negativo) return null;
+            return (
+              <div key={ativo.id} style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+                  {ativo.label}
+                </div>
+                <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+                  {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
+                </p>
+                {textoAtivo.dica && (
+                  <p style={{ fontSize: 10, color: "#B45309", lineHeight: 1.6, margin: "4px 0 0", fontStyle: "italic" }}>
+                    💡 {textoAtivo.dica.replace(/\n\s+/g, " ").trim()}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Tabela de alocação */}
       <div style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
@@ -100,17 +161,14 @@ ${nome}, o próximo passo é transformar essa fotografia atual em uma estratégi
         </table>
       </div>
 
-      {ativosRuins.length > 0 && (
+      {/* Aviso se nenhum ativo foi mapeado */}
+      {ativosDoLead.length === 0 && (
         <div style={{
-          background: "#FFF5F5", border: "0.5px solid #FCA5A5",
+          background: "#FFF7ED", border: "0.5px solid #FCD34D",
           borderRadius: 8, padding: "12px 16px", marginTop: 12,
+          fontSize: 12, color: "#92400E",
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#B91C1C", marginBottom: 6 }}>
-            ⚠ Produtos não recomendados identificados
-          </div>
-          <div style={{ fontSize: 11, color: "#374151" }}>
-            {ativosRuins.map(a => a.label).join(" · ")}
-          </div>
+          Nenhum investimento foi mapeado na coleta de dados. A análise de alocação será realizada na reunião inicial.
         </div>
       )}
     </PaginaDoc>
