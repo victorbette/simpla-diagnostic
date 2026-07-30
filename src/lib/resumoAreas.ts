@@ -113,31 +113,33 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   const fiscal = (() => {
     if (!fiscalSalvo || fiscalSalvo.analisado !== true) return -1;
     const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
+    const rendaAnual      = Number(fiscalSalvo.rendaAnual) || 0;
     const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
     const economia        = Number(fiscalSalvo.economiaAnual) || 0;
+    const temDados        = rendaAnual > 0;
 
     let pontos = 0;
 
     // 1. Tipo de declaração definido (30 pts completa / 20 pts simplificada)
-    if (tipoDeclaracao === 'completa')     pontos += 30;
+    if (tipoDeclaracao === 'completa')          pontos += 30;
     else if (tipoDeclaracao === 'simplificada') pontos += 20;
 
-    // 2. Aproveitamento PGBL (40 pts) ou identificação do modelo (20 pts)
+    // 2. Aproveitamento PGBL (50 pts) ou bônus neutro simplificada (20 pts só com dados)
     if (tipoDeclaracao === 'completa') {
       if (aporteAnualPGBL > 0) {
         const aproveitamento = tetoPGBL > 0 ? Math.min(1, aporteAnualPGBL / tetoPGBL) : 0;
         pontos += Math.round(aproveitamento * 50);
       }
-    } else if (tipoDeclaracao === 'simplificada') {
+    } else if (tipoDeclaracao === 'simplificada' && temDados) {
       pontos += 20;
     }
 
-    // 3. Diferimento gerado (30 pts) ou neutro para simplificada (15 pts)
+    // 3. Diferimento gerado (30 pts) ou bônus neutro simplificada (15 pts só com dados)
     if (economia > 0 && tetoPGBL > 0) {
       const economiaPct = Math.min(1, economia / (tetoPGBL * 0.275));
       pontos += Math.round(economiaPct * 30);
-    } else if (tipoDeclaracao === 'simplificada') {
+    } else if (tipoDeclaracao === 'simplificada' && temDados) {
       pontos += 15;
     }
 
