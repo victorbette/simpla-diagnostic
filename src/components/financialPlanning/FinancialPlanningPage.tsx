@@ -51,9 +51,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   const [mostrarResultado, setMostrarResultado] = useState(false);
   const [mostrarFP, setMostrarFP] = useState(false);
   const [abaFP, setAbaFP] = useState("asset_allocation");
-  const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [ultimoSalvo, setUltimoSalvo] = useState<Date | null>(null);
   const [salvandoColeta, setSalvandoColeta] = useState(false);
   const [salvoColeta, setSalvoColeta] = useState(false);
   const planInitialized = useRef(false);
@@ -157,12 +155,10 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
   // ── Save ──────────────────────────────────────────────────────────────────
 
   async function handleSave(status?: FinancialPlan["status"]) {
-    setSaving(true);
     try {
       const saved = await store.savePlan(status ? { ...plan, status } : plan);
       setPlan(saved);
       setDirty(false);
-      setUltimoSalvo(new Date());
       toast.success(status === "completo" ? "Plano finalizado!" : "Rascunho salvo.");
     } catch (err) {
       const supaErr = err as { message?: string; hint?: string; details?: string };
@@ -170,8 +166,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       const hint = supaErr.hint ? ` (${supaErr.hint})` : "";
       toast.error(`Erro ao salvar: ${msg}${hint}`);
       console.error("handleSave failed:", err);
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -185,7 +179,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       const saved = await store.savePlan(planToSave);
       setPlan(saved);
       setDirty(false);
-      setUltimoSalvo(new Date());
       setSalvoColeta(true);
       setTimeout(() => setSalvoColeta(false), 2500);
     } catch (err) {
@@ -533,31 +526,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
           </button>
         ))}
 
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, paddingLeft: 16, flexShrink: 0 }}>
-          {dirty && !saving && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#2563EB" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#2563EB", display: "inline-block" }} />
-              Não salvo
-            </span>
-          )}
-          {ultimoSalvo && !dirty && !saving && (
-            <span style={{ fontSize: 12, color: "#9CA3AF" }}>
-              Salvo às {ultimoSalvo.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          )}
-          <button
-            onClick={() => handleSave()}
-            disabled={saving}
-            style={{
-              border: "1.5px solid #1E3A8A", backgroundColor: "white", color: "#1E3A8A",
-              borderRadius: 6, padding: "6px 16px", fontSize: 13, fontWeight: 600,
-              cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {saving ? "Salvando..." : "Salvar"}
-          </button>
-        </div>
       </div>
 
       {/* Conteúdo das 4 abas */}
