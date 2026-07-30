@@ -111,8 +111,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
 
   // ── Tributário ────────────────────────────────────────────────────────────
   const fiscal = (() => {
-    if (!fiscalSalvo) return -1;
-    if (fiscalSalvo.analisado !== true && !fiscalSalvo.dataUltimoSalvamento) return -1;
+    if (!fiscalSalvo || fiscalSalvo.analisado !== true) return -1;
     const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
     const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
