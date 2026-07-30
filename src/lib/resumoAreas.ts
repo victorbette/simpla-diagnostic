@@ -84,7 +84,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
     const perfil = dc.suitabilityPerfil ?? '';
 
     let pontos = 0;
-    if (temRendaFixa) pontos += 30;
+    if (temRendaFixa) pontos += 25;
     if (temAcoes)     pontos += 25;
     if (temFIIs)      pontos += 25;
     if (temExterior)  pontos += 20;
@@ -100,6 +100,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   // ── Proteção ──────────────────────────────────────────────────────────────
   const ps = (() => {
     if (!seguroSalvo) return -1;
+    if (!seguroSalvo.dataUltimoSalvamento) return -1;
     const capitalNecessario = Number(seguroSalvo.capitalNecessario) || Number(seguroSalvo.totalNeed) || 0;
     const capitalAtual = capitalAtualSeguro(seguroSalvo);
     if (capitalNecessario > 0) {
@@ -127,7 +128,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
     if (tipoDeclaracao === 'completa') {
       if (aporteAnualPGBL > 0) {
         const aproveitamento = tetoPGBL > 0 ? Math.min(1, aporteAnualPGBL / tetoPGBL) : 0;
-        pontos += Math.round(aproveitamento * 40);
+        pontos += Math.round(aproveitamento * 50);
       }
     } else if (tipoDeclaracao === 'simplificada') {
       pontos += 20;

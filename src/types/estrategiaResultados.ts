@@ -95,6 +95,7 @@ export interface ResultadoSeguro {
   capitalDoencaGraveEfetivo?: number;
   seguroDoencasGravesAtual?: number;
   dadosFormulario?: Record<string, unknown>;
+  dataUltimoSalvamento?: string;
   dataCalculo: string;
   savedAt: string;
 }
