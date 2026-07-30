@@ -4,16 +4,6 @@ import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
 
-const SEG_COLORS: Record<string, { bg: string; color: string }> = {
-  "Pós-fixado":     { bg: "#DBEAFE", color: "#1E40AF" },
-  "Inflação":       { bg: "#FEF3C7", color: "#B45309" },
-  "Prefixado":      { bg: "#DCFCE7", color: "#15803D" },
-  "Fundos RF":      { bg: "#F3F4F6", color: "#374151" },
-  "Fundos MM":      { bg: "#F3F4F6", color: "#374151" },
-  "COE":            { bg: "#F5F3FF", color: "#6D28D9" },
-  "Renda Variável": { bg: "#FEF3C7", color: "#B45309" },
-  "Renda Fixa":     { bg: "#DBEAFE", color: "#1E40AF" },
-};
 
 const SEG_BAR_COLORS: Record<string, string> = {
   "Pós-fixado": "#1E40AF",
@@ -219,7 +209,6 @@ export function CarteiraCard({
 
       {/* Asset rows */}
       {ativos.map((ativo) => {
-        const segCor = SEG_COLORS[ativo.segmento];
         const isHover = hoverRow === ativo.id;
         const isEditSeg = editingSegId === ativo.id;
 
@@ -280,8 +269,9 @@ export function CarteiraCard({
                     display: "inline-block",
                     cursor: "pointer",
                     fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
-                    backgroundColor: segCor?.bg ?? "#F3F4F6",
-                    color: segCor?.color ?? "#374151",
+                    backgroundColor: "#F3F4F6",
+                    color: "#374151",
+                    border: "1.5px solid #9CA3AF",
                   }}
                   title="Clique para editar"
                 >
