@@ -5,8 +5,6 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { nivelScore } from "@/lib/nivelScore";
-import { calcularScoresAreas } from "@/lib/resumoAreas";
 import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
 
 interface Props {
@@ -245,12 +243,5 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
 
   blocos.push(...blocosNotaConsultor(plan.clientId, "aa", nota));
 
-  const nAA = nivelScore(calcularScoresAreas(plan, resultados).aa);
-  const badgeAA = (
-    <span style={{ fontSize: 10, fontWeight: 700, color: nAA.cor, background: nAA.bg, padding: "2px 10px", borderRadius: 99, display: "inline-block", marginLeft: 8 }}>
-      {nAA.label}
-    </span>
-  );
-
-  return <PaginaDocFluida titulo="Gestão de Ativos" nomeCliente={nomeCliente} blocos={blocos} badgeNode={badgeAA} />;
+  return <PaginaDocFluida titulo="Gestão de Ativos" nomeCliente={nomeCliente} blocos={blocos} />;
 }
