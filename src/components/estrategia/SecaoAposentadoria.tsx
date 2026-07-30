@@ -83,7 +83,7 @@ export function SecaoAposentadoria({
                 <GraficoIF
                   projecao={resultadoIF.projecao}
                   objetivos={resultadoIF.objetivos ?? []}
-                  height={280}
+                  height={380}
                   mesIF={(resultadoIF.idadeMeta - resultadoIF.idadeAtual) * 12}
                 />
               </div>
