@@ -20,7 +20,7 @@ const AVAILABLE_TAGS = ["IF", "Aposentadoria", "Aportes", "Previdência", "PGBL"
 const CARD: React.CSSProperties = {
   backgroundColor: "white",
   borderRadius: 12,
-  padding: 24,
+  padding: "24px 28px",
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
