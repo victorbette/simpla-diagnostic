@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
@@ -84,9 +84,17 @@ interface SeletorSegmentoProps {
 }
 
 function SeletorSegmento({ cardId, valor, onChange }: SeletorSegmentoProps) {
+  const [aberto, setAberto] = useState(false);
   const opcoes = SEGMENTOS_POR_CLASSE[cardId];
+
+  useEffect(() => {
+    if (!aberto) return;
+    const handler = () => setAberto(false);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [aberto]);
+
   if (!opcoes) {
-    // cripto or unknown — free text
     return (
       <input
         type="text"
@@ -100,28 +108,77 @@ function SeletorSegmento({ cardId, valor, onChange }: SeletorSegmentoProps) {
       />
     );
   }
+
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-      {opcoes.map((op) => {
-        const sel = valor === op;
-        return (
-          <button
-            key={op}
-            type="button"
-            onClick={() => onChange(sel ? "" : op)}
-            style={{
-              fontSize: 10, padding: "2px 7px", borderRadius: 99, cursor: "pointer",
-              border: sel ? "1px solid #2563EB" : "1px solid #E5E7EB",
-              background: sel ? "#DBEAFE" : "#F9FAFB",
-              color: sel ? "#1E40AF" : "#6B7280",
-              fontWeight: sel ? 700 : 400,
-              transition: "all 120ms",
-            }}
-          >
-            {op}
-          </button>
-        );
-      })}
+    <div
+      style={{ position: "relative" as const }}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => setAberto((v) => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: 4,
+          padding: "4px 10px",
+          border: "1px solid #E5E7EB",
+          borderRadius: 6,
+          background: valor ? "#EFF6FF" : "white",
+          color: valor ? "#2563EB" : "#9CA3AF",
+          fontSize: 11,
+          cursor: "pointer",
+          whiteSpace: "nowrap" as const,
+          minWidth: 80,
+        }}
+      >
+        {valor || "Segmento"}
+        <i className="ti ti-chevron-down" style={{ fontSize: 10 }} />
+      </button>
+
+      {aberto && (
+        <div style={{
+          position: "absolute" as const,
+          top: "100%",
+          left: 0,
+          zIndex: 100,
+          background: "white",
+          border: "1px solid #E5E7EB",
+          borderRadius: 8,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          minWidth: 150,
+          maxHeight: 220,
+          overflowY: "auto" as const,
+          marginTop: 2,
+        }}>
+          {opcoes.map((seg) => (
+            <div
+              key={seg}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                onChange(seg);
+                setAberto(false);
+              }}
+              style={{
+                padding: "8px 12px",
+                fontSize: 12,
+                cursor: "pointer",
+                color: valor === seg ? "#2563EB" : "#374151",
+                fontWeight: valor === seg ? 600 : 400,
+                background: valor === seg ? "#EFF6FF" : "white",
+                borderBottom: "0.5px solid #F3F4F6",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background = "#F0F7FF";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.background =
+                  valor === seg ? "#EFF6FF" : "white";
+              }}
+            >
+              {seg}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -278,7 +335,7 @@ export function CarteiraCard({
             style={{
               display: "grid", gridTemplateColumns: gridTemplate,
               gap: 4, padding: "5px 12px",
-              borderBottom: "1px solid #F3F4F6", alignItems: isRFCard ? "center" : "start",
+              borderBottom: "1px solid #F3F4F6", alignItems: "center",
               backgroundColor: isHover ? "#F8FAFC" : "white",
               transition: "background 150ms",
             }}
