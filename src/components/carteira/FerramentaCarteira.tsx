@@ -397,7 +397,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             patrimonioColeta={patrimonioColeta}
             custoVidaMensal={custoVidaMensal}
             onCustoVidaChange={setCustoVidaMensal}
-            custoVidaColeta={custoVidaColeta}
           />
         )}
         {etapa === 3 && (

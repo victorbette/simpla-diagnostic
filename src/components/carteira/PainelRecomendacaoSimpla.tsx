@@ -11,6 +11,8 @@ interface Props {
   patrimonioMeta: number;                       // patrimônio + aporte
   temAtivosRecomendados: boolean;
   onAplicar: (meta: Record<CardId, number>, ativos: Ativo[]) => void;
+  custoVidaInicial?: number;
+  onCustoVidaChange?: (v: number) => void;
 }
 
 function parseBRL(raw: string): number {
@@ -24,9 +26,9 @@ function parseBRL(raw: string): number {
  * detecta a faixa pelo patrimônio, desconta a reserva de emergência e aplica
  * a matriz faixa × perfil + produtos recomendados nos cards da Etapa 2.
  */
-export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAtivosRecomendados, onAplicar }: Props) {
+export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAtivosRecomendados, onAplicar, custoVidaInicial = 0, onCustoVidaChange }: Props) {
   const { model, loading, error, syncing, sincronizar } = useAllocationModel();
-  const [custoVidaText, setCustoVidaText] = useState("");
+  const [custoVidaText, setCustoVidaText] = useState(custoVidaInicial > 0 ? formatBRL(custoVidaInicial) : "");
   const [mesesReserva, setMesesReserva] = useState(0);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
 
@@ -119,14 +121,26 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
                 type="text"
                 value={custoVidaText}
                 placeholder="R$ 0,00"
-                onChange={(e) => setCustoVidaText(e.target.value)}
+                onChange={(e) => {
+                  setCustoVidaText(e.target.value);
+                  onCustoVidaChange?.(parseBRL(e.target.value));
+                }}
                 onFocus={(e) => e.currentTarget.select()}
-                onBlur={() => setCustoVidaText(custoVidaMensal > 0 ? formatBRL(custoVidaMensal) : "")}
+                onBlur={() => {
+                  const v = parseBRL(custoVidaText);
+                  onCustoVidaChange?.(v);
+                  setCustoVidaText(v > 0 ? formatBRL(v) : "");
+                }}
                 style={{
                   width: "100%", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6,
                   padding: "6px 10px", outline: "none", boxSizing: "border-box",
                 }}
               />
+              {custoVidaInicial > 0 && (
+                <p style={{ margin: "3px 0 0", fontSize: 10, color: "#2563EB" }}>
+                  Carregado da Situação Atual — editável
+                </p>
+              )}
             </div>
             <div>
               <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>

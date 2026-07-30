@@ -22,7 +22,6 @@ interface Props {
   patrimonioColeta?: number;
   custoVidaMensal?: number;
   onCustoVidaChange?: (v: number) => void;
-  custoVidaColeta?: number;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -50,14 +49,17 @@ export function Etapa2CarteiraRecomendada({
   patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
   usdBrl, onUsdBrlChange,
   comecandoDoZero = false, patrimonioColeta = 0,
-  custoVidaMensal = 0, onCustoVidaChange, custoVidaColeta = 0,
+  custoVidaMensal = 0, onCustoVidaChange,
 }: Props) {
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
   );
-  const [custoVidaText, setCustoVidaText] = useState(
-    custoVidaMensal > 0 ? formatBRL(custoVidaMensal) : ""
-  );
+
+  useEffect(() => {
+    if (aporteDisponivel > 0) {
+      setAporteText((prev) => prev === "" ? formatBRL(aporteDisponivel) : prev);
+    }
+  }, [aporteDisponivel]);
 
   const patrimonioMeta = patrimonio + aporteDisponivel;
   const totalAlocado = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
@@ -92,6 +94,8 @@ export function Etapa2CarteiraRecomendada({
           onAlocacaoMeta(meta);
           onAtivos(novosAtivos);
         }}
+        custoVidaInicial={custoVidaMensal}
+        onCustoVidaChange={onCustoVidaChange}
       />
 
       {/* ── CARD ALOCAÇÃO META ── */}
@@ -318,73 +322,6 @@ export function Etapa2CarteiraRecomendada({
             boxSizing: "border-box",
           } as React.CSSProperties}
           onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#86EFAC")}
-          onMouseLeave={(e) => {
-            if (document.activeElement !== e.currentTarget)
-              e.currentTarget.style.borderColor = "#BFDBFE";
-          }}
-        />
-      </div>
-
-      {/* ── CARD CUSTO DE VIDA MENSAL ── */}
-      <div style={{
-        backgroundColor: "white",
-        border: "0.5px solid #E5E7EB",
-        borderRadius: 12,
-        padding: "16px 20px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 16,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 36, height: 36, flexShrink: 0, borderRadius: 8,
-            backgroundColor: "#DBEAFE",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <i className="ti ti-home" style={{ fontSize: 20, color: "#1E40AF" }} />
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#111827" }}>Custo de Vida Mensal</p>
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6B7280" }}>
-              Despesas mensais do cliente
-            </p>
-            {custoVidaColeta > 0 && (
-              <p style={{ margin: "4px 0 0", fontSize: 10, color: "#2563EB" }}>
-                Carregado da Situação Atual — editável
-              </p>
-            )}
-          </div>
-        </div>
-
-        <input
-          type="text"
-          value={custoVidaText}
-          placeholder="R$ 0,00"
-          onChange={(e) => {
-            setCustoVidaText(e.target.value);
-            onCustoVidaChange?.(parseBRL(e.target.value));
-          }}
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={() => {
-            const v = parseBRL(custoVidaText);
-            onCustoVidaChange?.(v);
-            setCustoVidaText(v > 0 ? formatBRL(v) : "");
-          }}
-          style={{
-            textAlign: "right",
-            fontSize: 18,
-            fontWeight: 600,
-            color: "#1E40AF",
-            border: "1px solid #BFDBFE",
-            borderRadius: 8,
-            padding: "8px 14px",
-            width: 180,
-            outline: "none",
-            fontFamily: "inherit",
-            boxSizing: "border-box",
-          } as React.CSSProperties}
-          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#93C5FD")}
           onMouseLeave={(e) => {
             if (document.activeElement !== e.currentTarget)
               e.currentTarget.style.borderColor = "#BFDBFE";
