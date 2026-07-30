@@ -117,6 +117,8 @@ export interface ResultadoFiscal {
   inputDependentes?: number;
   inputAporteAnualPGBL?: number;
   inputSaldoPrevidencia?: number;
+  analisado?: boolean;
+  dataUltimoSalvamento?: string;
 }
 
 export interface EstrategiaFinalComentarios {

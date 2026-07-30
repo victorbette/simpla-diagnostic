@@ -65,6 +65,8 @@ export function SecaoFiscal({
           inputDependentes:       resultadoFiscal.inputDependentes,
           inputAporteAnualPGBL:   resultadoFiscal.inputAporteAnualPGBL,
           inputSaldoPrevidencia:  resultadoFiscal.inputSaldoPrevidencia,
+          analisado:              resultadoFiscal.analisado,
+          dataUltimoSalvamento:   resultadoFiscal.dataUltimoSalvamento,
         } : null}
         onSave={(r) => {
           onResultadoFiscal({
@@ -84,6 +86,8 @@ export function SecaoFiscal({
             inputDependentes:       r.inputDependentes,
             inputAporteAnualPGBL:   r.inputAporteAnualPGBL,
             inputSaldoPrevidencia:  r.inputSaldoPrevidencia,
+            analisado:              r.analisado,
+            dataUltimoSalvamento:   r.dataUltimoSalvamento,
           });
         }}
       />

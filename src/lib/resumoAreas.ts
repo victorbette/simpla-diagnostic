@@ -111,6 +111,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   // ── Tributário ────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo) return -1;
+    if (fiscalSalvo.analisado !== true && !fiscalSalvo.dataUltimoSalvamento) return -1;
     const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
     const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
@@ -255,8 +256,7 @@ export function gerarTextosAreas(
   const fiscal = (() => {
     const s = scores.fiscal;
     if (s < 0) return (
-      `O planejamento tributário ainda não foi analisado. Essa é uma das alavancas mais subestimadas na construção de patrimônio: pagar menos imposto de forma legal e estratégica pode representar uma diferença significativa no resultado final ao longo dos anos.\n\n` +
-      `Na aba de Planejamento Tributário, vamos identificar as oportunidades disponíveis e estruturar uma estratégia fiscal eficiente para a sua situação.`
+      `O Planejamento Tributário ainda não foi analisado. Acesse a aba de Planejamento Tributário para registrar as informações e obter a análise completa desta área.`
     );
     if (s <= 50) return (
       `A análise tributária revelou oportunidades importantes que ainda não estão sendo aproveitadas. Isso significa que parte do que poderia estar sendo reinvestido e acumulando patrimônio está sendo destinado ao fisco desnecessariamente.\n\n` +

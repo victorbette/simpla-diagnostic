@@ -24,6 +24,8 @@ export interface SavedPGBLResult {
   inputDependentes?: number;
   inputAporteAnualPGBL?: number;
   inputSaldoPrevidencia?: number;
+  analisado?: boolean;
+  dataUltimoSalvamento?: string;
 }
 
 interface Props {
@@ -41,8 +43,7 @@ const TIPOS_DECLARACAO = [
 ];
 
 export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
-  const dc     = plan?.dadosCliente;
-  const fiscal = plan?.fiscal;
+  const dc = plan?.dadosCliente;
 
   const idadeAtual = dc?.dataNascimento
     ? Math.floor(
@@ -54,7 +55,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const nAnos     = idadeAtual > 0 ? Math.max(1, idadeMeta - idadeAtual) : 0;
 
   const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(
-    savedResult?.tipoDeclaracao ?? fiscal?.tipoDeclaracao ?? "nao_sei"
+    savedResult?.tipoDeclaracao ?? ""
   );
 
   const renda      = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? 0);
@@ -99,22 +100,24 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const espacoDisponivel = tetoPGBLLive > 0 ? Math.max(0, tetoPGBLLive - aporteAnualPGBL) : 0;
 
   function handleSave() {
-    if (!sim || !onSave) return;
+    if (!onSave) return;
     onSave({
       tipoDeclaracao,
       rendaAnual:             renda.value,
-      tetoPGBLAnual:          sim.tetoPGBL,
-      aporteAnual:            sim.aporteEfetivo,
-      irComPGBL:              sim.irComPGBL,
-      irSemPGBL:              sim.irSemPGBL,
-      economiaAnual:          sim.economia,
-      espacoDisponivelMensal: Math.max(0, (sim.tetoPGBL - sim.aporteEfetivo) / 12),
-      aproveitandoTeto:       sim.aporteEfetivo >= sim.tetoPGBL,
+      tetoPGBLAnual:          sim?.tetoPGBL ?? 0,
+      aporteAnual:            sim?.aporteEfetivo ?? 0,
+      irComPGBL:              sim?.irComPGBL ?? 0,
+      irSemPGBL:              sim?.irSemPGBL ?? 0,
+      economiaAnual:          sim?.economia ?? 0,
+      espacoDisponivelMensal: sim ? Math.max(0, (sim.tetoPGBL - sim.aporteEfetivo) / 12) : 0,
+      aproveitandoTeto:       sim ? sim.aporteEfetivo >= sim.tetoPGBL : false,
       inputRendaAnualBruta:   renda.value,
       inputDespesas:          despesas.value,
       inputDependentes:       Math.max(0, parseInt(dependentes) || 0),
       inputAporteAnualPGBL:   aporteAnual.value,
       inputSaldoPrevidencia:  saldoAtual.value,
+      analisado:              true,
+      dataUltimoSalvamento:   new Date().toISOString(),
     });
     setSalvo(true);
     setTimeout(() => {
@@ -526,13 +529,13 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         <div style={{ display: "flex", justifyContent: "flex-end", padding: "16px 0 0", marginTop: 8, borderTop: "0.5px solid #E5E7EB" }}>
           <button
             onClick={handleSave}
-            disabled={!sim || salvo}
+            disabled={salvo}
             style={{
               display: "flex", alignItems: "center", gap: 6,
-              backgroundColor: salvo ? "#15803D" : (sim ? "#2563EB" : "#D1D5DB"),
+              backgroundColor: salvo ? "#15803D" : "#2563EB",
               color: "white", border: "none", borderRadius: 8,
               padding: "8px 20px", fontSize: 13, fontWeight: 600,
-              cursor: sim && !salvo ? "pointer" : "not-allowed",
+              cursor: salvo ? "not-allowed" : "pointer",
               transition: "background-color 0.2s",
             }}
           >
