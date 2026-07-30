@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
@@ -74,114 +74,8 @@ function ValueInput({ value, onChange }: ValueInputProps) {
 }
 
 const RF_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
-// Cards where segmento is picked from a predefined dropdown (RF only now)
-const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
-
-interface SeletorSegmentoProps {
-  cardId: CardId;
-  valor: string;
-  onChange: (seg: string) => void;
-}
-
-function SeletorSegmento({ cardId, valor, onChange }: SeletorSegmentoProps) {
-  const [aberto, setAberto] = useState(false);
-  const opcoes = SEGMENTOS_POR_CLASSE[cardId];
-
-  useEffect(() => {
-    if (!aberto) return;
-    const handler = () => setAberto(false);
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [aberto]);
-
-  if (!opcoes) {
-    return (
-      <input
-        type="text"
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Ex: Bitcoin, Ethereum..."
-        style={{
-          border: "none", background: "transparent", outline: "none",
-          fontSize: 11, color: "#6B7280", width: "100%", padding: 0,
-        }}
-      />
-    );
-  }
-
-  return (
-    <div
-      style={{ position: "relative" as const }}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      <button
-        type="button"
-        onClick={() => setAberto((v) => !v)}
-        style={{
-          display: "flex", alignItems: "center", gap: 4,
-          padding: "4px 10px",
-          border: "1px solid #E5E7EB",
-          borderRadius: 6,
-          background: valor ? "#EFF6FF" : "white",
-          color: valor ? "#2563EB" : "#9CA3AF",
-          fontSize: 11,
-          cursor: "pointer",
-          whiteSpace: "nowrap" as const,
-          minWidth: 80,
-        }}
-      >
-        {valor || "Segmento"}
-        <i className="ti ti-chevron-down" style={{ fontSize: 10 }} />
-      </button>
-
-      {aberto && (
-        <div style={{
-          position: "absolute" as const,
-          top: "100%",
-          left: 0,
-          zIndex: 100,
-          background: "white",
-          border: "1px solid #E5E7EB",
-          borderRadius: 8,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          minWidth: 150,
-          maxHeight: 220,
-          overflowY: "auto" as const,
-          marginTop: 2,
-        }}>
-          {opcoes.map((seg) => (
-            <div
-              key={seg}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                onChange(seg);
-                setAberto(false);
-              }}
-              style={{
-                padding: "8px 12px",
-                fontSize: 12,
-                cursor: "pointer",
-                color: valor === seg ? "#2563EB" : "#374151",
-                fontWeight: valor === seg ? 600 : 400,
-                background: valor === seg ? "#EFF6FF" : "white",
-                borderBottom: "0.5px solid #F3F4F6",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.background = "#F0F7FF";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.background =
-                  valor === seg ? "#EFF6FF" : "white";
-              }}
-            >
-              {seg}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// Cards with predefined segmento options — cripto uses free text
+const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido", "acoes", "fiis", "exterior"];
 
 interface Props {
   cardId: CardId;
@@ -232,8 +126,8 @@ export function CarteiraCard({
       headers = ["Nome", "Segmento", "Vencimento", "R$", ""];
     }
   } else {
-    // acoes, fiis, exterior, cripto — uniform: Nome | Segmento | R$ Atual | trash
-    gridTemplate = "2fr 1fr 85px 28px";
+    // acoes, fiis, exterior, cripto — 110px Segmento para alinhar com RF
+    gridTemplate = "2fr 110px 85px 28px";
     headers = ["Nome", "Segmento", "R$ Atual", ""];
   }
 
@@ -362,7 +256,7 @@ export function CarteiraCard({
               />
             )}
 
-            {/* Segmento — dropdown for RF, pill buttons for acoes/fiis/exterior, text for cripto */}
+            {/* Segmento — dropdown para cards com opções predefinidas; texto livre para cripto */}
             {hasDropdownSeg ? (
               isEditSeg ? (
                 <select
@@ -375,28 +269,35 @@ export function CarteiraCard({
                     padding: "2px 4px", backgroundColor: "white", cursor: "pointer", outline: "none",
                   }}
                 >
-                  {meta.segmentos.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {(SEGMENTOS_POR_CLASSE[cardId] ?? meta.segmentos).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </select>
               ) : (
                 <span
-                  onClick={() => meta.segmentos.length > 0 && setEditingSegId(ativo.id)}
+                  onClick={() => setEditingSegId(ativo.id)}
                   style={{
                     display: "inline-block",
-                    cursor: meta.segmentos.length > 0 ? "pointer" : "default",
+                    cursor: "pointer",
                     fontSize: 10, fontWeight: 600, padding: "2px 6px", borderRadius: 4,
                     backgroundColor: segCor?.bg ?? "#F3F4F6",
                     color: segCor?.color ?? "#374151",
                   }}
-                  title={meta.segmentos.length > 0 ? "Clique para editar" : undefined}
+                  title="Clique para editar"
                 >
                   {ativo.segmento || "—"}
                 </span>
               )
             ) : (
-              <SeletorSegmento
-                cardId={cardId}
-                valor={ativo.segmento ?? ""}
-                onChange={(seg) => onChange(ativo.id, { segmento: seg })}
+              <input
+                type="text"
+                value={ativo.segmento ?? ""}
+                onChange={(e) => onChange(ativo.id, { segmento: e.target.value })}
+                placeholder="Ex: Bitcoin, Ethereum..."
+                style={{
+                  border: "none", background: "transparent", outline: "none",
+                  fontSize: 11, color: "#6B7280", width: "100%", padding: 0,
+                }}
               />
             )}
 
