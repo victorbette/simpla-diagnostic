@@ -112,28 +112,26 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   // ── Tributário ────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo || fiscalSalvo.analisado !== true) return -1;
-    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? '';
-    const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
-    const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
 
-    let pontos = 0;
+    const tipoDeclaracao = fiscalSalvo.tipoDeclaracao ?? '';
+
+    if (tipoDeclaracao === 'simplificada') return 0;
+
+    if (!tipoDeclaracao || tipoDeclaracao === 'nao_sei') return 0;
 
     if (tipoDeclaracao === 'completa') {
-      pontos += 20;
-      if (tetoPGBL > 0) {
-        if (aporteAnualPGBL > 0) {
-          pontos += Math.round(Math.min(1, aporteAnualPGBL / tetoPGBL) * 80);
-        }
-        // aporteAnualPGBL === 0: sem pontos de aproveitamento
-      } else {
-        pontos += 40; // completa mas sem teto calculado (renda muito baixa)
-      }
-    } else if (tipoDeclaracao === 'simplificada') {
-      pontos += 30;
-    }
-    // tipoDeclaracao vazio ou 'nao_sei': 0 pts
+      const rendaAnualBruta = Number(fiscalSalvo.rendaAnual) || 0;
+      const tetoPGBL = rendaAnualBruta * 0.12;
 
-    return Math.min(100, Math.max(0, pontos));
+      if (tetoPGBL <= 0) return 10;
+
+      const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
+      const aproveitamento = Math.min(1, aporteAnualPGBL / tetoPGBL);
+
+      return Math.round(aproveitamento * 100);
+    }
+
+    return 0;
   })();
 
   // ── Score Geral ───────────────────────────────────────────────────────────
@@ -266,42 +264,51 @@ export function gerarTextosAreas(
   const fiscal = (() => {
     const s = scores.fiscal;
     if (s < 0) return (
-      `O Planejamento Tributário ainda não foi analisado.`
+      `O Planejamento Tributário ainda não foi analisado. Acesse a aba correspondente para registrar as informações e identificar as oportunidades disponíveis.`
     );
 
     const fiscalSalvo = resultados.fiscal;
     const tipoDeclaracao  = fiscalSalvo?.tipoDeclaracao ?? '';
     const aporteAnualPGBL = Number(fiscalSalvo?.aporteAnual) || 0;
+    const tetoPGBL        = Number(fiscalSalvo?.tetoPGBLAnual) || 0;
 
-    // Declaração completa mas sem nenhum aporte em PGBL
-    if (tipoDeclaracao === 'completa' && aporteAnualPGBL === 0) return (
-      `Identificamos uma oportunidade fiscal significativa que ainda não está sendo aproveitada. Você declara pelo modelo completo, o que permite deduzir contribuições à previdência privada diretamente na base de cálculo do Imposto de Renda.\n\n` +
-      `Não aproveitar esse benefício é, na prática, pagar mais imposto do que o necessário — e deixar de acumular patrimônio com o dinheiro que ficaria no fisco.\n\n` +
-      `Existe uma oportunidade real de redução legal da carga tributária que precisa ser estruturada.`
-    );
-
-    // Declaração simplificada
     if (tipoDeclaracao === 'simplificada') return (
-      `Você utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, contribuições à previdência privada do tipo PGBL não geram benefício fiscal adicional.\n\n` +
-      `Dependendo da evolução da sua renda e despesas dedutíveis, pode valer a pena avaliar periodicamente se o modelo de declaração mais vantajoso ainda é o mesmo.`
+      `Você realiza a declaração pelo modelo simplificado. Nesse modelo, contribuições à previdência privada do tipo PGBL não geram dedução adicional no Imposto de Renda — o que significa que o benefício do diferimento fiscal não está disponível para a sua situação atual.\n\n` +
+      `Dependendo da evolução da sua renda e das suas despesas dedutíveis, pode valer a pena avaliar periodicamente se a migração para o modelo completo traria vantagens fiscais relevantes.`
     );
 
-    // Completa com PGBL mas aproveitamento parcial baixo (score ≤ 50)
-    if (s <= 50) return (
-      `Você está utilizando a declaração completa e já tem alguma contribuição em previdência privada — o que é positivo. No entanto, o potencial de redução fiscal disponível ainda não está sendo aproveitado em sua totalidade.\n\n` +
-      `Cada real que poderia ser deduzido e não é representa um custo real: imposto pago desnecessariamente que poderia estar sendo reinvestido e acumulando patrimônio ao longo dos anos.`
+    if (!tipoDeclaracao || tipoDeclaracao === 'nao_sei') return (
+      `O tipo de declaração ainda não foi definido. Essa informação é fundamental para avaliar se existe oportunidade de reduzir legalmente a carga tributária através da previdência privada.`
     );
 
-    // Bom aproveitamento (score ≤ 80)
-    if (s <= 80) return (
-      `O planejamento tributário está em um bom caminho — você utiliza a declaração completa e aproveita parte do benefício disponível com a previdência privada.\n\n` +
-      `Ainda há espaço para otimização: aumentar a contribuição dentro do limite permitido pode reduzir ainda mais a carga tributária e acelerar a construção de patrimônio de forma estratégica.`
+    // Completa — daqui em diante
+    if (tetoPGBL <= 0) return (
+      `Você realiza a declaração pelo modelo completo, o que permite aproveitar o benefício fiscal da previdência privada do tipo PGBL.\n\n` +
+      `Para avaliar o potencial de economia disponível, precisamos das informações de renda e investimento em previdência.`
     );
 
-    // Aproveitamento excelente (score > 80)
+    if (aporteAnualPGBL === 0) return (
+      `Você realiza a declaração pelo modelo completo, mas ainda não utiliza a previdência privada (PGBL) como instrumento de planejamento fiscal.\n\n` +
+      `Isso significa que existe um benefício legal de redução do Imposto de Renda que não está sendo aproveitado. Cada contribuição dentro do limite permitido reduz diretamente a base de cálculo do imposto — e o valor que ficaria no fisco permanece investido e rendendo para você.\n\n` +
+      `Essa é uma das oportunidades mais diretas e acessíveis de otimização tributária legal.`
+    );
+
+    if (s <= 40) return (
+      `Você realiza a declaração pelo modelo completo e já utiliza a previdência privada como ferramenta de planejamento fiscal — o que é um passo importante na direção certa.\n\n` +
+      `No entanto, o aproveitamento do limite legal disponível ainda está aquém do potencial. Aumentar a contribuição dentro do teto permitido pode representar uma redução relevante na carga tributária anual — com o benefício adicional de fortalecer o patrimônio previdenciário ao mesmo tempo.`
+    );
+
+    if (s <= 70) return (
+      `Bom aproveitamento do benefício fiscal disponível. Você utiliza a declaração completa e já contribui com a previdência privada de forma consistente.\n\n` +
+      `Ainda existe espaço para otimização dentro do limite legal — cada real adicional contribuído reduz a base de cálculo do imposto e permanece trabalhando para você.`
+    );
+
+    if (s < 100) return (
+      `Excelente gestão tributária. Você está aproveitando uma parcela significativa do benefício fiscal disponível pela declaração completa com PGBL — o que reduz legalmente sua carga tributária e direciona mais recursos para a construção do patrimônio.`
+    );
+
     return (
-      `Excelente gestão tributária. Você está aproveitando de forma consistente o benefício fiscal disponível — o que significa pagar menos imposto de forma legal e direcionar mais recursos para a construção do seu patrimônio.\n\n` +
-      `Essa estratégia, mantida ao longo dos anos, representa uma diferença significativa no resultado final acumulado.`
+      `Aproveitamento máximo do benefício fiscal disponível. Você está utilizando integralmente o limite legal de dedução com previdência privada — o que significa a menor carga tributária possível dentro das regras atuais, com o máximo sendo direcionado para o patrimônio previdenciário.`
     );
   })();
 
