@@ -24,18 +24,23 @@ function varsLF(plan: FinancialPlan) {
   const patrimonioAtual = Number(dc.patrimonioFinanceiroEstimado) || 0;
   const aporteMensal    = Number(dc.aportesMensalMedio) || 0;
   const rendaDesejada   = Number(dc.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta       = Number(dc.idadeMeta) || Number(plan.planejamentoIF.idadeMeta) || 60;
+  const idadeMeta       = Number(dc.idadeMeta) || 60;
   const idadeAtual      = dc.dataNascimento
     ? Math.floor((Date.now() - new Date(dc.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
 
-  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
-  const TAXA_MENSAL = Math.pow(1.04, 1 / 12) - 1;
-  const nMeses = Math.max(0, (idadeMeta - idadeAtual) * 12);
-  const projecao = nMeses > 0
-    ? patrimonioAtual * Math.pow(1 + TAXA_MENSAL, nMeses) +
-      aporteMensal * (Math.pow(1 + TAXA_MENSAL, nMeses) - 1) / TAXA_MENSAL
-    : patrimonioAtual;
+  const TAXA_ANUAL  = 0.04;
+  const TAXA_MENSAL = Math.pow(1 + TAXA_ANUAL, 1 / 12) - 1;
+
+  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / TAXA_ANUAL : 0;
+  const nMeses = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
+
+  const projecao = (() => {
+    if (nMeses === 0 || !isFinite(nMeses)) return patrimonioAtual;
+    const f = Math.pow(1 + TAXA_MENSAL, nMeses);
+    if (!isFinite(f)) return patrimonioAtual;
+    return patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL;
+  })();
 
   const temDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
   return { patrimonioAtual, aporteMensal, rendaDesejada, idadeMeta, idadeAtual, patrimonioNecessario, projecao, temDados };
