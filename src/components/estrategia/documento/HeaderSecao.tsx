@@ -1,21 +1,17 @@
-import { type ReactNode } from "react";
 import { DOC, TITULO_SECAO } from "@/lib/documentoStyles";
 
 interface Props {
   titulo: string;
   subtitulo?: string;
-  /** Badge opcional exibido ao lado do título (ex.: nível de score da área) */
-  badgeNode?: ReactNode;
 }
 
 /** Cabeçalho padrão das páginas de conteúdo: título navy + "SIMPLA INVEST" + régua */
-export function HeaderSecao({ titulo, subtitulo, badgeNode }: Props) {
+export function HeaderSecao({ titulo, subtitulo }: Props) {
   return (
     <div style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div>
           <h2 style={TITULO_SECAO}>{titulo}</h2>
-          {badgeNode}
         </div>
         <span
           style={{
