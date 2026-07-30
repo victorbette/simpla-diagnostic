@@ -13,6 +13,9 @@ interface Props {
   clientName: string;
   clientProfile: string | null;
   patrimonyInicial?: number;
+  comecandoDoZero?: boolean;
+  patrimonioColeta?: number;
+  custoVidaColeta?: number;
   onClose: () => void;
   onSave?: (r: CarteiraResultado) => void;
   onLimpar?: () => void;
@@ -46,6 +49,7 @@ interface SavedState {
   planoAcao: PlanoAcaoItem[];
   notasConsultor: string;
   aporteDisponivel: number;
+  custoVidaMensal?: number;
   usdBrl?: number;
 }
 
@@ -92,7 +96,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
   };
 }
 
-export function FerramentaCarteira({ clientId, clientName, clientProfile, patrimonyInicial = 0, onClose, onSave, onLimpar }: Props) {
+export function FerramentaCarteira({ clientId, clientName, clientProfile, patrimonyInicial = 0, comecandoDoZero = false, patrimonioColeta = 0, custoVidaColeta = 0, onClose, onSave, onLimpar }: Props) {
   const storageKey = `carteira_v3_${clientId}`;
 
   const [etapa, setEtapa] = useState<Etapa>(1);
@@ -103,6 +107,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [planoAcao, setPlanoAcao] = useState<PlanoAcaoItem[]>([]);
   const [notasConsultor, setNotasConsultor] = useState("");
   const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
+  const [custoVidaMensal, setCustoVidaMensal] = useState<number>(0);
   const [usdBrl, setUsdBrl] = useState<number>(5.0);
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -112,6 +117,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
 
   // Load from localStorage once
   useEffect(() => {
+    let aporteFromStorage = false;
+    let custoVidaFromStorage = false;
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
@@ -122,10 +129,13 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
         if (parsed.alocacaoMeta && typeof parsed.alocacaoMeta === "object") setAlocacaoMeta({ ...defaultAlocacao(clientProfile), ...parsed.alocacaoMeta });
         if (Array.isArray(parsed.planoAcao)) setPlanoAcao(parsed.planoAcao.map(migrateItemPlano));
         if (typeof parsed.notasConsultor === "string") setNotasConsultor(parsed.notasConsultor);
-        if (typeof parsed.aporteDisponivel === "number") setAporteDisponivel(parsed.aporteDisponivel);
+        if (typeof parsed.aporteDisponivel === "number") { setAporteDisponivel(parsed.aporteDisponivel); aporteFromStorage = true; }
+        if (typeof parsed.custoVidaMensal === "number") { setCustoVidaMensal(parsed.custoVidaMensal); custoVidaFromStorage = true; }
         if (typeof parsed.usdBrl === "number" && parsed.usdBrl > 0) setUsdBrl(parsed.usdBrl);
       }
     } catch { /* ignore */ }
+    if (!aporteFromStorage && comecandoDoZero && patrimonioColeta > 0) setAporteDisponivel(patrimonioColeta);
+    if (!custoVidaFromStorage && custoVidaColeta > 0) setCustoVidaMensal(custoVidaColeta);
     setLoaded(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -136,7 +146,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (!loaded) return;
     if (!mudancasInitRef.current) { mudancasInitRef.current = true; return; }
     setTemMudancas(true);
-  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl]);
+  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, usdBrl]);
 
   // Sync plan whenever ativosAtuais or ativosRecomendados change — skip the
   // initial post-load fire so the saved plan from localStorage is not overwritten.
@@ -237,7 +247,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       aporteDisponivel,
     };
     try {
-      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, usdBrl };
+      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, usdBrl };
       localStorage.setItem(storageKey, JSON.stringify(s));
     } catch { /* ignore */ }
     onSave?.(resultado);
@@ -255,6 +265,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       setPlanoAcao([]);
       setNotasConsultor("");
       setAporteDisponivel(0);
+      setCustoVidaMensal(0);
       try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
       onLimpar?.();
     }
@@ -382,6 +393,11 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             onAlocacaoChange={setAlocacaoCompleta}
             usdBrl={usdBrl}
             onUsdBrlChange={setUsdBrl}
+            comecandoDoZero={comecandoDoZero}
+            patrimonioColeta={patrimonioColeta}
+            custoVidaMensal={custoVidaMensal}
+            onCustoVidaChange={setCustoVidaMensal}
+            custoVidaColeta={custoVidaColeta}
           />
         )}
         {etapa === 3 && (

@@ -214,6 +214,9 @@ export function SecaoAssetAllocation({
             onClose={() => setCarteiraOpen(false)}
             onSave={handleCarteiraSave}
             onLimpar={onLimparCarteira}
+            comecandoDoZero={plan.dadosCliente.comecandoDoZero === true}
+            patrimonioColeta={Number(plan.dadosCliente.patrimonioFinanceiroEstimado) || 0}
+            custoVidaColeta={Number(plan.dadosCliente.custoDeVidaMensal) || 0}
           />
         )}
       </>
@@ -291,7 +294,7 @@ export function SecaoAssetAllocation({
             const subsData = grupo.subclasses.map((sub) => ({
               ...sub,
               pct: Number(rc.macroMeta[sub.cardId]) || 0,
-              brl: ((Number(rc.macroMeta[sub.cardId]) || 0) / 100) * patrimonio,
+              brl: ((Number(rc.macroMeta[sub.cardId]) || 0) / 100) * patrimonioMeta,
             }));
             const totalPct = subsData.reduce((s, sub) => s + sub.pct, 0);
             const totalBrl = subsData.reduce((s, sub) => s + sub.brl, 0);
@@ -344,7 +347,7 @@ export function SecaoAssetAllocation({
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
-              {formatBRL(patrimonio)}
+              {formatBRL(patrimonioMeta)}
             </span>
           </div>
         </div>
@@ -489,6 +492,9 @@ export function SecaoAssetAllocation({
           patrimonyInicial={plan.ativosAtuais.total}
           onClose={() => setCarteiraOpen(false)}
           onSave={handleCarteiraSave}
+          comecandoDoZero={plan.dadosCliente.comecandoDoZero === true}
+          patrimonioColeta={Number(plan.dadosCliente.patrimonioFinanceiroEstimado) || 0}
+          custoVidaColeta={Number(plan.dadosCliente.custoDeVidaMensal) || 0}
         />
       )}
     </>
