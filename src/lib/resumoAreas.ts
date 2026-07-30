@@ -175,28 +175,23 @@ export function gerarTextosAreas(
   const lf = (() => {
     const s = scores.lf;
     if (s < 0) return (
-      `A jornada rumo à liberdade financeira ainda precisa ser mapeada com mais detalhes. Para ter uma visão completa de onde você está e para onde pode chegar, precisamos consolidar os dados da sua situação atual.\n\n` +
-      `Na aba de Liberdade Financeira, vamos juntos simular diferentes cenários, definir metas claras e traçar o caminho mais eficiente para a aposentadoria que você deseja — com clareza sobre o que precisa acontecer a partir de agora.`
+      `A jornada rumo à liberdade financeira ainda precisa ser mapeada com mais detalhes. Para ter uma visão completa de onde você está e para onde pode chegar, precisamos consolidar os dados da sua situação atual.`
     );
     if (s <= 30) return (
       `O resultado desta análise exige atenção imediata. Com a trajetória atual, chegar à aposentadoria com o padrão de vida desejado vai exigir mudanças significativas na estratégia.\n\n` +
-      `Cada mês que passa sem um plano estruturado representa uma diferença real no resultado final. O tempo é o ativo mais poderoso nos investimentos — e ele não para.\n\n` +
-      `No Financial Planning, vamos estruturar um plano concreto para reverter esse cenário: ajustes nos aportes, otimização da carteira e metas claras para cada etapa da jornada.`
+      `Cada mês que passa sem um plano estruturado representa uma diferença real no resultado final. O tempo é o ativo mais poderoso nos investimentos — e ele não para.`
     );
     if (s <= 50) return (
       `A projeção atual mostra que há um caminho sendo construído, mas ainda existe uma lacuna importante a ser preenchida para garantir a aposentadoria no padrão desejado.\n\n` +
-      `A boa notícia é que ainda há tempo e margem para ajustar a rota. Pequenas mudanças consistentes ao longo dos próximos anos podem transformar completamente esse cenário.\n\n` +
-      `O Financial Planning vai mapear exatamente quais alavancas precisam ser acionadas — seja no valor investido, na rentabilidade da carteira ou no prazo — para que a meta se torne alcançável dentro do tempo planejado.`
+      `A boa notícia é que ainda há tempo e margem para ajustar a rota. Pequenas mudanças consistentes ao longo dos próximos anos podem transformar completamente esse cenário.`
     );
     if (s <= 90) return (
       `Você está claramente no caminho certo. A disciplina e a consistência nos investimentos já produziram resultados concretos — e isso é motivo de reconhecimento.\n\n` +
-      `O próximo passo é otimizar: garantir que a carteira está posicionada da forma mais eficiente possível, que os aportes seguem uma estratégia clara e que nenhum imprevisto coloque em risco o que foi construído.\n\n` +
-      `No Financial Planning, vamos refinar essa estratégia para que a chegada aconteça exatamente no tempo e no padrão planejado.`
+      `O próximo passo é otimizar: garantir que a carteira está posicionada da forma mais eficiente possível, que os aportes seguem uma estratégia clara e que nenhum imprevisto coloque em risco o que foi construído.`
     );
     return (
       `Parabéns — você chegou a um nível de planejamento que a maioria das pessoas nunca alcança. A projeção indica que, mantendo a consistência atual, a aposentadoria no padrão desejado é uma realidade concreta.\n\n` +
-      `O desafio agora muda de natureza: não se trata mais de acumular, mas de proteger, otimizar e garantir que o que foi construído se mantenha independente do que aconteça.\n\n` +
-      `O Financial Planning vai estruturar essa próxima fase com foco em preservação, eficiência fiscal e proteção do patrimônio.`
+      `O desafio agora muda de natureza: não se trata mais de acumular, mas de proteger, otimizar e garantir que o que foi construído se mantenha independente do que aconteça.`
     );
   })();
 
@@ -221,31 +216,27 @@ export function gerarTextosAreas(
     if (s < 0) return (
       `A composição da carteira ainda não foi avaliada em detalhes.${
         perfil ? ` Já sabemos que ${dp} — isso será` : ' Esse ponto será'
-      } fundamental para estruturar a alocação adequada no Financial Planning.\n\n` +
-      `Para ter uma visão completa de como o patrimônio está posicionado e se está crescendo da forma mais eficiente possível, precisamos analisar cada classe de ativo com cuidado.\n\n` +
-      `Na aba de Gestão de Ativos, vamos montar uma estratégia personalizada que respeite seu perfil e maximize as chances de atingir os objetivos de longo prazo.`
+      } fundamental para estruturar a alocação adequada.\n\n` +
+      `Para ter uma visão completa de como o patrimônio está posicionado e se está crescendo da forma mais eficiente possível, precisamos analisar cada classe de ativo com cuidado.`
     );
 
     if (s === 0) return (
       `Começar do zero é, na verdade, uma vantagem enorme — e poucos percebem isso. Você tem a oportunidade de construir uma carteira já estruturada desde o início, sem precisar desfazer alocações equivocadas do passado ou conviver com produtos inadequados que travam o crescimento do patrimônio.\n\n` +
-      `Investir de forma consistente e estratégica desde cedo é o que separa quem constrói riqueza de quem sempre parece "quase chegando lá". Os juros compostos trabalham para quem começa bem — e o impacto de cada decisão acertada hoje se multiplica de forma surpreendente ao longo dos anos.\n\n` +
-      `${perfil ? `Com ${dp}, ` : ''}o Financial Planning vai estruturar uma carteira adequada ao seu momento, com diversificação inteligente e produtos alinhados aos seus objetivos — para que cada aporte seja investido da forma mais eficiente possível desde o primeiro dia.`
+      `Investir de forma consistente e estratégica desde cedo é o que separa quem constrói riqueza de quem sempre parece "quase chegando lá". Os juros compostos trabalham para quem começa bem — e o impacto de cada decisão acertada hoje se multiplica de forma surpreendente ao longo dos anos.`
     );
 
     if (s <= 50) return (
       `A análise da carteira revelou oportunidades importantes que merecem atenção.${
         perfil ? ` Considerando que ${dp},` : ''
       } a alocação atual pode estar limitando o crescimento do patrimônio de forma silenciosa — seja por excesso de concentração em uma única classe, por produtos com custo elevado ou por falta de diversificação adequada.\n\n` +
-      `Uma carteira mal estruturada não gera perdas visíveis no dia a dia — mas ao longo de anos, o custo de oportunidade é enorme. É o patrimônio que poderia ter crescido mais, e não cresceu.\n\n` +
-      `No Financial Planning, vamos reestruturar a alocação de forma estratégica, com cada ativo cumprindo um papel específico e alinhado ao seu perfil e objetivos.`
+      `Uma carteira mal estruturada não gera perdas visíveis no dia a dia — mas ao longo de anos, o custo de oportunidade é enorme. É o patrimônio que poderia ter crescido mais, e não cresceu.`
     );
 
     if (s <= 90) return (
       `A carteira apresenta bons fundamentos${
         perfil ? ` e está alinhada com ${dp}` : ''
       }. Há claramente uma estratégia em curso — e isso é um diferencial importante.\n\n` +
-      `O próximo nível é a otimização: garantir que os percentuais de cada classe estão corretos para o momento atual, que os produtos escolhidos são os mais eficientes disponíveis e que a carteira está preparada para diferentes cenários de mercado sem comprometer os objetivos de longo prazo.\n\n` +
-      `No Financial Planning, vamos refinar essa estratégia com precisão — eliminando ineficiências e potencializando o que já está funcionando.`
+      `O próximo nível é a otimização: garantir que os percentuais de cada classe estão corretos para o momento atual, que os produtos escolhidos são os mais eficientes disponíveis e que a carteira está preparada para diferentes cenários de mercado sem comprometer os objetivos de longo prazo.`
     );
 
     return (
@@ -261,23 +252,19 @@ export function gerarTextosAreas(
   const ps = (() => {
     const s = scores.ps;
     if (s < 0) return (
-      `A análise de proteção ainda não foi realizada. Esse é um dos pilares mais importantes do planejamento financeiro — e frequentemente o mais negligenciado.\n\n` +
-      `Na aba de Proteção e Sucessório, vamos mapear as necessidades reais de cobertura para garantir que, independente do que aconteça, a família continuará protegida e o patrimônio preservado.`
+      `A análise de proteção ainda não foi realizada. Esse é um dos pilares mais importantes do planejamento financeiro — e frequentemente o mais negligenciado.`
     );
     if (s === 0) return (
       `Este é o ponto mais crítico do diagnóstico. Não há cobertura de proteção identificada — o que significa que, em caso de falecimento ou invalidez, a família ficaria exposta a uma crise financeira simultânea à dor emocional.\n\n` +
-      `Nenhum plano financeiro está completo sem a certeza de que o patrimônio e os dependentes estão protegidos. Essa é uma decisão que precisa ser tomada com urgência.\n\n` +
-      `No Financial Planning, vamos calcular a cobertura ideal para cada situação e estruturar o plano de proteção adequado para a sua realidade.`
+      `Nenhum plano financeiro está completo sem a certeza de que o patrimônio e os dependentes estão protegidos. Essa é uma decisão que precisa ser tomada com urgência.`
     );
     if (s <= 50) return (
       `A análise indica que existe alguma cobertura em vigor, mas ainda há lacunas significativas na proteção patrimonial. Em caso de imprevistos, a família poderia enfrentar dificuldades financeiras que o seguro atual não conseguiria cobrir completamente.\n\n` +
-      `Proteção não é um luxo — é a fundação que sustenta tudo o que está sendo construído. Sem ela, anos de acumulação podem ser comprometidos em um único evento inesperado.\n\n` +
-      `No Financial Planning, vamos mapear as necessidades reais e estruturar uma cobertura que proteja de forma completa.`
+      `Proteção não é um luxo — é a fundação que sustenta tudo o que está sendo construído. Sem ela, anos de acumulação podem ser comprometidos em um único evento inesperado.`
     );
     if (s <= 90) return (
       `A proteção patrimonial está parcialmente estruturada — há consciência sobre a importância do tema e alguma cobertura em vigor. Isso já coloca você à frente da maioria das pessoas.\n\n` +
-      `O próximo passo é garantir que a cobertura está adequada para a realidade atual: família, patrimônio e padrão de vida tendem a crescer, e a proteção precisa acompanhar esse crescimento.\n\n` +
-      `No Financial Planning, vamos revisar e ajustar a estratégia de proteção.`
+      `O próximo passo é garantir que a cobertura está adequada para a realidade atual: família, patrimônio e padrão de vida tendem a crescer, e a proteção precisa acompanhar esse crescimento.`
     );
     return (
       `A proteção patrimonial está bem estruturada — você tem a tranquilidade de saber que, independente do que aconteça, a família estará financeiramente protegida.\n\n` +
@@ -289,16 +276,14 @@ export function gerarTextosAreas(
   const fiscal = (() => {
     const s = scores.fiscal;
     if (s < 0) return (
-      `O Planejamento Tributário ainda não foi analisado. Acesse a aba de Planejamento Tributário para registrar as informações e obter a análise completa desta área.`
+      `O Planejamento Tributário ainda não foi analisado.`
     );
     if (s <= 50) return (
       `A análise tributária revelou oportunidades importantes que ainda não estão sendo aproveitadas. Isso significa que parte do que poderia estar sendo reinvestido e acumulando patrimônio está sendo destinado ao fisco desnecessariamente.\n\n` +
-      `Uma estratégia fiscal bem estruturada não é apenas para grandes fortunas — é uma ferramenta acessível que pode acelerar significativamente a construção de patrimônio para qualquer investidor.\n\n` +
-      `No Financial Planning, vamos identificar e implementar as estratégias mais adequadas para a sua situação.`
+      `Uma estratégia fiscal bem estruturada não é apenas para grandes fortunas — é uma ferramenta acessível que pode acelerar significativamente a construção de patrimônio para qualquer investidor.`
     );
     if (s <= 90) return (
-      `Há boas práticas fiscais em curso, o que demonstra consciência sobre a importância do planejamento tributário. Ainda assim, existem oportunidades que podem ser melhor aproveitadas para aumentar a eficiência fiscal e liberar mais recursos para investimento.\n\n` +
-      `No Financial Planning, vamos refinar a estratégia e garantir que cada oportunidade disponível esteja sendo utilizada de forma otimizada.`
+      `Há boas práticas fiscais em curso, o que demonstra consciência sobre a importância do planejamento tributário. Ainda assim, existem oportunidades que podem ser melhor aproveitadas para aumentar a eficiência fiscal e liberar mais recursos para investimento.`
     );
     return (
       `O planejamento tributário está bem estruturado e eficiente. As estratégias em uso demonstram uma gestão fiscal cuidadosa — o que significa que mais recursos estão disponíveis para investimento e construção de patrimônio.\n\n` +
