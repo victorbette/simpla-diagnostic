@@ -203,26 +203,57 @@ export function gerarTextosAreas(
   // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
     const s = scores.aa;
+    const dc = plan.dadosCliente;
+    const perfil = dc.suitabilityPerfil ?? '';
+
+    const descricaoPerfil: Record<string, string> = {
+      conservador:
+        'seu perfil conservador indica preferência por segurança e previsibilidade — o que é totalmente válido, especialmente para a base da carteira',
+      conservador_moderado:
+        'seu perfil conservador moderado busca equilíbrio entre segurança e crescimento — uma postura madura e estratégica',
+      moderado:
+        'seu perfil moderado demonstra disposição para equilibrar proteção e crescimento — o que abre espaço para uma carteira mais diversificada',
+      arrojado:
+        'seu perfil arrojado indica disposição para assumir mais risco em busca de crescimento acelerado do patrimônio no longo prazo',
+    };
+    const dp = descricaoPerfil[perfil] ?? 'seu perfil de investidor já foi identificado';
+
     if (s < 0) return (
-      `A composição da carteira ainda não foi avaliada em detalhes. Para ter uma visão completa de como o patrimônio está alocado e se está bem posicionado para crescer, precisamos analisar cada classe de ativo.\n\n` +
-      `Na aba de Gestão de Ativos, vamos estruturar uma alocação personalizada para o seu perfil — com foco em eficiência, diversificação e alinhamento com os seus objetivos de longo prazo.`
+      `A composição da carteira ainda não foi avaliada em detalhes.${
+        perfil ? ` Já sabemos que ${dp} — isso será` : ' Esse ponto será'
+      } fundamental para estruturar a alocação adequada no Financial Planning.\n\n` +
+      `Para ter uma visão completa de como o patrimônio está posicionado e se está crescendo da forma mais eficiente possível, precisamos analisar cada classe de ativo com cuidado.\n\n` +
+      `Na aba de Gestão de Ativos, vamos montar uma estratégia personalizada que respeite seu perfil e maximize as chances de atingir os objetivos de longo prazo.`
     );
+
     if (s === 0) return (
-      `Identificamos que os investimentos ainda estão no início da jornada. Esse é um ponto de partida valioso: começar com a estratégia certa desde o início é o que faz toda a diferença no resultado de longo prazo.\n\n` +
-      `Na aba de Gestão de Ativos, vamos montar uma carteira estruturada do zero — com diversificação adequada ao seu perfil e os melhores produtos disponíveis para cada objetivo.`
+      `Começar do zero é, na verdade, uma vantagem enorme — e poucos percebem isso. Você tem a oportunidade de construir uma carteira já estruturada desde o início, sem precisar desfazer alocações equivocadas do passado ou conviver com produtos inadequados que travam o crescimento do patrimônio.\n\n` +
+      `Investir de forma consistente e estratégica desde cedo é o que separa quem constrói riqueza de quem sempre parece "quase chegando lá". Os juros compostos trabalham para quem começa bem — e o impacto de cada decisão acertada hoje se multiplica de forma surpreendente ao longo dos anos.\n\n` +
+      `${perfil ? `Com ${dp}, ` : ''}o Financial Planning vai estruturar uma carteira adequada ao seu momento, com diversificação inteligente e produtos alinhados aos seus objetivos — para que cada aporte seja investido da forma mais eficiente possível desde o primeiro dia.`
     );
+
     if (s <= 50) return (
-      `A análise da carteira revelou pontos importantes que precisam ser endereçados. Produtos inadequados, falta de diversificação ou concentração excessiva em uma única classe de ativo podem estar limitando o crescimento do patrimônio de forma silenciosa.\n\n` +
-      `Uma revisão estratégica da carteira pode representar uma diferença significativa no resultado ao longo dos anos — sem precisar assumir mais risco, apenas alocando melhor o que já existe.\n\n` +
-      `No Financial Planning, vamos reestruturar a alocação de forma personalizada, com cada ativo cumprindo um papel específico na estratégia.`
+      `A análise da carteira revelou oportunidades importantes que merecem atenção.${
+        perfil ? ` Considerando que ${dp},` : ''
+      } a alocação atual pode estar limitando o crescimento do patrimônio de forma silenciosa — seja por excesso de concentração em uma única classe, por produtos com custo elevado ou por falta de diversificação adequada.\n\n` +
+      `Uma carteira mal estruturada não gera perdas visíveis no dia a dia — mas ao longo de anos, o custo de oportunidade é enorme. É o patrimônio que poderia ter crescido mais, e não cresceu.\n\n` +
+      `No Financial Planning, vamos reestruturar a alocação de forma estratégica, com cada ativo cumprindo um papel específico e alinhado ao seu perfil e objetivos.`
     );
+
     if (s <= 90) return (
-      `A carteira apresenta bons fundamentos e demonstra que você já entende a importância da diversificação. Há claramente uma estratégia em curso — e isso é um diferencial importante.\n\n` +
-      `O próximo nível é a otimização: garantir que os percentuais de cada classe estão corretos para o momento atual, que os produtos escolhidos são os mais eficientes e que a carteira está preparada para diferentes cenários de mercado.`
+      `A carteira apresenta bons fundamentos${
+        perfil ? ` e está alinhada com ${dp}` : ''
+      }. Há claramente uma estratégia em curso — e isso é um diferencial importante.\n\n` +
+      `O próximo nível é a otimização: garantir que os percentuais de cada classe estão corretos para o momento atual, que os produtos escolhidos são os mais eficientes disponíveis e que a carteira está preparada para diferentes cenários de mercado sem comprometer os objetivos de longo prazo.\n\n` +
+      `No Financial Planning, vamos refinar essa estratégia com precisão — eliminando ineficiências e potencializando o que já está funcionando.`
     );
+
     return (
-      `A carteira demonstra uma diversificação e qualidade de ativos que coloca você em um patamar diferenciado. A combinação de classes de ativos está bem estruturada e alinhada com uma estratégia de longo prazo.\n\n` +
-      `O trabalho agora é de manutenção e refinamento: rebalanceamento periódico, acompanhamento dos ativos e ajustes pontuais conforme o cenário econômico evolui.`
+      `A carteira demonstra uma qualidade e diversificação que coloca você em um patamar diferenciado${
+        perfil ? `, alinhado com ${dp}` : ''
+      }. A combinação de classes de ativos está bem estruturada e posicionada para o longo prazo.\n\n` +
+      `Esse nível de organização é resultado de boas decisões consistentes — e é exatamente o que permite que o patrimônio trabalhe de forma mais eficiente, independente das oscilações do mercado.\n\n` +
+      `O trabalho agora é de manutenção e refinamento: rebalanceamento periódico, acompanhamento dos ativos e ajustes pontuais conforme os objetivos evoluem.`
     );
   })();
 
