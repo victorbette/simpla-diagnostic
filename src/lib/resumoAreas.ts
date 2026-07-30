@@ -112,38 +112,28 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
   // ── Tributário ────────────────────────────────────────────────────────────
   const fiscal = (() => {
     if (!fiscalSalvo || fiscalSalvo.analisado !== true) return -1;
-    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? 'nao_sei';
-    const rendaAnual      = Number(fiscalSalvo.rendaAnual) || 0;
+    const tipoDeclaracao  = fiscalSalvo.tipoDeclaracao ?? '';
     const tetoPGBL        = Number(fiscalSalvo.tetoPGBLAnual) || 0;
     const aporteAnualPGBL = Number(fiscalSalvo.aporteAnual) || 0;
-    const economia        = Number(fiscalSalvo.economiaAnual) || 0;
-    const temDados        = rendaAnual > 0;
 
     let pontos = 0;
 
-    // 1. Tipo de declaração definido (30 pts completa / 20 pts simplificada)
-    if (tipoDeclaracao === 'completa')          pontos += 30;
-    else if (tipoDeclaracao === 'simplificada') pontos += 20;
-
-    // 2. Aproveitamento PGBL (50 pts) ou bônus neutro simplificada (20 pts só com dados)
     if (tipoDeclaracao === 'completa') {
-      if (aporteAnualPGBL > 0) {
-        const aproveitamento = tetoPGBL > 0 ? Math.min(1, aporteAnualPGBL / tetoPGBL) : 0;
-        pontos += Math.round(aproveitamento * 50);
-      }
-    } else if (tipoDeclaracao === 'simplificada' && temDados) {
       pontos += 20;
+      if (tetoPGBL > 0) {
+        if (aporteAnualPGBL > 0) {
+          pontos += Math.round(Math.min(1, aporteAnualPGBL / tetoPGBL) * 80);
+        }
+        // aporteAnualPGBL === 0: sem pontos de aproveitamento
+      } else {
+        pontos += 40; // completa mas sem teto calculado (renda muito baixa)
+      }
+    } else if (tipoDeclaracao === 'simplificada') {
+      pontos += 30;
     }
+    // tipoDeclaracao vazio ou 'nao_sei': 0 pts
 
-    // 3. Diferimento gerado (30 pts) ou bônus neutro simplificada (15 pts só com dados)
-    if (economia > 0 && tetoPGBL > 0) {
-      const economiaPct = Math.min(1, economia / (tetoPGBL * 0.275));
-      pontos += Math.round(economiaPct * 30);
-    } else if (tipoDeclaracao === 'simplificada' && temDados) {
-      pontos += 15;
-    }
-
-    return Math.min(100, pontos);
+    return Math.min(100, Math.max(0, pontos));
   })();
 
   // ── Score Geral ───────────────────────────────────────────────────────────
@@ -278,16 +268,40 @@ export function gerarTextosAreas(
     if (s < 0) return (
       `O Planejamento Tributário ainda não foi analisado.`
     );
+
+    const fiscalSalvo = resultados.fiscal;
+    const tipoDeclaracao  = fiscalSalvo?.tipoDeclaracao ?? '';
+    const aporteAnualPGBL = Number(fiscalSalvo?.aporteAnual) || 0;
+
+    // Declaração completa mas sem nenhum aporte em PGBL
+    if (tipoDeclaracao === 'completa' && aporteAnualPGBL === 0) return (
+      `Identificamos uma oportunidade fiscal significativa que ainda não está sendo aproveitada. Você declara pelo modelo completo, o que permite deduzir contribuições à previdência privada diretamente na base de cálculo do Imposto de Renda.\n\n` +
+      `Não aproveitar esse benefício é, na prática, pagar mais imposto do que o necessário — e deixar de acumular patrimônio com o dinheiro que ficaria no fisco.\n\n` +
+      `Existe uma oportunidade real de redução legal da carga tributária que precisa ser estruturada.`
+    );
+
+    // Declaração simplificada
+    if (tipoDeclaracao === 'simplificada') return (
+      `Você utiliza a declaração simplificada, que aplica um desconto padrão no cálculo do imposto. Nesse modelo, contribuições à previdência privada do tipo PGBL não geram benefício fiscal adicional.\n\n` +
+      `Dependendo da evolução da sua renda e despesas dedutíveis, pode valer a pena avaliar periodicamente se o modelo de declaração mais vantajoso ainda é o mesmo.`
+    );
+
+    // Completa com PGBL mas aproveitamento parcial baixo (score ≤ 50)
     if (s <= 50) return (
-      `A análise tributária revelou oportunidades importantes que ainda não estão sendo aproveitadas. Isso significa que parte do que poderia estar sendo reinvestido e acumulando patrimônio está sendo destinado ao fisco desnecessariamente.\n\n` +
-      `Uma estratégia fiscal bem estruturada não é apenas para grandes fortunas — é uma ferramenta acessível que pode acelerar significativamente a construção de patrimônio para qualquer investidor.`
+      `Você está utilizando a declaração completa e já tem alguma contribuição em previdência privada — o que é positivo. No entanto, o potencial de redução fiscal disponível ainda não está sendo aproveitado em sua totalidade.\n\n` +
+      `Cada real que poderia ser deduzido e não é representa um custo real: imposto pago desnecessariamente que poderia estar sendo reinvestido e acumulando patrimônio ao longo dos anos.`
     );
-    if (s <= 90) return (
-      `Há boas práticas fiscais em curso, o que demonstra consciência sobre a importância do planejamento tributário. Ainda assim, existem oportunidades que podem ser melhor aproveitadas para aumentar a eficiência fiscal e liberar mais recursos para investimento.`
+
+    // Bom aproveitamento (score ≤ 80)
+    if (s <= 80) return (
+      `O planejamento tributário está em um bom caminho — você utiliza a declaração completa e aproveita parte do benefício disponível com a previdência privada.\n\n` +
+      `Ainda há espaço para otimização: aumentar a contribuição dentro do limite permitido pode reduzir ainda mais a carga tributária e acelerar a construção de patrimônio de forma estratégica.`
     );
+
+    // Aproveitamento excelente (score > 80)
     return (
-      `O planejamento tributário está bem estruturado e eficiente. As estratégias em uso demonstram uma gestão fiscal cuidadosa — o que significa que mais recursos estão disponíveis para investimento e construção de patrimônio.\n\n` +
-      `O trabalho agora é de manutenção e atualização: a legislação fiscal muda, e a estratégia precisa acompanhar essas mudanças para manter a eficiência atual.`
+      `Excelente gestão tributária. Você está aproveitando de forma consistente o benefício fiscal disponível — o que significa pagar menos imposto de forma legal e direcionar mais recursos para a construção do seu patrimônio.\n\n` +
+      `Essa estratégia, mantida ao longo dos anos, representa uma diferença significativa no resultado final acumulado.`
     );
   })();
 
