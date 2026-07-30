@@ -36,8 +36,8 @@ export function CardSelecaoAtivos({
         const pct = Number(macroMeta[cardId]) || 0;
         const brlMeta = (pct / 100) * patrimonio;
         const totalGrupo = ativos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-        const isRF = cardId === "resgate_longo" || cardId === "resgate_rapido";
-        const cols = isRF ? "2.5fr 1.2fr 1fr 1fr" : "2.5fr 1.5fr 1fr";
+        const hasVenc = ativos.some(a => a.vencimento && a.vencimento.trim() !== "");
+        const cols = hasVenc ? "2.5fr 1.2fr 1fr 1fr" : "2.5fr 1.5fr 1fr";
 
         return (
           <div key={cardId} style={{ marginBottom: 20 }}>
@@ -55,7 +55,7 @@ export function CardSelecaoAtivos({
             <div style={{ display: "grid", gridTemplateColumns: cols, padding: "4px 8px", fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", background: "#F8FAFF", borderRadius: 6, marginBottom: 4 }}>
               <span>Ativo</span>
               <span>Segmento</span>
-              {isRF && <span>Vencimento</span>}
+              {hasVenc && <span>Vencimento</span>}
               <span style={{ textAlign: "right" }}>R$ Meta</span>
             </div>
 
@@ -65,7 +65,7 @@ export function CardSelecaoAtivos({
                 <span style={{ fontSize: 10, color: "#374151", background: "#F3F4F6", padding: "2px 8px", borderRadius: 99, display: "inline-block", maxWidth: "fit-content" }}>
                   {ativo.segmento || "—"}
                 </span>
-                {isRF && <span style={{ fontSize: 12, color: "#6B7280" }}>{ativo.vencimento || "—"}</span>}
+                {hasVenc && <span style={{ fontSize: 12, color: "#6B7280" }}>{ativo.vencimento || "—"}</span>}
                 <span style={{ fontSize: 13, fontWeight: 500, color: "#111827", textAlign: "right" }}>{formatBRL(Number(ativo.valorBRL) || 0)}</span>
               </div>
             ))}

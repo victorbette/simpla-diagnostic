@@ -91,7 +91,7 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
           card: item.card,
           segmento: item.segmento ?? "",
           valorBRL: valorFinal,
-          vencimento: base?.vencimento,
+          vencimento: item.vencimento ?? base?.vencimento,
           adicionadoManualmente: item.adicionadoManualmente,
           observacao: item.observacao,
         } as Ativo;

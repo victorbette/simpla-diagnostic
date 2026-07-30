@@ -198,8 +198,13 @@ export function CarteiraCard({
   let gridTemplate: string;
   let headers: string[];
   if (isRFCard) {
-    gridTemplate = "2.5fr 110px 100px 90px 28px";
-    headers = ["Nome", "Segmento", "Vencimento", "R$", ""];
+    if (modo === "recomendada") {
+      gridTemplate = "2.5fr 110px 90px 28px";
+      headers = ["Nome", "Segmento", "R$", ""];
+    } else {
+      gridTemplate = "2.5fr 110px 100px 90px 28px";
+      headers = ["Nome", "Segmento", "Vencimento", "R$", ""];
+    }
   } else if (cardId === "exterior") {
     gridTemplate = "2fr 100px 65px 115px 85px 28px";
     headers = ["Nome", "Segmento", "Qtd", "Cotação USD", "R$ Atual", ""];
@@ -394,8 +399,8 @@ export function CarteiraCard({
               )
             )}
 
-            {/* Vencimento — RF only */}
-            {isRFCard && (
+            {/* Vencimento — RF only, editable in modo atual */}
+            {isRFCard && modo !== "recomendada" && (
               <input
                 value={ativo.vencimento ?? ""}
                 onChange={(e) => onChange(ativo.id, { vencimento: e.target.value })}

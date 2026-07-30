@@ -44,7 +44,7 @@ export function montarCarteiraFinal(
         card: cardId,
         nome: item.nomeAtivo,
         segmento: item.segmento ?? base?.segmento ?? "",
-        vencimento: base?.vencimento,
+        vencimento: item.vencimento ?? base?.vencimento,
         valorBRL: valorFinal,
       } satisfies Ativo;
     })
