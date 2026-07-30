@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
-import { CARD_META } from "@/lib/carteira/types";
+import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
 
 const SEG_COLORS: Record<string, { bg: string; color: string }> = {
@@ -74,8 +74,57 @@ function ValueInput({ value, onChange }: ValueInputProps) {
 }
 
 const RF_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
-// Cards where segmento is picked from a predefined dropdown
-const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido", "exterior"];
+// Cards where segmento is picked from a predefined dropdown (RF only now)
+const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
+
+interface SeletorSegmentoProps {
+  cardId: CardId;
+  valor: string;
+  onChange: (seg: string) => void;
+}
+
+function SeletorSegmento({ cardId, valor, onChange }: SeletorSegmentoProps) {
+  const opcoes = SEGMENTOS_POR_CLASSE[cardId];
+  if (!opcoes) {
+    // cripto or unknown — free text
+    return (
+      <input
+        type="text"
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Ex: Bitcoin, Ethereum..."
+        style={{
+          border: "none", background: "transparent", outline: "none",
+          fontSize: 11, color: "#6B7280", width: "100%", padding: 0,
+        }}
+      />
+    );
+  }
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {opcoes.map((op) => {
+        const sel = valor === op;
+        return (
+          <button
+            key={op}
+            type="button"
+            onClick={() => onChange(sel ? "" : op)}
+            style={{
+              fontSize: 10, padding: "2px 7px", borderRadius: 99, cursor: "pointer",
+              border: sel ? "1px solid #2563EB" : "1px solid #E5E7EB",
+              background: sel ? "#DBEAFE" : "#F9FAFB",
+              color: sel ? "#1E40AF" : "#6B7280",
+              fontWeight: sel ? 700 : 400,
+              transition: "all 120ms",
+            }}
+          >
+            {op}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 interface Props {
   cardId: CardId;
@@ -229,7 +278,7 @@ export function CarteiraCard({
             style={{
               display: "grid", gridTemplateColumns: gridTemplate,
               gap: 4, padding: "5px 12px",
-              borderBottom: "1px solid #F3F4F6", alignItems: "center",
+              borderBottom: "1px solid #F3F4F6", alignItems: isRFCard ? "center" : "start",
               backgroundColor: isHover ? "#F8FAFC" : "white",
               transition: "background 150ms",
             }}
@@ -256,7 +305,7 @@ export function CarteiraCard({
               />
             )}
 
-            {/* Segmento — dropdown for RF+exterior, free text for acoes/fiis/cripto */}
+            {/* Segmento — dropdown for RF, pill buttons for acoes/fiis/exterior, text for cripto */}
             {hasDropdownSeg ? (
               isEditSeg ? (
                 <select
@@ -287,15 +336,10 @@ export function CarteiraCard({
                 </span>
               )
             ) : (
-              <input
-                type="text"
-                value={ativo.segmento ?? ""}
-                onChange={(e) => onChange(ativo.id, { segmento: e.target.value })}
-                placeholder="Ex: Tecnologia, FII Papel..."
-                style={{
-                  border: "none", background: "transparent", outline: "none",
-                  fontSize: 11, color: "#6B7280", width: "100%", padding: 0,
-                }}
+              <SeletorSegmento
+                cardId={cardId}
+                valor={ativo.segmento ?? ""}
+                onChange={(seg) => onChange(ativo.id, { segmento: seg })}
               />
             )}
 

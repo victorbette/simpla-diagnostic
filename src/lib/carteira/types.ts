@@ -83,6 +83,12 @@ export const HIERARQUIA_CLASSES: ReadonlyArray<{
   },
 ];
 
+export const SEGMENTOS_POR_CLASSE: Partial<Record<CardId, string[]>> = {
+  acoes:   ['Bancos','Seguradora','Agronegócio','Commodities','Educação','Construção Civil','Saúde','Shopping','Telecomunicação','Energia','Diverso'],
+  fiis:    ['Papel','Galpões Log.','Híbrido','Lajes Corp.','Shopping','Fiagro','Recebíveis','FOF'],
+  exterior: ['ETF RV','ETF RF','Stocks','REITs','Bonds','Mutual Funds'],
+};
+
 export const ALOCACAO_PADRAO: Record<string, Record<CardId, number>> = {
   conservador:          { resgate_longo: 42, resgate_rapido: 50, acoes: 2, fiis: 2, exterior: 4,    cripto: 0   },
   conservador_moderado: { resgate_longo: 43, resgate_rapido: 35, acoes: 7, fiis: 6, exterior: 9,    cripto: 0   },
