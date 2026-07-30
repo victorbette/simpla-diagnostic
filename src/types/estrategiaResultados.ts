@@ -15,6 +15,7 @@ export interface PlanoAcaoItem {
   valorMetaBRL: number;
   movimentacaoBRL: number;
   movimentacaoEditada?: number;
+  vencimento?: string;
   prioridade?: string;
   observacao?: string;
   valorResgateBRL?: number;

@@ -29,6 +29,7 @@ export interface PlanoAcaoItem {
   valorMetaBRL: number;
   movimentacaoBRL: number;
   movimentacaoEditada?: number;
+  vencimento?: string;
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
   valorResgateBRL?: number;

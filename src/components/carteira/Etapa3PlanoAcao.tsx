@@ -220,10 +220,19 @@ export function Etapa3PlanoAcao({
     }).filter((c) => c.valorAtual > 0 || c.valorMeta > 0 || c.valorFinal > 0);
   }, [planoAcao, macroMeta, patrimonio]);
 
-  const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr";
+  const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr 0.8fr";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <style>{`
+        @media print {
+          .vencimento-edit { display: none !important; }
+          .vencimento-print { display: inline !important; }
+        }
+        @media screen {
+          .vencimento-print { display: none !important; }
+        }
+      `}</style>
 
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
@@ -429,7 +438,7 @@ export function Etapa3PlanoAcao({
               display: "grid", gridTemplateColumns: COLS,
               gap: 8, padding: "6px 14px", backgroundColor: "#1E3A8A",
             }}>
-              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Ação", "Observação", "Prioridade"].map((h) => (
+              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Ação", "Observação", "Vencimento", "Prioridade"].map((h) => (
                 <span key={h} style={{ color: "white", fontSize: 11, fontWeight: 600 }}>{h}</span>
               ))}
             </div>
@@ -663,6 +672,33 @@ export function Etapa3PlanoAcao({
                         width: "100%", boxSizing: "border-box",
                       }}
                     />
+
+                    {/* Vencimento — input de data (tela) / texto formatado (impressão) */}
+                    <div>
+                      <div className="vencimento-edit">
+                        <input
+                          type="date"
+                          value={item.vencimento ?? ""}
+                          onChange={(e) => updateItem(item.id, { vencimento: e.target.value })}
+                          style={{
+                            border: "1px solid #E5E7EB",
+                            borderRadius: 6,
+                            padding: "4px 6px",
+                            fontSize: 11,
+                            color: "#374151",
+                            background: "white",
+                            cursor: "pointer",
+                            width: "100%",
+                            boxSizing: "border-box" as const,
+                          }}
+                        />
+                      </div>
+                      <span className="vencimento-print" style={{ display: "none", fontSize: 11, color: "#6B7280" }}>
+                        {item.vencimento
+                          ? new Date(item.vencimento + "T12:00:00").toLocaleDateString("pt-BR")
+                          : "—"}
+                      </span>
+                    </div>
 
                     {item.adicionadoManualmente ? (
                       <div style={{ display: "flex", gap: 4 }}>

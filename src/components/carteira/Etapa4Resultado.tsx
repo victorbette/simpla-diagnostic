@@ -24,7 +24,7 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
       return item.valorAtualBRL;
     case "aportar":
     case "novo":
-      return item.valorAtualBRL + item.movimentacaoBRL;
+      return item.valorAtualBRL + (item.movimentacaoEditada ?? Math.abs(item.movimentacaoBRL ?? 0));
     case "resgatar_total":
       return 0;
     case "resgatar_parcial": {

@@ -99,6 +99,7 @@ export function SecaoAssetAllocation({
         valorMetaBRL: i.valorMetaBRL,
         movimentacaoBRL: i.movimentacaoBRL,
         movimentacaoEditada: i.movimentacaoEditada,
+        vencimento: i.vencimento,
         valorResgateBRL: i.valorResgateBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
