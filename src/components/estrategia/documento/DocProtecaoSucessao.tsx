@@ -3,7 +3,7 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
+
 
 interface Props {
   nomeCliente: string;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** Página "Proteção e Sucessão" — resultado da análise de seguros + narrativa */
-export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
+export function DocProtecaoSucessao({ nomeCliente, resultados }: Props) {
   const rs = resultados.seguro;
   const capitalNecessario = rs?.capitalNecessario ?? rs?.totalNeed ?? 0;
   const capitalSegurado   = rs?.capitalAtual ?? rs?.totalCoverage ?? 0;
@@ -30,8 +30,6 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
   const capitalDoencaGrave   = rs?.capitalDoencaGraveEfetivo ?? rs?.criticalIllnessTotal ?? 0;
   const totalCoberturasVida  = rs?.capitalCoberturasVida ?? (rs?.disabilityTotal ?? 0) + (rs?.criticalIllnessTotal ?? 0);
   const seguroVidaNecessario = totalImediato + subtotalContinuo;
-
-  const nota = useNotaConsultor(plan.clientId, "ps");
 
   const blocos: BlocoDoc[] = [];
 
@@ -190,8 +188,6 @@ export function DocProtecaoSucessao({ nomeCliente, plan, resultados }: Props) {
       ),
     });
   }
-
-  blocos.push(...blocosNotaConsultor(plan.clientId, "ps", nota));
 
   return <PaginaDocFluida titulo="Proteção e Sucessão" nomeCliente={nomeCliente} blocos={blocos} />;
 }

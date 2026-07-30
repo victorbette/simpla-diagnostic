@@ -5,7 +5,7 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
+
 
 interface Props {
   nomeCliente: string;
@@ -84,8 +84,6 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   const usandoModelo = !(rc?.macroMeta && Object.keys(rc.macroMeta).length > 0);
   const patrimonioMeta = (rc?.patrimonio ?? plan.ativosAtuais.total) + (rc?.aporteDisponivel ?? 0);
 
-  const nota = useNotaConsultor(plan.clientId, "aa");
-
   const blocos: BlocoDoc[] = [];
 
   if (perfil) {
@@ -126,7 +124,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   // Tabela hierárquica — Alocação Proposta por Classe
   blocos.push({
     chave: "tabela",
-    node: macroMeta ? (
+    node: macroMeta ? (<>
       <div className="doc-card" style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden", marginBottom: 6 }}>
         {/* Card header */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderBottom: `0.5px solid ${DOC.linha}` }}>
@@ -206,7 +204,10 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
           </span>
         </div>
       </div>
-    ) : (
+      <p style={{ fontSize: 9, color: "#9CA3AF", margin: "6px 0 0", fontStyle: "italic" }}>
+        *Os valores são meramente ilustrativos.
+      </p>
+    </>) : (
       <div
         className="doc-card"
         style={{ background: DOC.blueSoft, border: `1px solid ${DOC.blueBorder}`, borderRadius: 10, padding: "16px 18px", marginBottom: 6 }}
@@ -240,8 +241,6 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
       </p>
     ),
   });
-
-  blocos.push(...blocosNotaConsultor(plan.clientId, "aa", nota));
 
   return <PaginaDocFluida titulo="Gestão de Ativos" nomeCliente={nomeCliente} blocos={blocos} />;
 }

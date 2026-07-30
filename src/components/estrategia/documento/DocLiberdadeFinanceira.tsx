@@ -6,7 +6,7 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
+
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
 interface Props {
@@ -33,8 +33,6 @@ const fmtInteiro = new Intl.NumberFormat("pt-BR", {
 export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props) {
   const pi = plan.planejamentoIF;
   const rif = resultados.if;
-
-  const nota = useNotaConsultor(plan.clientId, "lf");
 
   const projecaoData = useMemo((): { projecao: PontoProjecao[]; mesIF?: number } => {
     if (rif?.projecao && rif.projecao.length > 0) {
@@ -241,8 +239,6 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
       ),
     });
   }
-
-  blocos.push(...blocosNotaConsultor(plan.clientId, "lf", nota));
 
   return <PaginaDocFluida titulo="Liberdade Financeira" nomeCliente={nomeCliente} blocos={blocos} />;
 }

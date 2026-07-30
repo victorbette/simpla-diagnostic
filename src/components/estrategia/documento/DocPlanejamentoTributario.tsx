@@ -5,7 +5,7 @@ import { simularDeclaracaoIRPF } from "@/lib/simularDeclaracao";
 import type { DeclaracaoResult } from "@/lib/simularDeclaracao";
 import { DOC, TEXTO_CORPO, CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
+
 
 interface Props {
   nomeCliente: string;
@@ -63,7 +63,7 @@ function CardCenario({
 }
 
 /** Página "Planejamento Tributário" — cenários Sem/Com PGBL + comparativo de IR (v4 p.15) */
-export function DocPlanejamentoTributario({ nomeCliente, plan, resultados }: Props) {
+export function DocPlanejamentoTributario({ nomeCliente, resultados }: Props) {
   const rf = resultados.fiscal;
 
   // Recalcula o cenário completo a partir dos inputs salvos pela calculadora
@@ -87,8 +87,6 @@ export function DocPlanejamentoTributario({ nomeCliente, plan, resultados }: Pro
     { label: "IR com PGBL", valor: irCom, cor: DOC.blue },
     { label: "Economia", valor: economia, cor: DOC.verde },
   ];
-
-  const nota = useNotaConsultor(plan.clientId, "fiscal");
 
   const blocos: BlocoDoc[] = [
     {
@@ -235,8 +233,6 @@ export function DocPlanejamentoTributario({ nomeCliente, plan, resultados }: Pro
       ),
     });
   }
-
-  blocos.push(...blocosNotaConsultor(plan.clientId, "fiscal", nota));
 
   return <PaginaDocFluida titulo="Planejamento Tributário" nomeCliente={nomeCliente} blocos={blocos} />;
 }

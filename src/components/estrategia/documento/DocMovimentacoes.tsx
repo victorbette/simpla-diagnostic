@@ -3,7 +3,7 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia, PlanoAcaoItem } from "@/types/estrategiaResultados";
 import { DOC, LABEL_SUBSECAO, TEXTO_CORPO, CARD } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { blocosNotaConsultor, useNotaConsultor } from "./CalloutConsultor";
+
 
 interface Props {
   nomeCliente: string;
@@ -107,9 +107,8 @@ function CardObservacao({ item }: { item: PlanoAcaoItem }) {
 }
 
 /** Página "Movimentações Recomendadas" — todas as movimentações do plano (v4 p.11) */
-export function DocMovimentacoes({ nomeCliente, plan, resultados }: Props) {
+export function DocMovimentacoes({ nomeCliente, resultados }: Props) {
   const rc = resultados.carteira;
-  const nota = useNotaConsultor(plan.clientId, "aa_mov");
   if (!rc) return null;
 
   const planoAcao = rc.planoAcao ?? [];
@@ -160,8 +159,6 @@ export function DocMovimentacoes({ nomeCliente, plan, resultados }: Props) {
       blocos.push({ chave: `obs-${obs.id}`, node: <CardObservacao item={obs} /> });
     }
   }
-
-  blocos.push(...blocosNotaConsultor(plan.clientId, "aa_mov", nota));
 
   return (
     <PaginaDocFluida titulo="Movimentações Recomendadas" nomeCliente={nomeCliente} blocos={blocos} />
