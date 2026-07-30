@@ -2,7 +2,7 @@ import { PieChart as PieChartIcon } from "lucide-react";
 import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/format";
-import { formatBRL } from "@/lib/carteira/calculos";
+import { formatBRL, formatPct } from "@/lib/carteira/calculos";
 import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
@@ -313,7 +313,7 @@ export function SecaoAssetAllocation({
                     <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor }}>{grupo.label}</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: grupo.cor }}>{totalPct.toFixed(0)}%</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: grupo.cor }}>{formatPct(totalPct)}</span>
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor, textAlign: "right" }}>
                     {formatBRL(totalBrl)}
@@ -329,7 +329,7 @@ export function SecaoAssetAllocation({
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end" }}>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, backgroundColor: `${grupo.cor}22`, color: grupo.cor }}>
-                        {sub.pct.toFixed(0)}%
+                        {formatPct(sub.pct)}
                       </span>
                     </div>
                     <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>

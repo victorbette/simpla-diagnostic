@@ -343,15 +343,24 @@ export function CarteiraCard({
             onMouseLeave={() => setHoverRow(null)}
           >
             {/* Nome */}
-            <input
-              value={ativo.nome}
-              onChange={(e) => onChange(ativo.id, { nome: e.target.value })}
-              placeholder="Nome do ativo..."
-              style={{
-                border: "none", background: "transparent", outline: "none",
-                fontSize: 12, color: "#111827", width: "100%", padding: 0,
-              }}
-            />
+            {modo === "recomendada" ? (
+              <span style={{
+                fontSize: 12, color: "#374151", overflow: "hidden",
+                textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
+              }}>
+                {ativo.nome || "—"}
+              </span>
+            ) : (
+              <input
+                value={ativo.nome}
+                onChange={(e) => onChange(ativo.id, { nome: e.target.value })}
+                placeholder="Nome do ativo..."
+                style={{
+                  border: "none", background: "transparent", outline: "none",
+                  fontSize: 12, color: "#111827", width: "100%", padding: 0,
+                }}
+              />
+            )}
 
             {/* Segmento — RF cards and exterior */}
             {(isRFCard || cardId === "exterior") && (
@@ -425,7 +434,11 @@ export function CarteiraCard({
             )}
 
             {/* R$ / Valor */}
-            {isRFCard ? (
+            {modo === "recomendada" ? (
+              <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right", display: "block" }}>
+                {ativo.valorBRL > 0 ? ativo.valorBRL.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—"}
+              </span>
+            ) : isRFCard ? (
               <ValueInput value={ativo.valorBRL} onChange={(v) => onChange(ativo.id, { valorBRL: v })} />
             ) : isCalc ? (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>

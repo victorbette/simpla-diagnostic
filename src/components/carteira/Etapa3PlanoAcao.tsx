@@ -224,16 +224,6 @@ export function Etapa3PlanoAcao({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <style>{`
-        @media print {
-          .vencimento-edit { display: none !important; }
-          .vencimento-print { display: inline !important; }
-        }
-        @media screen {
-          .vencimento-print { display: none !important; }
-        }
-      `}</style>
-
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {[
@@ -673,32 +663,23 @@ export function Etapa3PlanoAcao({
                       }}
                     />
 
-                    {/* Vencimento — input de data (tela) / texto formatado (impressão) */}
-                    <div>
-                      <div className="vencimento-edit">
-                        <input
-                          type="date"
-                          value={item.vencimento ?? ""}
-                          onChange={(e) => updateItem(item.id, { vencimento: e.target.value })}
-                          style={{
-                            border: "1px solid #E5E7EB",
-                            borderRadius: 6,
-                            padding: "4px 6px",
-                            fontSize: 11,
-                            color: "#374151",
-                            background: "white",
-                            cursor: "pointer",
-                            width: "100%",
-                            boxSizing: "border-box" as const,
-                          }}
-                        />
-                      </div>
-                      <span className="vencimento-print" style={{ display: "none", fontSize: 11, color: "#6B7280" }}>
-                        {item.vencimento
-                          ? new Date(item.vencimento + "T12:00:00").toLocaleDateString("pt-BR")
-                          : "—"}
-                      </span>
-                    </div>
+                    <input
+                      type="text"
+                      value={item.vencimento ?? ""}
+                      onChange={(e) => updateItem(item.id, { vencimento: e.target.value })}
+                      placeholder="Ex: Jan/2026"
+                      style={{
+                        border: "1px solid #E5E7EB",
+                        borderRadius: 6,
+                        padding: "4px 8px",
+                        fontSize: 11,
+                        color: "#374151",
+                        background: "white",
+                        width: 90,
+                        boxSizing: "border-box" as const,
+                        outline: "none",
+                      }}
+                    />
 
                     {item.adicionadoManualmente ? (
                       <div style={{ display: "flex", gap: 4 }}>
