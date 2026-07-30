@@ -216,10 +216,11 @@ function TabelaCarteiraFinal({
 }
 
 /** Página "Alocação Atual x Proposta" — pizzas comparativas + carteira final (v4 p.10) */
-export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
+export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Props) {
   const rc = resultados.carteira;
   if (!rc) return null;
 
+  const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
@@ -243,10 +244,18 @@ export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
       <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
         <HeaderSecao titulo="Alocação Atual x Proposta" />
 
-        <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-          <PizzaPrint titulo="Carteira Atual" dados={dadosAtual} />
-          <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
-        </div>
+        {comecandoDoZero ? (
+          <div className="doc-card" style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <div style={{ width: "50%" }}>
+              <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
+            </div>
+          </div>
+        ) : (
+          <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <PizzaPrint titulo="Carteira Atual" dados={dadosAtual} />
+            <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
+          </div>
+        )}
 
         {blocos.length > 0 && (
           <TabelaCarteiraFinal
