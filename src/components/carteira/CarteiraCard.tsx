@@ -73,83 +73,9 @@ function ValueInput({ value, onChange }: ValueInputProps) {
   );
 }
 
-interface QtyInputProps {
-  value: number | undefined;
-  onChange: (v: number) => void;
-}
-
-function QtyInput({ value, onChange }: QtyInputProps) {
-  const [display, setDisplay] = useState("");
-  const [focused, setFocused] = useState(false);
-
-  const formatted = value && value > 0
-    ? value.toLocaleString("pt-BR", { maximumFractionDigits: 6 })
-    : "";
-
-  return (
-    <input
-      type="text"
-      inputMode="decimal"
-      value={focused ? display : formatted}
-      onChange={(e) => {
-        setDisplay(e.target.value);
-        const v = parseFloat(e.target.value.replace(",", ".").replace(/[^\d.]/g, ""));
-        onChange(isNaN(v) ? 0 : v);
-      }}
-      onFocus={() => {
-        setFocused(true);
-        setDisplay(value && value > 0 ? String(value).replace(".", ",") : "");
-      }}
-      onBlur={() => setFocused(false)}
-      placeholder="0"
-      style={{
-        width: "100%", border: "none", background: "transparent", outline: "none",
-        fontSize: 12, color: "#111827", textAlign: "right", padding: 0,
-      }}
-    />
-  );
-}
-
-interface CotacaoInputProps {
-  value: number | undefined;
-  onChange: (v: number) => void;
-}
-
-function CotacaoInput({ value, onChange }: CotacaoInputProps) {
-  const [display, setDisplay] = useState("");
-  const [focused, setFocused] = useState(false);
-
-  const formatted = value && value > 0
-    ? value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 })
-    : "";
-
-  return (
-    <input
-      type="text"
-      inputMode="decimal"
-      value={focused ? display : formatted}
-      onChange={(e) => {
-        setDisplay(e.target.value);
-        const v = parseFloat(e.target.value.replace(",", ".").replace(/[^\d.]/g, ""));
-        onChange(isNaN(v) ? 0 : v);
-      }}
-      onFocus={() => {
-        setFocused(true);
-        setDisplay(value && value > 0 ? value.toFixed(4).replace(/\.?0+$/, "").replace(".", ",") : "");
-      }}
-      onBlur={() => setFocused(false)}
-      placeholder="0,00"
-      style={{
-        width: "100%", border: "none", background: "transparent", outline: "none",
-        fontSize: 12, color: "#374151", textAlign: "right", padding: 0,
-      }}
-    />
-  );
-}
-
 const RF_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
-const RV_CARDS: CardId[] = ["acoes", "fiis", "exterior", "cripto"];
-const USD_CARDS: CardId[] = ["exterior", "cripto"];
+// Cards where segmento is picked from a predefined dropdown
+const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido", "exterior"];
 
 interface Props {
   cardId: CardId;
@@ -158,8 +84,6 @@ interface Props {
   patrimonio: number;
   metaPct?: number;
   ativosAtuaisRef?: Ativo[];
-  usdBrl?: number;
-  onUsdBrlChange?: (v: number) => void;
   onAdd?: () => void;
   onRemove?: (id: string) => void;
   onChange: (id: string, partial: Partial<Ativo>) => void;
@@ -167,13 +91,11 @@ interface Props {
 
 export function CarteiraCard({
   cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef,
-  usdBrl = 5.0, onUsdBrlChange,
   onAdd, onRemove, onChange,
 }: Props) {
   const meta = CARD_META[cardId];
   const isRFCard = RF_CARDS.includes(cardId);
-  const isRVCard = RV_CARDS.includes(cardId);
-  const isUSDCard = USD_CARDS.includes(cardId);
+  const hasDropdownSeg = DROPDOWN_SEG_CARDS.includes(cardId);
   const temSegs = meta.segmentos.length > 0;
   const total = ativos.reduce((s, a) => s + a.valorBRL, 0);
   const pctCarteira = patrimonio > 0 ? (total / patrimonio) * 100 : 0;
@@ -191,8 +113,6 @@ export function CarteiraCard({
 
   const [hoverRow, setHoverRow] = useState<string | null>(null);
   const [editingSegId, setEditingSegId] = useState<string | null>(null);
-  const [usdFocused, setUsdFocused] = useState(false);
-  const [usdLocalVal, setUsdLocalVal] = useState("");
 
   // Grid template and column headers by card type
   let gridTemplate: string;
@@ -205,13 +125,10 @@ export function CarteiraCard({
       gridTemplate = "2.5fr 110px 100px 90px 28px";
       headers = ["Nome", "Segmento", "Vencimento", "R$", ""];
     }
-  } else if (cardId === "exterior") {
-    gridTemplate = "2fr 100px 65px 115px 85px 28px";
-    headers = ["Nome", "Segmento", "Qtd", "Cotação USD", "R$ Atual", ""];
   } else {
-    // acoes, fiis, cripto
-    gridTemplate = "2fr 65px 115px 85px 28px";
-    headers = ["Nome", "Qtd", "Cotação", "R$ Atual", ""];
+    // acoes, fiis, exterior, cripto — uniform: Nome | Segmento | R$ Atual | trash
+    gridTemplate = "2fr 1fr 85px 28px";
+    headers = ["Nome", "Segmento", "R$ Atual", ""];
   }
 
   return (
@@ -231,33 +148,6 @@ export function CarteiraCard({
               <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{meta.label}</div>
               <div style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.sub}</div>
             </div>
-
-            {/* USD/BRL câmbio — exterior only */}
-            {cardId === "exterior" && onUsdBrlChange && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: 4, marginLeft: 8,
-                padding: "3px 8px", border: "1px solid #BFDBFE", borderRadius: 6, backgroundColor: "#F8FAFC",
-              }}>
-                <span style={{ fontSize: 10, color: "#9CA3AF", flexShrink: 0 }}>USD/BRL</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={usdFocused ? usdLocalVal : usdBrl.toFixed(4)}
-                  onFocus={() => { setUsdFocused(true); setUsdLocalVal(usdBrl.toFixed(4)); }}
-                  onChange={(e) => {
-                    setUsdLocalVal(e.target.value);
-                    const v = parseFloat(e.target.value.replace(",", "."));
-                    if (!isNaN(v) && v > 0) onUsdBrlChange(v);
-                  }}
-                  onBlur={() => setUsdFocused(false)}
-                  style={{
-                    width: 60, textAlign: "right", fontSize: 11, fontWeight: 500,
-                    border: "none", background: "transparent", outline: "none",
-                    color: "#374151", padding: 0,
-                  }}
-                />
-              </div>
-            )}
           </div>
 
           {modo === "recomendada" && metaPct !== undefined ? (
@@ -332,7 +222,6 @@ export function CarteiraCard({
         const segCor = SEG_COLORS[ativo.segmento];
         const isHover = hoverRow === ativo.id;
         const isEditSeg = editingSegId === ativo.id;
-        const isCalc = (ativo.quantidade ?? 0) > 0 && (ativo.cotacaoAtual ?? 0) > 0;
 
         return (
           <div
@@ -367,8 +256,8 @@ export function CarteiraCard({
               />
             )}
 
-            {/* Segmento — RF cards and exterior */}
-            {(isRFCard || cardId === "exterior") && (
+            {/* Segmento — dropdown for RF+exterior, free text for acoes/fiis/cripto */}
+            {hasDropdownSeg ? (
               isEditSeg ? (
                 <select
                   autoFocus
@@ -397,6 +286,17 @@ export function CarteiraCard({
                   {ativo.segmento || "—"}
                 </span>
               )
+            ) : (
+              <input
+                type="text"
+                value={ativo.segmento ?? ""}
+                onChange={(e) => onChange(ativo.id, { segmento: e.target.value })}
+                placeholder="Ex: Tecnologia, FII Papel..."
+                style={{
+                  border: "none", background: "transparent", outline: "none",
+                  fontSize: 11, color: "#6B7280", width: "100%", padding: 0,
+                }}
+              />
             )}
 
             {/* Vencimento — RF only, editable in modo atual */}
@@ -412,51 +312,11 @@ export function CarteiraCard({
               />
             )}
 
-            {/* Qtd — RV only */}
-            {isRVCard && (
-              <QtyInput
-                value={ativo.quantidade}
-                onChange={(novaQtd) => {
-                  const novoValor = novaQtd > 0 && (ativo.cotacaoAtual ?? 0) > 0
-                    ? novaQtd * (ativo.cotacaoAtual ?? 0) * (isUSDCard ? usdBrl : 1)
-                    : ativo.valorBRL;
-                  onChange(ativo.id, { quantidade: novaQtd, valorBRL: novoValor });
-                }}
-              />
-            )}
-
-            {/* Cotação — RV only */}
-            {isRVCard && (
-              <CotacaoInput
-                value={ativo.cotacaoAtual}
-                onChange={(novaCotacao) => {
-                  const novoValor = (ativo.quantidade ?? 0) > 0 && novaCotacao > 0
-                    ? (ativo.quantidade ?? 0) * novaCotacao * (isUSDCard ? usdBrl : 1)
-                    : ativo.valorBRL;
-                  onChange(ativo.id, { cotacaoAtual: novaCotacao, valorBRL: novoValor });
-                }}
-              />
-            )}
-
             {/* R$ / Valor */}
             {modo === "recomendada" ? (
               <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right", display: "block" }}>
                 {ativo.valorBRL > 0 ? ativo.valorBRL.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—"}
               </span>
-            ) : isRFCard ? (
-              <ValueInput value={ativo.valorBRL} onChange={(v) => onChange(ativo.id, { valorBRL: v })} />
-            ) : isCalc ? (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                <span style={{ fontSize: 12, color: "#374151" }}>
-                  {ativo.valorBRL.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span style={{
-                  fontSize: 9, padding: "1px 4px", borderRadius: 3, flexShrink: 0,
-                  backgroundColor: "#EFF6FF", color: "#1E40AF", fontWeight: 700,
-                }}>
-                  CALC
-                </span>
-              </div>
             ) : (
               <ValueInput value={ativo.valorBRL} onChange={(v) => onChange(ativo.id, { valorBRL: v })} />
             )}
@@ -476,6 +336,7 @@ export function CarteiraCard({
                 <Trash2 size={13} />
               </button>
             )}
+
             {modo === "recomendada" && ativo.adicionadoManualmente && (
               <div style={{ gridColumn: "1 / -1", paddingBottom: 4 }}>
                 <input

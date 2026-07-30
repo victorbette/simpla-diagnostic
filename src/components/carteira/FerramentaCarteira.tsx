@@ -50,7 +50,6 @@ interface SavedState {
   notasConsultor: string;
   aporteDisponivel: number;
   custoVidaMensal?: number;
-  usdBrl?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,7 +107,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [notasConsultor, setNotasConsultor] = useState("");
   const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
   const [custoVidaMensal, setCustoVidaMensal] = useState<number>(0);
-  const [usdBrl, setUsdBrl] = useState<number>(5.0);
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [temMudancas, setTemMudancas] = useState(false);
@@ -131,7 +129,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
         if (typeof parsed.notasConsultor === "string") setNotasConsultor(parsed.notasConsultor);
         if (typeof parsed.aporteDisponivel === "number") { setAporteDisponivel(parsed.aporteDisponivel); aporteFromStorage = true; }
         if (typeof parsed.custoVidaMensal === "number") { setCustoVidaMensal(parsed.custoVidaMensal); custoVidaFromStorage = true; }
-        if (typeof parsed.usdBrl === "number" && parsed.usdBrl > 0) setUsdBrl(parsed.usdBrl);
       }
     } catch { /* ignore */ }
     if (!aporteFromStorage && comecandoDoZero && patrimonioColeta > 0) setAporteDisponivel(patrimonioColeta);
@@ -146,7 +143,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (!loaded) return;
     if (!mudancasInitRef.current) { mudancasInitRef.current = true; return; }
     setTemMudancas(true);
-  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, usdBrl]);
+  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal]);
 
   // Sync plan whenever ativosAtuais or ativosRecomendados change — skip the
   // initial post-load fire so the saved plan from localStorage is not overwritten.
@@ -189,20 +186,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, ativosAtuais, ativosRecomendados]);
-
-  // Recalculate USD assets when exchange rate changes
-  const usdBrlInitial = useRef(true);
-  useEffect(() => {
-    if (usdBrlInitial.current) { usdBrlInitial.current = false; return; }
-    const USD: CardId[] = ["exterior", "cripto"];
-    const recalc = (list: Ativo[]) => list.map((a) => {
-      if (!USD.includes(a.card)) return a;
-      if (!((a.quantidade ?? 0) > 0 && (a.cotacaoAtual ?? 0) > 0)) return a;
-      return { ...a, valorBRL: (a.quantidade ?? 0) * (a.cotacaoAtual ?? 0) * usdBrl };
-    });
-    setAtivosAtuais((prev) => recalc(prev));
-    setAtivosRecomendados((prev) => recalc(prev));
-  }, [usdBrl]);
 
   // Lock body scroll
   useEffect(() => {
@@ -247,7 +230,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       aporteDisponivel,
     };
     try {
-      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, usdBrl };
+      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
       localStorage.setItem(storageKey, JSON.stringify(s));
     } catch { /* ignore */ }
     onSave?.(resultado);
@@ -375,8 +358,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             ativos={ativosAtuais}
             onAtivos={setAtivosAtuais}
             patrimonio={patrimonio}
-            usdBrl={usdBrl}
-            onUsdBrlChange={setUsdBrl}
           />
         )}
         {etapa === 2 && (
@@ -391,8 +372,6 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             aporteDisponivel={aporteDisponivel}
             onAporteChange={setAporteDisponivel}
             onAlocacaoChange={setAlocacaoCompleta}
-            usdBrl={usdBrl}
-            onUsdBrlChange={setUsdBrl}
             comecandoDoZero={comecandoDoZero}
             patrimonioColeta={patrimonioColeta}
             custoVidaMensal={custoVidaMensal}

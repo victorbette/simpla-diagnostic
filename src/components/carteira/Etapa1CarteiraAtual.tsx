@@ -6,11 +6,9 @@ interface Props {
   ativos: Ativo[];
   onAtivos: (ativos: Ativo[]) => void;
   patrimonio: number;
-  usdBrl?: number;
-  onUsdBrlChange?: (v: number) => void;
 }
 
-export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, usdBrl, onUsdBrlChange }: Props) {
+export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio }: Props) {
   function handleAdd(cardId: CardId) {
     onAtivos([...ativos, makeNovoAtivo(cardId)]);
   }
@@ -32,8 +30,6 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio, usdBrl, onUs
           ativos={ativos.filter((a) => a.card === cardId)}
           modo="atual"
           patrimonio={patrimonio}
-          usdBrl={usdBrl}
-          onUsdBrlChange={onUsdBrlChange}
           onAdd={() => handleAdd(cardId)}
           onRemove={handleRemove}
           onChange={handleChange}

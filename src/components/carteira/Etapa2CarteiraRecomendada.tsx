@@ -16,8 +16,6 @@ interface Props {
   aporteDisponivel: number;
   onAporteChange: (v: number) => void;
   onAlocacaoChange?: (completa: boolean) => void;
-  usdBrl?: number;
-  onUsdBrlChange?: (v: number) => void;
   comecandoDoZero?: boolean;
   patrimonioColeta?: number;
   custoVidaMensal?: number;
@@ -47,7 +45,6 @@ function parseBRL(raw: string): number {
 export function Etapa2CarteiraRecomendada({
   ativos, onAtivos, ativosAtuais, alocacaoMeta, onAlocacaoMeta,
   patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
-  usdBrl, onUsdBrlChange,
   comecandoDoZero = false, patrimonioColeta = 0,
   custoVidaMensal = 0, onCustoVidaChange,
 }: Props) {
@@ -339,8 +336,6 @@ export function Etapa2CarteiraRecomendada({
           patrimonio={patrimonioMeta}
           metaPct={alocacaoMeta[cardId] ?? 0}
           ativosAtuaisRef={ativosAtuais}
-          usdBrl={usdBrl}
-          onUsdBrlChange={onUsdBrlChange}
           onChange={handleChange}
         />
       ))}
