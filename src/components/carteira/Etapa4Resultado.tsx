@@ -38,7 +38,7 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
   }
 }
 
-export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
+export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
   const patrimonioMeta = patrimonio + aporteDisponivel;
 
   const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
@@ -82,22 +82,27 @@ export function Etapa4Resultado({ ativosAtuais, ativosRecomendados, alocacaoMeta
       .map((item) => {
         const valorFinal = calcularValorFinal(item);
         if (valorFinal <= 0) return null;
-        const base =
-          ativosRecomendados.find((a) => a.nome === item.nomeAtivo && a.card === item.card) ??
-          ativosAtuais.find((a) => a.nome === item.nomeAtivo && a.card === item.card);
+        const ativoAtual = ativosAtuais.find(
+          (a) => a.id === item.id || (a.nome === item.nomeAtivo && a.card === item.card)
+        );
+        const vencimento = item.vencimento?.trim()
+          ? item.vencimento
+          : ativoAtual?.vencimento?.trim()
+            ? ativoAtual.vencimento
+            : undefined;
         return {
           id: item.id,
           nome: item.nomeAtivo,
           card: item.card,
           segmento: item.segmento ?? "",
           valorBRL: valorFinal,
-          vencimento: item.vencimento ?? base?.vencimento,
+          vencimento,
           adicionadoManualmente: item.adicionadoManualmente,
           observacao: item.observacao,
         } as Ativo;
       })
       .filter(Boolean) as Ativo[],
-    [planoAcao, ativosRecomendados, ativosAtuais]
+    [planoAcao, ativosAtuais]
   );
 
   const cardStyle = (_accent?: string): React.CSSProperties => ({
