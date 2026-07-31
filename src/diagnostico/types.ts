@@ -16,7 +16,8 @@ export interface DadosColetaDiag {
   estadoCivil?: string;
   nomeConjuge?: string;
   dataNascimentoConjuge?: string;
-  filhos?: Array<{ nome: string; idade: number }>;
+  temFilhos?: boolean;
+  filhos?: Array<{ nome: string }>;
   profissao?: string;
   vinculoProfissional?: string | string[];
   patrimonioFinanceiro?: number;

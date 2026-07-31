@@ -8,7 +8,7 @@ import { DiagRelatorio } from "./etapas/DiagRelatorio";
 type Etapa = "coleta" | "lf" | "resultado" | "relatorio";
 
 const ABAS: { id: Etapa; label: string }[] = [
-  { id: "coleta", label: "Coleta de Dados" },
+  { id: "coleta", label: "Situação Atual" },
   { id: "lf", label: "Liberdade Financeira" },
   { id: "resultado", label: "Diagnóstico Inicial" },
   { id: "relatorio", label: "Relatório" },

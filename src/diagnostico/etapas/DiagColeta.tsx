@@ -1,9 +1,5 @@
 import { useState } from "react";
-import {
-  User, DollarSign, PieChart,
-  X, Plus,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { User, DollarSign, PieChart } from "lucide-react";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
@@ -111,15 +107,10 @@ function BotaoSalvar({ onSalvar, rotulo = "Salvar" }: { onSalvar: () => void; ro
 }
 
 export function DiagColeta({ dados, onChange, onSalvar }: Props) {
-  const filhos = dados.filhos ?? [];
   const idadeAtual = dados.dataNascimento
     ? Math.floor((Date.now() - new Date(dados.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : null;
   const casado = dados.estadoCivil === "casado" || dados.estadoCivil === "uniao_estavel";
-
-  function updateFilhos(newFilhos: Array<{ nome: string; idade: number }>) {
-    onChange({ filhos: newFilhos });
-  }
 
   const VINCULOS = [
     { id: "clt",        label: "CLT" },
@@ -248,75 +239,74 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
               <i className="ti ti-heart" style={{ fontSize: 13 }} />
               Dados do Cônjuge
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>Nome completo do cônjuge</label>
-                <input
-                  type="text"
-                  value={dados.nomeConjuge ?? ""}
-                  onChange={e => onChange({ nomeConjuge: e.target.value })}
-                  placeholder="Nome do cônjuge"
-                  style={INP}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>Data de nascimento do cônjuge</label>
-                <input
-                  type="date"
-                  value={dados.dataNascimentoConjuge ?? ""}
-                  onChange={e => onChange({ dataNascimentoConjuge: e.target.value })}
-                  style={INP}
-                />
-                {dados.dataNascimentoConjuge && (
-                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>
-                    {Math.floor((Date.now() - new Date(dados.dataNascimentoConjuge).getTime()) / (365.25 * 24 * 3600 * 1000))} anos
-                  </div>
-                )}
-              </div>
+            <div>
+              <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 6 }}>Nome completo do cônjuge</label>
+              <input
+                type="text"
+                value={dados.nomeConjuge ?? ""}
+                onChange={e => onChange({ nomeConjuge: e.target.value })}
+                placeholder="Nome do cônjuge"
+                style={INP}
+              />
             </div>
           </div>
         )}
 
         {/* Filhos */}
-        <div style={{ marginTop: 20, padding: "16px 20px", backgroundColor: "#F8FAFF", borderRadius: 10, border: "1px solid #BFDBFE" }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#1E40AF", margin: "0 0 12px" }}>
-            Filhos {filhos.length > 0 && <span style={{ fontWeight: 400, color: "#6B7280" }}>({filhos.length})</span>}
-          </p>
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-            {filhos.map((filho, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px auto", gap: 8, alignItems: "center" }}>
-                <Input
-                  value={filho.nome}
-                  onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { ...f, nome: e.target.value } : f))}
-                  placeholder={`Nome do filho ${i + 1}`}
-                  className="border-[#BFDBFE]"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  max={30}
-                  value={filho.idade || ""}
-                  onChange={(e) => updateFilhos(filhos.map((f, j) => j === i ? { ...f, idade: Number(e.target.value) || 0 } : f))}
-                  placeholder="Idade"
-                  className="border-[#BFDBFE] text-center"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateFilhos(filhos.filter((_, j) => j !== i))}
-                  style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 6, border: "1px solid #FECACA", backgroundColor: "#FEF2F2", color: "#B91C1C", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-                >
-                  <X size={14} />
-                </button>
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0" }}>
+            <div style={{ fontSize: 12, fontWeight: 500, color: "#111827" }}>Tem filhos?</div>
+            <label style={{ cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={dados.temFilhos ?? false}
+                onChange={e => onChange({
+                  temFilhos: e.target.checked,
+                  filhos: e.target.checked ? (dados.filhos ?? [{ nome: "" }]) : [],
+                })}
+                style={{ display: "none" }}
+              />
+              <div style={{ width: 40, height: 22, borderRadius: 99, background: dados.temFilhos ? "#2563EB" : "#D1D5DB", position: "relative" as const, transition: "background 200ms" }}>
+                <div style={{ width: 16, height: 16, borderRadius: "50%", background: "white", position: "absolute" as const, top: 3, left: dados.temFilhos ? 21 : 3, transition: "left 200ms" }} />
               </div>
-            ))}
+            </label>
           </div>
-          <button
-            type="button"
-            onClick={() => updateFilhos([...filhos, { nome: "", idade: 0 }])}
-            style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#2563EB", background: "none", border: "1px dashed #BFDBFE", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontWeight: 500, fontFamily: "inherit" }}
-          >
-            <Plus size={14} /> Adicionar filho
-          </button>
+
+          {dados.temFilhos && (
+            <div style={{ marginTop: 8 }}>
+              {(dados.filhos ?? [{ nome: "" }]).map((filho, idx) => (
+                <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                  <input
+                    type="text"
+                    value={filho.nome ?? ""}
+                    onChange={e => {
+                      const novos = [...(dados.filhos ?? [])];
+                      novos[idx] = { nome: e.target.value };
+                      onChange({ filhos: novos });
+                    }}
+                    placeholder={`Nome do filho ${idx + 1}`}
+                    style={{ ...INP, flex: 1 }}
+                  />
+                  {(dados.filhos ?? []).length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onChange({ filhos: (dados.filhos ?? []).filter((_, i) => i !== idx) })}
+                      style={{ background: "none", border: "1px solid #FCA5A5", borderRadius: 6, padding: "6px 8px", cursor: "pointer", color: "#B91C1C", display: "flex", alignItems: "center" }}
+                    >
+                      <i className="ti ti-trash" style={{ fontSize: 13 }} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => onChange({ filhos: [...(dados.filhos ?? []), { nome: "" }] })}
+                style={{ fontSize: 12, color: "#2563EB", background: "none", border: "1px dashed #BFDBFE", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                + Adicionar filho
+              </button>
+            </div>
+          )}
         </div>
 
       </SecaoCard>
