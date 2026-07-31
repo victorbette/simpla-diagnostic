@@ -21,16 +21,34 @@ interface Props {
   leads: Lead[];
   onSelecionar: (lead: Lead) => void;
   onCadastrar: (lead: Lead) => void;
+  onAtualizar: (lead: Lead) => void;
   onExcluir: (id: string) => void;
   onVoltar: () => void;
 }
 
-export function LeadsList({ leads, onSelecionar, onCadastrar, onExcluir, onVoltar }: Props) {
+export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExcluir, onVoltar }: Props) {
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editando, setEditando] = useState<Lead | null>(null);
+  const [editNome, setEditNome] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editTelefone, setEditTelefone] = useState("");
+
+  function abrirEdicao(lead: Lead) {
+    setEditando(lead);
+    setEditNome(lead.nome);
+    setEditEmail(lead.email);
+    setEditTelefone(lead.telefone);
+  }
+
+  function salvarEdicao() {
+    if (!editando || !editNome.trim()) return;
+    onAtualizar({ ...editando, nome: editNome.trim(), email: editEmail.trim(), telefone: editTelefone.trim() });
+    setEditando(null);
+  }
 
   function handleCadastrar() {
     if (!nome.trim()) return;
@@ -113,8 +131,15 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onExcluir, onVolta
                   Diagnóstico →
                 </button>
                 <button
+                  onClick={() => abrirEdicao(lead)}
+                  style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 6, cursor: "pointer", color: "#6B7280", padding: "4px 6px" }}
+                  title="Editar lead"
+                >
+                  <i className="ti ti-pencil" style={{ fontSize: 15 }} />
+                </button>
+                <button
                   onClick={() => setDeleteTarget(lead.id)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: "4px 6px" }}
+                  style={{ background: "none", border: "1px solid #FCA5A5", borderRadius: 6, cursor: "pointer", color: "#B91C1C", padding: "4px 6px" }}
                   title="Excluir lead"
                 >
                   <i className="ti ti-trash" style={{ fontSize: 15 }} />
@@ -158,12 +183,45 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onExcluir, onVolta
         </div>
       )}
 
+      {/* Modal — Editar */}
+      {editando && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "white", borderRadius: 12, padding: 32, width: 440, maxWidth: "90vw" }}>
+            <h2 style={{ margin: "0 0 20px", fontSize: 18, fontWeight: 700, color: "#111827" }}>Editar Lead</h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>Nome completo *</label>
+                <input value={editNome} onChange={e => setEditNome(e.target.value)} placeholder="Nome do lead" style={INPUT} autoFocus />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>Email</label>
+                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="email@exemplo.com" style={INPUT} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: "#6B7280", display: "block", marginBottom: 4 }}>Telefone</label>
+                <input type="tel" value={editTelefone} onChange={e => setEditTelefone(e.target.value)} placeholder="(99) 99999-9999" style={INPUT} />
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
+              <button onClick={() => setEditando(null)} style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
+              <button
+                onClick={salvarEdicao}
+                disabled={!editNome.trim()}
+                style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 600, cursor: editNome.trim() ? "pointer" : "not-allowed", opacity: editNome.trim() ? 1 : 0.6, fontFamily: "inherit" }}
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal — Excluir */}
       {deleteTarget && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ background: "white", borderRadius: 12, padding: 28, width: 380, maxWidth: "90vw" }}>
             <h2 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 700, color: "#111827" }}>Excluir lead?</h2>
-            <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px" }}>Esta ação não pode ser desfeita.</p>
+            <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px" }}>Todos os dados serão removidos permanentemente.</p>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
               <button onClick={() => setDeleteTarget(null)} style={{ background: "none", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancelar</button>
               <button

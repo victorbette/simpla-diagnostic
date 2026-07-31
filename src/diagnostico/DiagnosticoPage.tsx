@@ -51,6 +51,9 @@ export function DiagnosticoPage({ onVoltar }: Props) {
         setLeads(prev => [...prev, novoLead]);
         setLeadAtivo(novoLead);
       }}
+      onAtualizar={(leadAtualizado) => {
+        setLeads(prev => prev.map(l => l.id === leadAtualizado.id ? leadAtualizado : l));
+      }}
       onExcluir={(id) => {
         setLeads(prev => prev.filter(l => l.id !== id));
       }}
