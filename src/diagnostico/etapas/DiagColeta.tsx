@@ -3,7 +3,6 @@ import { User, DollarSign, PieChart } from "lucide-react";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
-import { ATIVOS_TEXTOS } from "../ativosTextos";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -55,7 +54,6 @@ const CURRENCY_KEYS = [
   { label: "Renda Mensal (R$)", key: "rendaMensal" },
   { label: "Custo de Vida Mensal (R$)", key: "custoVidaMensal" },
   { label: "Aporte Mensal (R$)", key: "aporteMensal" },
-  { label: "Gasto no Cartão de Crédito (R$)", key: "gastoCartaoMensal" },
   { label: "Renda Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria" },
 ] as const;
 
@@ -416,18 +414,12 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
                   const marcado = !!(dados.ativosInvestimento?.[ativo.id]);
-                  const t = ATIVOS_TEXTOS[ativo.id];
-                  const snippet = marcado
-                    ? (ativo.qualidade === "bom"
-                        ? t?.positivo?.split("\n")[0].trim().slice(0, 90)
-                        : t?.negativo?.split("\n")[0].trim().slice(0, 90))
-                    : undefined;
                   return (
                     <div
                       key={ativo.id}
                       style={{
                         display: "flex",
-                        alignItems: snippet ? "flex-start" : "center",
+                        alignItems: "center",
                         justifyContent: "space-between",
                         padding: "8px 12px",
                         border: marcado
@@ -447,13 +439,8 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                             {ativo.label}
                           </div>
                           {marcado && (
-                            <div style={{ fontSize: 9, color: ativo.qualidade === "bom" ? "#15803D" : "#B91C1C", marginTop: 1 }}>
+                            <div style={{ fontSize: 9, fontWeight: 600, color: ativo.qualidade === "bom" ? "#15803D" : "#B91C1C", marginTop: 1 }}>
                               {ativo.qualidade === "bom" ? "✓ Recomendado" : "⚠ Não recomendado"}
-                            </div>
-                          )}
-                          {snippet && (
-                            <div style={{ fontSize: 10, color: ativo.qualidade === "bom" ? "#166534" : "#991B1B", marginTop: 4, lineHeight: 1.5 }}>
-                              {snippet}…
                             </div>
                           )}
                         </div>
