@@ -1,4 +1,3 @@
-import { TEXTO_CORPO } from "@/lib/documentoStyles";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
@@ -7,27 +6,26 @@ interface Props {
   config: ConfigConsultor;
 }
 
-export function DocDisclaimerDiag({ nomeCliente, config }: Props) {
-  const textoDisclaimer = config.textoDisclaimer.replace(/Financial Planning/g, "Diagnóstico Financeiro");
+const TEXTO_DISCLAIMER = `Esse Relatório não se destina à circulação geral, tampouco pode ser reproduzido. Não será assumida responsabilidade ou contingência por danos causados ou por eventual perda incorrida por qualquer parte envolvida, como resultado da circulação, publicação, reprodução ou uso deste documento com outra finalidade.
 
+A Simpla Invest é uma Consultoria de Investimentos independente, registrada na CVM, dedicada a oferecer planejamento financeiro personalizado e livre de conflitos de interesse.
+
+A Simpla Invest declara que segue as regras de conduta expressas nos termos da Resolução CVM nº 19/2021. Além disso, não está em situação que possa afetar a imparcialidade do relatório ou que possa configurar conflito de interesse.
+
+A elaboração desse material se deu de maneira independente e individualizada, e o conteúdo nele divulgado não pode ser copiado, reproduzido ou distribuído, no todo ou em parte, a terceiros, sem autorização prévia.
+
+As premissas utilizadas são de total ciência e entendimento da persona a qual o estudo se dedica. Os resultados apresentados tratam-se de projeções, não havendo controle absoluto sobre os resultados e, portanto, não se caracterizam como promessas de rentabilidade futura. O Relatório possui caráter exclusivamente educativo.`;
+
+export function DocDisclaimerDiag({ nomeCliente, config }: Props) {
   const blocos: BlocoDoc[] = [
-    {
-      chave: "simpla",
-      grudaNoProximo: true,
-      node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16 }}>
-          A Simpla Invest é uma assessoria de investimentos independente, registrada na CVM, dedicada a oferecer planejamento financeiro personalizado e livre de conflitos de interesse.
-        </p>
-      ),
-    },
     {
       chave: "disclaimer",
       grudaNoProximo: true,
       node: (
         <>
-          <div style={{ ...TEXTO_CORPO, fontSize: 13, whiteSpace: "pre-line" }}>
-            {textoDisclaimer}
-          </div>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" as const }}>
+            {TEXTO_DISCLAIMER}
+          </p>
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 14, marginTop: 18 }}>
             <img
