@@ -120,46 +120,7 @@ export function ConfiguracoesPage({ onFechar }: Props) {
                 style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", boxSizing: "border-box" }}
               />
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
-                Texto Sobre o Consultor
-              </label>
-              <textarea
-                rows={4}
-                value={config.descricao}
-                placeholder="Descreva sua formação e credenciais..."
-                onChange={(e) => setConfig({ ...config, descricao: e.target.value })}
-                style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", resize: "vertical", fontFamily: "inherit", lineHeight: 1.6, boxSizing: "border-box" }}
-              />
-              <p style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
-                Aparece no documento de Financial Planning
-              </p>
-            </div>
           </div>
-        </div>
-
-        {/* ── Disclaimer ── */}
-        <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <i className="ti ti-file-description" style={{ fontSize: 18, color: "#2563EB" }} />
-            <span style={{ fontWeight: 700, fontSize: 15, color: "#111827" }}>Disclaimer — Documento de Financial Planning</span>
-          </div>
-          <p style={{ fontSize: 12, color: "#6B7280", marginBottom: 16 }}>
-            Este texto aparece na segunda página do documento enviado ao cliente.
-          </p>
-          <textarea
-            rows={10}
-            value={config.textoDisclaimer}
-            onChange={(e) => setConfig({ ...config, textoDisclaimer: e.target.value })}
-            style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: 12, fontSize: 13, color: "#111827", outline: "none", resize: "vertical", fontFamily: "inherit", lineHeight: 1.6, boxSizing: "border-box" }}
-          />
-          <button
-            onClick={() => setConfig({ ...config, textoDisclaimer: CONFIG_CONSULTOR_DEFAULT.textoDisclaimer })}
-            style={{ fontSize: 12, color: "#6B7280", background: "none", border: "none", cursor: "pointer", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}
-          >
-            <i className="ti ti-refresh" style={{ fontSize: 12 }} />
-            Restaurar texto padrão
-          </button>
         </div>
 
         {/* ── Segurança ── */}
