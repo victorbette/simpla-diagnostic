@@ -39,34 +39,37 @@ export function DocDisclaimer({ nomeCliente }: Props) {
         <div style={{ background: "#F0F7FF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <i className="ti ti-headset" style={{ fontSize: 16, color: "#2563EB" }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Ouvidoria Simpla</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Ouvidoria Simpla Invest</span>
           </div>
           <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.7 }}>
-            <div style={{ marginBottom: 4 }}>
-              <span style={{ color: "#6B7280" }}>Telefone:</span>{" "}
-              <strong>(11) 99999-9999</strong>
-            </div>
-            <div>
-              <span style={{ color: "#6B7280" }}>Link:</span>{" "}
-              <span style={{ color: "#2563EB", textDecoration: "underline" }}>
-                ouvidoria.simplainvest.com.br
-              </span>
-            </div>
+            Telefone: (32) 3198-2742<br />
+            Ou acesse clicando{' '}
+            <a
+              href="https://wa.me/553231982742"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#2563EB' }}
+            >
+              Aqui
+            </a>
           </div>
         </div>
 
         <div style={{ background: "#F0F7FF", border: "0.5px solid #BFDBFE", borderRadius: 10, padding: "16px 18px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             <i className="ti ti-users" style={{ fontSize: 16, color: "#2563EB" }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Comunidade Simpla</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>Comunidade de Clientes Simpla Invest</span>
           </div>
           <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.7 }}>
-            <div>
-              <span style={{ color: "#6B7280" }}>Link:</span>{" "}
-              <span style={{ color: "#2563EB", textDecoration: "underline" }}>
-                comunidade.simplainvest.com.br
-              </span>
-            </div>
+            Acesse clicando{' '}
+            <a
+              href="https://chat.whatsapp.com/IyayLHuwHOK9xG9JImuMo9"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#2563EB' }}
+            >
+              Aqui
+            </a>
           </div>
         </div>
       </div>
