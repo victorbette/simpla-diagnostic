@@ -44,16 +44,6 @@ function formatDate(iso: string | null | undefined): string {
   return d.toLocaleDateString("pt-BR");
 }
 
-function profileConfig(perfil: string | null | undefined) {
-  switch (perfil) {
-    case "moderado":             return { bg: "#EFF6FF", color: "#2563EB", label: "MODERADO" };
-    case "conservador":          return { bg: "#EAF0F5", color: "#1E40AF", label: "CONSERVADOR" };
-    case "conservador_moderado": return { bg: "#EAF0F5", color: "#1E40AF", label: "CONS. MODERADO" };
-    case "arrojado":             return { bg: "#FEE2E2", color: "#B91C1C", label: "ARROJADO" };
-    default:                     return { bg: "#F3F4F6", color: "#6B7280", label: "SEM PERFIL" };
-  }
-}
-
 // ─── Form types ───────────────────────────────────────────────────────────────
 
 interface ClientForm {
@@ -82,7 +72,9 @@ export function HomePage() {
 
   const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
   const [clienteAcompanhamento, setClienteAcompanhamento] = useState<Client | null>(null);
-  const [search, setSearch] = useState("");
+  const [busca, setBusca] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState<"todos" | "pendente" | "em_andamento" | "completo">("todos");
+  const [ordenacao, setOrdenacao] = useState<"nome" | "atualizacao">("nome");
   const [modalAberto, setModalAberto] = useState(false);
   const [clienteEditando, setClienteEditando] = useState<Client | null>(null);
   const [form, setForm] = useState<ClientForm>(EMPTY_FORM);
@@ -94,15 +86,32 @@ export function HomePage() {
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
 
   // All hooks must be before conditional returns
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return clientStore.clients;
-    return clientStore.clients.filter(
-      (c) =>
-        c.nome.toLowerCase().includes(q) ||
-        (c.email ?? "").toLowerCase().includes(q)
-    );
-  }, [clientStore.clients, search]);
+  const clientesOrdenados = useMemo(() => {
+    let lista = [...clientStore.clients];
+    if (busca.trim()) {
+      const q = busca.toLowerCase();
+      lista = lista.filter(
+        (c) => c.nome?.toLowerCase().includes(q) || (c.email ?? "").toLowerCase().includes(q)
+      );
+    }
+    if (filtroStatus !== "todos") {
+      lista = lista.filter((c) => {
+        if (filtroStatus === "pendente") return !c.planStatus || c.planStatus === "nao_iniciado";
+        if (filtroStatus === "em_andamento") return c.planStatus === "rascunho";
+        return c.planStatus === "completo";
+      });
+    }
+    if (ordenacao === "nome") {
+      lista.sort((a, b) => (a.nome ?? "").localeCompare(b.nome ?? "", "pt-BR"));
+    } else {
+      lista.sort(
+        (a, b) =>
+          new Date(b.planUpdatedAt ?? b.updatedAt ?? 0).getTime() -
+          new Date(a.planUpdatedAt ?? a.updatedAt ?? 0).getTime()
+      );
+    }
+    return lista;
+  }, [clientStore.clients, busca, filtroStatus, ordenacao]);
 
   useEffect(() => {
     const fechar = () => { setMenuAberto(null); setMenuPos(null); };
@@ -329,17 +338,6 @@ export function HomePage() {
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
-              <input
-                type="text"
-                placeholder="Buscar cliente..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-4 py-2.5 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
-                style={{ width: 280 }}
-              />
-            </div>
             <button
               onClick={openNovoCliente}
               className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
@@ -371,6 +369,52 @@ export function HomePage() {
           ))}
         </div>
 
+        {/* Toolbar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" as const }}>
+          <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 320 }}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
+            <input
+              type="text"
+              placeholder="Buscar cliente..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="pl-9 pr-4 py-2 text-sm border border-[#BFDBFE] rounded-lg bg-white outline-none focus:ring-2 focus:ring-offset-1 transition"
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+            {(["todos", "pendente", "em_andamento", "completo"] as const).map((key) => {
+              const labels = { todos: "Todos", pendente: "Sem FP", em_andamento: "Em andamento", completo: "Concluído" };
+              const ativo = filtroStatus === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setFiltroStatus(key)}
+                  style={{ fontSize: 11, fontWeight: 600, padding: "5px 12px", borderRadius: 99, border: ativo ? "1.5px solid #2563EB" : "0.5px solid #E5E7EB", background: ativo ? "#EFF6FF" : "white", color: ativo ? "#2563EB" : "#6B7280", cursor: "pointer" }}
+                >
+                  {labels[key]}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
+            {(["nome", "atualizacao"] as const).map((key) => {
+              const cfg = { nome: { label: "Nome A-Z", icon: "ti-sort-a-z" }, atualizacao: { label: "Mais recente", icon: "ti-clock" } };
+              const ativo = ordenacao === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => setOrdenacao(key)}
+                  style={{ fontSize: 11, fontWeight: 600, padding: "5px 12px", borderRadius: 8, border: ativo ? "1.5px solid #2563EB" : "0.5px solid #E5E7EB", background: ativo ? "#1E3A8A" : "white", color: ativo ? "white" : "#6B7280", cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                >
+                  <i className={`ti ${cfg[key].icon}`} style={{ fontSize: 12 }} />
+                  {cfg[key].label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Table */}
         {clientStore.loading ? (
           <div style={{ textAlign: "center", padding: "80px 0", color: "#9CA3AF" }}>
@@ -381,9 +425,8 @@ export function HomePage() {
           <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
             {/* Table header */}
-            <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 120px 40px", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
               <span>Cliente</span>
-              <span>Perfil</span>
               <span>Status FP</span>
               <span>Atualização</span>
               <span>Ações</span>
@@ -391,24 +434,21 @@ export function HomePage() {
             </div>
 
             {/* Search empty state */}
-            {filtered.length === 0 && clientStore.clients.length > 0 && (
+            {clientesOrdenados.length === 0 && clientStore.clients.length > 0 && (
               <div style={{ padding: "40px 20px", textAlign: "center", color: "#9CA3AF" }}>
                 <Search className="h-10 w-10 mx-auto mb-3" style={{ color: "#D1D5DB" }} />
-                <p style={{ fontSize: 13 }}>Nenhum resultado para &ldquo;{search}&rdquo;</p>
-                <button onClick={() => setSearch("")} style={{ marginTop: 8, fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer" }}>
-                  Limpar busca
+                <p style={{ fontSize: 13 }}>Nenhum resultado encontrado</p>
+                <button onClick={() => { setBusca(""); setFiltroStatus("todos"); }} style={{ marginTop: 8, fontSize: 12, color: "#2563EB", background: "none", border: "none", cursor: "pointer" }}>
+                  Limpar filtros
                 </button>
               </div>
             )}
 
             {/* Data rows */}
-            {filtered.map((c) => {
-              const perfil = profileConfig(c.planSuitabilityPerfil);
-
-              return (
+            {clientesOrdenados.map((c) => (
                 <div
                   key={c.id}
-                  style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 1fr 120px 40px", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+                  style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 120px 40px", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#FAFAFA")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
                 >
@@ -421,13 +461,6 @@ export function HomePage() {
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
                       <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
                     </div>
-                  </div>
-
-                  {/* PERFIL */}
-                  <div>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: perfil.color, background: perfil.bg, padding: "3px 10px", borderRadius: 99 }}>
-                      {perfil.label}
-                    </span>
                   </div>
 
                   {/* STATUS FP */}
@@ -476,8 +509,7 @@ export function HomePage() {
                     </button>
                   </div>
                 </div>
-              );
-            })}
+            ))}
 
             {/* Empty state — no clients */}
             {clientStore.clients.length === 0 && (
