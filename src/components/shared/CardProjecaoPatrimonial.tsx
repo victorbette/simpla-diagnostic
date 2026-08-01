@@ -25,7 +25,7 @@ export function CardProjecaoPatrimonial({
   return (
     <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "none" }}>
       <CardContent className="pt-5">
-        <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+        <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
           Projeção Patrimonial
         </p>
         <GraficoIF
