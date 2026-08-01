@@ -40,7 +40,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
   }
 
   return (
-    <div className="diag-flow-root" style={{ minHeight: "100vh", backgroundColor: "#F0F7FF" }}>
+    <div className="diag-flow-root" style={{ minHeight: "100vh", backgroundColor: "#FFFFFF" }}>
 
       {/* Header */}
       <header

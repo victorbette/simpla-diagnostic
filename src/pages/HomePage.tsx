@@ -248,7 +248,7 @@ export function HomePage() {
   ).length;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F0F7FF" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#FFFFFF" }}>
 
       {/* ── Header ── */}
       <header

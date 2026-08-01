@@ -62,7 +62,7 @@ export function ConfiguracoesPage({ onFechar }: Props) {
     <div
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        backgroundColor: "#F0F7FF",
+        backgroundColor: "#FFFFFF",
         display: "flex", flexDirection: "column",
         overflowY: "auto",
       }}

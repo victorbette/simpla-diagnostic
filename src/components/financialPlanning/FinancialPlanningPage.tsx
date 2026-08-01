@@ -351,7 +351,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               onConcluir={async () => { await handleSave("completo"); }}
             />
           ) : (
-            <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
+            <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#FFFFFF" }}>
               {abaFP === "asset_allocation" && (
                 <div style={{ padding: "28px 32px" }}>
                   <SecaoAssetAllocation
@@ -420,7 +420,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
         </header>
 
         {/* Conteúdo scrollável */}
-        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
+        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#FFFFFF" }}>
           <FinancialPlanDashboard
             plan={plan}
             clientName={clientName}
@@ -534,7 +534,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
 
       {/* Conteúdo das 4 abas */}
       <main style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF", width: "100%" }}>
+        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#FFFFFF", width: "100%" }}>
 
           {abaAtiva === "coleta" && (
             <ColetaDadosCompleta

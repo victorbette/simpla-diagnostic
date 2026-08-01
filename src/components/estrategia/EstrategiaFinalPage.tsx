@@ -262,7 +262,7 @@ export function EstrategiaFinalPage({
       </div>
 
       {/* ── SCROLLABLE CONTENT ──────────────────────────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F0F7FF" }}>
+      <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#FFFFFF" }}>
         <div
           style={{
             width: "100%",

@@ -67,7 +67,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
   }
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#F0F7FF" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#FFFFFF" }}>
 
       {/* Header */}
       <header style={{ backgroundColor: "#1E3A8A", padding: "14px 32px", display: "flex", alignItems: "center", gap: 16 }}>
