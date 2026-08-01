@@ -23,7 +23,7 @@ export function CardProjecaoPatrimonial({
   interativo = true,
 }: Props) {
   return (
-    <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+    <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "none" }}>
       <CardContent className="pt-5">
         <p style={{ color: "#000000", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
           Projeção Patrimonial

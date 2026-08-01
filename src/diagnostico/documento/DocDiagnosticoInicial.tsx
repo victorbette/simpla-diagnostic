@@ -27,9 +27,9 @@ function GaugeDiag({
   score: number; label: string; icone: string;
   nivel: ReturnType<typeof nivelScore>;
 }) {
-  const W = 160, H = 90;
+  const W = 130, H = 70;
   const CX = W / 2, CY = H;
-  const R_EXT = 72, R_INT = 52;
+  const R_EXT = 56, R_INT = 40;
   const sc = Math.max(0, Math.min(100, score));
   const graus = 180 - (sc / 100) * 180;
   const rad = (graus * Math.PI) / 180;
@@ -54,26 +54,26 @@ function GaugeDiag({
   return (
     <div style={{
       background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-      padding: "18px 14px 14px", display: "flex", flexDirection: "column", alignItems: "center",
+      padding: "12px 10px 10px", display: "flex", flexDirection: "column", alignItems: "center",
     }}>
       <svg width={W} height={H + 10} viewBox={`0 0 ${W} ${H + 10}`} style={{ overflow: "visible" }}>
         <path d={pathFundo} fill="#F3F4F6" />
         {sc > 0 && <path d={pathFill} fill={nivel.cor} opacity={0.9} />}
-        <text x={CX} y={CY - 10} textAnchor="middle" fontSize="22" fontWeight="800"
+        <text x={CX} y={CY - 8} textAnchor="middle" fontSize="18" fontWeight="800"
           fill={score >= 0 ? nivel.cor : "#9CA3AF"}>
           {score >= 0 ? sc : "—"}
         </text>
-        <text x={CX} y={CY + 6} textAnchor="middle" fontSize="10" fill="#9CA3AF">/100</text>
+        <text x={CX} y={CY + 5} textAnchor="middle" fontSize="9" fill="#9CA3AF">/100</text>
       </svg>
       <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 4 }}>
         <i className={`ti ${icone}`} style={{ fontSize: 13, color: nivel.cor }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "center" as const }}>
+        <span style={{ fontSize: 10, fontWeight: 600, color: "#374151", textAlign: "center" as const }}>
           {label}
         </span>
       </div>
       <span style={{
-        fontSize: 10, fontWeight: 600, color: nivel.cor, background: nivel.bg,
-        padding: "2px 10px", borderRadius: 99, marginTop: 6,
+        fontSize: 9, fontWeight: 600, color: nivel.cor, background: nivel.bg,
+        padding: "2px 10px", borderRadius: 99, marginTop: 4,
       }}>
         {nivel.label}
       </span>
@@ -165,7 +165,7 @@ Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
           {/* Card score geral */}
           <div style={{
             background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12,
-            padding: "20px 24px", marginBottom: 14,
+            padding: "14px 20px", marginBottom: 10,
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div>
@@ -178,7 +178,7 @@ Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
               </div>
             </div>
             <div style={{ textAlign: "center" as const }}>
-              <div style={{ fontSize: 52, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
+              <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1, color: nv.cor }}>{scoreGeral}</div>
               <div style={{ fontSize: 10, color: "#9CA3AF" }}>de 100 pontos</div>
               <span style={{
                 fontSize: 10, fontWeight: 700, color: nv.cor, background: nv.bg,
@@ -190,7 +190,7 @@ Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
           </div>
 
           {/* Grid 3 gauges */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
             <GaugeDiag score={scoreLF}    label="Liberdade Financeira"    icone="ti-beach"     nivel={nivelScore(scoreLF)} />
             <GaugeDiag score={scoreInv}   label="Investimentos"           icone="ti-chart-pie" nivel={nivelScore(scoreInv)} />
             <GaugeDiag score={scoreBlind} label="Blindagem de Patrimônio" icone="ti-shield"    nivel={nivelScore(scoreBlind)} />
@@ -205,7 +205,7 @@ Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
           fontSize: 12,
           color: "#374151",
           lineHeight: 2,
-          margin: "20px 0 0",
+          margin: "12px 0 0",
           whiteSpace: "pre-line" as const,
         }}>
           {textoEmocional}
