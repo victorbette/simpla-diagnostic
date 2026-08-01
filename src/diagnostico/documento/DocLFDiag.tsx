@@ -120,7 +120,7 @@ export function DocLFDiag({ lead }: Props) {
     node: (
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 1.8,
-        marginBottom: 14, whiteSpace: "pre-line" as const,
+        marginBottom: 10, whiteSpace: "pre-line" as const,
       }}>
         {gerarTextoLF()}
       </p>
@@ -132,11 +132,11 @@ export function DocLFDiag({ lead }: Props) {
       chave: "grafico",
       grudaNoProximo: true,
       node: (
-        <div style={{ marginBottom: 14 }}>
+        <div style={{ marginBottom: 10 }}>
           <CardProjecaoPatrimonial
             projecao={result.projecao}
             objetivos={[]}
-            height={220}
+            height={180}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
             patrimonioNecessario={patrimonioNecessario}
@@ -151,22 +151,22 @@ export function DocLFDiag({ lead }: Props) {
     chave: "cards",
     grudaNoProximo: lfTemDados,
     node: (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
           <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
             Projeção Atual
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
             {formatBRL(projecaoNaIF)}
           </div>
           <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Aos {idadeMeta} anos</div>
         </div>
 
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
           <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
             Renda Sustentável
           </div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: rendaSustentavel >= rendaDesejada && rendaSustentavel > 0 ? "#15803D" : "#111827" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: rendaSustentavel >= rendaDesejada && rendaSustentavel > 0 ? "#15803D" : "#111827" }}>
             {rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "—"}
           </div>
           <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Com a projeção atual</div>
@@ -179,8 +179,8 @@ export function DocLFDiag({ lead }: Props) {
     blocos.push({
       chave: "sensibilidade",
       node: (
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "14px 16px" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 12 }}>
+        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
             Análise de Sensibilidade
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -192,7 +192,7 @@ export function DocLFDiag({ lead }: Props) {
               {cenariosAporte.map(c => (
                 <div key={c.pctVariacao} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "5px 6px", borderBottom: "0.5px solid #F3F4F6",
+                  padding: "3px 6px", borderBottom: "0.5px solid #F3F4F6",
                   background: c.pctVariacao === 0 ? "#F8FAFF" : "transparent",
                   borderRadius: c.pctVariacao === 0 ? 4 : 0,
                 }}>
@@ -214,7 +214,7 @@ export function DocLFDiag({ lead }: Props) {
               {cenariosIdade.map(c => (
                 <div key={c.delta} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "5px 6px", borderBottom: "0.5px solid #F3F4F6",
+                  padding: "3px 6px", borderBottom: "0.5px solid #F3F4F6",
                   background: c.delta === 0 ? "#F8FAFF" : "transparent",
                   borderRadius: c.delta === 0 ? 4 : 0,
                 }}>
