@@ -120,6 +120,30 @@ export function ConfiguracoesPage({ onFechar }: Props) {
                 style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", boxSizing: "border-box" }}
               />
             </div>
+            <div>
+              <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={config.email ?? ""}
+                onChange={(e) => setConfig({ ...config, email: e.target.value })}
+                placeholder="consultor@email.com"
+                style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
+                Telefone
+              </label>
+              <input
+                type="text"
+                value={config.telefone ?? ""}
+                onChange={(e) => setConfig({ ...config, telefone: e.target.value })}
+                placeholder="(00) 00000-0000"
+                style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
           </div>
         </div>
 

@@ -51,13 +51,17 @@ export function DocDisclaimerDiag({ nomeCliente, config }: Props) {
           <div style={{ fontSize: 11, fontWeight: 600, color: "#1E40AF", marginBottom: 8 }}>
             Contato e Canal de Ouvidoria
           </div>
-          <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.7 }}>
-            <b>Consultor:</b> {config.nomeCompleto}<br />
-            <b>E-mail:</b> {config.email || "—"}<br />
-            <b>Telefone:</b> {config.telefone || "—"}<br />
+          <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.8 }}>
+            <b>Consultor:</b> {config.nomeCompleto || "—"}<br />
+            {config.email && (
+              <><b>E-mail:</b> {config.email}<br /></>
+            )}
+            {config.telefone && (
+              <><b>Telefone:</b> {config.telefone}<br /></>
+            )}
             <br />
-            <b>Simpla Invest</b> — CNPJ: [CNPJ da empresa]<br />
-            Para reclamações ou sugestões, entre em contato pelo e-mail ouvidoria@simplainvest.com.br
+            <b>Simpla Invest</b><br />
+            Para dúvidas ou reclamações, entre em contato pelo e-mail ou telefone acima.
           </div>
         </div>
       ),
