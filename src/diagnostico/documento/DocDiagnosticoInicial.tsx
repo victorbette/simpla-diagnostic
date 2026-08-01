@@ -1,25 +1,6 @@
 import type { Lead } from "../types";
-import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
+import { nivelScore, calcularScoresDiag } from "../scoresDiag";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
-
-const TAXA_MENSAL = Math.pow(1.045, 1 / 12) - 1;
-
-function nivelScore(score: number): { label: string; cor: string; bg: string } {
-  if (score < 0)   return { label: "Não avaliado",        cor: "#9CA3AF", bg: "#F3F4F6" };
-  if (score <= 30) return { label: "Crítico",             cor: "#B91C1C", bg: "#FEE2E2" };
-  if (score <= 50) return { label: "Atenção Urgente",     cor: "#C2410C", bg: "#FFEDD5" };
-  if (score <= 90) return { label: "Precisa Desenvolver", cor: "#B45309", bg: "#FEF3C7" };
-  return            { label: "Caminho Certo",              cor: "#15803D", bg: "#DCFCE7" };
-}
-
-function parseDateNasc(s: string): { ano: number; mes: number } | null {
-  if (!s) return null;
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (iso) return { ano: Number(iso[1]), mes: Number(iso[2]) };
-  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (br) return { ano: Number(br[3]), mes: Number(br[2]) };
-  return null;
-}
 
 function GaugeDiag({
   score, label, icone, nivel,
@@ -87,49 +68,10 @@ export function DocDiagnosticoInicial({ lead }: Props) {
   const { dadosColeta, dadosLF } = lead;
   const nome = lead.nome.split(" ")[0];
 
-  // ── Score Liberdade Financeira ──
-  const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
-  const idadeAtual = parsed
-    ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 0;
-  const patrimonioAtual  = Number(dadosLF.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro)       || 0;
-  const aporteMensal     = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)               || 0;
-  const rendaDesejada    = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta        = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 60;
-  const patrimonioNec    = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
-  const nMeses           = Math.max(0, (idadeMeta - idadeAtual) * 12);
-  const f                = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
-  const projecao         = nMeses > 0 ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL : patrimonioAtual;
-  const lfTemDados       = patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
-  const scoreLF          = !lfTemDados ? -1 : Math.min(100, Math.round(projecao / patrimonioNec * 100));
+  const {
+    scoreLF, scoreInvestimentos: scoreInv, scoreBlindagem: scoreBlind, scoreGeral,
+  } = calcularScoresDiag(dadosColeta, dadosLF);
 
-  // ── Score Investimentos ──
-  const ativosMap    = dadosColeta.ativosInvestimento ?? {};
-  const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
-  const aaTemDados   = ativosDoLead.length > 0;
-  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
-  const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
-  const temRF        = ativosBons.some(a => a.classe === "renda_fixa");
-  const temRV        = ativosBons.some(a => a.classe === "renda_variavel");
-  const temExt       = ativosBons.some(a => a.classe === "exterior");
-  let pontos = 0;
-  if (temRF)  pontos += 25;
-  if (temRV)  pontos += 35;
-  if (temExt) pontos += 25;
-  pontos -= ativosRuins.length * 10;
-  pontos = Math.max(0, Math.min(100, pontos));
-  const scoreInv = !aaTemDados ? -1 : pontos;
-
-  // ── Score Blindagem ──
-  const despesas    = Number(dadosColeta.custoVidaMensal) || 0;
-  const capNec      = despesas * 12 * 20;
-  const capAtual    = dadosColeta.possuiSeguro === true ? (Number(dadosColeta.valorApolice) || 0) : 0;
-  const blindTemDad = despesas > 0;
-  const scoreBlind  = !blindTemDad ? -1 : capNec > 0 ? Math.min(100, Math.round(capAtual / capNec * 100)) : 0;
-
-  // ── Score Geral ──
-  const scoreLista = [scoreLF, scoreInv, scoreBlind].filter(s => s >= 0);
-  const scoreGeral = scoreLista.length === 0 ? 0 : Math.round(scoreLista.reduce((a, b) => a + b, 0) / scoreLista.length);
   const nv = nivelScore(scoreGeral);
 
   const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;

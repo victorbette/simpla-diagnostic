@@ -1,5 +1,3 @@
-import type { AtivoAtual } from "@/types/financialPlanning";
-
 export interface Lead {
   id: string;
   nome: string;
@@ -15,7 +13,6 @@ export interface DadosColetaDiag {
   dataNascimento?: string;
   estadoCivil?: string;
   nomeConjuge?: string;
-  dataNascimentoConjuge?: string;
   temFilhos?: boolean;
   filhos?: Array<{ nome: string }>;
   profissao?: string;
@@ -24,17 +21,10 @@ export interface DadosColetaDiag {
   rendaMensal?: number;
   custoVidaMensal?: number;
   aporteMensal?: number;
-  gastoCartaoMensal?: number;
   rendaDesejadaAposentadoria?: number;
   idadeMeta?: number;
-  suitabilityPerfil?: string;
-  ativosAtuais?: AtivoAtual;
   ativosInvestimento?: Record<string, boolean | number>;
-  comecandoDoZero?: boolean;
-  contribuiINSS?: boolean;
-  valorINSS?: number;
   possuiSeguro?: boolean;
-  valorApolice?: number;
   temPrevidencia?: boolean;
   saldoPrevidencia?: number;
 }
