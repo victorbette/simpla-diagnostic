@@ -26,7 +26,7 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
           </p>
 
           {/* 3. Cards brancos 2×2 */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "0 0 16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "0 0 16px" }}>
             {[
               { destaque: "3,9×", texto: "mais patrimônio acumulado em 15 anos com um consultor independente" },
               { destaque: "76%",  texto: "dos investidores com consultor relatam segurança e bem-estar em relação ao próprio futuro" },
@@ -35,13 +35,13 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             ].map((item, i) => (
               <div key={i} style={{
                 background: "white", border: "0.5px solid #E5E7EB",
-                borderRadius: 10, padding: "14px 16px",
+                borderRadius: 8, padding: "10px 12px",
                 display: "flex", alignItems: "flex-start", gap: 12,
               }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: "#1E40AF", lineHeight: 1, flexShrink: 0, minWidth: 48 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#1E40AF", lineHeight: 1, flexShrink: 0, minWidth: 36 }}>
                   {item.destaque}
                 </div>
-                <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.6 }}>
+                <div style={{ fontSize: 10, color: "#374151", lineHeight: 1.5 }}>
                   {item.texto}
                 </div>
               </div>
