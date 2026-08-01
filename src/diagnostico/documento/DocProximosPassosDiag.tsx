@@ -1,60 +1,23 @@
 import { useState } from "react";
-import { TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 interface Props { nomeCliente: string; }
-
-const PASSOS = [
-  {
-    numero: 1,
-    titulo: "Assinatura do Contrato",
-    icone: "ti-file-check",
-    texto: "Formalizar o início do acompanhamento com a assinatura do contrato de assessoria de investimentos.",
-  },
-  {
-    numero: 2,
-    titulo: "Reunião Inicial",
-    icone: "ti-calendar",
-    texto: "Reunião para apresentação completa do diagnóstico, definição das prioridades e alinhamento do plano de ação personalizado.",
-  },
-  {
-    numero: 3,
-    titulo: "Envio de Informações Complementares",
-    icone: "ti-file-upload",
-    texto: "Envio dos extratos de previdência privada e apólices de seguro para análise completa da proteção e planejamento tributário.",
-  },
-  {
-    numero: 4,
-    titulo: "Habilitar Conta na Corretora Parceira",
-    icone: "ti-building-bank",
-    texto: "Abertura ou portabilidade da conta em uma das corretoras parceiras para acesso às melhores condições e produtos do mercado.",
-  },
-] as const;
 
 export function DocProximosPassosDiag({ nomeCliente }: Props) {
   const [dataReuniao, setDataReuniao] = useState("");
 
   const blocos: BlocoDoc[] = [
     {
-      chave: "intro",
-      grudaNoProximo: true,
+      chave: "tudo",
       node: (
         <>
-          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10 }}>
+          {/* 1. Texto introdutório */}
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px" }}>
             Este diagnóstico trouxe clareza sobre onde você está hoje — e clareza é o primeiro passo para a mudança. Mas o conhecimento sem ação não transforma nada. O que separa as pessoas que constroem o futuro que desejam das que apenas sonham com ele é exatamente este momento: a decisão de agir.
           </p>
-          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 24 }}>
-            Os próximos passos foram definidos para que a jornada comece de forma estruturada, segura e com o suporte necessário para que cada decisão seja tomada com clareza.
-          </p>
-        </>
-      ),
-    },
-    {
-      chave: "rbc",
-      grudaNoProximo: true,
-      node: (
-        <>
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px" }}>
+
+          {/* 2. Estudo RBC — texto */}
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 12px" }}>
             Segundo estudo do Royal Bank of Canadá — uma das maiores instituições financeiras do mundo — investidores que tiveram um consultor independente por 15 anos tiveram, na média, um patrimônio quase quatro vezes maior do que os que não tinham um consultor.
           </p>
 
@@ -62,6 +25,7 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             Esses números não são aspiracionais. São dados reais, medidos ao longo de décadas, com milhares de investidores. E eles revelam uma verdade que os melhores investidores já entenderam: a diferença entre construir patrimônio com consistência ou ficar para trás não está nos produtos escolhidos — está no acompanhamento, na estratégia e nas decisões tomadas no momento certo.
           </p>
 
+          {/* 3. Cards brancos 2×2 */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "0 0 16px" }}>
             {[
               { destaque: "3,9×", texto: "mais patrimônio acumulado em 15 anos com um consultor independente" },
@@ -84,77 +48,110 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             ))}
           </div>
 
-          <div style={{ borderLeft: "3px solid #2563EB", paddingLeft: 14, marginBottom: 8 }}>
+          {/* 4. Citação */}
+          <div style={{ borderLeft: "3px solid #2563EB", paddingLeft: 14, marginBottom: 6 }}>
             <p style={{ fontSize: 12, color: "#1E40AF", lineHeight: 1.8, margin: 0, fontStyle: "italic", fontWeight: 500 }}>
               "Os números mostram que o acompanhamento profissional não é um custo — é o investimento com maior retorno comprovado. Cada ano sem um consultor é um ano em que a diferença cresce silenciosamente na direção errada."
             </p>
           </div>
 
-          <p style={{ fontSize: 9, color: "#9CA3AF", margin: "8px 0 0", fontStyle: "italic" }}>
+          {/* 5. Referência */}
+          <p style={{ fontSize: 9, color: "#9CA3AF", margin: "0 0 20px", fontStyle: "italic" }}>
             Fonte: RBC Global Asset Management Inc. (2020). The Value of Advice Report.
           </p>
-        </>
-      ),
-    },
-    {
-      chave: "passos",
-      node: (
-        <div>
-          {PASSOS.map((passo) => (
-            <div key={passo.numero} style={{
-              display: "flex", gap: 16, padding: "16px 0",
+
+          {/* 6. Texto de transição */}
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 20px" }}>
+            Os próximos passos foram definidos para que a jornada comece de forma estruturada, segura e com o suporte necessário para que cada decisão seja tomada com clareza.
+          </p>
+
+          {/* 7. Os 4 passos numerados */}
+          {[
+            {
+              num: 1,
+              titulo: "Assinatura do Contrato",
+              texto: "Formalizar o início do acompanhamento com a assinatura do contrato de assessoria de investimentos.",
+              icone: "ti-file-check",
+              temData: false,
+            },
+            {
+              num: 2,
+              titulo: "Reunião Inicial",
+              texto: "Reunião para apresentação completa do diagnóstico, definição das prioridades e alinhamento do plano de ação personalizado.",
+              icone: "ti-calendar",
+              temData: true,
+            },
+            {
+              num: 3,
+              titulo: "Envio de Informações Complementares",
+              texto: "Envio dos extratos de previdência privada e apólices de seguro para análise completa da proteção e planejamento tributário.",
+              icone: "ti-file-upload",
+              temData: false,
+            },
+            {
+              num: 4,
+              titulo: "Habilitar Conta na Corretora Parceira",
+              texto: "Abertura ou portabilidade da conta em uma das corretoras parceiras para acesso às melhores condições e produtos do mercado.",
+              icone: "ti-building-bank",
+              temData: false,
+            },
+          ].map(passo => (
+            <div key={passo.num} style={{
+              display: "flex", gap: 16,
+              padding: "14px 0",
               borderBottom: "0.5px solid #F3F4F6",
+              alignItems: "flex-start",
             }}>
               <div style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: "#EFF6FF", border: "2px solid #2563EB",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, fontSize: 16, fontWeight: 800, color: "#2563EB",
+                width: 36, height: 36,
+                borderRadius: "50%",
+                background: "#EFF6FF",
+                border: "2px solid #2563EB",
+                display: "flex", alignItems: "center",
+                justifyContent: "center",
+                fontSize: 14, fontWeight: 800,
+                color: "#2563EB", flexShrink: 0,
               }}>
-                {passo.numero}
+                {passo.num}
               </div>
-
               <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <i className={`ti ${passo.icone}`} style={{ fontSize: 14, color: "#2563EB" }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{passo.titulo}</span>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 4 }}>
+                  {passo.titulo}
                 </div>
-                <div style={{
-                  fontSize: 12, color: "#6B7280", lineHeight: 1.6,
-                  marginBottom: passo.numero === 2 ? 8 : 0,
-                }}>
+                <div style={{ fontSize: 11, color: "#6B7280", lineHeight: 1.6 }}>
                   {passo.texto}
                 </div>
-
-                {passo.numero === 2 && (
+                {passo.temData && (
                   <>
                     <input
-                      type="date"
+                      type="text"
                       className="data-reuniao-edit"
                       value={dataReuniao}
                       onChange={e => setDataReuniao(e.target.value)}
+                      placeholder="Data a definir"
                       style={{
-                        border: "1px solid #BFDBFE", borderRadius: 6,
-                        padding: "4px 10px", fontSize: 12, color: "#2563EB",
-                        background: "#EFF6FF", outline: "none",
+                        marginTop: 8,
+                        border: "1px solid #BFDBFE",
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        color: "#2563EB",
+                        background: "#EFF6FF",
+                        outline: "none",
                       }}
                     />
                     <span
                       className="data-reuniao-print"
-                      style={{ fontSize: 12, color: "#2563EB", fontWeight: 600 }}
+                      style={{ fontSize: 11, color: "#2563EB", fontWeight: 600, marginTop: 6 }}
                     >
-                      {dataReuniao
-                        ? new Date(dataReuniao + "T12:00:00").toLocaleDateString("pt-BR", {
-                            day: "2-digit", month: "long", year: "numeric",
-                          })
-                        : "A definir"}
+                      {dataReuniao || "A definir"}
                     </span>
                   </>
                 )}
               </div>
             </div>
           ))}
-        </div>
+        </>
       ),
     },
   ];
