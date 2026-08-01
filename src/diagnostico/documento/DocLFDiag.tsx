@@ -70,24 +70,60 @@ export function DocLFDiag({ lead }: Props) {
     : Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
-  const pct = lfTemDados && patrimonioNecessario > 0
-    ? Math.min(100, Math.round(projecaoNaIF / patrimonioNecessario * 100))
+
+  // ── Variáveis para o texto comparativo (situação atual vs ideal) ──
+  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteAtual = Number(dadosColeta.aporteMensal) || 0;
+  const rendaAtualColeta = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMetaColeta = Number(dadosColeta.idadeMeta) || 60;
+  const idadeAtualColeta = dadosColeta.dataNascimento
+    ? Math.floor((Date.now() - new Date(dadosColeta.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
+  const TAXA_MENSAL_TEXTO = Math.pow(1.04, 1 / 12) - 1;
+  const nMesesTexto = Math.max(0, Math.round((idadeMetaColeta - idadeAtualColeta) * 12));
+  const fTexto = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
+  const projecaoAtual = nMesesTexto > 0 && isFinite(fTexto)
+    ? patrimonioAtual * fTexto + aporteAtual * (fTexto - 1) / TAXA_MENSAL_TEXTO
+    : patrimonioAtual;
+  const patrimonioNecTexto = rendaAtualColeta > 0 ? (rendaAtualColeta * 12) / 0.04 : 0;
+  const aporteIdeal = Number(dadosLF.aporteMensal) || 0;
+  const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
+  const lfTemDadosTexto = patrimonioNecTexto > 0 && idadeAtualColeta > 0 && idadeMetaColeta > idadeAtualColeta;
 
   function gerarTextoLF(): string {
-    if (!lfTemDados) {
-      return "A liberdade financeira começa com clareza — e clareza começa com números.\n\nA maioria das pessoas passa a vida trabalhando sem saber exatamente para quê: quanto precisa acumular para parar quando quiser, viajar sem culpa, dar a melhor educação para os filhos ou simplesmente acordar de manhã sem a pressão de ter que trabalhar por necessidade.\n\nEssa falta de clareza não é inocente — ela tem um custo enorme. Cada ano sem um plano definido é um ano em que os juros compostos poderiam estar trabalhando a seu favor, mas não estão. Complete os seus dados e descubra onde você realmente está e o que precisa mudar para construir a vida que você imagina para a sua família.";
+    if (!lfTemDadosTexto) {
+      return `Para comparar a situação atual com o cenário ideal de aposentadoria, precisamos dos dados completos na Situação Atual: patrimônio, aporte mensal, renda desejada e idade de aposentadoria.`;
     }
-    if (pct <= 30) {
-      return `${nome}, este número precisa ser dito com clareza: a trajetória atual coloca você em uma situação de risco real no longo prazo.\n\nPense nos projetos que você tem para a sua família — a escola dos filhos, a casa própria, as viagens que ainda não fez, a aposentadoria tranquila que imagina para você e para quem você ama. Tudo isso depende de um patrimônio que, com o ritmo atual, chegará a apenas ${pct}% do necessário. Isso significa escolhas dolorosas no futuro: abrir mão de projetos, reduzir o padrão de vida ou continuar trabalhando por obrigação muito além do que desejaria.\n\nO que dói mais não é a realidade dos números — é saber que isso ainda pode ser mudado, mas que cada mês de atraso torna a mudança mais difícil e mais cara. O tempo nos investimentos é insubstituível. Quem começa a agir hoje, mesmo com pequenos ajustes, tem uma vantagem enorme sobre quem decide esperar o "momento certo" — que raramente chega sozinho.\n\nVocê ainda tem tempo de reescrever esse cenário. Mas essa decisão precisa ser tomada agora — não amanhã, não no próximo mês. Agora.`;
+
+    const pctAtual = Math.round(projecaoAtual / patrimonioNecTexto * 100);
+    const anosRestantes = idadeMetaColeta - idadeAtualColeta;
+    const diferencaAporte = aporteIdeal - aporteAtual;
+
+    if (projecaoAtual >= patrimonioNecTexto) {
+      return `${nome}, a análise do cenário atual mostra uma situação muito positiva: com o ritmo atual de investimentos, a projeção indica que você chegará à aposentadoria com patrimônio suficiente para gerar a renda desejada para sempre.\n\nIsso não significa que não há nada a fazer — significa que você tem uma base sólida para otimizar. A diferença entre uma carteira bem estruturada e uma carteira apenas suficiente pode representar anos a mais de liberdade,${temFilhos ? " uma herança significativa para os seus filhos," : ""} e muito mais tranquilidade diante das oscilações da vida.\n\nNa aba de Liberdade Financeira, calculamos o cenário ideal com ajustes estratégicos que podem acelerar essa jornada e aumentar a margem de segurança. O objetivo não é apenas chegar — é chegar com folga.`;
     }
-    if (pct <= 50) {
-      return `${nome}, sua projeção atual cobre ${pct}% da renda que você imaginou ter na aposentadoria. Esse número tem um significado concreto: sem mudanças, você chegará nessa fase com menos da metade do que precisa para viver com o padrão que deseja — e isso se traduz em escolhas que você não quer fazer.\n\nPense nos sonhos que você tem para a sua família. A viagem que sempre adiou. A faculdade dos filhos em uma boa instituição. A possibilidade de se aposentar quando quiser, não quando for obrigado. Todos esses projetos têm um preço — e esse preço precisa estar no plano.\n\nA boa notícia é que você está em um momento em que ainda é possível mudar de forma significativa. Mas a janela vai se fechando. Cada ano que passa sem uma estratégia clara aumenta o esforço necessário para chegar ao mesmo resultado — e reduz as opções disponíveis.\n\nUma estratégia bem estruturada pode acelerar essa jornada de forma surpreendente. Pequenos ajustes no valor investido, na rentabilidade da carteira ou na forma como o patrimônio está alocado podem fazer uma diferença enorme em 10 ou 15 anos. O caminho existe — o que falta é traçar o plano e começar a seguir.`;
+
+    let texto = `${nome}, a comparação entre o cenário atual e o ideal revela algo importante que precisa ser endereçado.\n\nCom o ritmo atual — patrimônio acumulado e aporte mensal de hoje — a projeção indica que você chegará à aposentadoria com ${pctAtual}% do patrimônio necessário para gerar a renda que deseja. Isso significa que, sem mudanças, a aposentadoria virá com restrições que você não planejou.`;
+
+    if (aporteIdeal > 0 && diferencaAporte > 0) {
+      texto += `\n\nNa análise da Liberdade Financeira, calculamos o que seria necessário para fechar essa lacuna: um aporte mensal de ${aporteIdeal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })} — uma diferença de ${diferencaAporte.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })} em relação ao que é investido hoje. Esse ajuste, feito agora, tem um impacto completamente diferente do que o mesmo ajuste feito daqui a 5 ou 10 anos.`;
+    } else if (aporteIdeal > 0 && diferencaAporte <= 0) {
+      texto += `\n\nA análise da Liberdade Financeira confirmou que o aporte atual está adequado. O foco agora é a eficiência: garantir que cada real investido está na melhor alocação possível para maximizar o retorno ao longo do tempo.`;
+    } else {
+      texto += `\n\nNa aba de Liberdade Financeira, simulamos diferentes cenários e identificamos os ajustes necessários para fechar essa lacuna. O caminho existe — o que faz a diferença é quando a decisão de seguir esse caminho é tomada.`;
     }
-    if (pct <= 90) {
-      return `${nome}, você está mais perto do que a maioria das pessoas — sua projeção já atinge ${pct}% da meta que você definiu para si mesmo. Isso é resultado de disciplina e consistência, e merece reconhecimento.\n\nMas "quase lá" sem a estratégia certa pode custar caro. São os últimos percentuais que mais exigem atenção: uma carteira mal diversificada, uma rentabilidade abaixo do potencial por alguns anos, ou uma decisão errada em um momento de volatilidade — e o que levou anos para construir pode demorar muito mais para recuperar.\n\nPense no que esse resultado representa para a sua família: a diferença entre uma aposentadoria com liberdade total — para viajar, para estar presente, para apoiar os filhos nos projetos deles — e uma aposentadoria com restrições que você não planejou. Esse intervalo entre ${pct}% e 100% é exatamente o que separa esses dois cenários.`;
-    }
-    return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja — para sempre.\n\nIsso significa liberdade de verdade: acordar de manhã e escolher como usar o seu tempo, não por obrigação, mas por vontade. Significa poder estar presente nos momentos que importam para a sua família, apoiar os projetos dos seus filhos, viver as experiências que sempre planejou — sem a pressão financeira que acompanha a maioria das pessoas ao longo da vida.\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro da sua família está resguardado, independente do que aconteça.`;
+
+    texto += `\n\nO tempo é o ativo mais valioso nos investimentos — e ele trabalha de forma desproporcional: cada ano de atraso exige um esforço muito maior para compensar.${
+      anosRestantes <= 15
+        ? ` Com ${anosRestantes} anos até a aposentadoria planejada, o momento de agir é agora.`
+        : ` Você ainda tem ${anosRestantes} anos — tempo suficiente para mudar o cenário de forma significativa, mas não tempo infinito.`
+    }${
+      temFilhos
+        ? `\n\nOs seus filhos são parte do futuro que você está construindo. Cada decisão financeira tomada hoje molda o legado que você vai deixar para eles.`
+        : ""
+    }`;
+
+    return texto;
   }
 
   // ── Análise de Sensibilidade ──
@@ -119,8 +155,8 @@ export function DocLFDiag({ lead }: Props) {
     grudaNoProximo: result !== null,
     node: (
       <p style={{
-        fontSize: 12, color: "#374151", lineHeight: 1.8,
-        marginBottom: 10, whiteSpace: "pre-line" as const,
+        fontSize: 12, color: "#374151", lineHeight: 2,
+        margin: "0 0 16px", whiteSpace: "pre-line" as const,
       }}>
         {gerarTextoLF()}
       </p>
