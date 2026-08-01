@@ -219,7 +219,7 @@ export function OportunidadesPage({ clientes, rawPlans, onVoltar, onAbrirCliente
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#FFFFFF" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#F8F9FA" }}>
 
       {/* Header */}
       <header style={{

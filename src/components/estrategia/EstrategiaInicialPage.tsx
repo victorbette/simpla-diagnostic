@@ -437,7 +437,7 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
             onConcluir={handleConcluir}
           />
         ) : (
-          <div style={{ flex: 1, overflowY: "auto", background: "#FFFFFF", padding: "28px 32px" }}>
+          <div style={{ flex: 1, overflowY: "auto", background: "#F8F9FA", padding: "28px 32px" }}>
             {renderContent()}
           </div>
         )}

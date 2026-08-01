@@ -100,7 +100,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
   })();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#FFFFFF" }}>
+    <div className="min-h-screen" style={{ backgroundColor: "#F8F9FA" }}>
 
       {/* Header */}
       <header style={{ backgroundColor: "#1E3A8A", position: "sticky", top: 0, zIndex: 40 }}>

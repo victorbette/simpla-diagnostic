@@ -100,7 +100,7 @@ export function EstrategiaFinal({ plan, resultados, clientName, onResultadosChan
   return (
     <div
       className="estrategia-final-root"
-      style={{ width: "100%", height: "100%", overflowY: "auto", background: "#FFFFFF" }}
+      style={{ width: "100%", height: "100%", overflowY: "auto", background: "#F8F9FA" }}
     >
       {/* Barra de ação — não imprime */}
       <div

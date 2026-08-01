@@ -265,7 +265,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", backgroundColor: "#FFFFFF" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", backgroundColor: "#F8F9FA" }}>
 
       {/* ── HEADER ── */}
       <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10 }}>

@@ -39,7 +39,7 @@ export function DiagRelatorio({ lead }: Props) {
   const nomeConsultorCapa = config.nomeCompleto.replace(/\s*\(.*\)\s*$/, "");
 
   return (
-    <div style={{ background: "#FFFFFF", minHeight: "100vh" }}>
+    <div style={{ background: "#F8F9FA", minHeight: "100vh" }}>
       <style>{`
         @media print {
           .data-reuniao-edit { display: none !important; }
