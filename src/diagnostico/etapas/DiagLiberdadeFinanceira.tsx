@@ -68,16 +68,6 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const badgeColetaStyle: React.CSSProperties = {
-  backgroundColor: "#DBEAFE",
-  color: "#1E40AF",
-  borderRadius: 9999,
-  padding: "2px 6px",
-  fontSize: 10,
-  fontWeight: 600,
-  marginLeft: 6,
-};
-
 function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
   const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -253,7 +243,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Patrimônio</label>
-              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {patrimonioEditado && (
                 <button onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
                   style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
@@ -270,7 +259,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Aporte mensal</label>
-              {aporteColeta > 0 && !aporteEditado && <span style={badgeColetaStyle}>Da coleta</span>}
               {aporteEditado && (
                 <button onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
                   style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
@@ -284,7 +272,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Renda desejada</label>
-              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {rendaEditada && (
                 <button onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
                   style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>

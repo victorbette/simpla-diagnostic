@@ -1,7 +1,7 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
-import type { DadosColetaDiag, DadosLFDiag } from "./types";
+import type { DadosColetaDiag } from "./types";
 
-const TAXA_MENSAL = Math.pow(1.045, 1 / 12) - 1;
+const TAXA_MENSAL = Math.pow(1.04, 1 / 12) - 1;
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -41,24 +41,24 @@ export interface ScoresDiag {
 
 export function calcularScoresDiag(
   dadosColeta: DadosColetaDiag,
-  dadosLF: DadosLFDiag,
 ): ScoresDiag {
   // ── Score Liberdade Financeira ──
-  const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
-  const idadeAtual = parsed
-    ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
+  const dataNasc = dadosColeta.dataNascimento ?? "";
+  const birthDate = dataNasc ? new Date(dataNasc) : null;
+  const idadeAtual = birthDate && isFinite(birthDate.getTime())
+    ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
-  const patrimonioAtual = Number(dadosLF.patrimonioInicial ?? dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteMensal    = Number(dadosLF.aporteMensal     ?? dadosColeta.aporteMensal)           || 0;
-  const rendaDesejada   = Number(dadosLF.rendaDesejada    ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta       = Number(dadosLF.idadeAlvo        ?? dadosColeta.idadeMeta) || 60;
+  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteMensal    = Number(dadosColeta.aporteMensal)           || 0;
+  const rendaDesejada   = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta       = Number(dadosColeta.idadeMeta) || 60;
   const patrimonioNec   = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
   const nMeses          = Math.max(0, (idadeMeta - idadeAtual) * 12);
   const f               = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
-  const projecao        = nMeses > 0
+  const projecao        = nMeses > 0 && isFinite(f)
     ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL
     : patrimonioAtual;
-  const lfTemDados = patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
+  const lfTemDados = rendaDesejada > 0 && patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
   const pctIF      = lfTemDados ? Math.min(100, Math.round(projecao / patrimonioNec * 100)) : 0;
   const scoreLF    = !lfTemDados ? -1 : pctIF;
 

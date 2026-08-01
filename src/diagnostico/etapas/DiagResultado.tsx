@@ -88,7 +88,7 @@ function GaugeDiag({
 }
 
 export function DiagResultado({ lead }: Props) {
-  const { dadosColeta, dadosLF } = lead;
+  const { dadosColeta } = lead;
 
   const {
     scoreLF, scoreInvestimentos, scoreBlindagem, scoreGeral,
@@ -96,7 +96,7 @@ export function DiagResultado({ lead }: Props) {
     aaTemDados, ativosBonsLabels, ativosRuinsLabels, nBonsCount, nRuinsCount,
     temRV, temExt,
     blindagemTemDados, possuiSeguro,
-  } = calcularScoresDiag(dadosColeta, dadosLF);
+  } = calcularScoresDiag(dadosColeta);
 
   const nome = lead.nome.split(" ")[0];
 

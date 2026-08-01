@@ -65,12 +65,12 @@ function GaugeDiag({
 interface Props { lead: Lead; }
 
 export function DocDiagnosticoInicial({ lead }: Props) {
-  const { dadosColeta, dadosLF } = lead;
+  const { dadosColeta } = lead;
   const nome = lead.nome.split(" ")[0];
 
   const {
     scoreLF, scoreInvestimentos: scoreInv, scoreBlindagem: scoreBlind, scoreGeral,
-  } = calcularScoresDiag(dadosColeta, dadosLF);
+  } = calcularScoresDiag(dadosColeta);
 
   const nv = nivelScore(scoreGeral);
 
