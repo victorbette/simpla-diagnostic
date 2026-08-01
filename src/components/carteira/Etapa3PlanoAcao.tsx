@@ -199,8 +199,9 @@ export function Etapa3PlanoAcao({
         return s + vf;
       }, 0);
       const pctMeta = Number(macroMeta[cardId]) || 0;
-      const valorMeta = (pctMeta / 100) * patrimonio;
-      const pctFinal = patrimonio > 0 ? (valorFinal / patrimonio) * 100 : 0;
+      const patrimonioBase = patrimonio + aporteDisponivel;
+      const valorMeta = (pctMeta / 100) * patrimonioBase;
+      const pctFinal = patrimonioBase > 0 ? (valorFinal / patrimonioBase) * 100 : 0;
       const desvio = pctFinal - pctMeta;
       const movLiquida = valorFinal - valorAtual;
       return {
@@ -210,7 +211,7 @@ export function Etapa3PlanoAcao({
         valorAtual,
         valorFinal,
         valorMeta,
-        pctAtual: patrimonio > 0 ? (valorAtual / patrimonio) * 100 : 0,
+        pctAtual: patrimonioBase > 0 ? (valorAtual / patrimonioBase) * 100 : 0,
         pctFinal,
         pctMeta,
         desvio,
@@ -218,7 +219,7 @@ export function Etapa3PlanoAcao({
         adequado: Math.abs(desvio) <= 2,
       };
     }).filter((c) => c.valorAtual > 0 || c.valorMeta > 0 || c.valorFinal > 0);
-  }, [planoAcao, macroMeta, patrimonio]);
+  }, [planoAcao, macroMeta, patrimonio, aporteDisponivel]);
 
   const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr 0.8fr";
 

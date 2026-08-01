@@ -88,6 +88,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     valorMetaBRL: Number(p.valorMetaBRL) || 0,
     movimentacaoBRL: Number(p.movimentacaoBRL) || 0,
     movimentacaoEditada: p.movimentacaoEditada != null ? Number(p.movimentacaoEditada) : undefined,
+    vencimento: p.vencimento ? String(p.vencimento) : undefined,
     observacao: String(p.observacao ?? ""),
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
     adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
@@ -145,6 +146,12 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     setTemMudancas(true);
   }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal]);
 
+  // Always keep a ref to the latest aporteDisponivel so the plan-sync effect
+  // can read the current value without having it as a dependency (which would
+  // cause unwanted plan regeneration every time the aporte field is edited).
+  const aporteDisponivelRef = useRef(aporteDisponivel);
+  useEffect(() => { aporteDisponivelRef.current = aporteDisponivel; }, [aporteDisponivel]);
+
   // Sync plan whenever ativosAtuais or ativosRecomendados change — skip the
   // initial post-load fire so the saved plan from localStorage is not overwritten.
   const planoSyncInitRef = useRef(false);
@@ -153,7 +160,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (!planoSyncInitRef.current) { planoSyncInitRef.current = true; return; }
     if (ativosRecomendados.length === 0) return;
 
-    const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivel);
+    const novoPlano = gerarPlanoAcao(ativosAtuais, ativosRecomendados, patrimonio + aporteDisponivelRef.current);
 
     setPlanoAcao((prev) => {
       // Keep items added manually by the consultant
@@ -179,6 +186,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           observacao: anterior.observacao || recObs || item.observacao,
           valorResgateBRL: anterior.valorResgateBRL,
           movimentacaoEditada: anterior.movimentacaoEditada,
+          prioridade: anterior.prioridade ?? item.prioridade,
+          vencimento: anterior.vencimento ?? item.vencimento,
         };
       });
 
@@ -228,6 +237,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       alocacaoMeta,
       planoAcao,
       aporteDisponivel,
+      notasConsultor,
     };
     try {
       const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
