@@ -21,17 +21,10 @@ interface Props {
 }
 
 export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
-  const [etapaAtiva, setEtapaAtiva] = useState<Etapa>(() => {
-    try {
-      const saved = sessionStorage.getItem(`diag_etapa_${lead.id}`);
-      if (saved === "coleta" || saved === "lf" || saved === "resultado" || saved === "relatorio") return saved;
-    } catch { /* ignore */ }
-    return "coleta";
-  });
+  const [etapaAtiva, setEtapaAtiva] = useState<Etapa>("coleta");
 
   function changeEtapa(etapa: Etapa) {
     setEtapaAtiva(etapa);
-    try { sessionStorage.setItem(`diag_etapa_${lead.id}`, etapa); } catch { /* ignore */ }
   }
 
   function atualizarColeta(patch: Partial<DadosColetaDiag>) {
