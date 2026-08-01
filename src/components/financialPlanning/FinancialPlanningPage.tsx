@@ -41,9 +41,10 @@ interface Props {
   clientId: string;
   clientName: string;
   onClose: () => void;
+  onPlanStatusChange?: (planId: string, status: "nao_iniciado" | "rascunho" | "completo") => void;
 }
 
-export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) {
+export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanStatusChange }: Props) {
   const store = useFinancialPlanStore();
   const { user, signOut } = useAuth();
   const [plan, setPlan] = useState<FinancialPlan>(() => initialFinancialPlan(clientId));
@@ -159,6 +160,9 @@ export function FinancialPlanningPage({ clientId, clientName, onClose }: Props) 
       const saved = await store.savePlan(status ? { ...plan, status } : plan);
       setPlan(saved);
       setDirty(false);
+      if (status === "completo" && saved.id) {
+        onPlanStatusChange?.(saved.id, "completo");
+      }
       toast.success(status === "completo" ? "Plano finalizado!" : "Rascunho salvo.");
     } catch (err) {
       const supaErr = err as { message?: string; hint?: string; details?: string };

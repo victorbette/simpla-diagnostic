@@ -141,6 +141,9 @@ export function HomePage() {
         clientId={clienteSelecionado.id}
         clientName={clienteSelecionado.nome}
         onClose={() => setClienteSelecionado(null)}
+        onPlanStatusChange={(planId, status) =>
+          clientStore.updateClientPlanStatus(clienteSelecionado.id, planId, status)
+        }
       />
     );
   }

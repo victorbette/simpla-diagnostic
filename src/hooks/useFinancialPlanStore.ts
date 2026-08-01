@@ -189,10 +189,13 @@ export function useFinancialPlanStore() {
         const estrategiaAtual =
           (estRow as unknown as { estrategia_inicial: Record<string, unknown> | null } | null)
             ?.estrategia_inicial ?? null;
-        payload.status = calcularStatus(
-          planAtual.dadosCliente as unknown as Record<string, unknown>,
-          estrategiaAtual
-        );
+        payload.status =
+          planAtual.status === "completo"
+            ? "completo"
+            : calcularStatus(
+                planAtual.dadosCliente as unknown as Record<string, unknown>,
+                estrategiaAtual
+              );
 
         const { data, error: updateError } = await supabase
           .from("financial_plans")
