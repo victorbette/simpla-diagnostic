@@ -7,11 +7,13 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   type ProjecaoIFParams,
+  type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
 const TAXA_PADRAO_ANUAL = 0.045;
+const TAXA_RET_MENSAL   = Math.pow(1.04, 1 / 12) - 1; // taxa de retirada: 4% a.a.
 
 interface Ajustes {
   usarTaxaCustom: boolean;
@@ -226,6 +228,40 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   const mesIF = result
     ? result.mesInicioRetirada
     : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+
+  // ── Gráfico: reconstrói curva com crescimento de aportes quando ativo ──
+  const projecaoGrafico = useMemo((): PontoProjecao[] => {
+    if (!result) return [];
+    if (!ajustes.usarCrescimentoAportes) return result.projecao;
+
+    const p0 = result.projecao[0];
+    if (!p0) return result.projecao;
+
+    let anoAtual = p0.ano;
+    let mesAtual = p0.mesDoAno;
+    let patrimonio = params.patrimonioInicial;
+    let aporte = params.aporteMensal;
+
+    const pontos: PontoProjecao[] = [
+      { mes: 0, ano: anoAtual, mesDoAno: mesAtual, idade: p0.idade, patrimonio: Math.round(patrimonio), fase: "acumulacao" },
+    ];
+
+    const totalMeses = result.projecao.length - 1;
+    for (let m = 1; m <= totalMeses; m++) {
+      mesAtual++;
+      if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
+      const idadeNoMes = Math.round((p0.idade + m / 12) * 10) / 10;
+      if (m <= mesIF) {
+        patrimonio = patrimonio * (1 + ajustesCalc.taxaMensal) + aporte;
+        aporte *= (1 + ajustesCalc.crescimentoMensal);
+        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.max(0, Math.round(patrimonio)), fase: "acumulacao" });
+      } else {
+        patrimonio = Math.max(0, patrimonio * (1 + TAXA_RET_MENSAL) - params.rendaDesejada);
+        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.round(patrimonio), fase: "decumulacao" });
+      }
+    }
+    return pontos;
+  }, [result, ajustes.usarCrescimentoAportes, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, ajustesCalc.taxaMensal, ajustesCalc.crescimentoMensal, mesIF]);
 
   // ── Análise de Sensibilidade ──
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
@@ -472,7 +508,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
       {/* ── 2. Gráfico ── */}
       <CardProjecaoPatrimonial
-        projecao={result.projecao}
+        projecao={projecaoGrafico}
         objetivos={[]}
         height={320}
         mesIF={mesIF}

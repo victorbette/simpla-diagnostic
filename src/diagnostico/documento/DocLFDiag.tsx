@@ -3,6 +3,7 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   type ProjecaoIFParams,
+  type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
@@ -94,6 +95,42 @@ export function DocLFDiag({ lead }: Props) {
   const mesIF = result
     ? result.mesInicioRetirada
     : nMesesBase;
+
+  // ── Gráfico: reconstrói curva com crescimento de aportes quando ativo ──
+  const TAXA_RET_MENSAL = Math.pow(1.04, 1 / 12) - 1;
+  const buildProjecaoGrafico = (): PontoProjecao[] => {
+    if (!result) return [];
+    if (crescimentoMensal === 0) return result.projecao;
+
+    const p0 = result.projecao[0];
+    if (!p0) return result.projecao;
+
+    let anoAtual = p0.ano;
+    let mesAtual = p0.mesDoAno;
+    let patrimonio = patrimonioInicial;
+    let aporte = aporteMensal;
+
+    const pontos: PontoProjecao[] = [
+      { mes: 0, ano: anoAtual, mesDoAno: mesAtual, idade: p0.idade, patrimonio: Math.round(patrimonio), fase: "acumulacao" },
+    ];
+
+    const totalMeses = result.projecao.length - 1;
+    for (let m = 1; m <= totalMeses; m++) {
+      mesAtual++;
+      if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
+      const idadeNoMes = Math.round((p0.idade + m / 12) * 10) / 10;
+      if (m <= mesIF) {
+        patrimonio = patrimonio * (1 + TAXA_MENSAL) + aporte;
+        aporte *= (1 + crescimentoMensal);
+        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.max(0, Math.round(patrimonio)), fase: "acumulacao" });
+      } else {
+        patrimonio = Math.max(0, patrimonio * (1 + TAXA_RET_MENSAL) - rendaDesejada);
+        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.round(patrimonio), fase: "decumulacao" });
+      }
+    }
+    return pontos;
+  };
+  const projecaoGrafico = buildProjecaoGrafico();
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
 
@@ -206,7 +243,7 @@ export function DocLFDiag({ lead }: Props) {
       node: (
         <div style={{ marginBottom: 10 }}>
           <CardProjecaoPatrimonial
-            projecao={result.projecao}
+            projecao={projecaoGrafico}
             objetivos={[]}
             height={260}
             mesIF={mesIF}
