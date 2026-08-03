@@ -96,11 +96,20 @@ export function DiagResultado({ lead }: Props) {
     aaTemDados, ativosBonsLabels, ativosRuinsLabels, nBonsCount, nRuinsCount,
     temRV, temExt,
     blindagemTemDados, possuiSeguro,
+    comecandoDoZero,
   } = calcularScoresDiag(dadosColeta);
 
   const nome = lead.nome.split(" ")[0];
 
   function gerarTextoInvestimentos(): string {
+    if (comecandoDoZero) {
+      const valor = Number(dadosColeta.valorParaInvestir) || 0;
+      const valorStr = valor > 0
+        ? ` — ${valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })} —`
+        : "";
+      return `Você está no ponto de partida — e esse é, na verdade, um momento de enorme vantagem.\n\nComeçar a investir do zero com estratégia é infinitamente melhor do que ter investido por anos sem ela. Quem começa certo não precisa depois desfazer decisões ruins, resgatar produtos inadequados ou conviver com taxas que corroem o patrimônio silenciosamente.\n\nO capital que você tem disponível${valorStr} é o ponto de partida para construir uma carteira que trabalha para você todos os dias. Os juros compostos são mais poderosos quanto mais cedo começam a agir — e cada mês de atraso tem um custo real que não aparece em nenhum extrato, mas que se acumula de forma surpreendente ao longo dos anos.\n\nEsse é o momento de começar do jeito certo.`;
+    }
+
     if (!aaTemDados) {
       return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.\n\nSe você já investe mas não tem clareza de onde e em quê, isso é igualmente preocupante. Dinheiro sem estratégia raramente cresce como deveria — e muitas vezes está gerando retorno para outros em vez de para você.";
     }

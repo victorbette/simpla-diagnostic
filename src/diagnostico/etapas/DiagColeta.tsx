@@ -405,6 +405,78 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
         title="Investimentos"
         subtitle="Marque os ativos que o cliente já possui"
       >
+        {/* Switch Começando do Zero */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "10px 0",
+          marginBottom: 12,
+          borderBottom: "0.5px solid #F3F4F6",
+        }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>
+              Começando do Zero
+            </div>
+            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+              Lead ainda não possui investimentos
+            </div>
+          </div>
+          <label style={{ cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={dados.comecandoDoZero ?? false}
+              onChange={e => onChange({
+                comecandoDoZero: e.target.checked,
+                ativosInvestimento: e.target.checked ? {} : dados.ativosInvestimento,
+              })}
+              style={{ display: "none" }}
+            />
+            <div style={{
+              width: 40, height: 22, borderRadius: 99,
+              background: dados.comecandoDoZero ? "#2563EB" : "#D1D5DB",
+              position: "relative" as const,
+              transition: "background 200ms",
+            }}>
+              <div style={{
+                width: 16, height: 16,
+                borderRadius: "50%", background: "white",
+                position: "absolute" as const, top: 3,
+                left: dados.comecandoDoZero ? 21 : 3,
+                transition: "left 200ms",
+              }} />
+            </div>
+          </label>
+        </div>
+
+        {/* Campo de valor — apenas se começando do zero */}
+        {dados.comecandoDoZero && (
+          <div style={{
+            background: "#F0FDF4",
+            border: "0.5px solid #BBF7D0",
+            borderRadius: 8,
+            padding: "12px 14px",
+            marginBottom: 16,
+          }}>
+            <label style={{
+              fontSize: 11, color: "#15803D",
+              fontWeight: 500, display: "block",
+              marginBottom: 6,
+            }}>
+              Valor disponível para investir (R$)
+            </label>
+            <CurrencyInput
+              value={dados.valorParaInvestir ?? 0}
+              onChange={(v: number) => onChange({ valorParaInvestir: v })}
+            />
+            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+              Capital inicial disponível para estruturar a carteira
+            </div>
+          </div>
+        )}
+
+        {/* Switches de ativos — ocultar se começando do zero */}
+        {!dados.comecandoDoZero && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {CLASSES_INVESTIMENTO.map(({ classe, label, cor }) => (
             <div key={classe}>
@@ -501,6 +573,7 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
             </div>
           ))}
         </div>
+        )}
       </SecaoCard>
       <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Coleta de Dados" />
     </div>

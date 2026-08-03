@@ -27,6 +27,8 @@ export interface DadosColetaDiag {
   possuiSeguro?: boolean;
   temPrevidencia?: boolean;
   saldoPrevidencia?: number;
+  comecandoDoZero?: boolean;
+  valorParaInvestir?: number;
 }
 
 export interface DadosLFDiag {

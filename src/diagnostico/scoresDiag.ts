@@ -37,6 +37,7 @@ export interface ScoresDiag {
   temExt: boolean;
   blindagemTemDados: boolean;
   possuiSeguro: boolean;
+  comecandoDoZero: boolean;
 }
 
 export function calcularScoresDiag(
@@ -63,9 +64,10 @@ export function calcularScoresDiag(
   const scoreLF    = !lfTemDados ? -1 : pctIF;
 
   // ── Score Investimentos ──
+  const comecandoDoZero = dadosColeta.comecandoDoZero === true;
   const ativosMap    = dadosColeta.ativosInvestimento ?? {};
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
-  const aaTemDados   = ativosDoLead.length > 0;
+  const aaTemDados   = comecandoDoZero || ativosDoLead.length > 0;
   const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
   const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
   const temRF  = ativosBons.some(a => a.classe === "renda_fixa");
@@ -77,7 +79,7 @@ export function calcularScoresDiag(
   if (temExt) pontos += 30;
   pontos -= ativosRuins.length * 10;
   pontos = Math.max(0, Math.min(100, pontos));
-  const scoreInvestimentos = !aaTemDados ? -1 : pontos;
+  const scoreInvestimentos = comecandoDoZero ? 0 : (!aaTemDados ? -1 : pontos);
 
   // ── Score Blindagem ──
   // valorApolice não é coletado no UI; usa possuiSeguro como proxy qualitativo
@@ -111,5 +113,6 @@ export function calcularScoresDiag(
     temExt,
     blindagemTemDados,
     possuiSeguro,
+    comecandoDoZero,
   };
 }
