@@ -1,181 +1,100 @@
 export interface TextoAtivo {
   positivo?: string;
   negativo?: string;
-  dica?: string;
 }
 
 export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
 
+  // ── RENDA FIXA ─────────────────────────────────────────────────────────────
+
   tesouro: {
-    positivo: `O Tesouro Direto é uma das melhores opções de renda fixa disponíveis no Brasil.
-Emitido pelo governo federal, oferece segurança máxima, rendimento acima da inflação e
-liquidez diária. É a base ideal para quem quer proteger e fazer o dinheiro crescer com segurança.`,
-    dica: `Priorize o Tesouro IPCA+ para proteção de longo prazo e o Tesouro Selic para reserva de emergência.`,
+    positivo: `O Tesouro Direto é uma das opções mais seguras e eficientes do mercado brasileiro. Emitido pelo Governo Federal, oferece garantia máxima, boa liquidez e rentabilidade transparente. É uma excelente base para a reserva de segurança e para objetivos de médio e longo prazo.`,
   },
 
   cdb: {
-    positivo: `CDBs de bancos sólidos são excelentes para renda fixa, com proteção do FGC até
-R$250 mil por instituição. Podem render acima do CDI e são uma ótima alternativa ao Tesouro
-para diversificação em renda fixa.`,
-    dica: `Prefira CDBs que rendem 100% do CDI ou mais e verifique sempre a solidez do banco emissor.`,
+    positivo: `CDBs de bancos sólidos com boas taxas são uma excelente opção de renda fixa. Contam com proteção do FGC até R$250 mil por CPF por instituição e permitem diversificação entre diferentes emissores.`,
+    negativo: `CDBs com taxas abaixo do CDI ou de bancos com condições desfavoráveis podem render menos do que outras alternativas de renda fixa. Vale avaliar se a rentabilidade compensa frente a opções mais eficientes.`,
   },
 
   lci_lca: {
-    positivo: `LCI e LCA são isentos de Imposto de Renda para pessoas físicas, o que aumenta
-o rendimento líquido. São emitidos por bancos e têm proteção do FGC. Ótima opção para
-complementar a renda fixa com eficiência fiscal.`,
+    positivo: `LCI e LCA são ativos isentos de Imposto de Renda para pessoa física — o que aumenta significativamente o retorno líquido. São uma excelente opção para quem busca eficiência fiscal dentro da renda fixa.`,
   },
 
   fundo_rf: {
-    positivo: `Fundos de renda fixa de qualidade oferecem diversificação e gestão profissional
-dentro da classe. São acessíveis e permitem investir em títulos que individualmente
-exigiriam valores maiores.`,
-    dica: `Atenção às taxas de administração — prefira fundos com taxa abaixo de 0,5% ao ano.`,
+    positivo: `Fundos de renda fixa bem selecionados oferecem diversificação e gestão profissional. Verifique sempre as taxas de administração — fundos com taxas acima de 0,5% ao ano tendem a prejudicar o retorno líquido no longo prazo.`,
+    negativo: `Fundos de renda fixa com taxas de administração elevadas ou com gestão pouco eficiente podem render abaixo do CDI. Em muitos casos, investir diretamente em Tesouro ou CDBs de boa qualidade seria mais vantajoso.`,
   },
 
   poupanca: {
-    positivo: `A poupança tem alta liquidez e segurança, sendo garantida pelo FGC.`,
-    negativo: `O grande problema da poupança é o rendimento muito baixo — historicamente abaixo
-da inflação. Quem deixa dinheiro na poupança por muitos anos perde poder de compra ao longo
-do tempo. Com as mesmas características de segurança, existem opções como CDB, LCI ou
-Tesouro Selic que rendem significativamente mais.`,
-    dica: `Use a poupança apenas para o dinheiro que você pode precisar de imediato. O restante
-pode render muito mais em outras aplicações.`,
+    negativo: `A poupança é o investimento mais popular do Brasil — mas também um dos menos eficientes. Sua rentabilidade é limitada por lei (0,5% ao mês + TR quando a Selic está acima de 8,5%), o que na prática significa perda de poder de compra em cenários de inflação mais alta.
+
+Existem alternativas igualmente seguras, com proteção do FGC, que rendem significativamente mais — como o Tesouro Selic e CDBs de liquidez diária. Migrar da poupança para essas opções é uma das mudanças mais simples e impactantes que um investidor pode fazer.`,
   },
 
   coe: {
-    negativo: `COEs (Certificados de Operações Estruturadas) costumam ter estruturas complexas,
-pouco transparentes e taxas embutidas elevadas. Na prática, a maioria não entrega o retorno
-prometido e o cliente fica preso por longos períodos sem liquidez. São produtos que
-beneficiam mais quem vende do que quem compra.`,
-    dica: `Evite COEs e prefira investimentos mais simples e transparentes onde você entende
-exatamente o que está comprando.`,
+    negativo: `COEs (Certificados de Operações Estruturadas) são produtos complexos que combinam renda fixa e derivativos. Na maioria dos casos, sua estrutura favorece mais a instituição emissora do que o investidor — com retornos limitados, baixa liquidez e dificuldade de avaliação real do risco. Requerem análise cuidadosa antes de qualquer aplicação.`,
   },
 
   fundo_multimercado: {
-    negativo: `Fundos multimercado cobram taxas de administração e performance elevadas, que
-corroem o rendimento ao longo do tempo. A maioria não consegue superar o CDI de forma
-consistente após os custos. O investidor paga caro por uma gestão que muitas vezes não compensa.`,
-    dica: `Se quiser diversificação, considere montar você mesmo uma carteira com ativos diretos,
-pagando menos taxas.`,
+    positivo: `Fundos multimercado de qualidade, com gestores consistentes e histórico comprovado, podem agregar diversificação e retornos acima do CDI. São uma boa opção para quem busca exposição a diferentes estratégias com gestão profissional.`,
+    negativo: `Fundos multimercado com taxas elevadas (administração + performance) ou sem histórico consistente de retorno podem consumir boa parte do rendimento. A escolha do gestor é fundamental nessa categoria.`,
   },
 
   fundo_alternativo: {
-    negativo: `Fundos alternativos como os de precatórios, direitos creditórios ou estratégias
-exóticas carregam riscos difíceis de avaliar e baixa liquidez. Muitas vezes são vendidos
-com promessas de altos retornos que não se concretizam. São produtos de alto risco e
-baixa transparência.`,
+    negativo: `Fundos alternativos pouco conhecidos ou sem histórico robusto representam risco elevado sem a contrapartida adequada de retorno. É essencial avaliar com cuidado a liquidez, as taxas e a solidez da gestora antes de alocar recursos nessa categoria.`,
   },
 
   fundo_cetipado: {
-    negativo: `Fundos cetipados (fechados) não têm liquidez diária e podem ter taxa de saída
-elevada. O cotista fica preso e sem poder sair quando precisa ou quando o mercado muda.
-Não é a estrutura mais adequada para a maioria dos investidores.`,
-  },
-
-  cri_cra: {
-    negativo: `CRI (Certificado de Recebíveis Imobiliários) e CRA (Certificado de Recebíveis do Agronegócio)
-são isentos de IR, mas escondem riscos que poucos percebem: não têm proteção do FGC, possuem
-baixíssima liquidez e dependem da saúde financeira dos emissores privados. Em momentos de crise,
-podem ser difíceis de vender e o risco de calote é real. A isenção fiscal não compensa esses
-riscos para a maioria dos investidores.`,
-    dica: `Se quiser ativos isentos de IR com mais segurança, prefira LCI ou LCA que têm proteção do FGC e maior liquidez.`,
-  },
-
-  debentures: {
-    negativo: `Debêntures são títulos de dívida emitidos por empresas privadas. Embora algumas debêntures
-incentivadas sejam isentas de IR, o risco de crédito da empresa emissora é elevado e não há proteção
-do FGC. A liquidez no mercado secundário costuma ser muito baixa, o que significa que você pode ficar
-preso no ativo se precisar do dinheiro antes do vencimento. Para a maioria dos investidores, o risco
-não compensa o retorno.`,
-    dica: `Prefira títulos públicos ou CDBs de bancos sólidos para renda fixa. Se quiser isenção de IR, LCI e LCA são mais seguras.`,
+    negativo: `Fundos exclusivos ou restritos com liquidez limitada e taxas de administração elevadas podem não ser a melhor escolha para a maioria dos investidores. Vale comparar o retorno líquido com alternativas mais simples e transparentes.`,
   },
 
   produto_estruturado: {
-    negativo: `Produtos estruturados geralmente combinam renda fixa com derivativos de forma
-complexa. As taxas são altas, a transparência é baixa e o risco pode ser maior do que aparenta.
-São criados para gerar margem para as instituições, não necessariamente para beneficiar
-o investidor.`,
-    dica: `Prefira produtos simples onde você entende completamente como o dinheiro está sendo
-investido e quais são os riscos reais.`,
+    negativo: `Produtos estruturados geralmente possuem estruturas de remuneração complexas e pouco transparentes, com liquidez reduzida e custos embutidos que nem sempre são evidentes. Exigem análise criteriosa e devem representar apenas uma parcela pequena do portfólio.`,
   },
 
-  acoes: {
-    positivo: `Ter ações na carteira é fundamental para quem quer construir patrimônio no longo
-prazo. As melhores empresas do país crescem e distribuem lucros ao longo dos anos. Quem
-investe com paciência e consistência tende a ter retornos superiores à renda fixa no longo prazo.`,
-    dica: `Diversifique entre setores diferentes e evite concentrar demais em uma única empresa.`,
+  cri_cra: {
+    positivo: `CRIs e CRAs são títulos de renda fixa isentos de IR para pessoa física, com lastro em recebíveis imobiliários ou do agronegócio. Oferecem boa rentabilidade e isenção fiscal, mas exigem atenção à qualidade do emissor e à liquidez, que tende a ser menor que outros ativos.`,
+    negativo: `CRIs e CRAs não contam com proteção do FGC e têm liquidez reduzida no mercado secundário. A análise criteriosa do emissor e do risco de crédito é fundamental — a isenção fiscal só agrega valor quando o risco é adequadamente remunerado.`,
   },
 
-  fiis: {
-    positivo: `Fundos Imobiliários são excelentes para gerar renda passiva mensal, com isenção
-de IR nos rendimentos. Funcionam como ser "sócio de imóveis" sem precisar comprar um imóvel
-inteiro. Proporcionam exposição ao mercado imobiliário com liquidez e valores acessíveis.`,
-    dica: `Prefira FIIs com histórico consistente de distribuição de rendimentos e boa qualidade
-dos imóveis no portfólio.`,
+  debentures: {
+    positivo: `Debêntures incentivadas são isentas de IR e podem oferecer rentabilidades atrativas. A qualidade do emissor é fundamental — prefira empresas com boa classificação de risco e verifique sempre a liquidez no mercado secundário.`,
+    negativo: `Debêntures sem isenção fiscal ou de emissores com risco elevado podem não compensar frente a alternativas mais seguras. Avaliar o rating de crédito e a liquidez é essencial antes de investir.`,
   },
 
-  etfs: {
-    positivo: `ETFs (Exchange Traded Funds) permitem investir em dezenas ou centenas de ativos
-com uma única compra, com taxas muito baixas. São uma das formas mais inteligentes e eficientes
-de diversificar a carteira, seguindo índices de mercado com custo mínimo.`,
-  },
+  // ── RENDA VARIÁVEL ──────────────────────────────────────────────────────────
 
   fundo_acoes: {
-    negativo: `Fundos de ações cobram taxas de administração e performance elevadas que corroem
-significativamente os retornos ao longo do tempo. A grande maioria não consegue superar o índice
-de referência (Ibovespa) de forma consistente após os custos. Você paga caro por uma gestão que
-estatisticamente não entrega resultado superior ao que você obteria investindo diretamente em
-ações ou ETFs com custo muito menor.`,
-    dica: `Invista diretamente em ações de boas empresas ou em ETFs de ações com taxa de administração baixíssima — você tende a ter resultados melhores com menos custo.`,
+    positivo: `Fundos de ações com gestão ativa e histórico consistente podem ser uma boa forma de ter exposição à renda variável com gestão profissional. Avalie sempre as taxas de administração e performance em relação ao benchmark.`,
+    negativo: `Fundos de ações com taxas elevadas ou desempenho abaixo do Ibovespa de forma consistente destroem valor. Em muitos casos, ETFs de índice com taxas menores entregam resultados superiores no longo prazo.`,
   },
 
   fiagro: {
-    negativo: `FIAGROs (Fundos de Investimento nas Cadeias Produtivas do Agronegócio) são um produto
-relativamente novo, com histórico curto e riscos complexos ligados ao setor agrícola — inadimplência
-de produtores, variações climáticas e de commodity. Diferente dos FIIs imobiliários consolidados,
-os FIAGROs têm menor transparência, menos liquidez e um risco que a maioria dos investidores tem
-dificuldade de avaliar corretamente.`,
-    dica: `Se quiser exposição ao agronegócio, considere ações de empresas sólidas do setor com muito mais transparência e liquidez.`,
+    positivo: `FIAGROs são fundos voltados para o agronegócio, com distribuição mensal de rendimentos isentos de IR para pessoa física. São uma forma de diversificar em ativos reais com geração de renda.`,
+    negativo: `FIAGROs ainda são uma classe relativamente nova no mercado brasileiro. Avalie com cuidado a qualidade da carteira, a gestora e o histórico de inadimplência antes de alocar recursos.`,
   },
+
+  acoes: {
+    positivo: `Ter ações na carteira é fundamental para quem busca crescimento patrimonial no longo prazo. Empresas sólidas, com bons fundamentos e posição competitiva, tendem a criar valor consistente ao longo dos anos. A chave é a seleção criteriosa e a diversificação.`,
+  },
+
+  fiis: {
+    positivo: `FIIs (Fundos Imobiliários) são uma excelente forma de ter exposição ao mercado imobiliário com liquidez e distribuição mensal de rendimentos isentos de IR. São um componente importante de carteiras que buscam renda passiva.`,
+  },
+
+  etfs: {
+    positivo: `ETFs são uma das ferramentas mais eficientes para diversificação com baixo custo. Permitem exposição a índices inteiros — brasileiro ou internacional — com taxas de administração muito menores que fundos ativos. São excelentes para investidores que buscam eficiência e simplicidade.`,
+  },
+
+  // ── EXTERIOR ───────────────────────────────────────────────────────────────
 
   exterior: {
-    positivo: `Investir no exterior é uma das formas mais eficazes de proteger o patrimônio.
-Além de acessar as maiores empresas do mundo, você se protege de crises locais e da
-desvalorização do real. Um patrimônio bem estruturado sempre tem parte investida fora do Brasil.`,
-    dica: `BDRs, ETFs internacionais e contas no exterior são formas acessíveis de começar
-a diversificar geograficamente.`,
+    positivo: `Ter exposição ao exterior é essencial para uma carteira verdadeiramente diversificada. Além de acessar as maiores empresas e mercados do mundo, protege o patrimônio contra os riscos específicos do Brasil — inflação, câmbio e instabilidade política.`,
   },
+
+  // ── CRIPTO ─────────────────────────────────────────────────────────────────
 
   cripto: {
-    positivo: `Criptomoedas representam uma classe de ativo nova e com alto potencial de
-crescimento. Bitcoin e outras moedas digitais vêm ganhando espaço como reserva de valor
-e alternativa de diversificação. Uma pequena parcela do patrimônio em cripto pode
-potencializar os retornos.`,
-    dica: `Mantenha a exposição em cripto dentro de um percentual que você tolera perder
-temporariamente, dado que é uma classe com alta volatilidade.`,
+    positivo: `Uma alocação pequena em criptoativos pode agregar diversificação a carteiras com perfil mais arrojado. Bitcoin e Ethereum, em particular, têm ganhado reconhecimento como reservas de valor alternativas. O importante é manter a exposição dentro de um percentual adequado ao seu perfil.`,
   },
-};
-
-export const TEXTOS_DIVERSIFICACAO = {
-  semRV: `Sua carteira não possui ativos de renda variável (ações ou fundos imobiliários). Isso
-significa que, no longo prazo, o crescimento do patrimônio tende a ser limitado. A renda
-fixa protege e preserva, mas são os ativos de renda variável que multiplicam o patrimônio
-ao longo dos anos.`,
-
-  semExt: `Não ter investimentos fora do Brasil deixa o patrimônio mais exposto a riscos
-locais — crise política, econômica ou desvalorização do real afetam diretamente quem está
-100% no mercado brasileiro. Diversificar internacionalmente é uma proteção importante.`,
-
-  semRF: `Não ter uma base em renda fixa é arriscado. A renda fixa funciona como a âncora
-da carteira — é ela que garante liquidez para emergências e estabilidade nos momentos de
-crise nos mercados.`,
-
-  boaDiversificacao: `Sua carteira já mostra uma boa diversificação entre diferentes classes
-de ativos. Isso é muito positivo — cada classe tem um papel diferente: renda fixa protege,
-ações crescem, FIIs geram renda e exterior diversifica. Juntos, formam uma carteira mais resiliente.`,
-
-  excelenteDiversificacao: `Parabéns pela diversificação! Você já tem ativos em todas as principais
-classes — renda fixa, renda variável, fundos imobiliários e exterior. Essa é a estrutura que
-os melhores investidores utilizam para construir e proteger patrimônio no longo prazo.`,
 };

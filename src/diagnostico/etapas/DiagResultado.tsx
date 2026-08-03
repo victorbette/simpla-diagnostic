@@ -93,7 +93,7 @@ export function DiagResultado({ lead }: Props) {
   const {
     scoreLF, scoreInvestimentos, scoreBlindagem, scoreGeral,
     lfTemDados, pctIF,
-    aaTemDados, ativosBonsLabels, ativosRuinsLabels, nBonsCount, nRuinsCount,
+    aaTemDados, ativosBonsLabels, nBonsCount, nRuinsCount,
     temRV, temExt,
     blindagemTemDados, possuiSeguro,
     comecandoDoZero,
@@ -114,19 +114,69 @@ export function DiagResultado({ lead }: Props) {
       return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.\n\nSe você já investe mas não tem clareza de onde e em quê, isso é igualmente preocupante. Dinheiro sem estratégia raramente cresce como deveria — e muitas vezes está gerando retorno para outros em vez de para você.";
     }
 
-    if (nRuinsCount > 0 && nBonsCount === 0) {
-      return `A análise da sua carteira acendeu um alerta importante. Todos os produtos identificados — ${ativosRuinsLabels.join(", ")} — estão na categoria de investimentos não recomendados: produtos com taxas elevadas, baixa transparência e retornos que historicamente ficam abaixo do mercado.\n\nIsso significa que, enquanto você trabalha para construir patrimônio, uma parcela dos seus rendimentos pode estar sendo consumida desnecessariamente por custos que não aparecem de forma clara no extrato.\n\nUma revisão estratégica da carteira pode representar uma diferença enorme ao longo dos anos — sem precisar assumir mais risco, apenas alocando melhor o que você já tem.`;
+    const am = dadosColeta.ativosInvestimento ?? {};
+    const tem = (id: string) => am[id] === true;
+    const partes: string[] = [];
+
+    // Ativos bons
+    if (nBonsCount > 0) {
+      partes.push(`Sua carteira já conta com ativos de qualidade — ${ativosBonsLabels.join(", ")}. Isso demonstra que você já tomou boas decisões de investimento e tem uma base sólida para continuar construindo.`);
     }
 
-    if (nRuinsCount > 0 && nBonsCount > 0) {
-      return `Sua carteira tem pontos positivos: você já investe em ${ativosBonsLabels.join(", ")}, o que demonstra que você está no caminho.\n\nNo entanto, identificamos também produtos que merecem atenção: ${ativosRuinsLabels.join(", ")}. Esses produtos costumam gerar mais resultado para quem os distribui do que para quem os compra — e podem estar comprometendo a eficiência da sua carteira de forma silenciosa.\n\nCom uma revisão estratégica, é possível manter o que funciona, eliminar o que drena e construir uma carteira muito mais eficiente — sem precisar mudar sua tolerância ao risco.`;
+    // Poupança
+    if (tem("poupanca")) {
+      partes.push(`A poupança é um dos pontos que mais chama atenção. Embora seja segura e familiar, sua rentabilidade é limitada por lei e, na prática, costuma perder para a inflação no longo prazo. Existem alternativas igualmente seguras — com proteção do FGC — que rendem significativamente mais, como o Tesouro Selic e CDBs de liquidez diária. Essa troca é uma das mudanças mais simples e impactantes que você pode fazer agora.`);
     }
 
+    // Produtos complexos/opacos
+    const prodComplexos: Record<string, string> = {
+      coe: "COE",
+      produto_estruturado: "Produtos Estruturados",
+      fundo_cetipado: "Fundos Cetipados",
+    };
+    const complexosPresentes = Object.keys(prodComplexos).filter(id => tem(id));
+    if (complexosPresentes.length > 0) {
+      const nomes = complexosPresentes.map(id => prodComplexos[id]).join(", ");
+      partes.push(`Alguns produtos da sua carteira — ${nomes} — possuem estruturas complexas que, na maioria dos casos, favorecem mais a instituição financeira do que o investidor. Baixa transparência, liquidez reduzida e custos embutidos são características que merecem atenção.`);
+    }
+
+    // Fundos alternativos
+    if (tem("fundo_alternativo")) {
+      partes.push(`Fundos alternativos sem histórico robusto ou de gestoras pouco conhecidas representam risco sem a devida contrapartida de retorno. Vale avaliar com cuidado o que justifica essa alocação.`);
+    }
+
+    // Fundos de ações
+    if (tem("fundo_acoes")) {
+      partes.push(`Fundos de ações com taxas elevadas ou desempenho abaixo do Ibovespa de forma consistente destroem valor. Em muitos casos, ETFs de índice com taxas menores entregam resultados superiores no longo prazo.`);
+    }
+
+    // Fundos multimercado
+    if (tem("fundo_multimercado")) {
+      partes.push(`Fundos multimercado com taxas elevadas ou sem histórico consistente de retorno podem consumir boa parte do rendimento. A escolha do gestor é fundamental nessa categoria.`);
+    }
+
+    // Fiagro
+    if (tem("fiagro")) {
+      partes.push(`Fiagros ainda são uma classe relativamente nova, com histórico curto e riscos ligados ao setor agrícola que a maioria dos investidores tem dificuldade de avaliar. Avalie com cuidado a qualidade da carteira e a gestora antes de alocar recursos.`);
+    }
+
+    // CRI/CRA e Debêntures
+    const creditLabels: Record<string, string> = { cri_cra: "CRI/CRA", debentures: "Debêntures" };
+    const creditPresentes = Object.keys(creditLabels).filter(id => tem(id));
+    if (creditPresentes.length > 0) {
+      const nomes = creditPresentes.map(id => creditLabels[id]).join(" e ");
+      partes.push(`${nomes} não contam com proteção do FGC e têm liquidez reduzida no mercado secundário. É essencial avaliar a qualidade de crédito do emissor e manter a exposição dentro de um percentual adequado ao seu perfil.`);
+    }
+
+    // Apenas renda fixa, sem RV nem exterior
     if (nRuinsCount === 0 && !temRV && !temExt) {
-      return `Você faz boas escolhas dentro da renda fixa — os produtos que identificamos são sólidos e adequados como base.\n\nMas uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo. Sem ativos de crescimento — como ações e fundos imobiliários — e sem diversificação internacional, o patrimônio tende a crescer significativamente abaixo do seu potencial.\n\nO equilíbrio entre proteção e crescimento é o que diferencia uma carteira que preserva de uma carteira que multiplica. Você já tem a base — agora é hora de construir sobre ela.`;
+      partes.push(`Uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo. Sem ativos de crescimento — como ações e fundos imobiliários — e sem diversificação internacional, o patrimônio tende a crescer significativamente abaixo do seu potencial. Você já tem a base — agora é hora de construir sobre ela.`);
     }
 
-    return `Sua carteira demonstra uma visão estratégica consistente. Com ${ativosBonsLabels.join(", ")}, você tem exposição a classes de ativos que trabalham juntas para crescer, gerar renda e proteger contra riscos.\n\nO próximo nível é otimizar os percentuais de cada classe para o seu perfil e objetivos específicos — garantindo que cada real esteja alocado da forma mais eficiente possível.\n\nCom uma carteira bem estruturada e revisada periodicamente, você maximiza retornos sem precisar assumir riscos desnecessários.`;
+    // Encerramento
+    partes.push(`Uma carteira bem estruturada não é apenas sobre escolher bons produtos — é sobre ter cada ativo cumprindo um papel específico, com diversificação adequada e custos sob controle. Pequenos ajustes na composição atual podem representar uma diferença significativa no resultado de longo prazo.`);
+
+    return partes.join("\n\n");
   }
 
   function gerarTexto(area: string): string {
