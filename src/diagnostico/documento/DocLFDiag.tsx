@@ -7,9 +7,6 @@ import {
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
-const TAXA_ANUAL_DIAG = 0.045;
-const TAXA_MENSAL_DIAG = Math.pow(1 + TAXA_ANUAL_DIAG, 1 / 12) - 1;
-
 function corMeta(pct: number): string {
   return pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
 }
@@ -47,6 +44,37 @@ export function DocLFDiag({ lead }: Props) {
   const idadeMeta          = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 60;
   const patrimonioNecessario = rendaDesejada > 0 ? calcularPatrimonioPerpetuidade(rendaDesejada) : 0;
 
+  // ── Ajustes: mesma lógica da aba LF ──
+  const dadosAjustes     = dadosLF.ajustes;
+  const usarTaxaCustom   = dadosAjustes?.usarTaxaCustom          ?? false;
+  const taxaCustomAnual  = dadosAjustes?.taxaCustomAnual          ?? 4.5;
+  const usarCrescimento  = dadosAjustes?.usarCrescimentoAportes   ?? false;
+  const crescimentoAnual = dadosAjustes?.crescimentoAportesAnual  ?? 2.0;
+
+  const TAXA_ANUAL    = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : 0.045;
+  const TAXA_MENSAL   = Math.pow(1 + TAXA_ANUAL, 1 / 12) - 1;
+  const crescimentoMensal = usarCrescimento
+    ? Math.pow(1 + crescimentoAnual / 100, 1 / 12) - 1 : 0;
+
+  const nMesesBase = Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
+
+  const calcularProjecao = (): number => {
+    if (crescimentoMensal === 0) {
+      const f = Math.pow(1 + TAXA_MENSAL, nMesesBase);
+      return patrimonioInicial * f + aporteMensal * (f - 1) / TAXA_MENSAL;
+    }
+    let patrimonio = patrimonioInicial;
+    let aporte = aporteMensal;
+    for (let m = 0; m < nMesesBase; m++) {
+      patrimonio = patrimonio * (1 + TAXA_MENSAL) + aporte;
+      aporte *= (1 + crescimentoMensal);
+    }
+    return patrimonio;
+  };
+
+  const projecaoNaIF     = Math.max(0, Math.round(calcularProjecao()));
+  const rendaSustentavel = (projecaoNaIF * 0.04) / 12;
+
   const projecaoParams: ProjecaoIFParams = {
     idadeAtual,
     idadeMeta,
@@ -54,7 +82,7 @@ export function DocLFDiag({ lead }: Props) {
     patrimonioInicial,
     aporteMensal,
     rendaMensalDesejada: rendaDesejada,
-    taxaRetornoAnual: TAXA_ANUAL_DIAG,
+    taxaRetornoAnual: TAXA_ANUAL,
     anoNascimento,
     mesNascimento,
     objetivos: [],
@@ -63,11 +91,9 @@ export function DocLFDiag({ lead }: Props) {
   let result: ReturnType<typeof calcularProjecaoIF> | null = null;
   try { result = calcularProjecaoIF(projecaoParams); } catch { /* sem dados suficientes */ }
 
-  const projecaoNaIF     = result ? result.patrimonioNaIF : 0;
-  const rendaSustentavel = result ? (result.patrimonioNaIF * 0.04) / 12 : 0;
   const mesIF = result
     ? result.mesInicioRetirada
-    : Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
+    : nMesesBase;
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
 
@@ -126,13 +152,24 @@ export function DocLFDiag({ lead }: Props) {
     return texto;
   }
 
-  // ── Análise de Sensibilidade ──
-  const nMesesBase = Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
+  // ── Análise de Sensibilidade — mesmos parâmetros da aba LF ──
+  const calcularFV = (nMeses: number, aporteC: number): number => {
+    if (crescimentoMensal === 0) {
+      const f = Math.pow(1 + TAXA_MENSAL, nMeses);
+      return patrimonioInicial * f + aporteC * (f - 1) / TAXA_MENSAL;
+    }
+    let patrimonio = patrimonioInicial;
+    let aporte = aporteC;
+    for (let m = 0; m < nMeses; m++) {
+      patrimonio = patrimonio * (1 + TAXA_MENSAL) + aporte;
+      aporte *= (1 + crescimentoMensal);
+    }
+    return patrimonio;
+  };
 
   const cenariosAporte = [-40, -20, 0, 20, 40].map(pctVariacao => {
     const aporteC = Math.max(0, aporteMensal * (1 + pctVariacao / 100));
-    const f = Math.pow(1 + TAXA_MENSAL_DIAG, nMesesBase);
-    const fv = patrimonioInicial * f + aporteC * (f - 1) / TAXA_MENSAL_DIAG;
+    const fv = calcularFV(nMesesBase, aporteC);
     const pctMeta = patrimonioNecessario > 0
       ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
     return { pctVariacao, aporteC, pctMeta };
@@ -141,8 +178,7 @@ export function DocLFDiag({ lead }: Props) {
   const cenariosIdade = [-5, -2, 0, 2, 5].map(delta => {
     const idadeC = Math.max(idadeAtual + 1, idadeMeta + delta);
     const n = Math.max(1, Math.round((idadeC - idadeAtual) * 12));
-    const f = Math.pow(1 + TAXA_MENSAL_DIAG, n);
-    const fv = patrimonioInicial * f + aporteMensal * (f - 1) / TAXA_MENSAL_DIAG;
+    const fv = calcularFV(n, aporteMensal);
     const pctMeta = patrimonioNecessario > 0
       ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
     return { delta, idadeC, pctMeta };
