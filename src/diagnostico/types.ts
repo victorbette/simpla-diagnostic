@@ -37,6 +37,12 @@ export interface DadosLFDiag {
   objetivos?: unknown[];
   taxaTravada?: boolean;
   taxaTravadaValor?: number | null;
+  ajustes?: {
+    usarTaxaCustom: boolean;
+    taxaCustomAnual: number;
+    usarCrescimentoAportes: boolean;
+    crescimentoAportesAnual: number;
+  };
 }
 
 export interface ProximoPasso {
