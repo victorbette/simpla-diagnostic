@@ -363,27 +363,32 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>ITCMD (%)</label>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  step={0.5}
-                  value={data.pctITCMD}
-                  onChange={(e) => upd({ pctITCMD: Number(e.target.value) || 0 })}
-                  style={NUMBER_INPUT}
-                />
-              </div>
-              {calc.itcmdCalculado > 0 && (
-                <span style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
-                  = {formatCurrency(calc.itcmdCalculado)}
+            <input
+              type="number"
+              min={0}
+              max={20}
+              step={0.5}
+              value={data.pctITCMD}
+              onChange={(e) => upd({ pctITCMD: Number(e.target.value) || 0 })}
+              style={NUMBER_INPUT}
+            />
+            {calc.patrimonioTotal > 0 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginTop: 6, padding: '6px 10px',
+                background: '#F0F7FF', borderRadius: 6, border: '0.5px solid #BFDBFE',
+              }}>
+                <span style={{ fontSize: 10, color: '#6B7280' }}>
+                  ITCMD estimado ({data.pctITCMD}% sobre o patrimônio)
                 </span>
-              )}
-            </div>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#1E40AF' }}>
+                  {calc.itcmdCalculado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            )}
             {ufCliente ? (
-              <span style={{ ...HINT, color: '#2563EB' }}>
-                Alíquota ITCMD de {ufCliente} ({aliquotaITCMD}% — pode ser editada)
+              <span style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, display: 'block' }}>
+                Alíquota de {ufCliente} ({aliquotaITCMD}%) — editável pelo consultor
               </span>
             ) : (
               <span style={HINT}>Alíquota do estado sobre o patrimônio</span>
@@ -391,25 +396,32 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           </div>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Custos Advocatícios (%)</label>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <input
-                  type="number"
-                  min={0}
-                  max={20}
-                  step={0.5}
-                  value={data.pctAdvocaticios}
-                  onChange={(e) => upd({ pctAdvocaticios: Number(e.target.value) || 0 })}
-                  style={NUMBER_INPUT}
-                />
-              </div>
-              {calc.custosAdvocaticiosCalculado > 0 && (
-                <span style={{ fontSize: 12, color: "#6B7280", whiteSpace: "nowrap" }}>
-                  = {formatCurrency(calc.custosAdvocaticiosCalculado)}
+            <input
+              type="number"
+              min={0}
+              max={20}
+              step={0.5}
+              value={data.pctAdvocaticios}
+              onChange={(e) => upd({ pctAdvocaticios: Number(e.target.value) || 0 })}
+              style={NUMBER_INPUT}
+            />
+            {calc.patrimonioTotal > 0 && (
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                marginTop: 6, padding: '6px 10px',
+                background: '#F0F7FF', borderRadius: 6, border: '0.5px solid #BFDBFE',
+              }}>
+                <span style={{ fontSize: 10, color: '#6B7280' }}>
+                  Custos advocatícios estimados ({data.pctAdvocaticios}% sobre o patrimônio)
                 </span>
-              )}
-            </div>
-            <span style={HINT}>Padrão: 10% — editável pelo consultor</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#1E40AF' }}>
+                  {calc.custosAdvocaticiosCalculado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                </span>
+              </div>
+            )}
+            <span style={{ fontSize: 9, color: '#9CA3AF', marginTop: 3, display: 'block' }}>
+              Padrão 10% — editável pelo consultor
+            </span>
           </div>
         </div>
 
