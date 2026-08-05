@@ -115,9 +115,11 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
 
     const tipoDeclaracao = fiscalSalvo.tipoDeclaracao ?? '';
 
-    if (tipoDeclaracao === 'simplificada') return 0;
+    // Não sabe / não definido → não penaliza, não avalia
+    if (!tipoDeclaracao || tipoDeclaracao === 'nao_sei') return -1;
 
-    if (!tipoDeclaracao || tipoDeclaracao === 'nao_sei') return 0;
+    // Simplificada → máximo (está fazendo o correto para a situação)
+    if (tipoDeclaracao === 'simplificada') return 100;
 
     if (tipoDeclaracao === 'completa') {
       const rendaAnualBruta = Number(fiscalSalvo.rendaAnual) || 0;
@@ -131,7 +133,7 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
       return Math.round(aproveitamento * 100);
     }
 
-    return 0;
+    return -1;
   })();
 
   // ── Score Geral ───────────────────────────────────────────────────────────
@@ -264,51 +266,31 @@ export function gerarTextosAreas(
   const fiscal = (() => {
     const s = scores.fiscal;
     if (s < 0) return (
-      `O Planejamento Tributário ainda não foi analisado. Acesse a aba correspondente para registrar as informações e identificar as oportunidades disponíveis.`
+      `O Planejamento Tributário ainda não foi analisado ou o modelo de declaração não foi definido. Acesse a aba correspondente para registrar as informações.`
     );
 
     const fiscalSalvo = resultados.fiscal;
-    const tipoDeclaracao  = fiscalSalvo?.tipoDeclaracao ?? '';
-    const aporteAnualPGBL = Number(fiscalSalvo?.aporteAnual) || 0;
-    const tetoPGBL        = Number(fiscalSalvo?.tetoPGBLAnual) || 0;
+    const tipoDeclaracao = fiscalSalvo?.tipoDeclaracao ?? '';
 
     if (tipoDeclaracao === 'simplificada') return (
-      `Você realiza a declaração pelo modelo simplificado. Nesse modelo, contribuições à previdência privada do tipo PGBL não geram dedução adicional no Imposto de Renda — o que significa que o benefício do diferimento fiscal não está disponível para a sua situação atual.\n\n` +
-      `Dependendo da evolução da sua renda e das suas despesas dedutíveis, pode valer a pena avaliar periodicamente se a migração para o modelo completo traria vantagens fiscais relevantes.`
+      `Você realiza a declaração pelo modelo simplificado — que é a escolha mais vantajosa para o seu perfil atual. Nesse modelo, o desconto padrão aplicado já é superior às deduções individuais, o que significa que você está pagando o mínimo de imposto permitido para a sua situação. Não há otimizações adicionais a fazer neste momento.`
     );
 
-    if (!tipoDeclaracao || tipoDeclaracao === 'nao_sei') return (
-      `O tipo de declaração ainda não foi definido. Essa informação é fundamental para avaliar se existe oportunidade de reduzir legalmente a carga tributária através da previdência privada.`
-    );
-
-    // Completa — daqui em diante
-    if (tetoPGBL <= 0) return (
-      `Você realiza a declaração pelo modelo completo, o que permite aproveitar o benefício fiscal da previdência privada do tipo PGBL.\n\n` +
-      `Para avaliar o potencial de economia disponível, precisamos das informações de renda e investimento em previdência.`
-    );
-
-    if (aporteAnualPGBL === 0) return (
-      `Você realiza a declaração pelo modelo completo, mas ainda não utiliza a previdência privada (PGBL) como instrumento de planejamento fiscal.\n\n` +
-      `Isso significa que existe um benefício legal de redução do Imposto de Renda que não está sendo aproveitado. Cada contribuição dentro do limite permitido reduz diretamente a base de cálculo do imposto — e o valor que ficaria no fisco permanece investido e rendendo para você.\n\n` +
-      `Essa é uma das oportunidades mais diretas e acessíveis de otimização tributária legal.`
-    );
-
-    if (s <= 40) return (
-      `Você realiza a declaração pelo modelo completo e já utiliza a previdência privada como ferramenta de planejamento fiscal — o que é um passo importante na direção certa.\n\n` +
-      `No entanto, o aproveitamento do limite legal disponível ainda está aquém do potencial. Aumentar a contribuição dentro do teto permitido pode representar uma redução relevante na carga tributária anual — com o benefício adicional de fortalecer o patrimônio previdenciário ao mesmo tempo.`
+    // Completa — baseado no score de aproveitamento do PGBL
+    if (s <= 20) return (
+      `Você declara pelo modelo completo, o que permite deduzir contribuições à previdência privada (PGBL) da base de cálculo do IR. Atualmente, esse benefício não está sendo aproveitado — o que representa uma oportunidade real de redução legal da carga tributária.`
     );
 
     if (s <= 70) return (
-      `Bom aproveitamento do benefício fiscal disponível. Você utiliza a declaração completa e já contribui com a previdência privada de forma consistente.\n\n` +
-      `Ainda existe espaço para otimização dentro do limite legal — cada real adicional contribuído reduz a base de cálculo do imposto e permanece trabalhando para você.`
+      `Você já utiliza a declaração completa e contribui com a previdência privada — o que é um passo importante. Ainda há espaço para aumentar o aproveitamento dentro do limite legal e reduzir ainda mais a carga tributária.`
     );
 
     if (s < 100) return (
-      `Excelente gestão tributária. Você está aproveitando uma parcela significativa do benefício fiscal disponível pela declaração completa com PGBL — o que reduz legalmente sua carga tributária e direciona mais recursos para a construção do patrimônio.`
+      `Bom aproveitamento do benefício fiscal. Você está próximo do limite ideal de dedução com PGBL. Um pequeno ajuste pode maximizar completamente a vantagem tributária disponível.`
     );
 
     return (
-      `Aproveitamento máximo do benefício fiscal disponível. Você está utilizando integralmente o limite legal de dedução com previdência privada — o que significa a menor carga tributária possível dentro das regras atuais, com o máximo sendo direcionado para o patrimônio previdenciário.`
+      `Aproveitamento máximo do benefício fiscal. Você utiliza integralmente o limite legal de dedução com previdência privada — pagando o mínimo de IR permitido pela legislação atual para o seu perfil.`
     );
   })();
 

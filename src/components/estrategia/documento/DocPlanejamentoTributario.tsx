@@ -111,7 +111,24 @@ export function DocPlanejamentoTributario({ nomeCliente, resultados }: Props) {
     },
   ];
 
-  if (rf) {
+  if (rf?.tipoDeclaracao === 'simplificada') {
+    blocos.push({
+      chave: "simplificada",
+      node: (
+        <div className="doc-card" style={{ ...CARD, background: DOC.blueSoft, border: `1px solid ${DOC.blueBorder}` }}>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10 }}>
+            Você realiza a declaração pelo modelo simplificado — e essa é a escolha correta para o seu perfil.
+          </p>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10 }}>
+            No modelo simplificado, a Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável, limitado a um teto estabelecido em lei. Quando esse desconto padrão é maior do que a soma das deduções individuais, o modelo simplificado é sempre o mais vantajoso — e é exatamente o seu caso.
+          </p>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, margin: 0 }}>
+            Do ponto de vista tributário, você está pagando o mínimo possível para a sua situação atual. Não há otimizações adicionais a fazer neste momento.
+          </p>
+        </div>
+      ),
+    });
+  } else if (rf) {
     // Resultado — cenários lado a lado
     if (sim) {
       blocos.push({
