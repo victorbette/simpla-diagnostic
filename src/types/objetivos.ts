@@ -52,6 +52,14 @@ export interface ObjetivoVida {
   valorBRL: number;
   ativo?: boolean;          // undefined = active (backwards compatible)
   tipoFluxo?: 'saida' | 'entrada'; // undefined = saida (backwards compatible)
+
+  // Repetição
+  repeticao?: 'nenhuma' | 'anual' | 'semestral' | 'trimestral' | 'cada2anos' | 'cada3anos';
+  quantidadeRepeticoes?: number;
+
+  // Projeto a Prazo
+  projetoAPrazo?: boolean;
+  numeroParcelas?: number;
 }
 
 /** Returns true when the objective adds capital (entrada) to the patrimônio */

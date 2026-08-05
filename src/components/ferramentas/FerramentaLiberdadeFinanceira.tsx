@@ -9,6 +9,7 @@ import {
   calcularPatrimonioPerpetuidade,
   calcularAporteMensalNecessario,
   calcularIdadeComAporte,
+  expandirObjetivos,
   TAXA_ACUM_ANUAL,
   TAXA_ACUM_MENSAL,
   TAXA_RET_MENSAL,
@@ -190,6 +191,9 @@ export function FerramentaLiberdadeFinanceira({
   // Only objectives with ativo !== false impact the projection
   const objetivosAtivos = useMemo(() => objetivos.filter(o => o.ativo !== false), [objetivos]);
 
+  // Expand repetitions and installments into flat list for calculations
+  const objetivosExpandidos = useMemo(() => expandirObjetivos(objetivosAtivos), [objetivosAtivos]);
+
   // ── Ajustes avançados — derived rates ─────────────────────────────────────
   const ajustesCalc = useMemo(() => {
     const taxaAnualCombinada = ajustes.usarTaxaCustom
@@ -216,11 +220,11 @@ export function FerramentaLiberdadeFinanceira({
     taxaRetornoAnual:     ajustesCalc.taxaAnualCombinada,
     anoNascimento,
     mesNascimento,
-    objetivos:            objetivosAtivos,
+    objetivos:            objetivosExpandidos,
   }), [
     params.idadeAtual, params.idadeAposentadoria, params.patrimonioInicial,
     params.aporteMensal, params.rendaDesejada,
-    objetivosAtivos, anoNascimento, mesNascimento,
+    objetivosExpandidos, anoNascimento, mesNascimento,
     ajustesCalc,
   ]);
 
@@ -241,7 +245,7 @@ export function FerramentaLiberdadeFinanceira({
     const fvSemAporte = params.patrimonioInicial * f;
     const anoCard = new Date().getFullYear();
     const mesCard = new Date().getMonth() + 1;
-    const vpObjetivos = objetivosAtivos.reduce((soma, obj) => {
+    const vpObjetivos = objetivosExpandidos.reduce((soma, obj) => {
       const mesesAteObj = Math.max(0, (obj.ano - anoCard) * 12 + (obj.mes - mesCard));
       const vp = (Number(obj.valorBRL) || 0) / Math.pow(1 + taxaMensal, mesesAteObj);
       return isEntradaObjetivo(obj) ? soma - vp : soma + vp;
@@ -250,7 +254,7 @@ export function FerramentaLiberdadeFinanceira({
     if (metaAjustada <= fvSemAporte) return 0;
     return Math.max(0, (metaAjustada - fvSemAporte) * taxaMensal / (f - 1));
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
-      patrimonioPerpetuidade, objetivosAtivos, ajustesCalc]);
+      patrimonioPerpetuidade, objetivosExpandidos, ajustesCalc]);
 
   const projecaoComAporteAtual = useMemo(() => {
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
@@ -258,7 +262,7 @@ export function FerramentaLiberdadeFinanceira({
 
     // Build objectives impact map (same calendar anchoring as calcularProjecaoIF)
     const objByMesAno = new Map<string, number>();
-    for (const obj of objetivosAtivos) {
+    for (const obj of objetivosExpandidos) {
       const sinal = isEntradaObjetivo(obj) ? 1 : -1;
       const chave = `${obj.ano}-${obj.mes}`;
       objByMesAno.set(chave, (objByMesAno.get(chave) ?? 0) + sinal * obj.valorBRL);
@@ -286,7 +290,7 @@ export function FerramentaLiberdadeFinanceira({
     return Math.max(0, Math.round(saldo));
   }, [
     params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria,
-    ajustesCalc, ajustes.usarCrescimentoAportes, objetivosAtivos,
+    ajustesCalc, ajustes.usarCrescimentoAportes, objetivosExpandidos,
   ]);
 
   const rendaSustentavel = useMemo(() => {
@@ -306,7 +310,7 @@ export function FerramentaLiberdadeFinanceira({
 
     // Build objectives impact map — same approach as calcularProjecaoIF
     const objByMesAno = new Map<string, number>();
-    for (const obj of objetivosAtivos) {
+    for (const obj of objetivosExpandidos) {
       const sinal = isEntradaObjetivo(obj) ? 1 : -1;
       const key = `${obj.ano}-${obj.mes}`;
       objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
@@ -364,7 +368,7 @@ export function FerramentaLiberdadeFinanceira({
     ajustes.usarCrescimentoAportes, result,
     params.patrimonioInicial, params.aporteMensal, params.idadeAtual,
     params.idadeAposentadoria, params.rendaDesejada,
-    ajustesCalc, objetivosAtivos,
+    ajustesCalc, objetivosExpandidos,
   ]);
 
   const sensAporteScenarios = useMemo(() => {
@@ -379,11 +383,11 @@ export function FerramentaLiberdadeFinanceira({
         patrimonioAlvo:  alvo,
         idadeAtual:      params.idadeAtual,
         taxaMensalReal:  TAXA_ACUM_MENSAL,
-        objetivos:       objetivosAtivos,
+        objetivos:       objetivosExpandidos,
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosExpandidos, patrimonioPerpetuidade]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
@@ -397,11 +401,11 @@ export function FerramentaLiberdadeFinanceira({
         idadeAtual:      params.idadeAtual,
         idadeAlvo,
         taxaMensalReal:  TAXA_ACUM_MENSAL,
-        objetivos:       objetivosAtivos,
+        objetivos:       objetivosExpandidos,
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, objetivosAtivos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosExpandidos, patrimonioPerpetuidade]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;

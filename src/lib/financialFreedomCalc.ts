@@ -544,3 +544,59 @@ export function calcularProjecaoComTaxa(p: {
   const f = Math.pow(1 + p.taxaMensal, meses);
   return p.patrimonioAtual * f + p.aporteMensal * (f - 1) / p.taxaMensal;
 }
+
+// ─── Objectives expansion (repetition + installments) ─────────────────────────
+
+function addMeses(mes: number, ano: number, delta: number): { mes: number; ano: number } {
+  if (delta === 0) return { mes, ano };
+  const total0 = (mes - 1) + delta; // 0-based month index
+  const m = ((total0 % 12) + 12) % 12 + 1;
+  const a = ano + Math.floor(total0 / 12);
+  return { mes: m, ano: a };
+}
+
+const INTERVALO_MESES: Record<string, number> = {
+  anual: 12, semestral: 6, trimestral: 3, cada2anos: 24, cada3anos: 36,
+};
+
+/** Expand objectives with repetition and/or installments into a flat list of single-occurrence objectives */
+export function expandirObjetivos(objetivos: ObjetivoVida[]): ObjetivoVida[] {
+  const resultado: ObjetivoVida[] = [];
+  for (const obj of objetivos) {
+    const intervalo = obj.repeticao ? (INTERVALO_MESES[obj.repeticao] ?? 0) : 0;
+    const totalOcorrencias =
+      intervalo > 0 && (obj.quantidadeRepeticoes ?? 1) > 1 ? obj.quantidadeRepeticoes! : 1;
+
+    for (let i = 0; i < totalOcorrencias; i++) {
+      const { mes: mesBase, ano: anoBase } = addMeses(obj.mes, obj.ano, i * intervalo);
+
+      if (obj.projetoAPrazo && (obj.numeroParcelas ?? 1) >= 2) {
+        const nParcelas = obj.numeroParcelas!;
+        const valorParcela = obj.valorBRL / nParcelas;
+        for (let p = 0; p < nParcelas; p++) {
+          const { mes, ano } = addMeses(mesBase, anoBase, p);
+          resultado.push({
+            id: `${obj.id}_r${i}_p${p}`,
+            tipo: obj.tipo,
+            label: obj.label,
+            mes,
+            ano,
+            valorBRL: valorParcela,
+            ativo: obj.ativo,
+            tipoFluxo: obj.tipoFluxo,
+          });
+        }
+      } else {
+        resultado.push({
+          ...obj,
+          id: i === 0 ? obj.id : `${obj.id}_r${i}`,
+          mes: mesBase,
+          ano: anoBase,
+          repeticao: undefined,
+          quantidadeRepeticoes: undefined,
+        });
+      }
+    }
+  }
+  return resultado;
+}

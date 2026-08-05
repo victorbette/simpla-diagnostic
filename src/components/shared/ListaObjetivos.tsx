@@ -193,6 +193,11 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   const [ano, setAno] = useState(anoAtual + 5);
   const [tipoFluxo, setTipoFluxo] = useState<'saida' | 'entrada'>('saida');
 
+  const [repeticao, setRepeticao] = useState<NonNullable<ObjetivoVida['repeticao']>>('nenhuma');
+  const [quantidadeRepeticoes, setQuantidadeRepeticoes] = useState(2);
+  const [projetoAPrazo, setProjetoAPrazo] = useState(false);
+  const [numeroParcelas, setNumeroParcelas] = useState(2);
+
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [editTipo, setEditTipo] = useState<TipoObjetivo>("viagem");
   const [editLabel, setEditLabel] = useState("");
@@ -200,6 +205,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
   const [editMes, setEditMes] = useState(1);
   const [editAno, setEditAno] = useState(anoAtual + 5);
   const [editTipoFluxo, setEditTipoFluxo] = useState<'saida' | 'entrada'>('saida');
+  const [editRepeticao, setEditRepeticao] = useState<NonNullable<ObjetivoVida['repeticao']>>('nenhuma');
+  const [editQuantidadeRepeticoes, setEditQuantidadeRepeticoes] = useState(2);
+  const [editProjetoAPrazo, setEditProjetoAPrazo] = useState(false);
+  const [editNumeroParcelas, setEditNumeroParcelas] = useState(2);
 
   function openForm() {
     setTipoSel("viagem");
@@ -208,6 +217,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     setMes(1);
     setAno(anoAtual + 5);
     setTipoFluxo('saida');
+    setRepeticao('nenhuma');
+    setQuantidadeRepeticoes(2);
+    setProjetoAPrazo(false);
+    setNumeroParcelas(2);
     setShowForm(true);
   }
 
@@ -215,7 +228,13 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     if (!label.trim() || valorBRL <= 0) return;
     onObjetivos([
       ...objetivos,
-      { id: generateId(), tipo: tipoSel, label: label.trim(), valorBRL, mes, ano, ativo: true, tipoFluxo },
+      {
+        id: generateId(), tipo: tipoSel, label: label.trim(), valorBRL, mes, ano, ativo: true, tipoFluxo,
+        repeticao: repeticao !== 'nenhuma' ? repeticao : undefined,
+        quantidadeRepeticoes: repeticao !== 'nenhuma' ? quantidadeRepeticoes : undefined,
+        projetoAPrazo: projetoAPrazo ? true : undefined,
+        numeroParcelas: projetoAPrazo ? numeroParcelas : undefined,
+      },
     ]);
     setShowForm(false);
   }
@@ -232,6 +251,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     setEditMes(o.mes);
     setEditAno(o.ano);
     setEditTipoFluxo(o.tipoFluxo ?? (o.tipo === 'aportes_financeiros' ? 'entrada' : 'saida'));
+    setEditRepeticao(o.repeticao ?? 'nenhuma');
+    setEditQuantidadeRepeticoes(o.quantidadeRepeticoes ?? 2);
+    setEditProjetoAPrazo(o.projetoAPrazo ?? false);
+    setEditNumeroParcelas(o.numeroParcelas ?? 2);
   }
 
   function saveEdit(id: string) {
@@ -239,7 +262,13 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
     onObjetivos(
       objetivos.map((o) =>
         o.id === id
-          ? { ...o, tipo: editTipo, label: editLabel.trim(), valorBRL: editValorBRL, mes: editMes, ano: editAno, tipoFluxo: editTipoFluxo }
+          ? {
+              ...o, tipo: editTipo, label: editLabel.trim(), valorBRL: editValorBRL, mes: editMes, ano: editAno, tipoFluxo: editTipoFluxo,
+              repeticao: editRepeticao !== 'nenhuma' ? editRepeticao : undefined,
+              quantidadeRepeticoes: editRepeticao !== 'nenhuma' ? editQuantidadeRepeticoes : undefined,
+              projetoAPrazo: editProjetoAPrazo ? true : undefined,
+              numeroParcelas: editProjetoAPrazo ? editNumeroParcelas : undefined,
+            }
           : o,
       ),
     );
@@ -294,6 +323,70 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
             anoAtual={anoAtual} anoMeta={anoMeta}
           />
           <TipoFluxoToggle tipoFluxo={tipoFluxo} onChange={setTipoFluxo} />
+
+          {/* LINHA 1 — Repetição */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              Repetição
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+              <select
+                value={repeticao}
+                onChange={(e) => setRepeticao(e.target.value as NonNullable<ObjetivoVida['repeticao']>)}
+                style={{ flex: 1, padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
+              >
+                <option value="nenhuma">Sem repetição</option>
+                <option value="anual">Anual</option>
+                <option value="semestral">Semestral</option>
+                <option value="trimestral">Trimestral</option>
+                <option value="cada2anos">A cada 2 anos</option>
+                <option value="cada3anos">A cada 3 anos</option>
+              </select>
+              {repeticao !== 'nenhuma' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span style={{ fontSize: 10, color: "#6B7280" }}>Ocorrências</span>
+                  <input
+                    type="number" min={2} max={50}
+                    value={quantidadeRepeticoes}
+                    onChange={(e) => setQuantidadeRepeticoes(Math.max(2, Number(e.target.value)))}
+                    style={{ width: 80, padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* LINHA 2 — Projeto a Prazo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              role="switch"
+              aria-checked={projetoAPrazo}
+              onClick={() => setProjetoAPrazo(v => !v)}
+              style={{
+                width: 30, height: 17, borderRadius: 999,
+                backgroundColor: projetoAPrazo ? "#2563EB" : "#D1D5DB",
+                border: "none", cursor: "pointer", padding: 2,
+                display: "flex", alignItems: "center",
+                justifyContent: projetoAPrazo ? "flex-end" : "flex-start",
+                transition: "background-color 150ms", flexShrink: 0,
+              }}
+            >
+              <div style={{ width: 13, height: 13, borderRadius: "50%", backgroundColor: "white", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+            </button>
+            <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>Parcelado</span>
+            {projetoAPrazo && (
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input
+                  type="number" min={2} max={360}
+                  value={numeroParcelas}
+                  onChange={(e) => setNumeroParcelas(Math.max(2, Number(e.target.value)))}
+                  style={{ width: 64, padding: "4px 8px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 12, color: "#000000", outline: "none", backgroundColor: "white" }}
+                />
+                <span style={{ fontSize: 12, color: "#6B7280" }}>parcelas mensais</span>
+              </div>
+            )}
+          </div>
+
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={confirm}
@@ -360,6 +453,70 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 anoAtual={anoAtual} anoMeta={anoMeta}
               />
               <TipoFluxoToggle tipoFluxo={editTipoFluxo} onChange={setEditTipoFluxo} />
+
+              {/* LINHA 1 — Repetição */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Repetição
+                </label>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                  <select
+                    value={editRepeticao}
+                    onChange={(e) => setEditRepeticao(e.target.value as NonNullable<ObjetivoVida['repeticao']>)}
+                    style={{ flex: 1, padding: "6px 10px", borderRadius: 6, border: "1px solid #FED7AA", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
+                  >
+                    <option value="nenhuma">Sem repetição</option>
+                    <option value="anual">Anual</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="trimestral">Trimestral</option>
+                    <option value="cada2anos">A cada 2 anos</option>
+                    <option value="cada3anos">A cada 3 anos</option>
+                  </select>
+                  {editRepeticao !== 'nenhuma' && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ fontSize: 10, color: "#6B7280" }}>Ocorrências</span>
+                      <input
+                        type="number" min={2} max={50}
+                        value={editQuantidadeRepeticoes}
+                        onChange={(e) => setEditQuantidadeRepeticoes(Math.max(2, Number(e.target.value)))}
+                        style={{ width: 80, padding: "6px 10px", borderRadius: 6, border: "1px solid #FED7AA", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* LINHA 2 — Projeto a Prazo */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button
+                  role="switch"
+                  aria-checked={editProjetoAPrazo}
+                  onClick={() => setEditProjetoAPrazo(v => !v)}
+                  style={{
+                    width: 30, height: 17, borderRadius: 999,
+                    backgroundColor: editProjetoAPrazo ? "#2563EB" : "#D1D5DB",
+                    border: "none", cursor: "pointer", padding: 2,
+                    display: "flex", alignItems: "center",
+                    justifyContent: editProjetoAPrazo ? "flex-end" : "flex-start",
+                    transition: "background-color 150ms", flexShrink: 0,
+                  }}
+                >
+                  <div style={{ width: 13, height: 13, borderRadius: "50%", backgroundColor: "white", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
+                </button>
+                <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>Parcelado</span>
+                {editProjetoAPrazo && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input
+                      type="number" min={2} max={360}
+                      value={editNumeroParcelas}
+                      onChange={(e) => setEditNumeroParcelas(Math.max(2, Number(e.target.value)))}
+                      style={{ width: 64, padding: "4px 8px", borderRadius: 6, border: "1px solid #FED7AA", fontSize: 12, color: "#000000", outline: "none", backgroundColor: "white" }}
+                    />
+                    <span style={{ fontSize: 12, color: "#6B7280" }}>parcelas mensais</span>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: "flex", gap: 8 }}>
                 <button
                   onClick={() => saveEdit(o.id)}
