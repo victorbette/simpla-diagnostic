@@ -71,6 +71,13 @@ const CLASSE_TO_SEGMENTO: Record<Classe, string> = {
   'Bitcoin':              '',
 };
 
+// ─── Fundo Caixa (resgate rápido) ─────────────────────────────────────────────
+// Ativo fixo que sempre aparece na carteira (bloco "Fundo Caixa" da aba
+// Resultado Final). Não é uma classe da matriz — é um carve-out fixo, como a
+// reserva de emergência.
+export const FUNDO_CAIXA_NOME = 'Trend Cash (XP) | BTG Tesouro Selic';
+const FUNDO_CAIXA_SEGMENTO = 'Pós-fixado'; // ver CARD_META.resgate_rapido / SEG_BAR_COLORS
+
 // ─── Resultado do cálculo ─────────────────────────────────────────────────────
 export type RecomendacaoPreco = 'comprar' | 'aguardar' | 'nao_cadastrado';
 
@@ -97,6 +104,7 @@ export interface RecomendacaoSimpla {
   faixa: string;
   perfilPlanilha: string;
   reservaEmergencia: number;
+  fundoCaixa: number;
   patrimonioInvestido: number;
   classes: ClasseRecomendada[];
 }
@@ -125,6 +133,18 @@ export function determinarFaixa(patrimonioTotal: number, bands: AllocationBand[]
     if (patrimonioTotal >= b.min_patrimonio) atual = b.nome;
   }
   return atual;
+}
+
+/**
+ * Fundo Caixa (resgate rápido): valor fixo escalonado pelo patrimônio TOTAL.
+ * Réplica do IFS de `Resultado Final!D18`:
+ *   < 350k → 5.000 · 350k a 1M → 10.000 · 1M a 5M → 1% · ≥ 5M → 0,8%.
+ */
+export function calcularFundoCaixa(patrimonioTotal: number): number {
+  if (patrimonioTotal < 350_000) return 5_000;
+  if (patrimonioTotal <= 1_000_000) return 10_000;
+  if (patrimonioTotal < 5_000_000) return 0.01 * patrimonioTotal;
+  return 0.008 * patrimonioTotal;
 }
 
 /** Recomendação Comprar/Aguardar de um ticker (Preço Teto > Preço de Hoje). */
@@ -192,7 +212,8 @@ export function calcularRecomendacao(
   }
 
   const reservaEmergencia = Math.max(0, (input.custoVidaMensal ?? 0) * (input.mesesReserva ?? 0));
-  const patrimonioInvestido = Math.max(0, input.patrimonioTotal - reservaEmergencia);
+  const fundoCaixa = calcularFundoCaixa(input.patrimonioTotal);
+  const patrimonioInvestido = Math.max(0, input.patrimonioTotal - reservaEmergencia - fundoCaixa);
 
   const classes: ClasseRecomendada[] = CLASSES.map((classe) => {
     const pct = linhas.find((l) => l.classe === classe)?.pct ?? 0;
@@ -213,15 +234,15 @@ export function calcularRecomendacao(
     return { classe, card, pct, valorBRL, produtos };
   });
 
-  return { ok: true, faixa, perfilPlanilha, reservaEmergencia, patrimonioInvestido, classes };
+  return { ok: true, faixa, perfilPlanilha, reservaEmergencia, fundoCaixa, patrimonioInvestido, classes };
 }
 
 // ─── Adaptação para a ferramenta de carteira (6 cards) ────────────────────────
 
 /**
  * Converte a recomendação em alocacaoMeta (% por card sobre o patrimônio META
- * da ferramenta). A reserva de emergência é somada ao Resgate Rápido — na
- * planilha ela fica fora da alocação; aqui o total precisa fechar 100%.
+ * da ferramenta). A reserva de emergência e o Fundo Caixa são somados ao Resgate
+ * Rápido — na planilha ficam fora da alocação das classes; aqui o total fecha 100%.
  */
 export function paraAlocacaoMeta(
   rec: RecomendacaoSimpla, patrimonioMeta: number,
@@ -234,6 +255,7 @@ export function paraAlocacaoMeta(
     meta[c.card] += (c.valorBRL / patrimonioMeta) * 100;
   }
   meta.resgate_rapido += (rec.reservaEmergencia / patrimonioMeta) * 100;
+  meta.resgate_rapido += (rec.fundoCaixa / patrimonioMeta) * 100;
   for (const k of Object.keys(meta) as CardId[]) meta[k] = Math.round(meta[k] * 100) / 100;
   return meta;
 }
@@ -241,6 +263,16 @@ export function paraAlocacaoMeta(
 /** Gera os ativos recomendados (um por produto com peso > 0) para os cards. */
 export function paraAtivosRecomendados(rec: RecomendacaoSimpla): Ativo[] {
   const ativos: Ativo[] = [];
+  // Fundo Caixa: ativo fixo, sempre no topo do Resgate Rápido (bloco da planilha).
+  if (rec.fundoCaixa > 0) {
+    ativos.push({
+      id: genId(),
+      card: 'resgate_rapido',
+      nome: FUNDO_CAIXA_NOME,
+      segmento: FUNDO_CAIXA_SEGMENTO,
+      valorBRL: Math.round(rec.fundoCaixa * 100) / 100,
+    });
+  }
   for (const classe of rec.classes) {
     for (const p of classe.produtos) {
       if (p.pctNaClasse <= 0 || p.valorBRL <= 0) continue;
