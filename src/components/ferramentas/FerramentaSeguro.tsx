@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
@@ -208,6 +208,14 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const [salvo, setSalvo] = useState(false);
   const [invalidezEditada, setInvalidezEditada] = useState<boolean>(() => df.invalidezEditada === true);
   const [doencaGraveEditada, setDoencaGraveEditada] = useState<boolean>(() => df.doencaGraveEditada === true);
+
+  // Atualiza pctITCMD quando o UF do cliente muda (ex: navegação entre clientes),
+  // mas só se o consultor nunca tiver salvo um valor explícito.
+  const hasSavedITCMD = df.pctITCMD !== undefined && df.pctITCMD !== null;
+  useEffect(() => {
+    if (!ufCliente || hasSavedITCMD) return;
+    setData(prev => ({ ...prev, pctITCMD: getAliquotaITCMD(ufCliente) }));
+  }, [ufCliente, hasSavedITCMD]);
 
   function upd(fields: Partial<FormData>) { setData(prev => ({ ...prev, ...fields })); }
 
