@@ -21,6 +21,34 @@ const MESES_ABREV = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 const COR_APOSENTADORIA = "#0891B2";
 
+type OcorrenciaObjetivo = ObjetivoVida & { isRepeticao?: boolean };
+
+const REPETICAO_LABEL: Record<string, string> = {
+  anual: 'anual', semestral: 'semestral', trimestral: 'trimestral',
+  cada2anos: 'a cada 2 anos', cada3anos: 'a cada 3 anos',
+};
+
+const INTERVALO_MESES_GRAF: Record<string, number> = {
+  anual: 12, semestral: 6, trimestral: 3, cada2anos: 24, cada3anos: 36,
+};
+
+function expandirOcorrenciasGrafico(objetivos: ObjetivoVida[]): OcorrenciaObjetivo[] {
+  const resultado: OcorrenciaObjetivo[] = [];
+  for (const obj of objetivos) {
+    resultado.push(obj);
+    if (!obj.repeticao || obj.repeticao === 'nenhuma') continue;
+    if (!obj.quantidadeRepeticoes || obj.quantidadeRepeticoes < 2) continue;
+    const intervalo = INTERVALO_MESES_GRAF[obj.repeticao] ?? 12;
+    for (let i = 1; i < obj.quantidadeRepeticoes; i++) {
+      const total0 = (obj.mes - 1) + i * intervalo;
+      const mesRep = ((total0 % 12) + 12) % 12 + 1;
+      const anoRep = obj.ano + Math.floor(total0 / 12);
+      resultado.push({ ...obj, id: `${obj.id}_r${i}`, mes: mesRep, ano: anoRep, isRepeticao: true });
+    }
+  }
+  return resultado;
+}
+
 interface Props {
   projecao: PontoProjecao[];
   curvaIdeal?: (number | null)[];
@@ -73,6 +101,11 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     [dadosMesclados, dominioX],
   );
 
+  const todasOcorrencias = useMemo(
+    () => expandirOcorrenciasGrafico(objetivos),
+    [objetivos],
+  );
+
   // ── Early return ─────────────────────────────────────────────────────────────
   if (!projecaoCompleta.length) {
     return (
@@ -113,15 +146,15 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
 
   const ifPonto = mesIF !== undefined ? projecaoCompleta[mesIF] : undefined;
 
-  // Objectives lookup maps
-  const objByMesAno = new Map<string, ObjetivoVida[]>();
-  for (const obj of objetivos) {
+  // Objectives lookup maps — use all occurrences (base + repetitions)
+  const objByMesAno = new Map<string, OcorrenciaObjetivo[]>();
+  for (const obj of todasOcorrencias) {
     const key = `${obj.ano}-${obj.mes}`;
     const list = objByMesAno.get(key) ?? [];
     list.push(obj);
     objByMesAno.set(key, list);
   }
-  const objByMesIdx = new Map<number, ObjetivoVida[]>();
+  const objByMesIdx = new Map<number, OcorrenciaObjetivo[]>();
   for (const p of projecao) {
     const list = objByMesAno.get(`${p.ano}-${p.mesDoAno}`);
     if (list?.length) objByMesIdx.set(p.mes, list);
@@ -174,13 +207,16 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioNecessario)}
           </div>
         )}
-        {/* IF icon marker: sem texto no tooltip (melhoria 1) */}
         {objsDoPonto.map((obj) => {
           const meta = getObjetivoMeta(obj.tipo);
           const entrada = isEntradaObjetivo(obj);
+          const rotulo = obj.isRepeticao ? `${obj.label} (repetição)` : obj.label;
+          const sufixo = !obj.isRepeticao && obj.repeticao && obj.repeticao !== 'nenhuma' && (obj.quantidadeRepeticoes ?? 1) > 1
+            ? ` ↺ ${obj.quantidadeRepeticoes}× ${REPETICAO_LABEL[obj.repeticao] ?? ''}`
+            : '';
           return (
             <p key={obj.id} style={{ margin: "3px 0 0", color: entrada ? "#15803D" : meta.cor, fontSize: 11 }}>
-              {entrada ? "+" : "−"}{formatCurrency(obj.valorBRL)} · {obj.label}
+              {entrada ? "+" : "−"}{formatCurrency(obj.valorBRL)} · {rotulo}{sufixo}
             </p>
           );
         })}
