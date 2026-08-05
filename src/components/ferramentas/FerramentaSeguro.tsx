@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
+import { getAliquotaITCMD } from "@/lib/itcmd";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -167,6 +168,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dcAny = dc as any;
 
+  const ufCliente = dc.estado ?? '';
+  const aliquotaITCMD = getAliquotaITCMD(ufCliente);
+
   const [data, setData] = useState<FormData>(() => {
     const initialFilhos: FilhoForm[] = Array.isArray(df.filhos)
       ? (df.filhos as FilhoForm[])
@@ -178,8 +182,8 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           custoMensal: 0,
         }));
     return {
-      pctITCMD:            Number(df.pctITCMD)            || 4,
-      pctAdvocaticios:     Number(df.pctAdvocaticios)     || 2,
+      pctITCMD:        df.pctITCMD        !== undefined ? Number(df.pctITCMD)        : aliquotaITCMD,
+      pctAdvocaticios: df.pctAdvocaticios !== undefined ? Number(df.pctAdvocaticios) : 10,
       dividas:             Number(df.dividas)             || 0,
       patrimonioFinanceiro: Number(df.patrimonioFinanceiro) || Number(dcAny.patrimonioFinanceiro) || 0,
       patrimonioImoveis:   Number(df.patrimonioImoveis)   || 0,
@@ -377,7 +381,13 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                 </span>
               )}
             </div>
-            <span style={HINT}>Alíquota do estado sobre o patrimônio</span>
+            {ufCliente ? (
+              <span style={{ ...HINT, color: '#2563EB' }}>
+                Alíquota ITCMD de {ufCliente} ({aliquotaITCMD}% — pode ser editada)
+              </span>
+            ) : (
+              <span style={HINT}>Alíquota do estado sobre o patrimônio</span>
+            )}
           </div>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Custos Advocatícios (%)</label>
@@ -399,7 +409,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                 </span>
               )}
             </div>
-            <span style={HINT}>Percentual sobre o patrimônio</span>
+            <span style={HINT}>Padrão: 10% — editável pelo consultor</span>
           </div>
         </div>
 
