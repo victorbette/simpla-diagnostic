@@ -32,63 +32,48 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
     { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario },
   ];
 
-  // ── Descrições por área ───────────────────────────────────────────────────
+  // ── Dados contextuais ────────────────────────────────────────────────────
 
-  const descricaoLF =
-    scoreLF < 0
-      ? "a jornada rumo à liberdade financeira ainda precisa ser mapeada"
-      : scoreLF <= 30
-      ? "a projeção atual indica uma lacuna significativa para a aposentadoria desejada"
-      : scoreLF <= 50
-      ? "a projeção atual cobre menos da metade do patrimônio necessário para a aposentadoria"
-      : scoreLF <= 90
-      ? `a projeção já atinge ${scoreLF}% da meta de aposentadoria — um bom começo, mas ainda há caminho`
-      : "a projeção indica que você está no caminho certo para a aposentadoria desejada";
+  const dc           = plan.dadosCliente;
+  const temFilhos    = (dc.filhos?.length ?? 0) > 0;
+  const temConjuge   = ['casado', 'uniao_estavel'].includes(dc.estadoCivil ?? '');
+  const objetivos    = resultados.if?.objetivos ?? [];
+  const nomeObjetivos = objetivos.map(o => o.label).filter(Boolean);
 
-  const descricaoAA =
-    scoreAA < 0
-      ? "a composição da carteira ainda precisa ser avaliada"
-      : scoreAA <= 30
-      ? "a carteira atual precisa de uma revisão profunda em sua composição e qualidade"
-      : scoreAA <= 50
-      ? "há oportunidades claras de melhoria na diversificação e nos ativos escolhidos"
-      : scoreAA <= 90
-      ? "a carteira tem bons fundamentos, mas ainda pode ser otimizada"
-      : "a carteira demonstra boa diversificação e qualidade de ativos";
+  // ── Texto principal ───────────────────────────────────────────────────────
 
-  const descricaoProtecao =
-    scoreProtecao < 0
-      ? "a proteção patrimonial ainda não foi analisada"
-      : scoreProtecao === 0
-      ? "não há cobertura de seguro identificada — esse é o ponto mais crítico do diagnóstico"
-      : scoreProtecao <= 50
-      ? "a cobertura atual protege parcialmente a família em caso de imprevistos"
-      : scoreProtecao <= 90
-      ? "a proteção está parcialmente estruturada, mas ainda há lacunas importantes"
-      : "a proteção patrimonial está bem estruturada";
+  const primeiroNome = nome || 'você';
 
-  const descricaoTributario =
-    scoreTributario < 0
-      ? "o planejamento tributário ainda não foi analisado"
-      : scoreTributario <= 30
-      ? "há oportunidades fiscais significativas que ainda não estão sendo aproveitadas"
-      : scoreTributario <= 50
-      ? "o planejamento tributário pode ser otimizado para reduzir a carga fiscal"
-      : scoreTributario <= 90
-      ? "há boas práticas fiscais, mas ainda há espaço para melhorar a eficiência"
-      : "o planejamento tributário está bem estruturado e eficiente";
+  const texto =
+`${primeiroNome}, o que você tem em mãos não é apenas um documento. É o resultado de uma análise honesta e detalhada sobre quatro pilares que vão determinar o tipo de vida que você terá daqui a 10, 20 ou 30 anos. Pilares que a maioria das pessoas nunca para para avaliar com seriedade — porque exige coragem olhar de frente para os números e admitir onde há lacunas.
 
-  const texto = `${nome}, este documento representa o ponto de partida de uma jornada que vai muito além dos números. Ele é o resultado de um olhar honesto sobre quatro pilares que definem o futuro financeiro de qualquer família — e que, quando bem estruturados, trabalham juntos para construir algo que poucas pessoas conseguem: liberdade de verdade.
+Você fez diferente. E isso já coloca você em uma posição que poucos alcançam.
 
-Na análise da Liberdade Financeira, ${descricaoLF}. Esse é o pilar que define quando e como você poderá viver de forma completamente independente do trabalho — e ele exige atenção e consistência desde agora.
+Mas o diagnóstico sozinho não transforma nada. O que transforma é o que vem depois dele.
 
-Na Gestão de Ativos, ${descricaoAA}. A forma como o patrimônio está alocado determina o ritmo com que ele cresce e o quanto resiste às turbulências do mercado.
+A Liberdade Financeira é o pilar que define quando — e se — você vai poder um dia acordar sem a obrigação do trabalho, viver do que construiu e ter tempo para o que realmente importa. ${
+  nomeObjetivos.length > 0
+    ? `Você definiu objetivos concretos que fazem parte desse futuro — ${nomeObjetivos.join(', ')} — e cada um deles depende de uma trajetória bem calibrada para se tornar realidade.`
+    : 'Cada mês sem uma estratégia clara para esse pilar é um mês em que a distância entre onde você está e onde quer chegar pode estar crescendo silenciosamente.'
+} A análise revelou exatamente onde essa jornada está — e o quanto ela precisa evoluir para que o futuro que você imagina de fato aconteça.
 
-Na Proteção Patrimonial, ${descricaoProtecao}. Nenhum plano financeiro está completo sem a certeza de que, independente do que aconteça, a família continuará protegida.
+A Gestão de Ativos determina o ritmo com que o seu patrimônio cresce. Não é sobre encontrar o melhor produto do mês ou tentar adivinhar o mercado — é sobre ter uma estratégia coerente, diversificada e alinhada com o seu momento de vida. Uma carteira mal estruturada não gera perdas visíveis no extrato. Ela simplesmente cresce menos do que poderia — e essa diferença, composta ao longo de anos, pode significar décadas a mais de trabalho ou uma aposentadoria muito diferente da planejada.
 
-No Planejamento Tributário, ${descricaoTributario}. Pagar menos imposto de forma legal e estratégica é uma das alavancas mais subestimadas na construção de patrimônio.
+A Proteção Patrimonial é o pilar que ninguém quer pensar — e exatamente por isso é o mais negligenciado. Construir patrimônio sem proteção é como erguer uma casa sem fundação: funciona enquanto o tempo está bom. Um único evento inesperado — uma doença grave, uma invalidez, um falecimento prematuro — pode desfazer em meses o que levou anos para construir.${
+  temFilhos
+    ? ` Seus filhos contam com essa base. O futuro que você está construindo para eles depende de que essa base permaneça intacta, independente do que aconteça.`
+    : ''
+}${
+  temConjuge
+    ? ` Seu cônjuge também está dentro desse risco. A proteção adequada não é um custo — é a garantia de que a vida que vocês construíram juntos continuará protegida.`
+    : ''
+}
 
-Nas páginas a seguir, você encontrará o direcionamento específico para cada uma dessas áreas — com análises, recomendações e os próximos passos para que cada pilar esteja alinhado com os seus objetivos. Este é apenas o começo.`;
+O Planejamento Tributário é a alavanca mais subestimada de todas. Pagar menos imposto de forma legal e estratégica não é um privilégio de grandes fortunas — é uma ferramenta acessível que, bem utilizada, pode representar uma diferença expressiva no patrimônio acumulado ao longo de décadas. Cada real que deixa de ir ao fisco desnecessariamente é um real que poderia estar sendo reinvestido e compondo patrimônio para o seu futuro.
+
+Nas páginas a seguir, você encontrará a análise completa de cada um desses pilares — com clareza sobre onde estão as oportunidades, onde estão os riscos e quais são os próximos passos para que cada área esteja alinhada com os seus objetivos.
+
+Este é o ponto de partida. O que vem depois depende das decisões que você tomar a partir de agora.`;
 
   // ── Blocos ────────────────────────────────────────────────────────────────
 
