@@ -20,6 +20,12 @@ const PRIO_BADGE: Record<string, { label: string; cor: string; bg: string }> = {
 function valorMovimentacao(item: PlanoAcaoItem): number {
   const acao = item.acao ?? item.tipo ?? "";
   if (acao === "resgatar_parcial" && item.valorResgateBRL !== undefined) return item.valorResgateBRL;
+  if (acao === "aportar" || acao === "novo") {
+    const mov = item.movimentacaoEditada !== undefined
+      ? Number(item.movimentacaoEditada)
+      : Number(item.movimentacaoBRL) || 0;
+    return Math.abs(mov);
+  }
   return Math.abs(item.movimentacaoBRL ?? 0);
 }
 
