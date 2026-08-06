@@ -246,7 +246,11 @@ export function gerarTextosAreas(
       `A composição da sua carteira ainda não foi avaliada. Sem saber como o patrimônio está alocado, é impossível dizer se ele está crescendo no ritmo que deveria — ou sendo corroído por taxas, produtos inadequados e falta de diversificação.`
     );
 
-    if (s === 0) return (
+    // s === 0 pode ser "começando do zero" (comecandoDoZero === true)
+    // OU score penalizado por alternativos sem outros ativos (−15 clampado a 0).
+    // Apenas o primeiro caso deve mostrar a mensagem de oportunidade;
+    // o segundo deve cair no path s <= 50 com blocoAlternativos.
+    if (s === 0 && dc.comecandoDoZero === true) return (
       `Você tem a oportunidade que poucos percebem: começar do zero com a estratégia certa desde o primeiro dia. Quem começa bem não precisa depois desfazer anos de decisões erradas.\n\n` +
       `Os juros compostos são mais poderosos quanto mais cedo começam — e cada mês de atraso tem um custo real que não aparece em nenhum extrato, mas se acumula de forma surpreendente.`
     );
