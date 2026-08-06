@@ -131,11 +131,11 @@ function dividirLinhas(linhas: LinhaTabela[]): LinhaTabela[][] {
 function TabelaCarteiraFinal({
   linhas,
   rodapeTotal,
-  patrimonioMeta,
+  totalSomaMeta,
 }: {
   linhas: LinhaTabela[];
   rodapeTotal: boolean;
-  patrimonioMeta: number;
+  totalSomaMeta: number;
 }) {
   return (
     <div className="doc-card" style={{ border: `1px solid ${DOC.linha}`, borderRadius: 10, overflow: "hidden" }}>
@@ -207,7 +207,7 @@ function TabelaCarteiraFinal({
         {rodapeTotal && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${DOC.linha}`, paddingTop: 9, marginTop: 6 }}>
             <span style={{ fontSize: 11, fontWeight: 700, color: DOC.texto }}>Total da carteira recomendada</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: DOC.ink }}>{formatCurrency(patrimonioMeta)}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: DOC.ink }}>{formatCurrency(totalSomaMeta)}</span>
           </div>
         )}
       </div>
@@ -236,6 +236,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
   const dadosProposta = montar(rc.macroMeta ?? {}, patrimonioMeta);
 
   const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
+  const totalSomaMeta = ativosFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
   const linhas = montarLinhas(ativosFinal, rc.macroMeta ?? {}, patrimonioMeta);
   const blocos = linhas.length > 0 ? dividirLinhas(linhas) : [];
 
@@ -261,7 +262,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
           <TabelaCarteiraFinal
             linhas={blocos[0]}
             rodapeTotal={blocos.length === 1}
-            patrimonioMeta={patrimonioMeta}
+            totalSomaMeta={totalSomaMeta}
           />
         )}
       </PaginaDoc>
@@ -272,7 +273,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
           <TabelaCarteiraFinal
             linhas={bloco}
             rodapeTotal={i === blocos.length - 2}
-            patrimonioMeta={patrimonioMeta}
+            totalSomaMeta={totalSomaMeta}
           />
         </PaginaDoc>
       ))}
