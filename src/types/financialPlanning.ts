@@ -35,6 +35,7 @@ export interface MacroalocacaoAlvo {
   rvGlobal: number;
   rfGlobal: number;
   cripto: number;
+  alternativos: number;
 }
 
 export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
@@ -45,6 +46,7 @@ export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
     rvGlobal: 4,
     rfGlobal: 0,
     cripto: 0,
+    alternativos: 0,
   },
   conservador_moderado: {
     rendaFixa: 78,
@@ -53,6 +55,7 @@ export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
     rvGlobal: 9,
     rfGlobal: 0,
     cripto: 0,
+    alternativos: 0,
   },
   moderado: {
     rendaFixa: 66,
@@ -61,6 +64,7 @@ export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
     rvGlobal: 13,
     rfGlobal: 0,
     cripto: 1,
+    alternativos: 0,
   },
   arrojado: {
     rendaFixa: 52,
@@ -69,6 +73,7 @@ export const ALOCACAO_ALVO: Record<PerfilRisco, MacroalocacaoAlvo> = {
     rvGlobal: 17.5,
     rfGlobal: 0,
     cripto: 1.5,
+    alternativos: 0,
   },
 };
 
@@ -196,6 +201,7 @@ export interface AtivoAtual {
   rvGlobal: number;
   rfGlobal: number;
   cripto: number;
+  alternativos: number;
   total: number;
 }
 
@@ -206,6 +212,7 @@ export const initialAtivoAtual: AtivoAtual = {
   rvGlobal: 0,
   rfGlobal: 0,
   cripto: 0,
+  alternativos: 0,
   total: 0,
 };
 
@@ -218,6 +225,7 @@ export function calcularAlocacaoAtual(ativos: AtivoAtual): MacroalocacaoAlvo {
     rvGlobal: (ativos.rvGlobal / total) * 100,
     rfGlobal: (ativos.rfGlobal / total) * 100,
     cripto: (ativos.cripto / total) * 100,
+    alternativos: ((ativos.alternativos ?? 0) / total) * 100,
   };
 }
 
@@ -232,6 +240,7 @@ export function calcularGapAlocacao(
     rvGlobal: alvo.rvGlobal - atual.rvGlobal,
     rfGlobal: alvo.rfGlobal - atual.rfGlobal,
     cripto: alvo.cripto - atual.cripto,
+    alternativos: alvo.alternativos - atual.alternativos,
   };
 }
 

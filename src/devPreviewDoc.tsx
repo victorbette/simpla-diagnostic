@@ -47,6 +47,7 @@ function mockPlan(): FinancialPlan {
     rvGlobal: 50_000,
     rfGlobal: 0,
     cripto: 30_000,
+    alternativos: 0,
     total: 480_000,
   };
   plan.planejamentoIF = {
