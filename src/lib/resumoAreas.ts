@@ -70,13 +70,14 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
 
   // ── Gestão de Ativos ──────────────────────────────────────────────────────
   const aa = (() => {
-    const temRendaFixa = Number(plan.ativosAtuais?.rendaFixa) > 0;
-    const temAcoes     = Number(plan.ativosAtuais?.acoes) > 0;
-    const temFIIs      = Number(plan.ativosAtuais?.fiis) > 0;
-    const temExterior  = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
-    const temCripto    = Number(plan.ativosAtuais?.cripto) > 0;
+    const temRendaFixa    = Number(plan.ativosAtuais?.rendaFixa) > 0;
+    const temAcoes        = Number(plan.ativosAtuais?.acoes) > 0;
+    const temFIIs         = Number(plan.ativosAtuais?.fiis) > 0;
+    const temExterior     = Number(plan.ativosAtuais?.rvGlobal) > 0 || Number(plan.ativosAtuais?.rfGlobal) > 0;
+    const temCripto       = Number(plan.ativosAtuais?.cripto) > 0;
+    const temAlternativos = Number(plan.ativosAtuais?.alternativos) > 0;
 
-    const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto;
+    const aaTemDados = temRendaFixa || temAcoes || temFIIs || temExterior || temCripto || temAlternativos;
     const comecandoDoZero = dc.comecandoDoZero === true;
     if (comecandoDoZero) return 0;
     if (!aaTemDados) return -1;
@@ -94,7 +95,11 @@ export function calcularScoresAreas(plan: FinancialPlan, resultados: ResultadosE
       pontos = Math.min(pontos + 20, 70);
     }
 
-    return Math.min(100, pontos);
+    // Alternativos (COE, Fundos Cetipados, Produtos Estruturados) são opacos
+    // e inadequados para a maioria dos investidores — penalidade de qualidade
+    if (temAlternativos) pontos -= 15;
+
+    return Math.max(0, Math.min(100, pontos));
   })();
 
   // ── Proteção ──────────────────────────────────────────────────────────────
@@ -231,6 +236,11 @@ export function gerarTextosAreas(
   // ── AA ────────────────────────────────────────────────────────────────────
   const aa = (() => {
     const s = scores.aa;
+    const temAlternativos = Number(plan.ativosAtuais?.alternativos) > 0;
+
+    const blocoAlternativos = temAlternativos
+      ? `\n\nHá um ponto que merece atenção imediata: sua carteira possui produtos classificados como alternativos — COE, Fundos Cetipados ou Produtos Estruturados. Esses instrumentos estão entre os mais complexos e opacos do mercado financeiro brasileiro. Na maioria dos casos, sua estrutura de remuneração é propositalmente difícil de compreender, o que favorece a instituição financeira — não o investidor.\n\nSão produtos com baixa liquidez, custos embutidos que raramente ficam evidentes, e retornos que frequentemente ficam abaixo de alternativas mais simples e transparentes. Em muitos casos, o investidor só descobre o real resultado quando o produto já venceu e não há mais o que fazer.\n\nManter esses produtos na carteira sem uma análise criteriosa é um risco que não precisa ser assumido. Existem alternativas com mais transparência, mais liquidez e melhor relação risco-retorno disponíveis no mercado.`
+      : '';
 
     if (s < 0) return (
       `A composição da sua carteira ainda não foi avaliada. Sem saber como o patrimônio está alocado, é impossível dizer se ele está crescendo no ritmo que deveria — ou sendo corroído por taxas, produtos inadequados e falta de diversificação.`
@@ -243,7 +253,7 @@ export function gerarTextosAreas(
 
     if (s <= 50) {
       let texto =
-        `A análise da carteira revelou pontos que precisam de atenção. Produtos inadequados, falta de diversificação ou taxas que corroem o rendimento podem estar consumindo parte do seu patrimônio de forma completamente silenciosa — sem que você perceba no dia a dia, mas com impacto enorme no longo prazo.\n\n` +
+        `A análise da carteira revelou pontos que precisam de atenção. Produtos inadequados, falta de diversificação ou taxas que corroem o rendimento podem estar consumindo parte do seu patrimônio de forma completamente silenciosa — sem que você perceba no dia a dia, mas com impacto enorme no longo prazo.${blocoAlternativos}\n\n` +
         `Uma carteira mal estruturada não gera perdas visíveis imediatas. Ela simplesmente cresce menos do que poderia — e essa diferença, ao longo de anos, pode significar menos patrimônio, menos renda e menos liberdade na hora em que você mais vai precisar.`;
       if (temObjetivos) {
         texto += `\n\nVocê tem planos concretos — ${nomeObjetivos.join(', ')}. Esses objetivos dependem de um patrimônio que cresce com eficiência. Uma carteira desorganizada compromete não só o futuro, mas os sonhos que você quer realizar ao longo do caminho.`;
@@ -254,7 +264,7 @@ export function gerarTextosAreas(
 
     if (s <= 90) {
       let texto =
-        `Sua carteira tem bons fundamentos — você tomou decisões que estão produzindo resultados. Mas existe uma diferença real entre uma carteira que funciona e uma carteira verdadeiramente otimizada para os seus objetivos específicos.\n\n` +
+        `Sua carteira tem bons fundamentos — você tomou decisões que estão produzindo resultados. Mas existe uma diferença real entre uma carteira que funciona e uma carteira verdadeiramente otimizada para os seus objetivos específicos.${blocoAlternativos}\n\n` +
         `Pequenos ajustes de alocação, rebalanceamento e troca de produtos inadequados por alternativas mais eficientes podem representar uma diferença significativa no resultado final — sem precisar assumir mais risco, apenas alocando melhor o que já existe.`;
       if (temObjetivos) {
         texto += `\n\nCom objetivos definidos — ${nomeObjetivos.join(', ')} — cada ponto percentual a mais de retorno importa. A diferença entre uma carteira boa e uma carteira excelente pode ser exatamente o que torna esses planos viáveis ou não.`;
@@ -264,7 +274,7 @@ export function gerarTextosAreas(
 
     // s > 90
     let texto =
-      `Sua carteira está bem estruturada e diversificada — isso coloca você em um patamar que a maioria dos investidores nunca alcança. O resultado é fruto de boas decisões consistentes ao longo do tempo.\n\n` +
+      `Sua carteira está bem estruturada e diversificada — isso coloca você em um patamar que a maioria dos investidores nunca alcança. O resultado é fruto de boas decisões consistentes ao longo do tempo.${blocoAlternativos}\n\n` +
       `Manter esse nível exige atenção contínua: rebalanceamento periódico, atualização conforme o cenário econômico evolui e garantia de que cada ativo continua cumprindo seu papel.`;
     if (temObjetivos) {
       texto += `\n\nOs objetivos que você planeja — ${nomeObjetivos.join(', ')} — merecem uma carteira que continue performando com a mesma qualidade. Consistência não é acidente — é resultado de gestão ativa e contínua.`;
