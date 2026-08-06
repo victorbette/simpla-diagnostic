@@ -39,9 +39,10 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
 }
 
 export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
-  const patrimonioMeta = patrimonio + aporteDisponivel;
-
   const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+  const patrimonioBase  = patrimonioTotal + aporteDisponivel;
+  // kept for prop-pass compat (CardAlocacaoComparativa, CardSelecaoAtivos)
+  const patrimonioMeta  = patrimonio + aporteDisponivel;
 
   const macroAtualCalc = useMemo(
     () => CARD_ORDER.reduce((acc, id) => {
@@ -54,27 +55,34 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
     [ativosAtuais, patrimonioTotal]
   );
 
-  const totalAportes = planoAcao.filter((p) => p.acao !== 'manter' && p.movimentacaoBRL > 0).reduce((s, p) => s + p.movimentacaoBRL, 0);
-  const totalResgates = planoAcao
-    .filter((p) => p.acao !== 'manter' && p.movimentacaoBRL < 0)
+  const totalAportes = planoAcao
+    .filter((p) => p.acao === 'aportar' || p.acao === 'novo')
     .reduce((s, p) => {
-      if (p.acao === 'resgatar_parcial' && p.valorResgateBRL !== undefined) return s + p.valorResgateBRL;
-      return s + Math.abs(p.movimentacaoBRL);
+      const mov = p.movimentacaoEditada !== undefined
+        ? Number(p.movimentacaoEditada)
+        : Number(p.movimentacaoBRL) || 0;
+      return s + Math.abs(mov);
+    }, 0);
+  const totalResgates = planoAcao
+    .filter((p) => p.acao === 'resgatar_total' || p.acao === 'resgatar_parcial')
+    .reduce((s, p) => {
+      if (p.acao === 'resgatar_total') return s + (Number(p.valorAtualBRL) || 0);
+      return s + (Number(p.valorResgateBRL) || 0);
     }, 0);
 
   const aportes = planoAcao.filter((p) => p.acao === "aportar" || p.acao === "novo");
   const resgates = planoAcao.filter((p) => p.acao === "resgatar_parcial" || p.acao === "resgatar_total");
   const mantidos = planoAcao.filter((p) => p.acao === "manter");
 
-  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × (patrimônio + aporte)
+  // Per card: atual = soma ativos atuais; meta = alocacaoMeta % × (patrimônioTotal + aporte)
   const cardTotais = useMemo(
     () => CARD_ORDER.map((cardId) => {
-      const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + a.valorBRL, 0);
+      const atual = ativosAtuais.filter((a) => a.card === cardId).reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
       const pctMeta = alocacaoMeta[cardId] ?? 0;
-      const meta = (pctMeta / 100) * patrimonioMeta;
+      const meta = (pctMeta / 100) * patrimonioBase;
       return { cardId, atual, meta, dif: meta - atual };
     }),
-    [ativosAtuais, alocacaoMeta, patrimonioMeta]
+    [ativosAtuais, alocacaoMeta, patrimonioBase]
   );
 
   const carteiraFinal = useMemo(() =>
@@ -120,7 +128,7 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[
-            { label: "Patrimônio Total", value: formatBRL(patrimonioMeta), color: "#1E3A8A" },
+            { label: "Patrimônio Total", value: formatBRL(patrimonioTotal), color: "#1E3A8A" },
             { label: "Total Aportes",    value: formatBRL(totalAportes), color: "#15803D" },
             { label: "Total Resgates",   value: formatBRL(totalResgates), color: "#B91C1C" },
           ].map(({ label, value, color }, i) => (
