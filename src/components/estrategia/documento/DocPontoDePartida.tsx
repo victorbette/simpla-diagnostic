@@ -12,6 +12,14 @@ interface Props {
   resultados: ResultadosEstrategia;
 }
 
+const TEXTO_STYLE = {
+  fontSize: 12,
+  color: "#374151",
+  lineHeight: 1.95,
+  margin: "0",
+  whiteSpace: "pre-line" as const,
+};
+
 /** Página "Ponto de Partida" — score geral, 4 gauges e texto único personalizado */
 export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
   const scores     = calcularScoresAreas(plan, resultados);
@@ -40,26 +48,29 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
   const objetivos    = resultados.if?.objetivos ?? [];
   const nomeObjetivos = objetivos.map(o => o.label).filter(Boolean);
 
-  // ── Texto principal ───────────────────────────────────────────────────────
+  // ── Parágrafos individuais ────────────────────────────────────────────────
 
   const primeiroNome = nome || 'você';
 
-  const texto =
+  const textoIntro =
 `${primeiroNome}, o que você tem em mãos não é apenas um documento. É o resultado de uma análise honesta e detalhada sobre quatro pilares que vão determinar o tipo de vida que você terá daqui a 10, 20 ou 30 anos. Pilares que a maioria das pessoas nunca para para avaliar com seriedade — porque exige coragem olhar de frente para os números e admitir onde há lacunas.
 
 Você fez diferente. E isso já coloca você em uma posição que poucos alcançam.
 
-Mas o diagnóstico sozinho não transforma nada. O que transforma é o que vem depois dele.
+Mas o diagnóstico sozinho não transforma nada. O que transforma é o que vem depois dele.`;
 
-A Liberdade Financeira é o pilar que define quando — e se — você vai poder um dia acordar sem a obrigação do trabalho, viver do que construiu e ter tempo para o que realmente importa. ${
+  const textoLF =
+`A Liberdade Financeira é o pilar que define quando — e se — você vai poder um dia acordar sem a obrigação do trabalho, viver do que construiu e ter tempo para o que realmente importa. ${
   nomeObjetivos.length > 0
     ? `Você definiu objetivos concretos que fazem parte desse futuro — ${nomeObjetivos.join(', ')} — e cada um deles depende de uma trajetória bem calibrada para se tornar realidade.`
     : 'Cada mês sem uma estratégia clara para esse pilar é um mês em que a distância entre onde você está e onde quer chegar pode estar crescendo silenciosamente.'
-} A análise revelou exatamente onde essa jornada está — e o quanto ela precisa evoluir para que o futuro que você imagina de fato aconteça.
+} A análise revelou exatamente onde essa jornada está — e o quanto ela precisa evoluir para que o futuro que você imagina de fato aconteça.`;
 
-A Gestão de Ativos determina o ritmo com que o seu patrimônio cresce. Não é sobre encontrar o melhor produto do mês ou tentar adivinhar o mercado — é sobre ter uma estratégia coerente, diversificada e alinhada com o seu momento de vida. Uma carteira mal estruturada não gera perdas visíveis no extrato. Ela simplesmente cresce menos do que poderia — e essa diferença, composta ao longo de anos, pode significar décadas a mais de trabalho ou uma aposentadoria muito diferente da planejada.
+  const textoAA =
+`A Gestão de Ativos determina o ritmo com que o seu patrimônio cresce. Não é sobre encontrar o melhor produto do mês ou tentar adivinhar o mercado — é sobre ter uma estratégia coerente, diversificada e alinhada com o seu momento de vida. Uma carteira mal estruturada não gera perdas visíveis no extrato. Ela simplesmente cresce menos do que poderia — e essa diferença, composta ao longo de anos, pode significar décadas a mais de trabalho ou uma aposentadoria muito diferente da planejada.`;
 
-A Proteção Patrimonial é o pilar que ninguém quer pensar — e exatamente por isso é o mais negligenciado. Construir patrimônio sem proteção é como erguer uma casa sem fundação: funciona enquanto o tempo está bom. Um único evento inesperado — uma doença grave, uma invalidez, um falecimento prematuro — pode desfazer em meses o que levou anos para construir.${
+  const textoProtecao =
+`A Proteção Patrimonial é o pilar que ninguém quer pensar — e exatamente por isso é o mais negligenciado. Construir patrimônio sem proteção é como erguer uma casa sem fundação: funciona enquanto o tempo está bom. Um único evento inesperado — uma doença grave, uma invalidez, um falecimento prematuro — pode desfazer em meses o que levou anos para construir.${
   temFilhos
     ? ` Seus filhos contam com essa base. O futuro que você está construindo para eles depende de que essa base permaneça intacta, independente do que aconteça.`
     : ''
@@ -67,11 +78,13 @@ A Proteção Patrimonial é o pilar que ninguém quer pensar — e exatamente po
   temConjuge
     ? ` Seu cônjuge também está dentro desse risco. A proteção adequada não é um custo — é a garantia de que a vida que vocês construíram juntos continuará protegida.`
     : ''
-}
+}`;
 
-O Planejamento Tributário é a alavanca mais subestimada de todas. Pagar menos imposto de forma legal e estratégica não é um privilégio de grandes fortunas — é uma ferramenta acessível que, bem utilizada, pode representar uma diferença expressiva no patrimônio acumulado ao longo de décadas. Cada real que deixa de ir ao fisco desnecessariamente é um real que poderia estar sendo reinvestido e compondo patrimônio para o seu futuro.
+  const textoTributario =
+`O Planejamento Tributário é a alavanca mais subestimada de todas. Pagar menos imposto de forma legal e estratégica não é um privilégio de grandes fortunas — é uma ferramenta acessível que, bem utilizada, pode representar uma diferença expressiva no patrimônio acumulado ao longo de décadas. Cada real que deixa de ir ao fisco desnecessariamente é um real que poderia estar sendo reinvestido e compondo patrimônio para o seu futuro.`;
 
-Nas páginas a seguir, você encontrará a análise completa de cada um desses pilares — com clareza sobre onde estão as oportunidades, onde estão os riscos e quais são os próximos passos para que cada área esteja alinhada com os seus objetivos.
+  const textoFechamento =
+`Nas páginas a seguir, você encontrará a análise completa de cada um desses pilares — com clareza sobre onde estão as oportunidades, onde estão os riscos e quais são os próximos passos para que cada área esteja alinhada com os seus objetivos.
 
 Este é o ponto de partida. O que vem depois depende das decisões que você tomar a partir de agora.`;
 
@@ -146,12 +159,29 @@ Este é o ponto de partida. O que vem depois depende das decisões que você tom
       ),
     },
     {
-      chave: "texto",
-      node: (
-        <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "8px 0 0", whiteSpace: "pre-line" as const }}>
-          {texto}
-        </p>
-      ),
+      chave: "texto-intro",
+      grudaNoProximo: true,
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 8 }}>{textoIntro}</p>,
+    },
+    {
+      chave: "texto-lf",
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 20 }}>{textoLF}</p>,
+    },
+    {
+      chave: "texto-aa",
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 20 }}>{textoAA}</p>,
+    },
+    {
+      chave: "texto-protecao",
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 20 }}>{textoProtecao}</p>,
+    },
+    {
+      chave: "texto-tributario",
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 20 }}>{textoTributario}</p>,
+    },
+    {
+      chave: "texto-fechamento",
+      node: <p style={{ ...TEXTO_STYLE, marginTop: 20 }}>{textoFechamento}</p>,
     },
   ];
 
