@@ -19,6 +19,8 @@ export function CardSelecaoAtivos({
 }: Props) {
   if (ativosRecomendados.length === 0) return null;
 
+  const totalSomaMeta = ativosRecomendados.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+
   return (
     <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, paddingBottom: 16, borderBottom: "1px solid #F3F4F6" }}>
@@ -75,7 +77,7 @@ export function CardSelecaoAtivos({
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #E5E7EB", paddingTop: 14, marginTop: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Total da carteira recomendada</span>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatBRL(patrimonio)}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{formatBRL(totalSomaMeta)}</span>
       </div>
     </div>
   );
