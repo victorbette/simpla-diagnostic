@@ -308,7 +308,7 @@ export function HomePage() {
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.75")}
             >
-              <i className="ti ti-settings" style={{ fontSize: 18 }} />
+              <i className="ti ti-settings" style={{ fontSize: 24 }} />
             </button>
             <button
               onClick={signOut}
