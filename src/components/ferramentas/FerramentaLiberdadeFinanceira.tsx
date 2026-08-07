@@ -61,16 +61,6 @@ const cardGreenTop: React.CSSProperties = {
   boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
 };
 
-const badgeColetaStyle: React.CSSProperties = {
-  backgroundColor: "#DBEAFE",
-  color: "#1E40AF",
-  borderRadius: 9999,
-  padding: "2px 6px",
-  fontSize: 10,
-  fontWeight: 600,
-  marginLeft: 6,
-};
-
 const VALID_TIPOS = new Set(Object.keys(OBJETIVO_META));
 
 /** Parse "YYYY-MM-DD" or "DD/MM/YYYY" → { ano, mes } */
@@ -423,8 +413,8 @@ export function FerramentaLiberdadeFinanceira({
     }
   };
 
-  const sliderAporteMax = Math.max(Math.round(aporteNecessario * 2 / 100) * 100, 20000);
-  const maxRendaSlider = Math.max(params.rendaDesejada * 2, 50000);
+  const sliderAporteMax = 200000;
+  const maxRendaSlider = 200000;
 
   if (!result) {
     return (
@@ -454,7 +444,6 @@ export function FerramentaLiberdadeFinanceira({
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
               <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Renda desejada</label>
-              {rendaDesejadaColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {rendaEditada && (
                 <button
                   onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
@@ -488,7 +477,6 @@ export function FerramentaLiberdadeFinanceira({
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
               <label style={{ fontSize: 10, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Aporte mensal</label>
-              {aporteColeta > 0 && params.aporteMensal === aporteColeta && <span style={badgeColetaStyle}>Da coleta</span>}
               {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
                 <button
                   onClick={() => setP({ aporteMensal: aporteColeta })}
@@ -548,7 +536,6 @@ export function FerramentaLiberdadeFinanceira({
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
               <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Financeiro</label>
-              {patrimonioColeta > 0 && <span style={badgeColetaStyle}>Da coleta</span>}
               {patrimonioEditado && (
                 <button
                   onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
