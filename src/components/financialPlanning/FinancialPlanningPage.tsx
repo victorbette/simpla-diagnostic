@@ -15,6 +15,8 @@ import { SecaoFiscal } from "@/components/estrategia/SecaoFiscal";
 import { EstrategiaFinal } from "@/components/estrategia/EstrategiaFinal";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { AutoSaveIndicator } from "@/components/shared/AutoSaveIndicator";
 
 const DARK = "#000000";
 const GOLD = "#3B82F6";
@@ -53,6 +55,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
   const [mostrarFP, setMostrarFP] = useState(false);
   const [abaFP, setAbaFP] = useState("asset_allocation");
   const [dirty, setDirty] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'salvando' | 'salvo' | 'erro'>('idle');
   const [salvandoColeta, setSalvandoColeta] = useState(false);
   const [salvoColeta, setSalvoColeta] = useState(false);
   const planInitialized = useRef(false);
@@ -191,6 +194,43 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
     } finally {
       setSalvandoColeta(false);
     }
+  }
+
+  // ── Auto-save on tab switch ───────────────────────────────────────────────
+
+  const salvarAbaAtiva = useCallback(async () => {
+    setSaveStatus('salvando');
+    try {
+      switch (abaAtiva) {
+        case 'coleta': {
+          const planToSave = plan.dadosCliente.idadeMeta
+            ? { ...plan, planejamentoIF: { ...plan.planejamentoIF, idadeMeta: plan.dadosCliente.idadeMeta } }
+            : plan;
+          const saved = await store.savePlan(planToSave);
+          setPlan(saved);
+          setDirty(false);
+          break;
+        }
+        default:
+          if (plan.id) {
+            await store.saveEstrategia(plan.id, resultados as unknown as Record<string, unknown>);
+          }
+          break;
+      }
+      setSaveStatus('salvo');
+      setTimeout(() => setSaveStatus('idle'), 2500);
+    } catch {
+      setSaveStatus('erro');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  }, [abaAtiva, plan, resultados, store]);
+
+  const { salvarImediato } = useAutoSave(salvarAbaAtiva);
+
+  async function handleTrocarAba(novaAba: string) {
+    if (novaAba === abaAtiva) return;
+    await salvarImediato();
+    setAbaAtiva(novaAba);
   }
 
   async function handleBackToClients() {
@@ -521,15 +561,17 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
       <div style={{
         backgroundColor: "white", borderBottom: "1px solid #E5E7EB",
         padding: "0 24px", display: "flex", alignItems: "center",
-        flexShrink: 0, overflowX: "auto",
+        flexShrink: 0,
       }}>
-        {ABAS.map((aba) => (
-          <button key={aba.id} onClick={() => setAbaAtiva(aba.id)} style={tabStyle(abaAtiva === aba.id)}>
-            <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
-            {aba.label}
-          </button>
-        ))}
-
+        <div style={{ display: "flex", alignItems: "center", overflowX: "auto", flex: 1 }}>
+          {ABAS.map((aba) => (
+            <button key={aba.id} onClick={() => handleTrocarAba(aba.id)} style={tabStyle(abaAtiva === aba.id)}>
+              <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
+              {aba.label}
+            </button>
+          ))}
+        </div>
+        <AutoSaveIndicator status={saveStatus} />
       </div>
 
       {/* Conteúdo das 4 abas */}
