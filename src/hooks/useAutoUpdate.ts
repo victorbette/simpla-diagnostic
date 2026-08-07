@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 function horaAtualBRT(): { hora: number; minuto: number } {
@@ -27,10 +27,15 @@ function msAtePróximoAgendado(): number {
   return Math.min(...minutosAte);
 }
 
-export function useAutoUpdate() {
+export function useAutoUpdate(onAntesDeAtualizar?: () => Promise<void>) {
   const [recarregando, setRecarregando] = useState(false);
+  const [salvandoAntes, setSalvandoAntes] = useState(false);
   const [dispensado, setDispensado] = useState(false);
   const scheduledRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Always-current ref — avoids stale closure in scheduled reload
+  const onAntesRef = useRef(onAntesDeAtualizar);
+  onAntesRef.current = onAntesDeAtualizar;
 
   const {
     needRefresh: [needRefresh],
@@ -43,21 +48,36 @@ export function useAutoUpdate() {
     },
   });
 
-  const aplicarUpdate = () => {
-    setRecarregando(true);
-    updateServiceWorker(true);
-  };
+  const aplicarUpdate = useCallback(async () => {
+    setSalvandoAntes(true);
+    try {
+      if (onAntesRef.current) await onAntesRef.current();
+    } catch (err) {
+      console.error('Erro ao salvar antes de atualizar:', err);
+    } finally {
+      setSalvandoAntes(false);
+      setRecarregando(true);
+      updateServiceWorker(true);
+    }
+  }, [updateServiceWorker]);
 
   const dispensar = () => setDispensado(true);
 
   // Schedule forced reload at 6h and 18h BRT
   useEffect(() => {
+    async function fazerReload() {
+      if (onAntesRef.current) {
+        try { await onAntesRef.current(); } catch { /**/ }
+      }
+      window.location.reload();
+    }
+
     function agendarProximoReload() {
       const ms = msAtePróximoAgendado();
       scheduledRef.current = setTimeout(() => {
         const { hora } = horaAtualBRT();
         if (hora === 6 || hora === 18) {
-          window.location.reload();
+          void fazerReload();
         } else {
           agendarProximoReload();
         }
@@ -71,5 +91,5 @@ export function useAutoUpdate() {
 
   const temUpdate = needRefresh && !dispensado;
 
-  return { temUpdate, recarregando, aplicarUpdate, dispensar };
+  return { temUpdate, recarregando, salvandoAntes, aplicarUpdate, dispensar };
 }

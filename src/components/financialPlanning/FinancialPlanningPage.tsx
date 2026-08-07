@@ -17,6 +17,7 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { AutoSaveIndicator } from "@/components/shared/AutoSaveIndicator";
+import { useSaveContext } from "@/contexts/SaveContext";
 
 const DARK = "#000000";
 const GOLD = "#3B82F6";
@@ -226,6 +227,17 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
   }, [abaAtiva, plan, resultados, store]);
 
   const { salvarImediato } = useAutoSave(salvarAbaAtiva);
+
+  // Registrar no SaveContext global para salvar antes de atualizar o app
+  const { registrarSalvador, desregistrarSalvador } = useSaveContext();
+  const salvarAbaAtivaRef = useRef<() => Promise<void>>(salvarAbaAtiva);
+  salvarAbaAtivaRef.current = salvarAbaAtiva;
+
+  useEffect(() => {
+    const id = `fp-${plan.id ?? 'novo'}`;
+    registrarSalvador(id, () => salvarAbaAtivaRef.current());
+    return () => desregistrarSalvador(id);
+  }, [plan.id, registrarSalvador, desregistrarSalvador]);
 
   async function handleTrocarAba(novaAba: string) {
     if (novaAba === abaAtiva) return;

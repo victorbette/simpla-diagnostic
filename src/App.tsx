@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SaveProvider, useSaveContext } from "@/contexts/SaveContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AuthRoute } from "@/components/AuthRoute";
 import { HomePage } from "@/pages/HomePage";
@@ -25,7 +26,17 @@ const BANNER: React.CSSProperties = {
 };
 
 function UpdateBanners() {
-  const { temUpdate, recarregando, aplicarUpdate, dispensar } = useAutoUpdate();
+  const { salvarTudo } = useSaveContext();
+  const { temUpdate, recarregando, salvandoAntes, aplicarUpdate, dispensar } = useAutoUpdate(salvarTudo);
+
+  if (salvandoAntes) {
+    return (
+      <div style={{ ...BANNER, backgroundColor: "#1E3A8A", color: "white" }}>
+        <i className="ti ti-device-floppy" style={{ fontSize: 16 }} />
+        <span>Salvando dados antes de atualizar...</span>
+      </div>
+    );
+  }
 
   if (recarregando) {
     return (
@@ -40,7 +51,8 @@ function UpdateBanners() {
       <div style={{ ...BANNER, backgroundColor: "white", border: "1px solid #BFDBFE", color: "#1E3A8A" }}>
         <span>Nova versão disponível!</span>
         <button
-          onClick={aplicarUpdate}
+          onClick={() => { void aplicarUpdate(); }}
+          disabled={salvandoAntes}
           style={{
             backgroundColor: "#1E3A8A", color: "white",
             border: "none", borderRadius: 6,
@@ -68,20 +80,22 @@ function UpdateBanners() {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<HomePage />} />
-          </Route>
-          <Route element={<AuthRoute />}>
-            <Route path="/login" element={<LoginPage />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-      <Toaster richColors position="top-right" />
-      <UpdateBanners />
-    </AuthProvider>
+    <SaveProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<HomePage />} />
+            </Route>
+            <Route element={<AuthRoute />}>
+              <Route path="/login" element={<LoginPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+        <Toaster richColors position="top-right" />
+        <UpdateBanners />
+      </AuthProvider>
+    </SaveProvider>
   );
 }
 
