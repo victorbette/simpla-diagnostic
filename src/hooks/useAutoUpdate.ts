@@ -31,11 +31,15 @@ export function useAutoUpdate(onAntesDeAtualizar?: () => Promise<void>) {
   const [recarregando, setRecarregando] = useState(false);
   const [salvandoAntes, setSalvandoAntes] = useState(false);
   const [dispensado, setDispensado] = useState(false);
+  const [versaoMudou, setVersaoMudou] = useState(false);
   const scheduledRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Always-current ref — avoids stale closure in scheduled reload
   const onAntesRef = useRef(onAntesDeAtualizar);
   onAntesRef.current = onAntesDeAtualizar;
+
+  // Version loaded when the app started
+  const versaoAtualRef = useRef<string | null>(null);
 
   const {
     needRefresh: [needRefresh],
@@ -57,11 +61,49 @@ export function useAutoUpdate(onAntesDeAtualizar?: () => Promise<void>) {
     } finally {
       setSalvandoAntes(false);
       setRecarregando(true);
-      updateServiceWorker(true);
+      if (needRefresh) {
+        updateServiceWorker(true);
+      } else {
+        window.location.reload();
+      }
     }
-  }, [updateServiceWorker]);
+  }, [needRefresh, updateServiceWorker]);
 
   const dispensar = () => setDispensado(true);
+
+  // Fetch version at startup to record the baseline
+  useEffect(() => {
+    const buscarVersaoAtual = async () => {
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json() as { version: string };
+        versaoAtualRef.current = data.version;
+      } catch {
+        // silencioso
+      }
+    };
+    void buscarVersaoAtual();
+  }, []);
+
+  // Poll version.json every 2 minutes — triggers banner when deploy changes
+  useEffect(() => {
+    const verificarVersao = async () => {
+      if (!versaoAtualRef.current) return;
+      try {
+        const res = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json() as { version: string };
+        if (data.version !== versaoAtualRef.current) {
+          setVersaoMudou(true);
+        }
+      } catch {
+        // silencioso — sem internet, ignorar
+      }
+    };
+
+    void verificarVersao();
+    const intervalo = setInterval(verificarVersao, 2 * 60 * 1000);
+    return () => clearInterval(intervalo);
+  }, []);
 
   // Schedule forced reload at 6h and 18h BRT
   useEffect(() => {
@@ -89,7 +131,7 @@ export function useAutoUpdate(onAntesDeAtualizar?: () => Promise<void>) {
     };
   }, []);
 
-  const temUpdate = needRefresh && !dispensado;
+  const temUpdate = (needRefresh || versaoMudou) && !dispensado;
 
   return { temUpdate, recarregando, salvandoAntes, aplicarUpdate, dispensar };
 }
