@@ -65,18 +65,43 @@ export function EstrategiaFinalPage({
 
   // ── Print functions ────────────────────────────────────────────────────────────
 
+  const gerarNomePDF = (sufixo?: string) => {
+    const nome = (clientName ?? "Cliente")
+      .trim()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-zA-Z0-9\s]/g, "")
+      .trim()
+      .replace(/\s+/g, "_");
+    const hoje = new Date();
+    const d = String(hoje.getDate()).padStart(2, "0");
+    const m = String(hoje.getMonth() + 1).padStart(2, "0");
+    const a = hoje.getFullYear();
+    return `Financial_Planning_${nome}${sufixo ? `_${sufixo}` : ""}_${d}_${m}_${a}`;
+  };
+
   const imprimirConsultor = () => {
+    const original = document.title;
+    document.title = gerarNomePDF();
     document.body.classList.add("print-consultor");
     document.body.classList.remove("print-cliente");
     window.print();
-    setTimeout(() => document.body.classList.remove("print-consultor"), 500);
+    setTimeout(() => {
+      document.body.classList.remove("print-consultor");
+      document.title = original;
+    }, 1000);
   };
 
   const imprimirCliente = () => {
+    const original = document.title;
+    document.title = gerarNomePDF("Cliente");
     document.body.classList.add("print-cliente");
     document.body.classList.remove("print-consultor");
     window.print();
-    setTimeout(() => document.body.classList.remove("print-cliente"), 500);
+    setTimeout(() => {
+      document.body.classList.remove("print-cliente");
+      document.title = original;
+    }, 1000);
   };
 
   const handleSalvar = async () => {
