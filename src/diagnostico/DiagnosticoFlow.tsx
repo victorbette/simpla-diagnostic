@@ -23,8 +23,9 @@ interface Props {
 export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
   const [etapaAtiva, setEtapaAtiva] = useState<Etapa>("coleta");
 
-  function changeEtapa(etapa: Etapa) {
-    setEtapaAtiva(etapa);
+  function handleTrocarAba(novaAba: Etapa) {
+    onAtualizar(lead);
+    setEtapaAtiva(novaAba);
   }
 
   function atualizarColeta(patch: Partial<DadosColetaDiag>) {
@@ -69,7 +70,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         {ABAS.map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => changeEtapa(id)}
+            onClick={() => handleTrocarAba(id)}
             style={{
               padding: "14px 20px",
               fontSize: 13,
@@ -104,7 +105,7 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
             />
             <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
               <button
-                onClick={() => changeEtapa("resultado")}
+                onClick={() => handleTrocarAba("resultado")}
                 style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
               >
                 Ver Diagnóstico →

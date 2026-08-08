@@ -13,7 +13,11 @@ function carregarLeads(): Lead[] {
 }
 
 function salvarLeads(leads: Lead[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+  } catch (err) {
+    console.error("Erro ao salvar leads:", err);
+  }
 }
 
 interface Props {
