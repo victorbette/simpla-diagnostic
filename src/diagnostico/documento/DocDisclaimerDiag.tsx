@@ -61,7 +61,10 @@ export function DocDisclaimerDiag({ nomeCliente, config }: Props) {
             )}
             <br />
             <b>Simpla Invest</b><br />
-            Para dúvidas ou reclamações, entre em contato pelo e-mail ou telefone acima.
+            <div style={{ fontSize: 11, color: "#374151", lineHeight: 1.8, marginTop: 4 }}>
+              <b>CNPJ:</b> 27.383.813/0001-64<br />
+              <b>Ouvidoria:</b> (32) 3198-2742
+            </div>
           </div>
         </div>
       ),
