@@ -61,7 +61,7 @@ export function SecaoAposentadoria({
             rendaMensalDesejada: params.rendaMensalDesejada,
             aporteAtual: params.aporteMensal,
             taxaRetorno: params.taxaRetornoAnual,
-            projecao: result.projecao,
+            projecao: display.dadosGrafico,
             curvaIdeal: result.curvaIdeal,
             objetivos,
             anoNascimento: params.anoNascimento,
@@ -69,6 +69,7 @@ export function SecaoAposentadoria({
             mesInicioRetirada: result.mesInicioRetirada,
             taxaTravada: taxaTravadaInfo.taxaTravada,
             taxaTravadaValor: taxaTravadaInfo.taxaTravadaValor,
+            ajustes: display.ajustes,
             dataCalculo: new Date().toISOString(),
             savedAt: new Date().toISOString(),
           };

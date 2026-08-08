@@ -44,7 +44,7 @@ interface Props {
   dataNascimento?: string;
   dadosCliente?: DadosCliente;
   resultadoIF?: ResultadoIF | null;
-  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult, taxaTravadaInfo: { taxaTravada: boolean; taxaTravadaValor: number | null }, display: { aporteNecessario: number; projecaoComAporteAtual: number }) => Promise<void>;
+  onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult, taxaTravadaInfo: { taxaTravada: boolean; taxaTravadaValor: number | null }, display: { aporteNecessario: number; projecaoComAporteAtual: number; dadosGrafico: PontoProjecao[]; ajustes: Ajustes }) => Promise<void>;
 }
 
 interface UIParams {
@@ -405,7 +405,7 @@ export function FerramentaLiberdadeFinanceira({
     if (!result) return;
     setSalvando(true);
     try {
-      await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual });
+      await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual, dadosGrafico, ajustes });
       setSalvo(true);
       setTimeout(() => setSalvo(false), 2500);
     } finally {

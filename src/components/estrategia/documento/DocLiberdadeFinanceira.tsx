@@ -79,13 +79,11 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
         ? (projecaoData.projecao[projecaoData.mesIF]?.patrimonio ?? 0)
         : (simplesIF?.patrimonioProjetado ?? 0));
   const rendaSustentavel = (patrimonioNaIF * 0.04) / 12;
-  const aporteNecessario = rif?.aporteAjustado ?? rif?.aporteAtual ?? pi.aporteMensal;
-  const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
+  const aporteDefinido = rif?.aporteAtual ?? pi.aporteMensal;
   const objetivos = rif?.objetivos ?? [];
   const temDados = patrimonioNecessario > 0 || projecaoData.projecao.length > 0;
 
   const metaAtingida = rendaDesejada > 0 && rendaSustentavel >= rendaDesejada;
-  const aporteOk = aporteNecessario <= aporteAtual;
 
   const blocos: BlocoDoc[] = [
     {
@@ -135,15 +133,13 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
           </div>
 
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Aporte Necessário</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: aporteOk ? DOC.verde : DOC.vermelho, margin: 0 }}>
-              {aporteNecessario > 0 ? `${fmtInteiro.format(aporteNecessario)}/mês` : "Meta atingível"}
+            <p style={LABEL_CARD}>Aporte Definido</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: DOC.blue, margin: 0 }}>
+              {aporteDefinido > 0 ? `${fmtInteiro.format(aporteDefinido)}/mês` : "—"}
             </p>
-            <p style={{ fontSize: 9.5, color: aporteOk ? DOC.verde : DOC.hint, margin: "3px 0 0" }}>
-              {aporteOk
-                ? "Aporte atual suficiente"
-                : `Faltam ${fmtInteiro.format(aporteNecessario - aporteAtual)}/mês`}
-              {objetivos.length > 0 && ` · inclui ${objetivos.length} objetivo(s) de vida`}
+            <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>
+              Valor definido na simulação
+              {objetivos.length > 0 && ` · ${objetivos.length} objetivo(s) incluído(s)`}
             </p>
           </div>
 

@@ -59,6 +59,12 @@ export interface ResultadoIF {
   mesInicioRetirada?: number;
   taxaTravada?: boolean;
   taxaTravadaValor?: number | null;
+  ajustes?: {
+    usarTaxaCustom: boolean;
+    taxaCustomAnual: number;
+    usarCrescimentoAportes: boolean;
+    crescimentoAportesAnual: number;
+  };
   dataCalculo: string;
   savedAt: string;
 }
