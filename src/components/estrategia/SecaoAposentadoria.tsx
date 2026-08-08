@@ -45,14 +45,15 @@ export function SecaoAposentadoria({
         dataNascimento={plan.dadosCliente.dataNascimento}
         dadosCliente={plan.dadosCliente}
         resultadoIF={resultadoIF}
-        onSave={async (params, objetivos, result, taxaTravadaInfo) => {
+        onSave={async (params, objetivos, result, taxaTravadaInfo, display) => {
+          const rendaSustentavelDisplay = (display.projecaoComAporteAtual * 0.04) / 12;
           const r: ResultadoIF = {
-            patrimonioAposentadoria: result.patrimonioNaIF,
-            rendaSustentavel: result.rendaSustentavel,
-            gapRenda: result.gapRenda,
-            liberdadeAlcancada: result.ifAlcancada,
-            aporteAjustado: result.aporteNecessario,
-            patrimonioNecessario: result.patrimonioNecessario,
+            patrimonioAposentadoria: display.projecaoComAporteAtual,
+            rendaSustentavel: rendaSustentavelDisplay,
+            gapRenda: params.rendaMensalDesejada - rendaSustentavelDisplay,
+            liberdadeAlcancada: rendaSustentavelDisplay >= params.rendaMensalDesejada,
+            aporteAjustado: display.aporteNecessario,
+            patrimonioNecessario: params.rendaMensalDesejada > 0 ? (params.rendaMensalDesejada * 12) / 0.04 : result.patrimonioNecessario,
             patrimonioAtual: params.patrimonioInicial,
             idadeAtual: params.idadeAtual,
             idadeMeta: params.idadeMeta,
