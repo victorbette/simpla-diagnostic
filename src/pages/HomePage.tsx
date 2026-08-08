@@ -122,8 +122,18 @@ export function HomePage() {
   }, [menuAberto]);
 
   const userEmail = user?.email ?? "";
-  const userLabel = userEmail.split("@")[0] || "Consultor";
-  const userInitials = userLabel.slice(0, 2).toUpperCase();
+  const configNome = (() => {
+    try {
+      const salvo = localStorage.getItem("config_consultor");
+      if (salvo) {
+        const parsed = JSON.parse(salvo) as { nomeCompleto?: string };
+        return (parsed.nomeCompleto ?? "").replace(/\s*\(.*\)\s*$/, "").trim();
+      }
+    } catch { /**/ }
+    return "";
+  })();
+  const userLabel = configNome || userEmail.split("@")[0] || "Consultor";
+  const userInitials = configNome ? getInitials(configNome) : userLabel.slice(0, 2).toUpperCase();
 
   // ── Overlay ───────────────────────────────────────────────────────────────
 

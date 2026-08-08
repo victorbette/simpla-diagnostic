@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ConfigConsultor } from "@/lib/documentoConfig";
 import { CONFIG_CONSULTOR_DEFAULT } from "@/lib/documentoConfig";
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function ConfiguracoesPage({ onFechar }: Props) {
-  const { changePassword } = useAuth();
+  const { user, changePassword } = useAuth();
   const [config, setConfig] = useState<ConfigConsultor>(() => {
     try {
       const salvo = localStorage.getItem("config_consultor");
@@ -17,6 +17,16 @@ export function ConfiguracoesPage({ onFechar }: Props) {
       return CONFIG_CONSULTOR_DEFAULT;
     }
   });
+
+  const [emailUsuario, setEmailUsuario] = useState("");
+
+  useEffect(() => {
+    const email = user?.email ?? "";
+    setEmailUsuario(email);
+    if (email) {
+      setConfig(prev => ({ ...prev, email: prev.email || email }));
+    }
+  }, [user?.email]);
 
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
@@ -131,6 +141,9 @@ export function ConfiguracoesPage({ onFechar }: Props) {
                 placeholder="consultor@email.com"
                 style={{ width: "100%", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#111827", outline: "none", boxSizing: "border-box" }}
               />
+              {emailUsuario && config.email === emailUsuario && (
+                <p style={{ fontSize: 11, color: "#6B7280", marginTop: 4 }}>Preenchido com o e-mail da conta</p>
+              )}
             </div>
             <div>
               <label style={{ display: "block", fontSize: 11, color: "#6B7280", marginBottom: 6, fontWeight: 500 }}>
