@@ -49,6 +49,7 @@ O momento de estruturar essa base é agora — porque os juros compostos trabalh
           <p style={{
             fontSize: 12, color: "#374151", lineHeight: 2,
             marginBottom: 20, whiteSpace: "pre-line" as const,
+            textAlign: "justify" as const,
           }}>
             {textoZero}
           </p>
@@ -192,7 +193,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
               {ativo.label}
             </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
               {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
             </p>
           </div>
@@ -225,7 +226,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
               {ativo.label}
             </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0 }}>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
               {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
             </p>
           </div>

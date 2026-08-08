@@ -230,6 +230,7 @@ export function DocLFDiag({ lead }: Props) {
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 2,
         margin: "0 0 16px", whiteSpace: "pre-line" as const,
+        textAlign: "justify" as const,
       }}>
         {gerarTextoLF()}
       </p>

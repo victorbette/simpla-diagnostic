@@ -149,6 +149,7 @@ Os próximos passos estão mapeados neste documento. A jornada começa agora.`;
           lineHeight: 2,
           margin: "12px 0 0",
           whiteSpace: "pre-line" as const,
+          textAlign: "justify" as const,
         }}>
           {textoEmocional}
         </p>

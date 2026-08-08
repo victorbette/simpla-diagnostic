@@ -60,6 +60,7 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
           lineHeight: 2,
           margin: i === 0 ? 0 : "16px 0 0",
           whiteSpace: "pre-line" as const,
+          textAlign: "justify" as const,
         }}>
           {texto}
         </p>

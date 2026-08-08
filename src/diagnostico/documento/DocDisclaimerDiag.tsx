@@ -23,7 +23,7 @@ export function DocDisclaimerDiag({ nomeCliente, config }: Props) {
       grudaNoProximo: true,
       node: (
         <>
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" as const }}>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" as const, textAlign: "justify" as const }}>
             {TEXTO_DISCLAIMER}
           </p>
 

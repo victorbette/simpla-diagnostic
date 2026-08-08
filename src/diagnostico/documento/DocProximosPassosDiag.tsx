@@ -12,16 +12,16 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
       node: (
         <>
           {/* 1. Texto introdutório */}
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px" }}>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px", textAlign: "justify" as const }}>
             Este diagnóstico trouxe clareza sobre onde você está hoje — e clareza é o primeiro passo para a mudança. Mas o conhecimento sem ação não transforma nada. O que separa as pessoas que constroem o futuro que desejam das que apenas sonham com ele é exatamente este momento: a decisão de agir.
           </p>
 
           {/* 2. Estudo RBC — texto */}
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 12px" }}>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 12px", textAlign: "justify" as const }}>
             Segundo estudo do Royal Bank of Canadá — uma das maiores instituições financeiras do mundo — investidores que tiveram um consultor independente por 15 anos tiveram, na média, um patrimônio quase quatro vezes maior do que os que não tinham um consultor.
           </p>
 
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px" }}>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px", textAlign: "justify" as const }}>
             Esses números não são aspiracionais. São dados reais, medidos ao longo de décadas, com milhares de investidores. E eles revelam uma verdade que os melhores investidores já entenderam: a diferença entre construir patrimônio com consistência ou ficar para trás não está nos produtos escolhidos — está no acompanhamento, na estratégia e nas decisões tomadas no momento certo.
           </p>
 
@@ -61,7 +61,7 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
           </p>
 
           {/* 6. Texto de transição */}
-          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 20px" }}>
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 20px", textAlign: "justify" as const }}>
             Os próximos passos foram definidos para que a jornada comece de forma estruturada, segura e com o suporte necessário para que cada decisão seja tomada com clareza.
           </p>
 

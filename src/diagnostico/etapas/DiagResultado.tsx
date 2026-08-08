@@ -306,7 +306,7 @@ export function DiagResultado({ lead }: Props) {
                 {nivelScore(score).label}
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" }}>
+            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line", textAlign: "justify" as const }}>
               {gerarTexto(area)}
             </p>
           </div>
