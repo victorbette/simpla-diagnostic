@@ -42,7 +42,7 @@ export function DocProtecaoSucessao({ nomeCliente, resultados }: Props) {
   narrativa.forEach((texto, i) => {
     blocos.push({
       chave: `narrativa-${i}`,
-      node: <p style={{ ...TEXTO_CORPO, fontSize: 12.5, marginBottom: 12 }}>{texto}</p>,
+      node: <p style={{ ...TEXTO_CORPO, fontSize: 12.5, marginBottom: 12, textAlign: "justify" as const }}>{texto}</p>,
     });
   });
 

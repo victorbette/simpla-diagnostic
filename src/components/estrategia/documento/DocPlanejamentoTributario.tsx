@@ -92,7 +92,7 @@ export function DocPlanejamentoTributario({ nomeCliente, resultados }: Props) {
     {
       chave: "intro-1",
       node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
           A eficiência tributária é um dos mecanismos mais poderosos e frequentemente subestimados
           para acelerar a acumulação de riqueza. A importância do Planejamento Tributário reside no
           fato de que o imposto é uma das maiores fricções na rentabilidade de longo prazo.
@@ -102,7 +102,7 @@ export function DocPlanejamentoTributario({ nomeCliente, resultados }: Props) {
     {
       chave: "intro-2",
       node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16, textAlign: "justify" as const }}>
           O nosso trabalho busca, de forma estritamente legal e estruturada, minimizar o impacto dos
           impostos sobre a sua renda e os seus investimentos, transformando o que seria uma "despesa
           fiscal" em capital produtivo a seu favor.
@@ -116,13 +116,13 @@ export function DocPlanejamentoTributario({ nomeCliente, resultados }: Props) {
       chave: "simplificada",
       node: (
         <div className="doc-card" style={{ ...CARD, background: DOC.blueSoft, border: `1px solid ${DOC.blueBorder}` }}>
-          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10 }}>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10, textAlign: "justify" as const }}>
             Você realiza a declaração pelo modelo simplificado — e essa é a escolha correta para o seu perfil.
           </p>
-          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10 }}>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 10, textAlign: "justify" as const }}>
             No modelo simplificado, a Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável, limitado a um teto estabelecido em lei. Quando esse desconto padrão é maior do que a soma das deduções individuais, o modelo simplificado é sempre o mais vantajoso — e é exatamente o seu caso.
           </p>
-          <p style={{ ...TEXTO_CORPO, fontSize: 13, margin: 0 }}>
+          <p style={{ ...TEXTO_CORPO, fontSize: 13, margin: 0, textAlign: "justify" as const }}>
             Do ponto de vista tributário, você está pagando o mínimo possível para a sua situação atual. Não há otimizações adicionais a fazer neste momento.
           </p>
         </div>

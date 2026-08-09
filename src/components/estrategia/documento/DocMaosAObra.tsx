@@ -23,27 +23,27 @@ export function DocMaosAObra({ nomeCliente }: Props) {
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, textAlign: "justify" as const }}>
           Primeiramente, parabenizo você pela decisão de investir no seu futuro e de integrar um
           grupo seleto de pessoas que detêm o controle absoluto sobre as suas finanças, trabalhando
           ativamente para preservar e multiplicar o seu legado.
         </p>
 
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, textAlign: "justify" as const }}>
           Gostaria de reforçar que a Simpla Invest tem o compromisso inegociável de caminhar ao seu
           lado. Periodicamente, realizaremos encontros de alinhamento para sanar dúvidas, calibrar
           novos aportes e rebalancear o seu portfólio, sempre com o foco exclusivo na realização dos
           seus projetos com segurança institucional e tranquilidade.
         </p>
 
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, textAlign: "justify" as const }}>
           O nosso propósito final é cuidar da inteligência do seu capital, permitindo que você
           direcione o seu tempo e energia para o que gera mais valor: o crescimento da sua renda
           profissional e, acima de tudo, o convívio com a sua família. No fim do dia, isso é o que
           realmente importa.
         </p>
 
-        <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, textAlign: "justify" as const }}>
           Conte conosco para o sucesso desta jornada.
         </p>
       </div>

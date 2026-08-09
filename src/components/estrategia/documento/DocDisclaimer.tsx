@@ -20,7 +20,7 @@ export function DocDisclaimer({ nomeCliente }: Props) {
     <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
       <HeaderSecao titulo="Disclaimer" />
 
-      <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: "0 0 20px", whiteSpace: "pre-line" as const }}>
+      <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, margin: "0 0 20px", whiteSpace: "pre-line" as const, textAlign: "justify" as const }}>
         {textoDisclaimer}
       </p>
 

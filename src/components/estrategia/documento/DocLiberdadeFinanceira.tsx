@@ -89,7 +89,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     {
       chave: "intro-1",
       node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
           A estruturação da sua Liberdade Financeira é o pilar central do nosso planejamento. A
           importância desta etapa reside em transformar as suas expectativas de futuro em um mapa
           matemático claro e executável. Sem um destino financeiro definido e um diagnóstico preciso
@@ -103,7 +103,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     {
       chave: "intro-2",
       node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 16, textAlign: "justify" as const }}>
           Com base no seu cenário atual, elaboramos uma projeção estratégica detalhada para
           viabilizar a sua transição para a liberdade financeira na idade alvo estipulada, garantindo
           uma renda mensal sustentável e protegida da perda de poder de compra:

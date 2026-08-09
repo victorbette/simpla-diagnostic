@@ -90,7 +90,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
     blocos.push({
       chave: "perfil",
       node: (
-        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+        <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
           O perfil <strong style={{ color: DOC.blue }}>{perfilLabel}</strong>{" "}
           {DESCRICAO_PERFIL[perfil]}
         </p>
@@ -101,7 +101,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   blocos.push({
     chave: "estatistica",
     node: (
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
         Estatisticamente, a estratégia de Gestão de Ativos (alocação estrutural de ativos) é a
         principal responsável pela performance de uma carteira no longo prazo. Classes de ativos
         descorrelacionadas trazem uma relação de risco x retorno mais inteligente, algo fundamental
@@ -114,7 +114,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
     chave: "abaixo",
     grudaNoProximo: true,
     node: (
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
         Abaixo temos a sua alocação de ativos ideal, de acordo com os percentuais definidos após a
         análise dos dados para construção do portfólio meta:
       </p>
@@ -222,7 +222,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   blocos.push({
     chave: "rebalanceamento-intro",
     node: (
-      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginTop: 14 }}>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, marginTop: 14, textAlign: "justify" as const }}>
         Uma vez definida a estratégia de alocação de ativos em termos percentuais, ela será nossa
         referência para realizar o rebalanceamento. Com os novos aportes, vamos sempre realizar o
         investimento naquela classe de ativos que está mais distante do percentual ideal.
@@ -235,7 +235,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   blocos.push({
     chave: "manter",
     node: (
-      <p style={{ ...TEXTO_CORPO, fontSize: 13 }}>
+      <p style={{ ...TEXTO_CORPO, fontSize: 13, textAlign: "justify" as const }}>
         Essa estratégia inicial deve ser mantida enquanto julgarmos que continua refletindo suas
         preferências, aderência ao risco, perfil e objetivos de longo prazo.
       </p>

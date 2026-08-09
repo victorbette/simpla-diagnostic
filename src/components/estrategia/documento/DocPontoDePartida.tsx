@@ -18,6 +18,7 @@ const TEXTO_STYLE = {
   lineHeight: 1.95,
   margin: "0",
   whiteSpace: "pre-line" as const,
+  textAlign: "justify" as const,
 };
 
 /** Página "Ponto de Partida" — score geral, 4 gauges e texto único personalizado */
