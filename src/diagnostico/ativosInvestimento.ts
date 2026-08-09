@@ -2,7 +2,7 @@ export interface AtivoInvestimento {
   id: string;
   label: string;
   classe: "renda_fixa" | "renda_variavel" | "exterior" | "cripto" | "alternativos";
-  qualidade: "bom" | "ruim";
+  qualidade: "bom" | "ruim" | "atencao";
   icone: string;
   cor: string;
 }
@@ -10,7 +10,7 @@ export interface AtivoInvestimento {
 export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   // ─── RENDA FIXA ────────────────────────────────
   { id: "tesouro",             label: "Tesouro Direto",          classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
-  { id: "cdb",                 label: "CDB",                     classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
+  { id: "cdb",                 label: "CDB",                     classe: "renda_fixa",    qualidade: "atencao", icone: "ti-alert-triangle", cor: "#B45309" },
   { id: "lci_lca",             label: "LCI / LCA",               classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
   { id: "fundo_rf",            label: "Fundos de Renda Fixa",    classe: "renda_fixa",    qualidade: "bom",  icone: "ti-building-bank",  cor: "#1E40AF" },
   { id: "poupanca",            label: "Poupança",                classe: "renda_fixa",    qualidade: "ruim", icone: "ti-piggy-bank",     cor: "#B91C1C" },

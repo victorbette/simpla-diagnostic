@@ -1,6 +1,7 @@
 export interface TextoAtivo {
   positivo?: string;
   negativo?: string;
+  atencao?: string;
 }
 
 export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
@@ -12,8 +13,7 @@ export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
   },
 
   cdb: {
-    positivo: `CDBs de bancos sólidos com boas taxas são uma excelente opção de renda fixa. Contam com proteção do FGC até R$250 mil por CPF por instituição e permitem diversificação entre diferentes emissores.`,
-    negativo: `CDBs com taxas abaixo do CDI ou de bancos com condições desfavoráveis podem render menos do que outras alternativas de renda fixa. Vale avaliar se a rentabilidade compensa frente a opções mais eficientes.`,
+    atencao: `CDBs são bons ativos de renda fixa, desde que emitidos por instituições sólidas e confiáveis. Prefira sempre emissores com boa classificação de risco e evite concentrar recursos em bancos pequenos ou pouco conhecidos, mesmo que ofereçam taxas mais atrativas. A proteção do FGC cobre até R$ 250 mil por CPF por instituição, o que torna a diversificação entre emissores uma prática recomendada.`,
   },
 
   lci_lca: {

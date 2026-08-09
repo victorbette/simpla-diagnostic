@@ -24,8 +24,9 @@ export function DocGestaoAtivos({ lead }: Props) {
   const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
 
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
-  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
-  const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
+  const ativosBons    = ativosDoLead.filter(a => a.qualidade === "bom");
+  const ativosAtencao = ativosDoLead.filter(a => a.qualidade === "atencao");
+  const ativosRuins   = ativosDoLead.filter(a => a.qualidade === "ruim");
 
   if (comecandoDoZero) {
     const valorStr = valorParaInvestir > 0
@@ -117,6 +118,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       <p style={{
         fontSize: 12, color: "#374151", lineHeight: 2,
         marginBottom: 20, whiteSpace: "pre-line" as const,
+        textAlign: "justify" as const,
       }}>
         {texto}
       </p>
@@ -179,7 +181,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
           <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
-          O que você já faz bem
+          Recomendado
         </div>
       ),
     });
@@ -202,17 +204,50 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
     });
   }
 
+  if (ativosAtencao.length > 0) {
+    blocos.push({
+      chave: "atencao_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: ativosBons.length > 0 ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B45309",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
+          Atenção
+        </div>
+      ),
+    });
+    ativosAtencao.forEach((ativo) => {
+      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
+      if (!textoAtivo?.atencao) return;
+      blocos.push({
+        chave: `atencao_${ativo.id}`,
+        node: (
+          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCD34D" }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+              {ativo.label}
+            </div>
+            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
+              {textoAtivo.atencao.replace(/\n\s+/g, " ").trim()}
+            </p>
+          </div>
+        ),
+      });
+    });
+  }
+
   if (ativosRuins.length > 0) {
     blocos.push({
       chave: "ruins_label",
       grudaNoProximo: true,
       node: (
         <div style={{
-          marginTop: ativosBons.length > 0 ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B91C1C",
+          marginTop: (ativosBons.length > 0 || ativosAtencao.length > 0) ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B91C1C",
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
           <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
-          Pontos que merecem atenção
+          Não Recomendado
         </div>
       ),
     });
