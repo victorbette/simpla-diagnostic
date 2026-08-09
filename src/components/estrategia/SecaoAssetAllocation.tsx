@@ -472,7 +472,7 @@ export function SecaoAssetAllocation({
                           </span>
                         )}
                       </div>
-                      <p style={{ fontSize: 12, color: "#374151", margin: 0, lineHeight: 1.5 }}>{item.observacao}</p>
+                      <p style={{ fontSize: 12, color: "#374151", margin: 0, lineHeight: 1.5, textAlign: "justify" as const }}>{item.observacao}</p>
                     </div>
                   );
                 })}

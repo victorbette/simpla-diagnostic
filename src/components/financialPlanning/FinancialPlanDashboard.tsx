@@ -121,7 +121,7 @@ export function FinancialPlanDashboard({
                 {n.label}
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line" }}>
+            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line", textAlign: "justify" as const }}>
               {texto}
             </p>
           </div>
