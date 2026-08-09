@@ -207,13 +207,13 @@ export function DocPlanoAcao({ nomeCliente, plan, resultados, onResultadosChange
 
           {p === 0 && (
             <>
-              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14 }}>
+              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 14, textAlign: "justify" as const }}>
                 Um planejamento financeiro de excelência só gera valor real quando aliado a uma execução
                 disciplinada, técnica e diligente. A transição da estratégia para a prática é o momento
                 mais crítico da sua jornada de construção e proteção patrimonial.
               </p>
 
-              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 18 }}>
+              <p style={{ ...TEXTO_CORPO, fontSize: 13, marginBottom: 18, textAlign: "justify" as const }}>
                 Para que a estratégia desenhada saia do papel e se traduza em resultados tangíveis,
                 estruturamos um cronograma de implementação claro, listando as ações recomendadas em ordem
                 de prioridade. Essa organização metodológica garante que nosso foco inicial esteja voltado

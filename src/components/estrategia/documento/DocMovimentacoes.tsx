@@ -104,7 +104,7 @@ function CardObservacao({ item }: { item: PlanoAcaoItem }) {
         )}
       </div>
       {(item.observacao ?? "").trim().length > 0 && (
-        <p style={{ margin: "4px 0 0", fontSize: 10.5, color: DOC.texto, lineHeight: 1.5 }}>
+        <p style={{ margin: "4px 0 0", fontSize: 10.5, color: DOC.texto, lineHeight: 1.5, textAlign: "justify" as const }}>
           {item.observacao}
         </p>
       )}

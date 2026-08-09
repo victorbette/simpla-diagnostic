@@ -98,6 +98,7 @@ function NotaParagrafoPrint({ texto, primeiro }: { texto: string; primeiro: bool
         lineHeight: 1.7,
         color: "#374151",
         fontStyle: "italic",
+        textAlign: "justify" as const,
       }}>
         {texto}
       </p>
