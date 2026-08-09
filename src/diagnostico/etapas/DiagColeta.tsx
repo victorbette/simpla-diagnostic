@@ -495,11 +495,11 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                         justifyContent: "space-between",
                         padding: "8px 12px",
                         border: marcado
-                          ? `1px solid ${ativo.qualidade === "bom" ? "#BBF7D0" : "#FCA5A5"}`
+                          ? `1px solid ${ativo.qualidade === "bom" ? "#BBF7D0" : ativo.qualidade === "atencao" ? "#FCD34D" : "#FCA5A5"}`
                           : "1px solid #F3F4F6",
                         borderRadius: 8,
                         background: marcado
-                          ? ativo.qualidade === "bom" ? "#F0FDF4" : "#FFF5F5"
+                          ? ativo.qualidade === "bom" ? "#F0FDF4" : ativo.qualidade === "atencao" ? "#FEF3C7" : "#FFF5F5"
                           : "white",
                         transition: "all 150ms",
                       }}
@@ -511,8 +511,8 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                             {ativo.label}
                           </div>
                           {marcado && (
-                            <div style={{ fontSize: 9, fontWeight: 600, color: ativo.qualidade === "bom" ? "#15803D" : "#B91C1C", marginTop: 1 }}>
-                              {ativo.qualidade === "bom" ? "✓ Recomendado" : "⚠ Não recomendado"}
+                            <div style={{ fontSize: 9, fontWeight: 600, color: ativo.qualidade === "bom" ? "#15803D" : ativo.qualidade === "atencao" ? "#B45309" : "#B91C1C", marginTop: 1 }}>
+                              {ativo.qualidade === "bom" ? "✓ Recomendado" : ativo.qualidade === "atencao" ? "⚠ Atenção" : "⚠ Não recomendado"}
                             </div>
                           )}
                         </div>
@@ -534,7 +534,7 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                           top: 0, right: 0, bottom: 0, left: 0,
                           borderRadius: 20,
                           background: marcado
-                            ? ativo.qualidade === "bom" ? "#15803D" : "#B91C1C"
+                            ? ativo.qualidade === "bom" ? "#15803D" : ativo.qualidade === "atencao" ? "#B45309" : "#B91C1C"
                             : "#D1D5DB",
                           transition: "background 200ms",
                         }}>
