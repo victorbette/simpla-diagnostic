@@ -86,8 +86,12 @@ export function SecaoAssetAllocation({
       totalResgates,
       macroAtual,
       macroMeta,
+      ativosAtuais: r.ativosAtuais,
       ativosRecomendados: r.ativosRecomendados ?? [],
+      alocacaoMeta: r.alocacaoMeta,
       aporteDisponivel: r.aporteDisponivel,
+      custoVidaMensal: r.custoVidaMensal,
+      notasConsultor: r.notasConsultor,
       planoAcao: r.planoAcao.map((i) => ({
         id: i.id,
         card: i.card,
@@ -103,6 +107,7 @@ export function SecaoAssetAllocation({
         valorResgateBRL: i.valorResgateBRL,
         prioridade: i.prioridade,
         observacao: i.observacao,
+        adicionadoManualmente: i.adicionadoManualmente,
       })),
       dataCalculo: new Date().toISOString(),
       savedAt: new Date().toISOString(),
@@ -212,6 +217,7 @@ export function SecaoAssetAllocation({
             clientId={plan.clientId}
             clientProfile={plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null}
             patrimonyInicial={plan.ativosAtuais.total}
+            resultadoCarteira={resultadoCarteira}
             onClose={() => setCarteiraOpen(false)}
             onSave={handleCarteiraSave}
             onLimpar={onLimparCarteira}
@@ -491,6 +497,7 @@ export function SecaoAssetAllocation({
           clientId={plan.clientId}
           clientProfile={plan.dadosCliente.suitabilityPerfil ?? plan.suitability?.perfil ?? null}
           patrimonyInicial={plan.ativosAtuais.total}
+          resultadoCarteira={resultadoCarteira}
           onClose={() => setCarteiraOpen(false)}
           onSave={handleCarteiraSave}
           comecandoDoZero={plan.dadosCliente.comecandoDoZero === true}

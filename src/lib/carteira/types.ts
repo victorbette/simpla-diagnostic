@@ -43,6 +43,7 @@ export interface CarteiraResultado {
   alocacaoMeta: Record<CardId, number>;
   planoAcao: PlanoAcaoItem[];
   aporteDisponivel?: number;
+  custoVidaMensal?: number;
   notasConsultor?: string;
 }
 

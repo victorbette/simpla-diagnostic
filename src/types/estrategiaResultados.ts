@@ -19,6 +19,7 @@ export interface PlanoAcaoItem {
   prioridade?: string;
   observacao?: string;
   valorResgateBRL?: number;
+  adicionadoManualmente?: boolean;
 }
 
 export interface ResultadoCarteira {
@@ -29,8 +30,12 @@ export interface ResultadoCarteira {
   macroAtual: Record<string, number>;   // CardId → % atual
   macroMeta: Record<string, number>;    // CardId → % meta (do slider)
   planoAcao: PlanoAcaoItem[];
+  ativosAtuais?: Ativo[];               // dados completos da Etapa 1
   ativosRecomendados?: Ativo[];
+  alocacaoMeta?: Record<string, number>;
   aporteDisponivel?: number;
+  custoVidaMensal?: number;
+  notasConsultor?: string;
   dataCalculo: string;
   savedAt: string;
 }

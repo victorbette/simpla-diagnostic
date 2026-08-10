@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import type { Ativo, CardId, CarteiraResultado, PlanoAcaoItem } from "@/lib/carteira/types";
+import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import { CARD_ORDER, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { gerarPlanoAcao, formatBRL, calcularPatrimonio } from "@/lib/carteira/calculos";
 import { Etapa1CarteiraAtual } from "./Etapa1CarteiraAtual";
@@ -16,6 +17,7 @@ interface Props {
   comecandoDoZero?: boolean;
   patrimonioColeta?: number;
   custoVidaColeta?: number;
+  resultadoCarteira?: ResultadoCarteira | null;
   onClose: () => void;
   onSave?: (r: CarteiraResultado) => void;
   onLimpar?: () => void;
@@ -96,7 +98,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
   };
 }
 
-export function FerramentaCarteira({ clientId, clientName, clientProfile, patrimonyInicial = 0, comecandoDoZero = false, patrimonioColeta = 0, custoVidaColeta = 0, onClose, onSave, onLimpar }: Props) {
+export function FerramentaCarteira({ clientId, clientName, clientProfile, patrimonyInicial = 0, comecandoDoZero = false, patrimonioColeta = 0, custoVidaColeta = 0, resultadoCarteira, onClose, onSave, onLimpar }: Props) {
   const storageKey = `carteira_v3_${clientId}`;
 
   const [etapa, setEtapa] = useState<Etapa>(1);
@@ -114,24 +116,37 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
 
-  // Load from localStorage once
+  // Load once: Supabase data (prop) → localStorage fallback → empty
   useEffect(() => {
     let aporteFromStorage = false;
     let custoVidaFromStorage = false;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const parsed = JSON.parse(raw) as any;
-        if (Array.isArray(parsed.ativosAtuais)) setAtivosAtuais(parsed.ativosAtuais.map(migrateAtivo));
-        if (Array.isArray(parsed.ativosRecomendados)) setAtivosRecomendados(parsed.ativosRecomendados.map(migrateAtivo));
-        if (parsed.alocacaoMeta && typeof parsed.alocacaoMeta === "object") setAlocacaoMeta({ ...defaultAlocacao(clientProfile), ...parsed.alocacaoMeta });
-        if (Array.isArray(parsed.planoAcao)) setPlanoAcao(parsed.planoAcao.map(migrateItemPlano));
-        if (typeof parsed.notasConsultor === "string") setNotasConsultor(parsed.notasConsultor);
-        if (typeof parsed.aporteDisponivel === "number") { setAporteDisponivel(parsed.aporteDisponivel); aporteFromStorage = true; }
-        if (typeof parsed.custoVidaMensal === "number") { setCustoVidaMensal(parsed.custoVidaMensal); custoVidaFromStorage = true; }
-      }
-    } catch { /* ignore */ }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const applyData = (d: any) => {
+      if (Array.isArray(d.ativosAtuais)) setAtivosAtuais(d.ativosAtuais.map(migrateAtivo));
+      if (Array.isArray(d.ativosRecomendados)) setAtivosRecomendados(d.ativosRecomendados.map(migrateAtivo));
+      if (d.alocacaoMeta && typeof d.alocacaoMeta === "object") setAlocacaoMeta({ ...defaultAlocacao(clientProfile), ...d.alocacaoMeta });
+      if (Array.isArray(d.planoAcao)) setPlanoAcao(d.planoAcao.map(migrateItemPlano));
+      if (typeof d.notasConsultor === "string") setNotasConsultor(d.notasConsultor);
+      if (typeof d.aporteDisponivel === "number") { setAporteDisponivel(d.aporteDisponivel); aporteFromStorage = true; }
+      if (typeof d.custoVidaMensal === "number") { setCustoVidaMensal(d.custoVidaMensal); custoVidaFromStorage = true; }
+    };
+
+    // 1. Supabase (via prop) — preferred when it contains full working data
+    const rc = resultadoCarteira as Record<string, unknown> | null | undefined;
+    const supabaseTemAtivos = Array.isArray(rc?.ativosAtuais) && (rc!.ativosAtuais as unknown[]).length > 0;
+    if (supabaseTemAtivos && rc) {
+      applyData(rc);
+      // Sync Supabase → localStorage cache
+      try { localStorage.setItem(storageKey, JSON.stringify(rc)); } catch { /* ignore */ }
+    } else {
+      // 2. localStorage fallback
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) applyData(JSON.parse(raw));
+      } catch { /* ignore */ }
+    }
+
     if (!aporteFromStorage && comecandoDoZero && patrimonioColeta > 0) setAporteDisponivel(patrimonioColeta);
     if (!custoVidaFromStorage && custoVidaColeta > 0) setCustoVidaMensal(custoVidaColeta);
     setLoaded(true);
@@ -237,6 +252,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       alocacaoMeta,
       planoAcao,
       aporteDisponivel,
+      custoVidaMensal,
       notasConsultor,
     };
     try {
