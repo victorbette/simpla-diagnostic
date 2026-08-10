@@ -125,6 +125,7 @@ export function gerarPlanoAcao(
       movimentacaoBRL,
       observacao: '',
       prioridade,
+      vencimento: rec.vencimento ?? atual?.vencimento,
     });
   }
 
@@ -148,6 +149,7 @@ export function gerarPlanoAcao(
         movimentacaoBRL: -atual.valorBRL,
         observacao: '',
         prioridade: abs > p * 0.03 ? 'media' : 'baixa',
+        vencimento: atual.vencimento,
       });
     }
   }
