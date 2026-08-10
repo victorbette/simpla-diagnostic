@@ -60,6 +60,9 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
   const [salvandoColeta, setSalvandoColeta] = useState(false);
   const [salvoColeta, setSalvoColeta] = useState(false);
   const planInitialized = useRef(false);
+  // Guard: block saveEstrategia until loadEstrategia completes; prevents
+  // overwriting Supabase with empty localStorage state during async init.
+  const resultadosCarregados = useRef(false);
 
   // ── Strategy state (localStorage-backed) ─────────────────────────────────
 
@@ -138,8 +141,14 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               }
             } catch (err) {
               console.error("loadEstrategia failed:", err);
+            } finally {
+              resultadosCarregados.current = true;
             }
+          } else {
+            resultadosCarregados.current = true;
           }
+        } else {
+          resultadosCarregados.current = true;
         }
       }
     };
@@ -213,7 +222,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
           break;
         }
         default:
-          if (plan.id) {
+          if (plan.id && resultadosCarregados.current) {
             await store.saveEstrategia(plan.id, resultados as unknown as Record<string, unknown>);
           }
           break;
