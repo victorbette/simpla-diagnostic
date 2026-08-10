@@ -1,6 +1,8 @@
-import type { Ativo } from "@/lib/carteira/types";
+import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
+
+const CARDS_COM_VENCIMENTO: CardId[] = ['resgate_longo', 'resgate_rapido'];
 
 interface Props {
   ativosRecomendados: Ativo[];
@@ -20,7 +22,6 @@ export function CardSelecaoAtivos({
   if (ativosRecomendados.length === 0) return null;
 
   const totalSomaMeta = ativosRecomendados.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-  const cols = "2.5fr 1.2fr 1fr 1fr";
 
   return (
     <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
@@ -40,6 +41,11 @@ export function CardSelecaoAtivos({
         const brlMeta = (pct / 100) * patrimonio;
         const totalGrupo = ativos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
 
+        const mostrarVencimento =
+          CARDS_COM_VENCIMENTO.includes(cardId) &&
+          ativos.some((a) => a.vencimento?.trim());
+        const cols = mostrarVencimento ? "2.5fr 1.2fr 1fr 1fr" : "2.5fr 1.5fr 1fr";
+
         return (
           <div key={cardId} style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #F3F4F6", marginBottom: 8 }}>
@@ -56,7 +62,7 @@ export function CardSelecaoAtivos({
             <div style={{ display: "grid", gridTemplateColumns: cols, padding: "4px 8px", fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", background: "#F8FAFF", borderRadius: 6, marginBottom: 4 }}>
               <span>Ativo</span>
               <span>Segmento</span>
-              <span>Vencimento</span>
+              {mostrarVencimento && <span>Vencimento</span>}
               <span style={{ textAlign: "right" }}>R$ Meta</span>
             </div>
 
@@ -66,7 +72,9 @@ export function CardSelecaoAtivos({
                 <span style={{ fontSize: 10, color: "#374151", background: "#F3F4F6", padding: "2px 8px", borderRadius: 99, display: "inline-block", maxWidth: "fit-content" }}>
                   {ativo.segmento || "—"}
                 </span>
-                <span style={{ fontSize: 12, color: "#6B7280" }}>{ativo.vencimento?.trim() || "—"}</span>
+                {mostrarVencimento && (
+                  <span style={{ fontSize: 12, color: "#6B7280" }}>{ativo.vencimento?.trim() || "—"}</span>
+                )}
                 <span style={{ fontSize: 13, fontWeight: 500, color: "#111827", textAlign: "right" }}>{formatBRL(Number(ativo.valorBRL) || 0)}</span>
               </div>
             ))}

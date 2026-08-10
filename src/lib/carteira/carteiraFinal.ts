@@ -10,6 +10,7 @@ import type { PlanoAcaoItem } from "@/types/estrategiaResultados";
 export function montarCarteiraFinal(
   planoAcao: PlanoAcaoItem[],
   ativosRecomendados: Ativo[],
+  ativosAtuais?: Ativo[],
 ): Ativo[] {
   return (planoAcao ?? [])
     .map((item) => {
@@ -39,12 +40,13 @@ export function montarCarteiraFinal(
       if (valorFinal <= 0) return null;
       const cardId = item.card as CardId;
       const base = (ativosRecomendados ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
+      const atual = (ativosAtuais ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
       return {
         id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
         card: cardId,
         nome: item.nomeAtivo,
         segmento: item.segmento ?? base?.segmento ?? "",
-        vencimento: item.vencimento ?? base?.vencimento,
+        vencimento: item.vencimento?.trim() ? item.vencimento : (atual?.vencimento?.trim() ? atual.vencimento : base?.vencimento),
         valorBRL: valorFinal,
       } satisfies Ativo;
     })

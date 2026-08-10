@@ -361,7 +361,7 @@ export function SecaoAssetAllocation({
 
         {/* Card 3B — Seleção de Ativos Recomendados */}
         {(() => {
-          const ativosCarteiraFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
+          const ativosCarteiraFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
           if (ativosCarteiraFinal.length === 0) return null;
           return (
             <CardSelecaoAtivos
