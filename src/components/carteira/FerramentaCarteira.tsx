@@ -52,6 +52,7 @@ interface SavedState {
   notasConsultor: string;
   aporteDisponivel: number;
   custoVidaMensal?: number;
+  mesesReserva?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,6 +111,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [notasConsultor, setNotasConsultor] = useState("");
   const [aporteDisponivel, setAporteDisponivel] = useState<number>(0);
   const [custoVidaMensal, setCustoVidaMensal] = useState<number>(0);
+  const [mesesReserva, setMesesReserva] = useState<number>(0);
   const [alocacaoCompleta, setAlocacaoCompleta] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [temMudancas, setTemMudancas] = useState(false);
@@ -131,6 +133,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       if (typeof d.notasConsultor === "string") setNotasConsultor(d.notasConsultor);
       if (typeof d.aporteDisponivel === "number") { setAporteDisponivel(d.aporteDisponivel); aporteFromStorage = true; }
       if (typeof d.custoVidaMensal === "number") { setCustoVidaMensal(d.custoVidaMensal); custoVidaFromStorage = true; }
+      if (typeof d.mesesReserva === "number") setMesesReserva(d.mesesReserva);
     };
 
     // 1. Supabase (via prop) — preferred when it contains full working data
@@ -160,7 +163,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (!loaded) return;
     if (!mudancasInitRef.current) { mudancasInitRef.current = true; return; }
     setTemMudancas(true);
-  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal]);
+  }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, mesesReserva]);
 
   // Always keep a ref to the latest aporteDisponivel so the plan-sync effect
   // can read the current value without having it as a dependency (which would
@@ -169,9 +172,9 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   useEffect(() => { aporteDisponivelRef.current = aporteDisponivel; }, [aporteDisponivel]);
 
   // Ref that always holds the latest saveable state — read synchronously inside goToEtapa
-  const saveStateRef = useRef<SavedState>({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal });
+  const saveStateRef = useRef<SavedState>({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, mesesReserva });
   useEffect(() => {
-    saveStateRef.current = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
+    saveStateRef.current = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, mesesReserva };
   });
 
   const salvarLocalStorage = useCallback(() => {
@@ -274,10 +277,11 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       planoAcao,
       aporteDisponivel,
       custoVidaMensal,
+      mesesReserva,
       notasConsultor,
     };
     try {
-      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
+      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal, mesesReserva };
       localStorage.setItem(storageKey, JSON.stringify(s));
     } catch { /* ignore */ }
     onSave?.(resultado);
@@ -430,6 +434,8 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             patrimonioColeta={patrimonioColeta}
             custoVidaMensal={custoVidaMensal}
             onCustoVidaChange={setCustoVidaMensal}
+            mesesReserva={mesesReserva}
+            onMesesReservaChange={setMesesReserva}
           />
         )}
         {etapa === 3 && (

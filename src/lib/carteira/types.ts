@@ -46,6 +46,7 @@ export interface CarteiraResultado {
   planoAcao: PlanoAcaoItem[];
   aporteDisponivel?: number;
   custoVidaMensal?: number;
+  mesesReserva?: number;
   notasConsultor?: string;
 }
 

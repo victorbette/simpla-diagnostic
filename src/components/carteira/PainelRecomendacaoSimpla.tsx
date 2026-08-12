@@ -13,6 +13,8 @@ interface Props {
   onAplicar: (meta: Record<CardId, number>, ativos: Ativo[]) => void;
   custoVidaInicial?: number;
   onCustoVidaChange?: (v: number) => void;
+  mesesReserva?: number;
+  onMesesReservaChange?: (v: number) => void;
 }
 
 function parseBRL(raw: string): number {
@@ -26,10 +28,9 @@ function parseBRL(raw: string): number {
  * detecta a faixa pelo patrimônio, desconta a reserva de emergência e aplica
  * a matriz faixa × perfil + produtos recomendados nos cards da Etapa 2.
  */
-export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAtivosRecomendados, onAplicar, custoVidaInicial = 0, onCustoVidaChange }: Props) {
+export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAtivosRecomendados, onAplicar, custoVidaInicial = 0, onCustoVidaChange, mesesReserva = 0, onMesesReservaChange }: Props) {
   const { model, loading, error, syncing, sincronizar } = useAllocationModel();
   const [custoVidaText, setCustoVidaText] = useState(custoVidaInicial > 0 ? formatBRL(custoVidaInicial) : "");
-  const [mesesReserva, setMesesReserva] = useState(0);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
 
   const custoVidaMensal = parseBRL(custoVidaText);
@@ -151,7 +152,7 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
                 min={0}
                 max={36}
                 value={mesesReserva}
-                onChange={(e) => setMesesReserva(Math.max(0, parseInt(e.target.value) || 0))}
+                onChange={(e) => onMesesReservaChange?.(Math.max(0, parseInt(e.target.value) || 0))}
                 style={{
                   width: "100%", fontSize: 13, border: "1px solid #E5E7EB", borderRadius: 6,
                   padding: "6px 10px", outline: "none", boxSizing: "border-box",

@@ -35,6 +35,7 @@ export interface ResultadoCarteira {
   alocacaoMeta?: Record<string, number>;
   aporteDisponivel?: number;
   custoVidaMensal?: number;
+  mesesReserva?: number;
   notasConsultor?: string;
   dataCalculo: string;
   savedAt: string;

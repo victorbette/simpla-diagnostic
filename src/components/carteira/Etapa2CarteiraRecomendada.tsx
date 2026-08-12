@@ -20,6 +20,8 @@ interface Props {
   patrimonioColeta?: number;
   custoVidaMensal?: number;
   onCustoVidaChange?: (v: number) => void;
+  mesesReserva?: number;
+  onMesesReservaChange?: (v: number) => void;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -49,6 +51,7 @@ export function Etapa2CarteiraRecomendada({
   patrimonio, clientProfile, aporteDisponivel, onAporteChange, onAlocacaoChange,
   comecandoDoZero = false, patrimonioColeta = 0,
   custoVidaMensal = 0, onCustoVidaChange,
+  mesesReserva = 0, onMesesReservaChange,
 }: Props) {
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
@@ -95,6 +98,8 @@ export function Etapa2CarteiraRecomendada({
         }}
         custoVidaInicial={custoVidaMensal}
         onCustoVidaChange={onCustoVidaChange}
+        mesesReserva={mesesReserva}
+        onMesesReservaChange={onMesesReservaChange}
       />
 
       {/* ── CARD ALOCAÇÃO META ── */}
