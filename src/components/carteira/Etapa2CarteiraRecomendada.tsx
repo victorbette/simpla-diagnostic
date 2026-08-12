@@ -34,8 +34,6 @@ const GRUPOS = [
   { label: "Renda Variável",    cor: "#15803D", cards: ["acoes", "fiis"] as CardId[] },
   { label: "Internacional",     cor: "#B45309", cards: ["exterior"] as CardId[] },
   { label: "Cripto",            cor: "#1D4ED8", cards: ["cripto"] as CardId[] },
-  { label: "Alternativos",      cor: "#7C3AED", cards: ["alternativos"] as CardId[] },
-  { label: "Previdência",       cor: "#0284C7", cards: ["previdencia"] as CardId[] },
 ];
 
 function parseBRL(raw: string): number {
