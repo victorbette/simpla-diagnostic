@@ -56,7 +56,7 @@ export const CARD_META = {
   fiis:           { label: 'Fundos Imobiliários',  sub: 'FIIs listados na B3',               cor: '#059669', corBg: '#D1FAE5', icone: 'ti-building',           segmentos: [],                                                               temVencimento: false },
   exterior:       { label: 'Exterior',             sub: 'Renda Variável · Renda Fixa',       cor: '#B45309', corBg: '#FEF3C7', icone: 'ti-world',              segmentos: ['Renda Variável','Renda Fixa'],                                   temVencimento: false },
   cripto:         { label: 'Cripto',               sub: 'Criptoativos',                      cor: '#1D4ED8', corBg: '#EFF6FF', icone: 'ti-currency-bitcoin',   segmentos: [],                                                               temVencimento: false },
-  alternativos:   { label: 'Alternativos',         sub: 'Hedge funds · Private equity · COE', cor: '#7C3AED', corBg: '#F3E8FF', icone: 'ti-chart-infographic',  segmentos: ['Hedge Fund','Multimercado','Private Equity','COE','Estruturado'], temVencimento: false },
+  alternativos:   { label: 'Alternativos',         sub: 'COE, Fundos Cetipados, Produtos Estruturados', cor: '#7C3AED', corBg: '#F3E8FF', icone: 'ti-chart-infographic',  segmentos: ['COE','Fundo Cetipado','Produto Estruturado','Hedge Fund','Multimercado','Private Equity'], temVencimento: false },
   previdencia:    { label: 'Previdência Privada',  sub: 'PGBL · VGBL',                       cor: '#0284C7', corBg: '#E0F2FE', icone: 'ti-piggy-bank',          segmentos: ['PGBL','VGBL'],                                                    temVencimento: false },
 } as const;
 
