@@ -50,8 +50,6 @@ interface ClientForm {
   nome: string;
   email: string;
   telefone: string;
-  cpf: string;
-  nascimento: string;
   observacoes: string;
 }
 
@@ -59,10 +57,16 @@ const EMPTY_FORM: ClientForm = {
   nome: "",
   email: "",
   telefone: "",
-  cpf: "",
-  nascimento: "",
   observacoes: "",
 };
+
+function formatarTelefone(valor: string): string {
+  const nums = valor.replace(/\D/g, "").slice(0, 11);
+  if (nums.length <= 2) return nums.replace(/(\d{0,2})/, "($1");
+  if (nums.length <= 6) return nums.replace(/(\d{2})(\d{0,4})/, "($1) $2");
+  if (nums.length <= 10) return nums.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  return nums.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -182,9 +186,7 @@ export function HomePage() {
       nome: c.nome,
       email: c.email ?? "",
       telefone: c.telefone ?? "",
-      cpf: "",
-      nascimento: "",
-      observacoes: "",
+      observacoes: c.observacoes ?? "",
     });
     setModalAberto(true);
   }
@@ -201,8 +203,6 @@ export function HomePage() {
           nome: form.nome.trim(),
           email: form.email.trim() || null,
           telefone: form.telefone.trim() || null,
-          cpf: form.cpf.trim() || null,
-          dataNascimento: form.nascimento.trim() || null,
           observacoes: form.observacoes.trim() || null,
         });
         toast.success("Cliente atualizado.");
@@ -211,8 +211,6 @@ export function HomePage() {
           nome: form.nome.trim(),
           email: form.email.trim() || undefined,
           telefone: form.telefone.trim() || undefined,
-          cpf: form.cpf.trim() || undefined,
-          dataNascimento: form.nascimento.trim() || undefined,
           observacoes: form.observacoes.trim() || undefined,
         });
         toast.success("Cliente adicionado.");
@@ -609,30 +607,9 @@ export function HomePage() {
                 id="m-tel"
                 type="tel"
                 value={form.telefone}
-                onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))}
-                placeholder="(99) 99999-9999"
-                disabled={salvando}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="m-cpf">CPF</Label>
-              <Input
-                id="m-cpf"
-                value={form.cpf}
-                onChange={(e) => setForm((p) => ({ ...p, cpf: e.target.value }))}
-                placeholder="999.999.999-99"
-                disabled={salvando}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="m-nasc">Data de nascimento</Label>
-              <Input
-                id="m-nasc"
-                type="date"
-                value={form.nascimento}
-                onChange={(e) => setForm((p) => ({ ...p, nascimento: e.target.value }))}
+                onChange={(e) => setForm((p) => ({ ...p, telefone: formatarTelefone(e.target.value) }))}
+                placeholder="(00) 00000-0000"
+                maxLength={15}
                 disabled={salvando}
               />
             </div>
