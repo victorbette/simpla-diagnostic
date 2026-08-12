@@ -56,7 +56,7 @@ function movEfetivo(item: PlanoAcaoItem): number {
 }
 
 function exigeObservacao(item: PlanoAcaoItem): boolean {
-  return item.adicionadoManualmente === true;
+  return item.adicionadoManualmente === true || item.acao === "manter";
 }
 
 function placeholderObservacao(item: PlanoAcaoItem): string {

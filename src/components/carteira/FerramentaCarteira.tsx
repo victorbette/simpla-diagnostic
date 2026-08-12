@@ -494,7 +494,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             : [];
 
           const itensExigemObservacao = etapa === 3
-            ? planoAcao.filter((item) => item.adicionadoManualmente === true && !item.observacao?.trim())
+            ? planoAcao.filter((item) => (item.adicionadoManualmente === true || item.acao === "manter") && !item.observacao?.trim())
             : [];
 
           const podeAvancar = etapa === 2
