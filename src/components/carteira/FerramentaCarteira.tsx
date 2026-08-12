@@ -115,6 +115,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   const [temMudancas, setTemMudancas] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
+  const [autoSalvo, setAutoSalvo] = useState(false);
 
   // Load once: Supabase data (prop) → localStorage fallback → empty
   useEffect(() => {
@@ -161,21 +162,26 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     setTemMudancas(true);
   }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal]);
 
-  // Auto-save to localStorage when navigating between steps
-  useEffect(() => {
-    if (!loaded) return;
-    try {
-      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
-      localStorage.setItem(storageKey, JSON.stringify(s));
-    } catch { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [etapa]);
-
   // Always keep a ref to the latest aporteDisponivel so the plan-sync effect
   // can read the current value without having it as a dependency (which would
   // cause unwanted plan regeneration every time the aporte field is edited).
   const aporteDisponivelRef = useRef(aporteDisponivel);
   useEffect(() => { aporteDisponivelRef.current = aporteDisponivel; }, [aporteDisponivel]);
+
+  // Ref that always holds the latest saveable state — read synchronously inside goToEtapa
+  const saveStateRef = useRef<SavedState>({ ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal });
+  useEffect(() => {
+    saveStateRef.current = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
+  });
+
+  const salvarLocalStorage = useCallback(() => {
+    if (!loaded) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(saveStateRef.current));
+    } catch { /* ignore */ }
+  // storageKey and loaded are stable after mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
 
   // Sync plan whenever ativosAtuais or ativosRecomendados change — skip the
   // initial post-load fire so the saved plan from localStorage is not overwritten.
@@ -233,6 +239,11 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
   );
 
   const goToEtapa = useCallback((n: Etapa) => {
+    // Save current state before navigating
+    salvarLocalStorage();
+    setAutoSalvo(true);
+    setTimeout(() => setAutoSalvo(false), 2000);
+
     if (n === 3) {
       setPlanoAcao((prev) => {
         // Only generate the plan on first entry; after that the consultant controls it
@@ -248,10 +259,10 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
       });
     }
     setEtapa(n);
-  }, [ativosAtuais, ativosRecomendados, patrimonio, aporteDisponivel]);
+  }, [salvarLocalStorage, ativosAtuais, ativosRecomendados, patrimonio, aporteDisponivel]);
 
   function handleNext() { if (etapa < 4) goToEtapa((etapa + 1) as Etapa); }
-  function handleBack() { if (etapa > 1) setEtapa((etapa - 1) as Etapa); }
+  function handleBack() { if (etapa > 1) goToEtapa((etapa - 1) as Etapa); }
 
   function handleSalvarCarteira() {
     setSalvando(true);
@@ -324,6 +335,13 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
           <span style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", padding: "2px 8px", borderRadius: 99, flexShrink: 0 }}>
             Não salvo
           </span>
+        )}
+
+        {autoSalvo && (
+          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#86EFAC", flexShrink: 0 }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
+            Salvo automaticamente
+          </div>
         )}
 
         <button
