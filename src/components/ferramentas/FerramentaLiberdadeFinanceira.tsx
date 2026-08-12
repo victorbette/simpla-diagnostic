@@ -231,18 +231,63 @@ export function FerramentaLiberdadeFinanceira({
     if (patrimonioPerpetuidade <= 0) return 0;
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
     const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+
+    // Build objectives impact map keyed by calendar month/year
+    const objByMesAno = new Map<string, number>();
+    for (const obj of objetivosExpandidos) {
+      const sinal = isEntradaObjetivo(obj) ? 1 : -1;
+      const key = `${obj.ano}-${obj.mes}`;
+      objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
+    }
+
+    const hoje = new Date();
+    const anoInicio = hoje.getFullYear();
+    const mesInicio = hoje.getMonth() + 1;
+
+    // Month-by-month simulation to IF date — objectives applied before growth (spec)
+    function simular(aporte: number): number {
+      let p = params.patrimonioInicial;
+      let anoS = anoInicio;
+      let mesS = mesInicio;
+      for (let m = 1; m <= n; m++) {
+        mesS++;
+        if (mesS > 12) { mesS = 1; anoS++; }
+        const effect = objByMesAno.get(`${anoS}-${mesS}`) ?? 0;
+        if (effect !== 0) { p += effect; p = Math.max(0, p); }
+        p = p * (1 + taxaMensal) + aporte;
+      }
+      return p;
+    }
+
+    // Closed-form baseline (sem objetivos) — kept for console validation
     const f = Math.pow(1 + taxaMensal, n);
-    const fvSemAporte = params.patrimonioInicial * f;
-    const anoCard = new Date().getFullYear();
-    const mesCard = new Date().getMonth() + 1;
-    const vpObjetivos = objetivosExpandidos.reduce((soma, obj) => {
-      const mesesAteObj = Math.max(0, (obj.ano - anoCard) * 12 + (obj.mes - mesCard));
-      const vp = (Number(obj.valorBRL) || 0) / Math.pow(1 + taxaMensal, mesesAteObj);
-      return isEntradaObjetivo(obj) ? soma - vp : soma + vp;
-    }, 0);
-    const metaAjustada = Math.max(0, patrimonioPerpetuidade + vpObjetivos);
-    if (metaAjustada <= fvSemAporte) return 0;
-    return Math.max(0, (metaAjustada - fvSemAporte) * taxaMensal / (f - 1));
+    const aporteBase = (() => {
+      const fvSemAporte = params.patrimonioInicial * f;
+      if (patrimonioPerpetuidade <= fvSemAporte) return 0;
+      return Math.max(0, (patrimonioPerpetuidade - fvSemAporte) * taxaMensal / (f - 1));
+    })();
+
+    if (simular(0) >= patrimonioPerpetuidade) {
+      console.log('[AporteNecessario] Sem objetivos:', Math.ceil(aporteBase), '| Com objetivos: 0 (meta atingível sem aportes)');
+      return 0;
+    }
+
+    // Binary search — 60 iterations → precision < R$0,01
+    let low = 0;
+    let high = Math.max(patrimonioPerpetuidade, aporteBase * 4);
+    while (simular(high) < patrimonioPerpetuidade) high *= 2;
+
+    for (let i = 0; i < 60; i++) {
+      const mid = (low + high) / 2;
+      if (simular(mid) >= patrimonioPerpetuidade) high = mid;
+      else low = mid;
+      if (high - low < 0.01) break;
+    }
+
+    const aporteComObjetivos = Math.ceil(high);
+    console.log('[AporteNecessario] Sem objetivos:', Math.ceil(aporteBase), '| Com objetivos:', aporteComObjetivos, '| Diferença:', aporteComObjetivos - Math.ceil(aporteBase));
+    console.log('[AporteNecessario] Fluxos mensais (primeiros 10):', [...objByMesAno.entries()].slice(0, 10));
+    return aporteComObjetivos;
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
       patrimonioPerpetuidade, objetivosExpandidos, ajustesCalc]);
 
