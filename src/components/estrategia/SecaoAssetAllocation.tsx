@@ -91,6 +91,7 @@ export function SecaoAssetAllocation({
       alocacaoMeta: r.alocacaoMeta,
       aporteDisponivel: r.aporteDisponivel,
       custoVidaMensal: r.custoVidaMensal,
+      mesesReserva: r.mesesReserva,
       notasConsultor: r.notasConsultor,
       planoAcao: r.planoAcao.map((i) => ({
         id: i.id,
