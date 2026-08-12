@@ -494,24 +494,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             : [];
 
           const itensExigemObservacao = etapa === 3
-            ? planoAcao.filter((item) => {
-                if (item.adicionadoManualmente === true) return !item.observacao?.trim();
-                const foiEditado =
-                  item.movimentacaoEditada !== undefined &&
-                  item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
-                if (foiEditado) return !item.observacao?.trim();
-                if (item.acao === "resgatar_parcial") return !item.observacao?.trim();
-                if (item.acao === "manter") {
-                  const valMeta = item.valorMetaBRL ?? 0;
-                  if (valMeta === 0) return !item.observacao?.trim();
-                  const valAtual = item.valorAtualBRL ?? 0;
-                  if (valMeta > 0) {
-                    const desvio = Math.abs(valAtual - valMeta) / valMeta * 100;
-                    if (desvio > 5) return !item.observacao?.trim();
-                  }
-                }
-                return false;
-              })
+            ? planoAcao.filter((item) => item.adicionadoManualmente === true && !item.observacao?.trim())
             : [];
 
           const podeAvancar = etapa === 2

@@ -56,27 +56,7 @@ function movEfetivo(item: PlanoAcaoItem): number {
 }
 
 function exigeObservacao(item: PlanoAcaoItem): boolean {
-  if (item.adicionadoManualmente === true) return true;
-
-  const foiEditado =
-    item.movimentacaoEditada !== undefined &&
-    item.movimentacaoEditada !== Math.abs(item.movimentacaoBRL ?? 0);
-  if (foiEditado) return true;
-
-  if (item.acao === "resgatar_parcial") return true;
-
-  if (item.acao === "manter") {
-    const valMeta = item.valorMetaBRL ?? 0;
-    if (valMeta === 0) return true;
-
-    const valAtual = item.valorAtualBRL ?? 0;
-    if (valMeta > 0) {
-      const desvio = Math.abs(valAtual - valMeta) / valMeta * 100;
-      if (desvio > 5) return true;
-    }
-  }
-
-  return false;
+  return item.adicionadoManualmente === true;
 }
 
 function placeholderObservacao(item: PlanoAcaoItem): string {
