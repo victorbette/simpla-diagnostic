@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
-import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
+import { CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard } from "./CarteiraCard";
 import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
@@ -28,6 +28,8 @@ const PERFIL_LABELS: Record<string, string> = {
   moderado: "Moderado",
   arrojado: "Arrojado",
 };
+
+const CARDS_ETAPA2: CardId[] = ['resgate_longo', 'resgate_rapido', 'acoes', 'fiis', 'exterior', 'cripto'];
 
 const GRUPOS = [
   { label: "Renda Fixa",        cor: "#1E40AF", cards: ["resgate_longo", "resgate_rapido"] as CardId[] },
@@ -59,7 +61,7 @@ export function Etapa2CarteiraRecomendada({
   }, [aporteDisponivel]);
 
   const patrimonioMeta = patrimonio + aporteDisponivel;
-  const totalAlocado = CARD_ORDER.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
+  const totalAlocado = CARDS_ETAPA2.reduce((s, c) => s + (alocacaoMeta[c] ?? 0), 0);
   const totalAlocadoBRL = (totalAlocado / 100) * patrimonioMeta;
   const diferencaBRL = patrimonioMeta - totalAlocadoBRL;
   const diferencaPct = 100 - totalAlocado;
@@ -327,7 +329,7 @@ export function Etapa2CarteiraRecomendada({
       </div>
 
       {/* ── CARDS DE ATIVOS ── */}
-      {CARD_ORDER.map((cardId) => (
+      {CARDS_ETAPA2.map((cardId) => (
         <CarteiraCard
           key={cardId}
           cardId={cardId}
