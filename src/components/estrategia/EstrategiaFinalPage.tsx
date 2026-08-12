@@ -679,7 +679,7 @@ export function EstrategiaFinalPage({
               >
                 <Shield size={20} style={{ color: "#B91C1C" }} />
                 <span style={{ fontWeight: 700, fontSize: 18, color: "#000000" }}>
-                  Proteção e Sucessório
+                  Proteção e Sucessão
                 </span>
                 {statusBadgeLocal("protecaoSucessorio", estrategia)}
               </div>
@@ -724,7 +724,7 @@ export function EstrategiaFinalPage({
                   {checklist("Plano de saúde", plan.protecao.possuiPlanoSaude)}
                 </div>
 
-                {/* Right: Sucessório */}
+                {/* Right: Sucessão */}
                 <div>
                   <div
                     style={{

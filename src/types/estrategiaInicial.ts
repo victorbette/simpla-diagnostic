@@ -42,7 +42,7 @@ export function initialEstrategia(clientId: string, financialPlanId?: string): E
       aposentadoria: initialSecao('aposentadoria', 'Aposentadoria / IF'),
       protecao: initialSecao('protecao', 'Proteção'),
       fiscal: initialSecao('fiscal', 'Planejamento Tributário'),
-      sucessorio: initialSecao('sucessorio', 'Planejamento Sucessório'),
+      sucessorio: initialSecao('sucessorio', 'Planejamento Sucessão'),
       proximosPassos: initialSecao('proximosPassos', 'Próximos Passos'),
     },
     status: 'rascunho',

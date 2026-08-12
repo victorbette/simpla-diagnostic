@@ -492,7 +492,7 @@ export function calcularFiscal(f: PlanejamentoFiscal): ResultadoFiscal {
   };
 }
 
-// ─── Planejamento Sucessório ──────────────────────────────────────────────────
+// ─── Planejamento Sucessão ──────────────────────────────────────────────────
 
 export interface PlanejamentoSucessorio {
   patrimonioTotal: number;

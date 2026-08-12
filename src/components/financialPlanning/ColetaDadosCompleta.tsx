@@ -518,6 +518,45 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           onComecandoDoZeroChange={(v) => setDados("comecandoDoZero", v)}
         />
 
+        {/* Previdência Privada */}
+        <div style={{ marginTop: 20, padding: "14px 16px", borderRadius: 10, border: "0.5px solid #E5E7EB" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Switch
+              checked={!!dados.possuiPrevidencia}
+              onCheckedChange={(v) => setDados("possuiPrevidencia", v)}
+            />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#000000", margin: 0 }}>Possui Previdência Privada?</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>PGBL, VGBL ou ambos</p>
+            </div>
+          </div>
+          {dados.possuiPrevidencia && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #BFDBFE", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div className={fieldCls}>
+                <Label className={labelCls}>Tipo de previdência</Label>
+                <Select
+                  value={dados.tipoPrevidencia ?? ""}
+                  onValueChange={(v) => setDados("tipoPrevidencia", v as DadosCliente["tipoPrevidencia"])}
+                >
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pgbl">PGBL</SelectItem>
+                    <SelectItem value="vgbl">VGBL</SelectItem>
+                    <SelectItem value="ambos">Ambos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className={fieldCls}>
+                <Label className={labelCls}>Saldo acumulado</Label>
+                <CurrencyInput
+                  value={dados.saldoPrevidencia ?? 0}
+                  onChange={(v) => setDados("saldoPrevidencia", v)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
       </SecaoCard>
 
       {/* Botão Salvar */}

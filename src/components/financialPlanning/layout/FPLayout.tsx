@@ -20,10 +20,10 @@ const STEP_META: Record<FPStep, { title: string; subtitle: string; next: string 
   aposentadoria: {
     title: "Aposentadoria",
     subtitle: "Planejamento de independência financeira e aposentadoria",
-    next: "Proteção e Sucessório",
+    next: "Proteção e Sucessão",
   },
   protecaoSucessorio: {
-    title: "Proteção e Sucessório",
+    title: "Proteção e Sucessão",
     subtitle: "Seguros, proteção patrimonial e planejamento sucessório",
     next: "Fiscal",
   },

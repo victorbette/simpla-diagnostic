@@ -40,14 +40,14 @@ export function FinancialPlanDashboard({
   const gauges = [
     { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scores.lf     },
     { icone: "ti-chart-pie", nome: "Gestão de Ativos",      score: scores.aa     },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scores.ps     },
+    { icone: "ti-shield",    nome: "Proteção e Sucessão", score: scores.ps     },
     { icone: "ti-receipt",   nome: "Tributário",            score: scores.fiscal },
   ];
 
   const textCards = [
     { icone: "ti-sunset",    nome: "Liberdade Financeira",      texto: textos.lf,     score: scores.lf     },
     { icone: "ti-chart-pie", nome: "Gestão de Ativos",          texto: textos.aa,     score: scores.aa     },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório",     texto: textos.ps,     score: scores.ps     },
+    { icone: "ti-shield",    nome: "Proteção e Sucessão",     texto: textos.ps,     score: scores.ps     },
     { icone: "ti-receipt",   nome: "Planejamento Tributário",   texto: textos.fiscal, score: scores.fiscal },
   ];
 

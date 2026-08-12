@@ -72,7 +72,7 @@ export function EstrategiaPrint({ plan, clientName, data, resultados: resultados
       {/* Proteção */}
       <div style={{ marginBottom: 32 }}>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: "#000000", margin: "0 0 16px", borderLeft: "3px solid #B91C1C", paddingLeft: 12 }}>
-          Proteção e Sucessório
+          Proteção e Sucessão
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
           {row("Capital necessário (vida)", formatCurrency(protR.capitalNecessario))}

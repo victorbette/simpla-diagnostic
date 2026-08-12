@@ -80,7 +80,7 @@ interface Props {
 }
 
 export function CarteiraCard({
-  cardId, ativos, modo, patrimonio, metaPct, ativosAtuaisRef,
+  cardId, ativos, modo, patrimonio, metaPct,
   onAdd, onRemove, onChange,
 }: Props) {
   const meta = CARD_META[cardId];
@@ -148,21 +148,6 @@ export function CarteiraCard({
               <div style={{ fontSize: 11, color: meta.cor, fontWeight: 600 }}>
                 Meta {metaPct.toFixed(1)}%
               </div>
-              {(() => {
-                const brlAtual = (ativosAtuaisRef ?? [])
-                  .filter((a) => a.card === cardId)
-                  .reduce((s, a) => s + a.valorBRL, 0);
-                const brlMeta = (metaPct / 100) * patrimonio;
-                const dif = brlMeta - brlAtual;
-                if (Math.abs(dif) < 1) return (
-                  <div style={{ fontSize: 10, color: "#9CA3AF" }}>Alinhado</div>
-                );
-                return (
-                  <div style={{ fontSize: 11, fontWeight: 600, color: dif > 0 ? "#15803D" : "#B91C1C" }}>
-                    {dif > 0 ? "+" : ""}{formatBRL(dif)}
-                  </div>
-                );
-              })()}
             </div>
           ) : (
             <div style={{ textAlign: "right" }}>

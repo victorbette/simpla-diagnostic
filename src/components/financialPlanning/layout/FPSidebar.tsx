@@ -17,7 +17,7 @@ const STEPS: { id: FPStep; label: string; num: number }[] = [
   { id: "coleta", label: "Coleta de dados", num: 1 },
   { id: "ativos", label: "Patrimônio atual", num: 2 },
   { id: "aposentadoria", label: "Aposentadoria", num: 3 },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório", num: 4 },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessão", num: 4 },
   { id: "fiscal", label: "Fiscal", num: 5 },
   { id: "resultado", label: "Resultado", num: 6 },
 ];

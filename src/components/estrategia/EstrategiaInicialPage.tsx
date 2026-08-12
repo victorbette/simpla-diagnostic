@@ -60,7 +60,7 @@ interface SecaoConfig {
 const SECOES: SecaoConfig[] = [
   { id: "assetAllocation",    label: "Gestão de Ativos",       icone: "ti-chart-pie"     },
   { id: "aposentadoria",      label: "Liberdade Financeira",   icone: "ti-beach"         },
-  { id: "protecaoSucessorio", label: "Proteção e Sucessório",  icone: "ti-shield"        },
+  { id: "protecaoSucessorio", label: "Proteção e Sucessão",  icone: "ti-shield"        },
   { id: "fiscal",             label: "Planejamento Tributário",    icone: "ti-receipt"       },
   { id: "estrategia_pronta",  label: "Financial Planning",     icone: "ti-file-download" },
 ];
@@ -110,7 +110,7 @@ function gerarAcoesIniciais(plan: FinancialPlan): AcaoItem[] {
       id: `acao_${idx++}`,
       texto: "Elaborar testamento para agilizar processo sucessório",
       prioridade: "media",
-      area: "Sucessório",
+      area: "Sucessão",
       prazo: "",
     });
   }

@@ -177,7 +177,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       : (dc.filhos ?? []).map((f) => ({
           id: genId(),
           nome: f.nome ?? "",
-          idadeAtual: 0,
+          idadeAtual: Number(f.idade) || 0,
           idadeIndependencia: 25,
           custoMensal: 0,
         }));
@@ -463,6 +463,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
               )}
             </label>
             <CurrencyInput value={data.patrimonioFinanceiro} onChange={(v) => upd({ patrimonioFinanceiro: v })} />
+            {patrimonioFinanceiroColeta > 0 && <span style={HINT}>Carregado da Situação Atual</span>}
           </div>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Imóveis (R$)</label>

@@ -248,7 +248,7 @@ export function paraAlocacaoMeta(
   rec: RecomendacaoSimpla, patrimonioMeta: number,
 ): Record<CardId, number> {
   const meta: Record<CardId, number> = {
-    resgate_longo: 0, resgate_rapido: 0, acoes: 0, fiis: 0, exterior: 0, cripto: 0,
+    resgate_longo: 0, resgate_rapido: 0, acoes: 0, fiis: 0, exterior: 0, cripto: 0, alternativos: 0, previdencia: 0,
   };
   if (patrimonioMeta <= 0) return meta;
   for (const c of rec.classes) {

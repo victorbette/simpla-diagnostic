@@ -41,7 +41,7 @@ const PERFIL_LABELS: Record<string, string> = {
 
 function defaultAlocacao(profile: string | null): Record<CardId, number> {
   if (profile && ALOCACAO_PADRAO[profile]) return { ...ALOCACAO_PADRAO[profile] };
-  return { resgate_longo: 0, resgate_rapido: 0, acoes: 0, fiis: 0, exterior: 0, cripto: 0 };
+  return { resgate_longo: 0, resgate_rapido: 0, acoes: 0, fiis: 0, exterior: 0, cripto: 0, alternativos: 0, previdencia: 0 };
 }
 
 interface SavedState {
@@ -56,7 +56,7 @@ interface SavedState {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateAtivo(a: any): Ativo {
-  const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto"];
+  const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto", "alternativos", "previdencia"];
   const card: CardId = VALID.includes(a.card) ? a.card : "resgate_rapido";
   return {
     id: String(a.id ?? Math.random()),
@@ -74,7 +74,7 @@ function migrateAtivo(a: any): Ativo {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateItemPlano(p: any): PlanoAcaoItem {
-  const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto"];
+  const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto", "alternativos", "previdencia"];
   const VALID_ACAO = ["manter", "aportar", "resgatar_parcial", "resgatar_total", "novo"];
   const card: CardId = VALID.includes(p.card) ? p.card : "resgate_rapido";
   // support both 'acao' (new) and 'tipo' (legacy localStorage data)
@@ -160,6 +160,16 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     if (!mudancasInitRef.current) { mudancasInitRef.current = true; return; }
     setTemMudancas(true);
   }, [loaded, ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal]);
+
+  // Auto-save to localStorage when navigating between steps
+  useEffect(() => {
+    if (!loaded) return;
+    try {
+      const s: SavedState = { ativosAtuais, ativosRecomendados, alocacaoMeta, planoAcao, notasConsultor, aporteDisponivel, custoVidaMensal };
+      localStorage.setItem(storageKey, JSON.stringify(s));
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapa]);
 
   // Always keep a ref to the latest aporteDisponivel so the plan-sync effect
   // can read the current value without having it as a dependency (which would

@@ -37,7 +37,7 @@ export function DocPontoDePartida({ nomeCliente, plan, resultados }: Props) {
   const areas = [
     { icone: "ti-sunset",    nome: "Liberdade Financeira",  score: scoreLF        },
     { icone: "ti-chart-pie", nome: "Gestão de Ativos",      score: scoreAA        },
-    { icone: "ti-shield",    nome: "Proteção e Sucessório", score: scoreProtecao  },
+    { icone: "ti-shield",    nome: "Proteção e Sucessão", score: scoreProtecao  },
     { icone: "ti-receipt",   nome: "Tributário",            score: scoreTributario },
   ];
 

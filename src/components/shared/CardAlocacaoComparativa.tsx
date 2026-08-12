@@ -18,8 +18,6 @@ export function renderLabelPizza({
   cx: number; cy: number; midAngle: number; outerRadius: number;
   percent: number; name: string; cor: string;
 }) {
-  if (percent < 0.03) return null;
-
   const x1 = cx + (outerRadius + 8)  * Math.cos(-midAngle * RADIAN);
   const y1 = cy + (outerRadius + 8)  * Math.sin(-midAngle * RADIAN);
   const x2 = cx + (outerRadius + 30) * Math.cos(-midAngle * RADIAN);

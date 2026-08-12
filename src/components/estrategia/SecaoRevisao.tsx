@@ -424,7 +424,7 @@ export function SecaoRevisao({
 
   const anosRestantes = Math.max(0, plan.planejamentoIF.idadeMeta - plan.planejamentoIF.idadeAtual);
 
-  // ── Sucessório data ──
+  // ── Sucessão data ──
   const resultadoSuc = calcularSucessorio(plan.sucessorio);
 
   // ── Fiscal bars ──
@@ -729,13 +729,13 @@ export function SecaoRevisao({
         </CardBody>
       </AreaCard>
 
-      {/* Card 3: Proteção e Sucessório */}
+      {/* Card 3: Proteção e Sucessão */}
       <AreaCard>
         <CardHeader>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Shield style={{ width: 20, height: 20, color: "#B91C1C" }} />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#000000" }}>
-              Proteção e Sucessório
+              Proteção e Sucessão
             </span>
             {statusBadge("protecaoSucessorio", estrategia)}
             {holdingRecomendada && (
@@ -806,7 +806,7 @@ export function SecaoRevisao({
               </div>
             </div>
 
-            {/* Right: Sucessório */}
+            {/* Right: Sucessão */}
             <div>
               <p
                 style={{
@@ -818,7 +818,7 @@ export function SecaoRevisao({
                   margin: "0 0 10px",
                 }}
               >
-                Sucessório
+                Sucessão
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>

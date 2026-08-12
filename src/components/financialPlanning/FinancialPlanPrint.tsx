@@ -178,7 +178,7 @@ export function FinancialPlanPrintAdvisor({ plan, clientName }: PrintProps) {
           ))}
         </PrintSection>
 
-        {/* Sucessório */}
+        {/* Sucessão */}
         <PrintSection title="Planejamento sucessório">
           <Row label="Score" value={`${scores.suc}/100`} />
           <Row label="Patrimônio total" value={formatCurrency(plan.sucessorio.patrimonioTotal)} />
@@ -347,7 +347,7 @@ export function FinancialPlanPrintClient({ plan, clientName }: PrintProps) {
           )}
         </PrintSection>
 
-        {/* Sucessório */}
+        {/* Sucessão */}
         <PrintSection title="Planejamento sucessório">
           <Row label="Custo total estimado do inventário" value={`${formatNumber(sucResult.percentualCusto, 1)}% do patrimônio`} />
           <Row label="Valor em risco" value={formatCurrency(sucResult.custoTotal)} />

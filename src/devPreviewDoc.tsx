@@ -109,8 +109,8 @@ function mockResultados(): ResultadosEstrategia {
       planoAcaoCount: 7,
       totalAportes: 218_000,
       totalResgates: 130_000,
-      macroAtual: { resgate_longo: 62.5, resgate_rapido: 0, acoes: 12.5, fiis: 8.3, exterior: 10.4, cripto: 6.3 },
-      macroMeta:  { resgate_longo: 41,   resgate_rapido: 25, acoes: 13,  fiis: 7,   exterior: 13,   cripto: 1 },
+      macroAtual: { resgate_longo: 62.5, resgate_rapido: 0, acoes: 12.5, fiis: 8.3, exterior: 10.4, cripto: 6.3, alternativos: 0, previdencia: 0 },
+      macroMeta:  { resgate_longo: 41,   resgate_rapido: 25, acoes: 13,  fiis: 7,   exterior: 13,   cripto: 1,   alternativos: 0, previdencia: 0 },
       planoAcao: [
         { id: "pa-1", card: "resgate_longo",  segmento: "Inflação",       nomeAtivo: "Tesouro IPCA+ 2045",   acao: "aportar",          valorAtualBRL: 100_000, valorMetaBRL: 180_000, movimentacaoBRL: 80_000,   prioridade: "alta" },
         { id: "pa-2", card: "resgate_longo",  segmento: "Pós-fixado",     nomeAtivo: "CDB Itau",             acao: "resgatar_total",   valorAtualBRL: 100_000, valorMetaBRL: 0,       movimentacaoBRL: -100_000, prioridade: "alta", observacao: "Taxa abaixo do mercado" },

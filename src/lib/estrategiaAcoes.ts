@@ -113,7 +113,7 @@ export function gerarAcoes(
       id: "ps_gap_seguro",
       texto: `Contratar seguro de vida — gap de ${formatCurrency(resultados.seguro.gap)} na cobertura`,
       prioridade: "alta",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
       areaColor: "#B91C1C",
     });
   } else if (!pp.possuiSeguroVida) {
@@ -121,7 +121,7 @@ export function gerarAcoes(
       id: "ps_seguro_vida",
       texto: "Analisar necessidade de seguro de vida",
       prioridade: "alta",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
       areaColor: "#B91C1C",
     });
   }
@@ -131,7 +131,7 @@ export function gerarAcoes(
       id: "ps_invalidez",
       texto: "Analisar necessidade de seguro de invalidez",
       prioridade: "media",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
       areaColor: "#B91C1C",
     });
   }
@@ -141,7 +141,7 @@ export function gerarAcoes(
       id: "ps_saude",
       texto: "Contratar plano de saúde",
       prioridade: "alta",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
       areaColor: "#B91C1C",
     });
   }
@@ -151,7 +151,7 @@ export function gerarAcoes(
       id: "ps_testamento",
       texto: "Elaborar testamento para planejamento sucessório",
       prioridade: "media",
-      area: "Proteção e Sucessório",
+      area: "Proteção e Sucessão",
       areaColor: "#B91C1C",
     });
   }
@@ -166,7 +166,7 @@ export function gerarAcoes(
         id: "ps_holding",
         texto: "Avaliar constituição de holding patrimonial",
         prioridade: "alta",
-        area: "Proteção e Sucessório",
+        area: "Proteção e Sucessão",
         areaColor: "#B91C1C",
       });
     }

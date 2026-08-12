@@ -168,7 +168,7 @@ export function SecaoCapa({
               { label: "Aposentadoria", color: "#15803D", bg: "#DCFCE7" },
               { label: "Proteção", color: "#B91C1C", bg: "#FEE2E2" },
               { label: "Fiscal", color: "#2563EB", bg: "#EFF6FF" },
-              { label: "Sucessório", color: "#1E40AF", bg: "#EAF0F5" },
+              { label: "Sucessão", color: "#1E40AF", bg: "#EAF0F5" },
             ].map(({ label, color, bg }) => (
               <span key={label} style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, backgroundColor: bg, color }}>
                 {label}
