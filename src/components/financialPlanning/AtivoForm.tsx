@@ -6,13 +6,14 @@ import { ALOCACAO_ALVO, calcularAlocacaoAtual } from "@/types/financialPlanning"
 import type { AtivoAtual, PerfilRisco } from "@/types/financialPlanning";
 
 const CAMPOS: { key: keyof Omit<AtivoAtual, "total">; label: string; hint: string; color: string }[] = [
-  { key: "rendaFixa",     label: "Renda Fixa",        hint: "CDB, Tesouro, LCI, LCA",                          color: "#1E40AF" },
-  { key: "acoes",         label: "Ações brasileiras",  hint: "Ações, ETFs nacionais",                           color: "#15803D" },
-  { key: "fiis",          label: "FIIs",               hint: "Fundos Imobiliários",                             color: "#15803D" },
-  { key: "rvGlobal",      label: "RV Global",          hint: "BDR, ETF int., conta ext.",                       color: "#000000" },
-  { key: "rfGlobal",      label: "RF Global",          hint: "Renda fixa internacional",                        color: "#6B7280" },
-  { key: "cripto",        label: "Criptoativos",       hint: "Bitcoin, Ethereum e outros",                      color: "#3B82F6" },
-  { key: "alternativos",  label: "Alternativos",       hint: "COE, Fundos Cetipados, Produtos Estruturados",    color: "#7C3AED" },
+  { key: "rendaFixa",     label: "Renda Fixa",           hint: "CDB, Tesouro, LCI, LCA",                          color: "#1E40AF" },
+  { key: "acoes",         label: "Ações brasileiras",     hint: "Ações, ETFs nacionais",                           color: "#15803D" },
+  { key: "fiis",          label: "FIIs",                  hint: "Fundos Imobiliários",                             color: "#15803D" },
+  { key: "rvGlobal",      label: "RV Global",             hint: "BDR, ETF int., conta ext.",                       color: "#000000" },
+  { key: "rfGlobal",      label: "RF Global",             hint: "Renda fixa internacional",                        color: "#6B7280" },
+  { key: "cripto",        label: "Criptoativos",          hint: "Bitcoin, Ethereum e outros",                      color: "#3B82F6" },
+  { key: "alternativos",  label: "Alternativos",          hint: "COE, Fundos Cetipados, Produtos Estruturados",    color: "#7C3AED" },
+  { key: "previdencia",   label: "Previdência Privada",   hint: "PGBL, VGBL",                                      color: "#0284C7" },
 ];
 
 interface Props {
@@ -27,18 +28,18 @@ interface Props {
 export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero, onComecandoDoZeroChange, hideComecandoDoZero }: Props) {
   const zerando = comecandoDoZero ?? false;
 
-  const total = value.rendaFixa + value.acoes + value.fiis + value.rvGlobal + value.rfGlobal + value.cripto + (value.alternativos ?? 0);
+  const total = value.rendaFixa + value.acoes + value.fiis + value.rvGlobal + value.rfGlobal + value.cripto + (value.alternativos ?? 0) + (value.previdencia ?? 0);
 
   function handleField(key: keyof Omit<AtivoAtual, "total">, v: number) {
     const updated = { ...value, [key]: v };
-    const newTotal = updated.rendaFixa + updated.acoes + updated.fiis + updated.rvGlobal + updated.rfGlobal + updated.cripto + (updated.alternativos ?? 0);
+    const newTotal = updated.rendaFixa + updated.acoes + updated.fiis + updated.rvGlobal + updated.rfGlobal + updated.cripto + (updated.alternativos ?? 0) + (updated.previdencia ?? 0);
     onChange({ ...updated, total: newTotal });
   }
 
   function handleZerando(checked: boolean) {
     onComecandoDoZeroChange?.(checked);
     if (checked) {
-      onChange({ rendaFixa: 0, acoes: 0, fiis: 0, rvGlobal: 0, rfGlobal: 0, cripto: 0, alternativos: 0, total: 0 });
+      onChange({ rendaFixa: 0, acoes: 0, fiis: 0, rvGlobal: 0, rfGlobal: 0, cripto: 0, alternativos: 0, previdencia: 0, total: 0 });
     }
   }
 
