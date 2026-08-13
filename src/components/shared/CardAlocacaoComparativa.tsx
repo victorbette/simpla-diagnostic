@@ -1,4 +1,5 @@
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 
@@ -8,28 +9,88 @@ interface Props {
   patrimonio: number;
 }
 
-// ── Mantido para compatibilidade — não utilizado internamente ─────────────────
-const RADIAN = Math.PI / 180;
+// ── Geometria dos labels ──────────────────────────────────────────────────────
 
-export function renderLabelPizza({
-  cx, cy, midAngle, outerRadius, percent, name, cor,
-}: {
-  cx: number; cy: number; midAngle: number; outerRadius: number;
-  percent: number; name: string; cor: string;
-}) {
-  const x1 = cx + (outerRadius + 8)  * Math.cos(-midAngle * RADIAN);
-  const y1 = cy + (outerRadius + 8)  * Math.sin(-midAngle * RADIAN);
-  const x2 = cx + (outerRadius + 30) * Math.cos(-midAngle * RADIAN);
-  const y2 = cy + (outerRadius + 30) * Math.sin(-midAngle * RADIAN);
-  const x3 = x2 + (x2 > cx ? 16 : -16);
-  const anchor = x2 > cx ? "start" : "end";
-  const labelX = x2 > cx ? x3 + 2 : x3 - 2;
-  const nomeExibido = name.length > 12 ? name.slice(0, 11) + "…" : name;
+const RADIAN   = Math.PI / 180;
+const OUTER_R  = 75;
+const ELBOW_R  = OUTER_R + 28; // distância do centro ao cotovelo
+const TICK     = 14;            // comprimento do traço horizontal
+const MIN_GAP  = 15;            // mínimo de px entre centros verticais de labels adjacentes
+
+interface LabelPos {
+  index:  number;
+  x1: number; y1: number; // origem no bordo do slice
+  ex: number; y:  number; // cotovelo (y ajustado por colisão)
+  tx: number;              // fim do traço horizontal
+  lx: number;              // âncora do texto
+  anchor: "start" | "end";
+  cor:    string;
+  name:   string;
+  pct:    number; // 0-1
+}
+
+/**
+ * Calcula posições de todos os labels de uma vez, resolve colisões verticais
+ * em cada lado (esquerdo/direito) e retorna o array indexado por slice.
+ */
+function buildLabels(filtrados: Fatia[], cx: number, cy: number): LabelPos[] {
+  const total = filtrados.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return [];
+
+  let cumAngle = 0;
+  const natural: LabelPos[] = filtrados.map((item, index) => {
+    const fraction = item.value / total;
+    const span     = fraction * 360;
+    const mid      = 90 - cumAngle - span / 2; // graus, horário do topo
+    cumAngle += span;
+
+    const cos = Math.cos(-mid * RADIAN);
+    const sin = Math.sin(-mid * RADIAN);
+    const x1  = cx + (OUTER_R + 6) * cos;
+    const y1  = cy + (OUTER_R + 6) * sin;
+    const ex  = cx + ELBOW_R * cos;
+    const y   = cy + ELBOW_R * sin;
+    const r   = ex >= cx;
+    const tx  = ex + (r ? TICK : -TICK);
+    const lx  = r  ? tx + 2 : tx - 2;
+    return { index, x1, y1, ex, y, tx, lx, anchor: r ? "start" : "end", cor: item.cor, name: item.name, pct: fraction };
+  });
+
+  // Resolve colisões em cada lado separadamente
+  const sides = [
+    natural.filter(l => l.ex >= cx).sort((a, b) => a.y - b.y),
+    natural.filter(l => l.ex <  cx).sort((a, b) => a.y - b.y),
+  ];
+  for (const g of sides) {
+    // Passagem para baixo
+    for (let i = 1; i < g.length; i++) {
+      if (g[i].y - g[i - 1].y < MIN_GAP) g[i].y = g[i - 1].y + MIN_GAP;
+    }
+    // Passagem para cima
+    for (let i = g.length - 2; i >= 0; i--) {
+      if (g[i + 1].y - g[i].y < MIN_GAP) g[i].y = g[i + 1].y - MIN_GAP;
+    }
+  }
+
+  const result = new Array<LabelPos>(filtrados.length);
+  for (const l of [...sides[0], ...sides[1]]) result[l.index] = l;
+  return result;
+}
+
+export function renderLabelPizza(pos: LabelPos) {
+  const nome = pos.name.length > 12 ? pos.name.slice(0, 11) + "…" : pos.name;
   return (
-    <g>
-      <path d={`M${x1},${y1} Q${x2},${y2} ${x3},${y2}`} fill="none" stroke={cor} strokeWidth={1} opacity={0.6} />
-      <text x={labelX} y={y2 - 5} textAnchor={anchor} fontSize={9} fill="#374151" fontWeight="500">{nomeExibido}</text>
-      <text x={labelX} y={y2 + 7} textAnchor={anchor} fontSize={9} fill={cor} fontWeight="700">{(percent * 100).toFixed(1)}%</text>
+    <g key={pos.index}>
+      <path
+        d={`M${pos.x1},${pos.y1} L${pos.ex},${pos.y} L${pos.tx},${pos.y}`}
+        fill="none" stroke={pos.cor} strokeWidth={1} opacity={0.6}
+      />
+      <text x={pos.lx} y={pos.y - 5} textAnchor={pos.anchor} fontSize={9} fill="#374151" fontWeight="500">
+        {nome}
+      </text>
+      <text x={pos.lx} y={pos.y + 7} textAnchor={pos.anchor} fontSize={9} fill={pos.cor} fontWeight="700">
+        {(pos.pct * 100).toFixed(1)}%
+      </text>
     </g>
   );
 }
@@ -44,39 +105,54 @@ export interface Fatia {
 }
 
 function GraficoPizza({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
-  const filtrados = dados.filter((d) => d.value >= 0.5);
+  const filtrados = useMemo(() => dados.filter((d) => d.value >= 0.5), [dados]);
+
+  // Mede a largura real do container para calcular cx correto
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [cw, setCw] = useState(300);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setCw(Math.floor(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Pré-computa posições com resolução de colisão (cy = 120 = 50% de height=240)
+  const labelPos = useMemo(
+    () => buildLabels(filtrados, cw / 2, 120),
+    [filtrados, cw],
+  );
 
   return (
     <div>
-      <div style={{
-        fontSize: 11, fontWeight: 600, color: "#6B7280",
-        textTransform: "uppercase", letterSpacing: "0.05em",
-        textAlign: "center", marginBottom: 10,
-      }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", marginBottom: 4 }}>
         {titulo}
       </div>
 
       {filtrados.length === 0 ? (
-        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#9CA3AF" }}>
+        <div style={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#9CA3AF" }}>
           Sem dados
         </div>
       ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {/* Pie — tamanho fixo, sem margens para labels flutuantes */}
-          <div style={{ flexShrink: 0 }}>
-            <PieChart width={160} height={160}>
+        <div ref={wrapRef}>
+          <ResponsiveContainer width="100%" height={240}>
+            <PieChart margin={{ top: 30, right: 60, bottom: 30, left: 60 }}>
               <Pie
                 data={filtrados}
-                cx={80}
-                cy={80}
-                outerRadius={74}
+                cx="50%"
+                cy="50%"
+                outerRadius={OUTER_R}
                 innerRadius={0}
                 paddingAngle={1.5}
                 dataKey="value"
                 startAngle={90}
                 endAngle={-270}
-                label={false}
                 labelLine={false}
+                label={(props) => {
+                  const pos = labelPos[props.index];
+                  return pos ? renderLabelPizza(pos) : null;
+                }}
               >
                 {filtrados.map((entry, i) => (
                   <Cell key={i} fill={entry.cor} />
@@ -90,29 +166,7 @@ function GraficoPizza({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
                 contentStyle={{ fontSize: 11, borderRadius: 6, border: "0.5px solid #E5E7EB" }}
               />
             </PieChart>
-          </div>
-
-          {/* Legenda lateral — sem sobreposição possível */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-            {filtrados.map((item, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                <div style={{
-                  width: 9, height: 9, borderRadius: 2,
-                  background: item.cor, flexShrink: 0,
-                }} />
-                <span style={{
-                  fontSize: 10.5, color: "#374151", flex: 1,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  lineHeight: 1.3,
-                }}>
-                  {item.name}
-                </span>
-                <span style={{ fontSize: 10.5, color: item.cor, fontWeight: 700, flexShrink: 0 }}>
-                  {item.value.toFixed(1)}%
-                </span>
-              </div>
-            ))}
-          </div>
+          </ResponsiveContainer>
         </div>
       )}
     </div>
