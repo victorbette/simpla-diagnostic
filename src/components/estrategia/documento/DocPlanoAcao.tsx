@@ -160,7 +160,7 @@ function PassoCard({ passo, onChange, onRemove }: { passo: ProximoPasso; onChang
             style={{ border: "1px solid #E5E7EB", borderRadius: 6, padding: "4px 8px", fontSize: 11, color: "#374151", background: "white", fontFamily: "inherit", outline: "none" }}
           />
           <span className="doc-print-only" style={{ fontSize: 11, color: "#6B7280" }}>
-            {passo.dataPrevisao ? `📅 ${formatarData(passo.dataPrevisao)}` : ""}
+            {passo.dataPrevisao ? formatarData(passo.dataPrevisao) : ""}
           </span>
         </div>
       </div>
