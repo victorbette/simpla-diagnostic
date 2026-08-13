@@ -185,7 +185,9 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       pctITCMD:        df.pctITCMD        !== undefined ? Number(df.pctITCMD)        : aliquotaITCMD,
       pctAdvocaticios: df.pctAdvocaticios !== undefined ? Number(df.pctAdvocaticios) : 10,
       dividas:             Number(df.dividas)             || 0,
-      patrimonioFinanceiro: Number(df.patrimonioFinanceiro) || Number(dcAny.patrimonioFinanceiro) || 0,
+      patrimonioFinanceiro: df.patrimonioFinanceiro !== undefined && df.patrimonioFinanceiro !== null
+        ? Number(df.patrimonioFinanceiro)
+        : Number(dcAny.patrimonioFinanceiroEstimado) || 0,
       patrimonioImoveis:   Number(df.patrimonioImoveis)   || 0,
       outrosBens:          Number(df.outrosBens)          || 0,
       despesasMensais:     Number(df.despesasMensais)     || Number(dc.custoDeVidaMensal) || 0,
@@ -349,7 +351,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const seguroVidaNecessario = calc.totalImediato + calc.subtotalContinuo;
   const adequado = calc.capitalAtual >= calc.capitalNecessario && calc.capitalNecessario > 0;
   const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
-  const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiro) || 0;
+  const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiroEstimado) || 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -463,7 +465,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
               )}
             </label>
             <CurrencyInput value={data.patrimonioFinanceiro} onChange={(v) => upd({ patrimonioFinanceiro: v })} />
-            {patrimonioFinanceiroColeta > 0 && <span style={HINT}>Carregado da Situação Atual</span>}
+            {patrimonioFinanceiroColeta > 0 && <span style={{ ...HINT, color: "#2563EB" }}>Carregado da Situação Atual — editável</span>}
           </div>
           <div style={FIELD_WRAP}>
             <label style={LABEL}>Imóveis (R$)</label>
