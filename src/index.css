@@ -141,6 +141,14 @@
   overflow: visible;
 }
 
+/* Pizzas de alocação: a geometria dos rótulos é calculada para caber no viewBox
+   (ver src/lib/carteira/labelsPizza.ts), então NÃO se usa overflow: visible aqui.
+   Recortar é o modo de falha seguro — enquanto o gráfico se re-mede após um
+   redimensionamento, um SVG ainda largo fica contido no card em vez de vazar. */
+.pizza-alocacao {
+  overflow: hidden;
+}
+
 /* Blocos que só existem na impressão (ex.: texto das observações) */
 .doc-print-only { display: none; }
 

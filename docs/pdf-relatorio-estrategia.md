@@ -245,6 +245,20 @@ nas folhas de transbordo.
    `AREAS_DOCUMENTO`.
 5. **Regra de negócio em componente** — `gerarPassosIniciais` (`DocPlanoAcao.tsx`) deveria
    virar `lib/`.
+6. **Gráfico de alocação duplicado no PDF.** `EstrategiaFinal.tsx:189-190` renderiza
+   `DocAssetAllocation` (que inclui `CardAlocacaoComparativa`) e, na página seguinte,
+   `DocAlocacaoAtualProposta` — o mesmo "Alocação Atual × Proposta" aparece duas vezes.
+   Decidir qual das duas páginas fica com o gráfico; fazer junto com o item 1, porque
+   remover as pizzas de `DocAlocacaoAtualProposta` zera `ALTURA_PIZZAS` e a paginação
+   estimada perde a razão de existir. Diferença funcional a preservar: só o caminho de
+   `DocAlocacaoAtualProposta` respeita `comecandoDoZero` (esconde a pizza "Carteira Atual").
+7. **`@media print` do Recharts é global.** `index.css` força
+   `.recharts-responsive-container / .recharts-wrapper / svg.recharts-surface` para
+   `height: 260px !important`. A regra foi escrita para o `GraficoIF`, mas atinge as pizzas
+   também. Como o `<svg>` tem `viewBox` e `preserveAspectRatio` padrão, o efeito é escala
+   uniforme (não distorce), mas a altura impressa passa a ser 260 em vez de 240/235 —
+   o que deixa `ALTURA_PIZZAS = 272` mais otimista do que parece. Escopar a regra ao
+   `GraficoIF`.
 
 ---
 

@@ -1,11 +1,11 @@
-import { PieChart, Pie, Cell } from "recharts";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
-import { renderLabelPizza, type Fatia } from "@/components/shared/CardAlocacaoComparativa";
+import { montarFatias, type Fatia } from "@/lib/carteira/labelsPizza";
+import { PizzaAlocacao } from "@/components/shared/PizzaAlocacao";
 import { DOC } from "@/lib/documentoStyles";
 import { empacotarPorAltura, orcamentoPagina, type ItemPaginavel } from "@/lib/paginacaoDoc";
 import { PaginaDoc } from "./PaginaDoc";
@@ -18,10 +18,8 @@ interface Props {
   resultados: ResultadosEstrategia;
 }
 
-/** Pizza cheia com labels externos — dimensões fixas, sem animação (impressão confiável) */
+/** Pizza cheia com labels externos — dimensões fixas (impressão confiável) */
 function PizzaPrint({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
-  const filtrados = dados.filter((d) => d.value >= 0.5);
-
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <p
@@ -37,39 +35,18 @@ function PizzaPrint({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
       >
         {titulo}
       </p>
-      {filtrados.length === 0 ? (
-        <div style={{ height: 235, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: DOC.hint }}>
-          Sem dados
-        </div>
-      ) : (
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <PieChart width={320} height={235} margin={{ top: 26, right: 56, bottom: 22, left: 56 }}>
-            <Pie
-              data={filtrados}
-              cx="50%"
-              cy="50%"
-              outerRadius={70}
-              innerRadius={0}
-              paddingAngle={1.5}
-              dataKey="value"
-              startAngle={90}
-              endAngle={-270}
-              isAnimationActive={false}
-              labelLine={false}
-              label={(props) => {
-                const item = filtrados[props.index];
-                return renderLabelPizza({ ...props, cor: item?.cor ?? "#9CA3AF" });
-              }}
-              stroke="white"
-              strokeWidth={1}
-            >
-              {filtrados.map((entry, i) => (
-                <Cell key={i} fill={entry.cor} />
-              ))}
-            </Pie>
-          </PieChart>
-        </div>
-      )}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <PizzaAlocacao
+          dados={dados}
+          largura={320}
+          altura={235}
+          vazio={
+            <div style={{ height: 235, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: DOC.hint }}>
+              Sem dados
+            </div>
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -224,16 +201,8 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
-  const montar = (macro: Record<string, number>, base: number): Fatia[] =>
-    CARD_ORDER.map((id) => ({
-      name: CARD_META[id].label,
-      value: Number(macro?.[id]) || 0,
-      cor: CARD_META[id].cor,
-      brl: ((Number(macro?.[id]) || 0) / 100) * base,
-    })).filter((d) => d.value >= 0.5);
-
-  const dadosAtual = montar(rc.macroAtual ?? {}, patrimonio);
-  const dadosProposta = montar(rc.macroMeta ?? {}, patrimonioMeta);
+  const dadosAtual = montarFatias(rc.macroAtual, patrimonio);
+  const dadosProposta = montarFatias(rc.macroMeta, patrimonioMeta);
 
   const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
   const totalSomaMeta = ativosFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
