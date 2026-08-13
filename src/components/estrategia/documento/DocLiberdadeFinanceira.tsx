@@ -1,7 +1,8 @@
 import { useMemo, type CSSProperties } from "react";
 import { formatCurrency } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
-import { calcularProjecaoIF, TAXA_ACUM_ANUAL, type PontoProjecao } from "@/lib/financialFreedomCalc";
+import { calcularProjecaoIF, type PontoProjecao } from "@/lib/financialFreedomCalc";
+import { getTaxaRentabilidade } from "@/lib/rentabilidade";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { DOC, TEXTO_CORPO, CARD, LABEL_CARD, LABEL_SUBSECAO } from "@/lib/documentoStyles";
@@ -49,6 +50,11 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
 
     if (pi.idadeMeta <= idadeAtual) return { projecao: [] };
 
+    const taxaRetornoAnual = getTaxaRentabilidade(
+      pi.patrimonioAtual,
+      plan.dadosCliente.suitabilityPerfil ?? "",
+    ) / 100;
+
     try {
       const result = calcularProjecaoIF({
         idadeAtual,
@@ -57,7 +63,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
         patrimonioInicial: pi.patrimonioAtual,
         aporteMensal: pi.aporteMensal,
         rendaMensalDesejada: pi.rendaMensalDesejada,
-        taxaRetornoAnual: TAXA_ACUM_ANUAL,
+        taxaRetornoAnual,
         anoNascimento: anoNasc,
         mesNascimento: mesNasc,
         objetivos: [],
@@ -66,7 +72,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
     } catch {
       return { projecao: [] };
     }
-  }, [rif, pi, plan.dadosCliente.dataNascimento]);
+  }, [rif, pi, plan.dadosCliente.dataNascimento, plan.dadosCliente.suitabilityPerfil]);
 
   const mesNascimento = parseDateNasc(plan.dadosCliente.dataNascimento)?.mes;
 

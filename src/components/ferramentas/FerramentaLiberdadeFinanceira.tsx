@@ -266,7 +266,7 @@ export function FerramentaLiberdadeFinanceira({
       return p;
     }
 
-    // Closed-form baseline (sem objetivos) — kept for console validation
+    // Closed-form baseline used to seed the binary search upper bound
     const f = Math.pow(1 + taxaMensal, n);
     const aporteBase = (() => {
       const fvSemAporte = params.patrimonioInicial * f;
@@ -274,10 +274,7 @@ export function FerramentaLiberdadeFinanceira({
       return Math.max(0, (patrimonioPerpetuidade - fvSemAporte) * taxaMensal / (f - 1));
     })();
 
-    if (simular(0) >= patrimonioPerpetuidade) {
-      console.log('[AporteNecessario] Sem objetivos:', Math.ceil(aporteBase), '| Com objetivos: 0 (meta atingível sem aportes)');
-      return 0;
-    }
+    if (simular(0) >= patrimonioPerpetuidade) return 0;
 
     // Binary search — 60 iterations → precision < R$0,01
     let low = 0;
@@ -291,10 +288,7 @@ export function FerramentaLiberdadeFinanceira({
       if (high - low < 0.01) break;
     }
 
-    const aporteComObjetivos = Math.ceil(high);
-    console.log('[AporteNecessario] Sem objetivos:', Math.ceil(aporteBase), '| Com objetivos:', aporteComObjetivos, '| Diferença:', aporteComObjetivos - Math.ceil(aporteBase));
-    console.log('[AporteNecessario] Fluxos mensais (primeiros 10):', [...objByMesAno.entries()].slice(0, 10));
-    return aporteComObjetivos;
+    return Math.ceil(high);
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
       patrimonioPerpetuidade, objetivosExpandidos, ajustesCalc]);
 

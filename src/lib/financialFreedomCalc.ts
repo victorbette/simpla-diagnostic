@@ -299,10 +299,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     for (let m = 1; m <= mesInicioRetirada; m++) {
       mesS++;
       if (mesS > 12) { mesS = 1; anoS++; }
-      p = p * (1 + taxaMensalReal) + aporte;
       const effect = objByMesAno.get(`${anoS}-${mesS}`) ?? 0;
-      if (effect !== 0) p += effect;
-      p = Math.max(0, p);
+      if (effect !== 0) { p += effect; p = Math.max(0, p); }
+      p = p * (1 + taxaMensalReal) + aporte;
     }
     return p;
   }
