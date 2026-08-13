@@ -10,13 +10,13 @@ import {
   calcularAporteMensalNecessario,
   calcularIdadeComAporte,
   expandirObjetivos,
-  TAXA_ACUM_ANUAL,
   TAXA_ACUM_MENSAL,
   TAXA_RET_MENSAL,
   type ProjecaoIFParams,
   type ProjecaoIFResult,
   type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
+import { getTaxaRentabilidade, formatarTaxaLabel } from "@/lib/rentabilidade";
 import type { PlanejamentoIF, DadosCliente } from "@/types/financialPlanning";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import type { ObjetivoVida } from "@/types/objetivos";
@@ -184,16 +184,23 @@ export function FerramentaLiberdadeFinanceira({
   // Expand repetitions and installments into flat list for calculations
   const objetivosExpandidos = useMemo(() => expandirObjetivos(objetivosAtivos), [objetivosAtivos]);
 
+  // ── Taxa dinâmica por patrimônio + perfil ─────────────────────────────────
+  const perfil = dadosCliente?.suitabilityPerfil ?? "";
+  const taxaPadrao = useMemo(
+    () => getTaxaRentabilidade(params.patrimonioInicial, perfil ?? ""),
+    [params.patrimonioInicial, perfil],
+  );
+
   // ── Ajustes avançados — derived rates ─────────────────────────────────────
   const ajustesCalc = useMemo(() => {
     const taxaAnualCombinada = ajustes.usarTaxaCustom
       ? ajustes.taxaCustomAnual / 100
-      : TAXA_ACUM_ANUAL;
+      : taxaPadrao / 100;
     const crescimentoMensal = ajustes.usarCrescimentoAportes
       ? Math.pow(1 + ajustes.crescimentoAportesAnual / 100, 1 / 12) - 1
       : 0;
     return { taxaAnualCombinada, crescimentoMensal };
-  }, [ajustes]);
+  }, [ajustes, taxaPadrao]);
 
   const patrimonioPerpetuidade = useMemo(() => {
     if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
@@ -616,6 +623,26 @@ export function FerramentaLiberdadeFinanceira({
           </div>
         </div>
 
+        {/* Taxa de rentabilidade dinâmica */}
+        <div style={{
+          background: "#F0F7FF", border: "0.5px solid #BFDBFE",
+          borderRadius: 8, padding: "8px 12px", marginTop: 10,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: 11, color: "#6B7280" }}>Taxa de rentabilidade utilizada</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>
+            {ajustes.usarTaxaCustom
+              ? formatarTaxaLabel(ajustes.taxaCustomAnual)
+              : formatarTaxaLabel(taxaPadrao)
+            }
+            {!ajustes.usarTaxaCustom && perfil && (
+              <span style={{ fontSize: 9, color: "#9CA3AF", fontWeight: 400, marginLeft: 4 }}>
+                ({String(perfil).replace(/_/g, " ")})
+              </span>
+            )}
+          </span>
+        </div>
+
         {/* Ajustes avançados — footer integrado */}
         <div style={{ marginTop: 10, paddingTop: 8, borderTop: "0.5px solid #F3F4F6" }}>
           <button
@@ -652,7 +679,11 @@ export function FerramentaLiberdadeFinanceira({
                   <button
                     role="switch"
                     aria-checked={ajustes.usarTaxaCustom}
-                    onClick={() => setAjustes(a => ({ ...a, usarTaxaCustom: !a.usarTaxaCustom }))}
+                    onClick={() => setAjustes(a => ({
+                      ...a,
+                      usarTaxaCustom: !a.usarTaxaCustom,
+                      taxaCustomAnual: !a.usarTaxaCustom ? taxaPadrao : a.taxaCustomAnual,
+                    }))}
                     style={{
                       width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
                       background: ajustes.usarTaxaCustom ? "#2563EB" : "#D1D5DB",
@@ -672,7 +703,7 @@ export function FerramentaLiberdadeFinanceira({
                       style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
                     />
                     <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>(padrão: {(TAXA_ACUM_ANUAL * 100).toFixed(1)}%)</span>
+                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>(base: {formatarTaxaLabel(taxaPadrao)})</span>
                   </div>
                 )}
               </div>
