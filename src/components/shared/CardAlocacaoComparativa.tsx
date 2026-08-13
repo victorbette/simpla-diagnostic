@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 
@@ -8,8 +8,7 @@ interface Props {
   patrimonio: number;
 }
 
-// ── Label customizado com linha de conexão ───────────────────────────────────────
-
+// ── Mantido para compatibilidade — não utilizado internamente ─────────────────
 const RADIAN = Math.PI / 180;
 
 export function renderLabelPizza({
@@ -23,26 +22,14 @@ export function renderLabelPizza({
   const x2 = cx + (outerRadius + 30) * Math.cos(-midAngle * RADIAN);
   const y2 = cy + (outerRadius + 30) * Math.sin(-midAngle * RADIAN);
   const x3 = x2 + (x2 > cx ? 16 : -16);
-
   const anchor = x2 > cx ? "start" : "end";
   const labelX = x2 > cx ? x3 + 2 : x3 - 2;
   const nomeExibido = name.length > 12 ? name.slice(0, 11) + "…" : name;
-
   return (
     <g>
-      <path
-        d={`M${x1},${y1} Q${x2},${y2} ${x3},${y2}`}
-        fill="none"
-        stroke={cor}
-        strokeWidth={1}
-        opacity={0.6}
-      />
-      <text x={labelX} y={y2 - 5} textAnchor={anchor} fontSize={9} fill="#374151" fontWeight="500">
-        {nomeExibido}
-      </text>
-      <text x={labelX} y={y2 + 7} textAnchor={anchor} fontSize={9} fill={cor} fontWeight="700">
-        {(percent * 100).toFixed(1)}%
-      </text>
+      <path d={`M${x1},${y1} Q${x2},${y2} ${x3},${y2}`} fill="none" stroke={cor} strokeWidth={1} opacity={0.6} />
+      <text x={labelX} y={y2 - 5} textAnchor={anchor} fontSize={9} fill="#374151" fontWeight="500">{nomeExibido}</text>
+      <text x={labelX} y={y2 + 7} textAnchor={anchor} fontSize={9} fill={cor} fontWeight="700">{(percent * 100).toFixed(1)}%</text>
     </g>
   );
 }
@@ -61,43 +48,72 @@ function GraficoPizza({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
 
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center", marginBottom: 4 }}>
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: "#6B7280",
+        textTransform: "uppercase", letterSpacing: "0.05em",
+        textAlign: "center", marginBottom: 10,
+      }}>
         {titulo}
       </div>
 
       {filtrados.length === 0 ? (
-        <div style={{ height: 240, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#9CA3AF" }}>
+        <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#9CA3AF" }}>
           Sem dados
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
-          <PieChart margin={{ top: 30, right: 60, bottom: 30, left: 60 }}>
-            <Pie
-              data={filtrados}
-              cx="50%"
-              cy="50%"
-              outerRadius={75}
-              innerRadius={0}
-              paddingAngle={1.5}
-              dataKey="value"
-              startAngle={90}
-              endAngle={-270}
-              labelLine={false}
-              label={(props) => {
-                const item = filtrados[props.index];
-                return renderLabelPizza({ ...props, cor: item?.cor ?? "#9CA3AF" });
-              }}
-            >
-              {filtrados.map((entry, i) => (
-                <Cell key={i} fill={entry.cor} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(v: number, name: string) => [`${v.toFixed(1)}%  ·  ${formatBRL(filtrados.find(d => d.name === name)?.brl ?? 0)}`, name]}
-              contentStyle={{ fontSize: 11, borderRadius: 6, border: "0.5px solid #E5E7EB" }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* Pie — tamanho fixo, sem margens para labels flutuantes */}
+          <div style={{ flexShrink: 0 }}>
+            <PieChart width={160} height={160}>
+              <Pie
+                data={filtrados}
+                cx={80}
+                cy={80}
+                outerRadius={74}
+                innerRadius={0}
+                paddingAngle={1.5}
+                dataKey="value"
+                startAngle={90}
+                endAngle={-270}
+                label={false}
+                labelLine={false}
+              >
+                {filtrados.map((entry, i) => (
+                  <Cell key={i} fill={entry.cor} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(v: number, name: string) => [
+                  `${v.toFixed(1)}%  ·  ${formatBRL(filtrados.find(d => d.name === name)?.brl ?? 0)}`,
+                  name,
+                ]}
+                contentStyle={{ fontSize: 11, borderRadius: 6, border: "0.5px solid #E5E7EB" }}
+              />
+            </PieChart>
+          </div>
+
+          {/* Legenda lateral — sem sobreposição possível */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
+            {filtrados.map((item, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                <div style={{
+                  width: 9, height: 9, borderRadius: 2,
+                  background: item.cor, flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 10.5, color: "#374151", flex: 1,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  lineHeight: 1.3,
+                }}>
+                  {item.name}
+                </span>
+                <span style={{ fontSize: 10.5, color: item.cor, fontWeight: 700, flexShrink: 0 }}>
+                  {item.value.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
