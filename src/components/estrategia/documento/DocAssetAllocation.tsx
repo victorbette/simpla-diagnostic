@@ -5,7 +5,6 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO } from "@/lib/carteira/types";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
-import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
 
 
 interface Props {
@@ -75,23 +74,6 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   const perfilLabel = perfil ? PERFIL_LABELS[perfil] : "não definido";
   const rc = resultados.carteira;
 
-  // macroAtual: campo salvo; fallback → calcular dos ativosAtuais
-  const macroAtual: Record<string, number> = {};
-  if (rc?.macroAtual && Object.keys(rc.macroAtual).length > 0) {
-    Object.assign(macroAtual, rc.macroAtual);
-  } else if (rc?.ativosAtuais && rc.ativosAtuais.length > 0) {
-    const totalAtual = rc.ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-    for (const a of rc.ativosAtuais) {
-      const card = (a.card ?? "") as string;
-      if (card) macroAtual[card] = (macroAtual[card] ?? 0) + (Number(a.valorBRL) || 0);
-    }
-    if (totalAtual > 0) {
-      for (const k of Object.keys(macroAtual)) {
-        macroAtual[k] = (macroAtual[k] / totalAtual) * 100;
-      }
-    }
-  }
-
   const patrimonio = rc?.patrimonio ?? plan.ativosAtuais.total;
 
   // Alocação meta: carteira salva; fallback = alocação-modelo do perfil
@@ -140,20 +122,6 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
       </p>
     ),
   });
-
-  // Gráfico Atual × Proposta — idêntico ao da Gestão de Ativos
-  if (macroMeta) {
-    blocos.push({
-      chave: "grafico-alocacao",
-      node: (
-        <CardAlocacaoComparativa
-          macroAtual={macroAtual}
-          macroMeta={macroMeta}
-          patrimonio={patrimonio}
-        />
-      ),
-    });
-  }
 
   // Tabela hierárquica — Alocação Proposta por Classe
   blocos.push({
