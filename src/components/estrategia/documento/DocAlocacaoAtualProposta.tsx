@@ -4,8 +4,6 @@ import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_ORDER, CARD_META } from "@/lib/carteira/types";
 import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
-import { montarFatias, type Fatia } from "@/lib/carteira/labelsPizza";
-import { PizzaAlocacao } from "@/components/shared/PizzaAlocacao";
 import { DOC } from "@/lib/documentoStyles";
 import { empacotarPorAltura, orcamentoPagina, type ItemPaginavel } from "@/lib/paginacaoDoc";
 import { PaginaDoc } from "./PaginaDoc";
@@ -16,39 +14,6 @@ interface Props {
   nomeCliente: string;
   plan: FinancialPlan;
   resultados: ResultadosEstrategia;
-}
-
-/** Pizza cheia com labels externos — dimensões fixas (impressão confiável) */
-function PizzaPrint({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
-  return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p
-        style={{
-          margin: "0 0 2px",
-          fontSize: 11,
-          fontWeight: 700,
-          color: DOC.muted,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          textAlign: "center",
-        }}
-      >
-        {titulo}
-      </p>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <PizzaAlocacao
-          dados={dados}
-          largura={320}
-          altura={235}
-          vazio={
-            <div style={{ height: 235, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: DOC.hint }}>
-              Sem dados
-            </div>
-          }
-        />
-      </div>
-    </div>
-  );
 }
 
 /* ── Tabela "Como sua carteira deverá ficar" (versão print compacta) ────────── */
@@ -78,7 +43,6 @@ function montarLinhas(ativos: Ativo[], macroMeta: Record<string, number>, patrim
 }
 
 /* Alturas estimadas (px) dos blocos fixos e de cada tipo de linha da tabela */
-const ALTURA_PIZZAS = 272;        // card com as duas pizzas + margem inferior
 const ALTURA_CHROME_TABELA = 64;  // cabeçalho do card + paddings internos
 const ALTURA_RODAPE_TOTAL = 36;   // linha "Total da carteira recomendada"
 
@@ -99,8 +63,7 @@ function dividirLinhas(linhas: LinhaTabela[]): LinhaTabela[][] {
     grudaNoProximo: linha.tipo !== "ativo",
   }));
   return empacotarPorAltura(itens, [
-    // Página 1 divide o espaço com as pizzas; continuações têm a folha inteira
-    orcamentoPagina(false) - ALTURA_PIZZAS - ALTURA_CHROME_TABELA - ALTURA_RODAPE_TOTAL,
+    orcamentoPagina(false) - ALTURA_CHROME_TABELA - ALTURA_RODAPE_TOTAL,
     orcamentoPagina(true) - ALTURA_CHROME_TABELA - ALTURA_RODAPE_TOTAL,
   ]).map((pagina) => pagina.map(({ item }) => item));
 }
@@ -192,17 +155,13 @@ function TabelaCarteiraFinal({
   );
 }
 
-/** Página "Alocação Atual x Proposta" — pizzas comparativas + carteira final (v4 p.10) */
-export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Props) {
+/** Página "Carteira Final" — tabela de ativos recomendados após execução do plano (v4 p.10) */
+export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
   const rc = resultados.carteira;
   if (!rc) return null;
 
-  const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
-
-  const dadosAtual = montarFatias(rc.macroAtual, patrimonio);
-  const dadosProposta = montarFatias(rc.macroMeta, patrimonioMeta);
 
   const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
   const totalSomaMeta = ativosFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
@@ -213,19 +172,6 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
     <>
       <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
         <HeaderSecao titulo="Alocação Atual x Proposta" />
-
-        {comecandoDoZero ? (
-          <div className="doc-card" style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-            <div style={{ width: "50%" }}>
-              <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
-            </div>
-          </div>
-        ) : (
-          <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            <PizzaPrint titulo="Carteira Atual" dados={dadosAtual} />
-            <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
-          </div>
-        )}
 
         {blocos.length > 0 && (
           <TabelaCarteiraFinal
