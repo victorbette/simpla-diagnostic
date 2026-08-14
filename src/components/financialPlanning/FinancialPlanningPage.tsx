@@ -248,9 +248,9 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
     return () => desregistrarSalvador(id);
   }, [plan.id, registrarSalvador, desregistrarSalvador]);
 
-  async function handleTrocarAba(novaAba: string) {
+  function handleTrocarAba(novaAba: string) {
     if (novaAba === abaAtiva) return;
-    await salvarImediato();
+    salvarImediato().catch(() => {});
     setAbaAtiva(novaAba);
   }
 
