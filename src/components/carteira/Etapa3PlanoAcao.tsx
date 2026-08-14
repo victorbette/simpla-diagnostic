@@ -45,40 +45,21 @@ function parseBRL(text: string): number {
   return isNaN(n) ? 0 : n;
 }
 
-interface PreviewRedistribuicao {
-  card: CardId;
+interface SugestaoClasse {
+  cardId: string;
   label: string;
-  cor: string;
-  valorAdicional: number;
-  ativoId: string | null;
-  valorAntes: number;
-  valorDepois: number;
-}
-
-function calcularRedistribuicao(
-  resumo: Array<{ cardId: CardId; label: string; cor: string; valorFinal: number; valorMeta: number; desvio: number; pctMeta: number }>,
-  planoAcao: PlanoAcaoItem[],
-  valorTotal: number,
-): PreviewRedistribuicao[] {
-  const abaixo = resumo.filter((c) => c.desvio < 0 && c.pctMeta > 0);
-  const totalDeficit = abaixo.reduce((s, c) => s + (c.valorMeta - c.valorFinal), 0);
-  if (totalDeficit <= 0 || valorTotal <= 0) return [];
-  return abaixo.map((c) => {
-    const valorAdicional = Math.round((valorTotal * (c.valorMeta - c.valorFinal) / totalDeficit) * 100) / 100;
-    const item =
-      planoAcao.find((i) => i.card === c.cardId && (i.acao === "aportar" || i.acao === "novo")) ??
-      planoAcao.find((i) => i.card === c.cardId && i.acao === "manter" && !i.adicionadoManualmente);
-    const valorAntes = item ? (item.movimentacaoEditada ?? item.movimentacaoBRL) : 0;
-    return {
-      card: c.cardId,
-      label: c.label,
-      cor: c.cor,
-      valorAdicional,
-      ativoId: item?.id ?? null,
-      valorAntes,
-      valorDepois: Math.round((valorAntes + valorAdicional) * 100) / 100,
-    };
-  });
+  valorAtual: number;
+  valorMeta: number;
+  desvio: number;
+  sugestoes: {
+    ativoId: string;
+    ativoNome: string;
+    movimentacaoAtual: number;
+    movimentacaoSugerida: number;
+    delta: number;
+  }[];
+  podeAjustar: boolean;
+  mensagem?: string;
 }
 
 function movEfetivo(item: PlanoAcaoItem): number {
@@ -133,10 +114,8 @@ export function Etapa3PlanoAcao({
     observacao: "",
   });
 
-  const [valorARealocar, setValorARealocar] = useState(0);
-  const [preview, setPreview] = useState<PreviewRedistribuicao[]>([]);
   const [ativosAjustados, setAtivosAjustados] = useState<Set<string>>(new Set());
-  const [valoresOriginais, setValoresOriginais] = useState<Map<string, number>>(new Map());
+  const [sugestoes, setSugestoes] = useState<SugestaoClasse[]>([]);
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -242,11 +221,85 @@ export function Etapa3PlanoAcao({
     }).filter((c) => c.valorAtual > 0 || c.valorMeta > 0 || c.valorFinal > 0);
   }, [planoAcao, macroMeta, patrimonio, aporteDisponivel]);
 
-  const totalExcesso = useMemo(() => {
-    return resumoPorClasse
-      .filter((c) => c.desvio > 0)
-      .reduce((s, c) => s + (c.valorFinal - c.valorMeta), 0);
-  }, [resumoPorClasse]);
+  function calcularSugestoesPorClasse(): SugestaoClasse[] {
+    const patrimonioBase = patrimonio + aporteDisponivel;
+    const resultado: SugestaoClasse[] = [];
+
+    CARD_ORDER.forEach((cardId) => {
+      const pctMeta = Number(macroMeta[cardId]) || 0;
+      if (pctMeta === 0) return;
+
+      const valorMeta = (pctMeta / 100) * patrimonioBase;
+      const itensClasse = planoAcao.filter((i) => i.card === cardId);
+      const valorFinalClasse = itensClasse.reduce((s, i) => {
+        let vf = 0;
+        switch (i.acao) {
+          case "aportar": case "novo":
+            vf = (Number(i.valorAtualBRL) || 0) + (i.movimentacaoEditada ?? Math.abs(i.movimentacaoBRL ?? 0));
+            break;
+          case "manter":
+            vf = Number(i.valorAtualBRL) || 0;
+            break;
+          case "resgatar_parcial":
+            vf = Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
+            break;
+          case "resgatar_total":
+            vf = 0;
+            break;
+          default:
+            vf = Number(i.valorAtualBRL) || 0;
+        }
+        return s + vf;
+      }, 0);
+
+      const desvio = valorFinalClasse - valorMeta;
+      if (Math.abs(desvio) < 100) return;
+
+      const ativosAjustaveis = itensClasse.filter((i) => i.acao === "aportar" || i.acao === "novo");
+      const totalMovAtual = ativosAjustaveis.reduce((s, i) => {
+        const mov = i.movimentacaoEditada !== undefined ? Number(i.movimentacaoEditada) : Number(i.movimentacaoBRL) || 0;
+        return s + Math.abs(mov);
+      }, 0);
+
+      const sugs: SugestaoClasse["sugestoes"] = [];
+      let podeAjustar = false;
+      let mensagem: string | undefined;
+
+      if (desvio > 0) {
+        if (ativosAjustaveis.length > 0 && totalMovAtual >= desvio) {
+          podeAjustar = true;
+          ativosAjustaveis.forEach((item) => {
+            const movAtual = item.movimentacaoEditada !== undefined ? Number(item.movimentacaoEditada) : Number(item.movimentacaoBRL) || 0;
+            const proporcao = totalMovAtual > 0 ? Math.abs(movAtual) / totalMovAtual : 1 / ativosAjustaveis.length;
+            const novoMov = Math.max(0, Math.abs(movAtual) - desvio * proporcao);
+            sugs.push({ ativoId: item.id, ativoNome: item.nomeAtivo, movimentacaoAtual: Math.abs(movAtual), movimentacaoSugerida: Math.round(novoMov * 100) / 100, delta: Math.round((novoMov - Math.abs(movAtual)) * 100) / 100 });
+          });
+        } else {
+          mensagem = ativosAjustaveis.length === 0
+            ? "Nenhum aporte para reduzir. Considere resgatar ativos desta classe."
+            : "Aportes insuficientes para cobrir o excesso. Reduza resgates ou adicione resgate parcial.";
+        }
+      } else {
+        const falta = Math.abs(desvio);
+        if (ativosAjustaveis.length > 0) {
+          podeAjustar = true;
+          ativosAjustaveis.forEach((item) => {
+            const movAtual = item.movimentacaoEditada !== undefined ? Number(item.movimentacaoEditada) : Number(item.movimentacaoBRL) || 0;
+            const proporcao = totalMovAtual > 0 ? Math.abs(movAtual) / totalMovAtual : 1 / ativosAjustaveis.length;
+            const acrescimo = falta * proporcao;
+            const novoMov = Math.abs(movAtual) + acrescimo;
+            sugs.push({ ativoId: item.id, ativoNome: item.nomeAtivo, movimentacaoAtual: Math.abs(movAtual), movimentacaoSugerida: Math.round(novoMov * 100) / 100, delta: Math.round(acrescimo * 100) / 100 });
+          });
+        } else {
+          mensagem = "Nenhum ativo disponível para aportar nesta classe.";
+        }
+      }
+
+      resultado.push({ cardId, label: CARD_META[cardId]?.label ?? cardId, valorAtual: valorFinalClasse, valorMeta, desvio, sugestoes: sugs, podeAjustar, mensagem });
+    });
+
+    return resultado;
+  }
 
   const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr 0.8fr";
 
@@ -318,12 +371,27 @@ export function Etapa3PlanoAcao({
           padding: "20px 24px",
         }}>
           <div style={{
-            display: "flex", alignItems: "center", gap: 8,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
             marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6",
           }}>
-            <i className="ti ti-layout-grid" style={{ fontSize: 16, color: "#2563EB" }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Conferência por Classe</span>
-            <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>após execução do plano</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-layout-grid" style={{ fontSize: 16, color: "#2563EB" }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Conferência por Classe</span>
+              <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>após execução do plano</span>
+            </div>
+            <button
+              onClick={() => setSugestoes(calcularSugestoesPorClasse())}
+              style={{
+                background: "#2563EB", color: "white",
+                border: "none", borderRadius: 8,
+                padding: "7px 14px", fontSize: 12,
+                fontWeight: 600, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <i className="ti ti-adjustments-horizontal" style={{ fontSize: 13 }} />
+              Sugerir ajustes por classe
+            </button>
           </div>
 
           <div style={{
@@ -425,152 +493,128 @@ export function Etapa3PlanoAcao({
         </div>
       )}
 
-      {/* Painel de Redistribuição Automática */}
-      {totalExcesso > 0 && (
-        <div style={{
-          background: "white",
-          border: "0.5px solid #E5E7EB",
-          borderRadius: 12,
-          padding: "20px 24px",
-        }}>
+      {/* Painel de Sugestões por Classe */}
+      {sugestoes.length > 0 && (
+        <div style={{ border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
           <div style={{
-            display: "flex", alignItems: "center", gap: 8,
-            marginBottom: 16, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6",
+            background: "#F8FAFF", padding: "12px 16px",
+            borderBottom: "1px solid #E5E7EB",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
-            <i className="ti ti-arrows-exchange" style={{ fontSize: 16, color: "#7C3AED" }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Redistribuição Automática</span>
-            <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>realoque o excesso entre classes abaixo da meta</span>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 16 }}>
-            <div style={{
-              background: "#F5F3FF", border: "0.5px solid #DDD6FE",
-              borderRadius: 8, padding: "10px 16px", flexShrink: 0,
-            }}>
-              <p style={{ fontSize: 10, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 4px" }}>
-                Excesso disponível
-              </p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: "#7C3AED", margin: 0 }}>
-                {formatBRL(totalExcesso)}
-              </p>
-            </div>
-
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>
-                Valor a redistribuir
-              </label>
-              <CurrencyInput
-                value={valorARealocar}
-                onChange={(v) => {
-                  setValorARealocar(Math.min(v, totalExcesso));
-                  setPreview([]);
-                }}
-                placeholder="R$ 0,00"
-              />
-            </div>
-
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
+              Sugestões de ajuste por classe
+            </span>
             <button
-              onClick={() => setPreview(calcularRedistribuicao(resumoPorClasse, planoAcao, valorARealocar))}
-              disabled={valorARealocar <= 0}
-              style={{
-                padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                background: valorARealocar > 0 ? "#7C3AED" : "#9CA3AF",
-                color: "white", border: "none", cursor: valorARealocar > 0 ? "pointer" : "not-allowed",
-                whiteSpace: "nowrap",
-              }}
+              onClick={() => setSugestoes([])}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 16 }}
             >
-              Calcular
+              <i className="ti ti-x" />
             </button>
           </div>
 
-          {preview.length > 0 && (
-            <>
-              <div style={{ marginBottom: 12 }}>
-                <p style={{ fontSize: 11, color: "#6B7280", margin: "0 0 8px", fontWeight: 500 }}>
-                  Distribuição proposta:
-                </p>
-                {preview.map((pv) => (
-                  <div key={pv.card} style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "8px 12px", marginBottom: 4,
-                    background: "#F8FAFF", borderRadius: 6,
-                    border: "0.5px solid #DBEAFE",
+          {sugestoes.map((s) => (
+            <div key={s.cardId} style={{ padding: "14px 16px", borderBottom: "0.5px solid #F3F4F6" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>{s.label}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+                    color: s.desvio > 0 ? "#B91C1C" : "#B45309",
+                    background: s.desvio > 0 ? "#FEE2E2" : "#FEF3C7",
                   }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: pv.cor, flexShrink: 0 }} />
-                      <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{pv.label}</span>
-                    </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#15803D" }}>
-                      +{formatBRL(pv.valorAdicional)}
-                    </span>
-                  </div>
-                ))}
+                    {s.desvio > 0 ? "▲ Acima" : "▼ Abaixo"} da meta em {formatBRL(Math.abs(s.desvio))}
+                  </span>
+                </div>
+                {s.podeAjustar && (
+                  <button
+                    onClick={() => {
+                      onPlanoAcao(planoAcao.map((item) => {
+                        const sug = s.sugestoes.find((x) => x.ativoId === item.id);
+                        if (!sug) return item;
+                        return { ...item, movimentacaoEditada: sug.movimentacaoSugerida };
+                      }));
+                      setAtivosAjustados((prev) => {
+                        const novo = new Set(prev);
+                        s.sugestoes.forEach((x) => novo.add(x.ativoId));
+                        return novo;
+                      });
+                      setSugestoes((prev) => prev.filter((x) => x.cardId !== s.cardId));
+                    }}
+                    style={{
+                      background: "#15803D", color: "white", border: "none",
+                      borderRadius: 8, padding: "6px 14px", fontSize: 11,
+                      fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    ✓ Confirmar ajuste
+                  </button>
+                )}
               </div>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                <button
-                  onClick={() => {
-                    setPreview([]);
-                    setValorARealocar(0);
-                    setAtivosAjustados(new Set());
-                    setValoresOriginais(new Map());
-                  }}
-                  style={{
-                    fontSize: 12, color: "#6B7280", background: "white",
-                    border: "1px solid #E5E7EB", borderRadius: 6,
-                    padding: "6px 14px", cursor: "pointer",
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => {
-                    const novosAjustados = new Set<string>();
-                    const novosOriginais = new Map<string, number>();
-                    let updated = [...planoAcao];
-                    for (const pv of preview) {
-                      if (!pv.ativoId) continue;
-                      const idx = updated.findIndex((i) => i.id === pv.ativoId);
-                      if (idx < 0) continue;
-                      const item = updated[idx];
-                      novosOriginais.set(pv.ativoId, pv.valorAntes);
-                      novosAjustados.add(pv.ativoId);
-                      if (item.acao === "manter" && !item.adicionadoManualmente) {
-                        updated[idx] = {
-                          ...item,
-                          acao: "aportar",
-                          movimentacaoBRL: Math.round((item.valorMetaBRL - item.valorAtualBRL) * 100) / 100,
-                          movimentacaoEditada: Math.round(pv.valorAdicional * 100) / 100,
-                        };
-                      } else {
-                        updated[idx] = {
-                          ...item,
-                          movimentacaoEditada: Math.round(pv.valorDepois * 100) / 100,
-                        };
-                      }
-                    }
-                    onPlanoAcao(updated);
-                    setAtivosAjustados(novosAjustados);
-                    setValoresOriginais(novosOriginais);
-                    setPreview([]);
-                    setValorARealocar(0);
-                  }}
-                  style={{
-                    fontSize: 12, fontWeight: 600, color: "white",
-                    background: "#7C3AED", border: "none", borderRadius: 6,
-                    padding: "6px 16px", cursor: "pointer",
-                  }}
-                >
-                  Aplicar redistribuição
-                </button>
-              </div>
-            </>
-          )}
+              {!s.podeAjustar && s.mensagem && (
+                <div style={{ fontSize: 11, color: "#B45309", background: "#FEF3C7", padding: "8px 12px", borderRadius: 6 }}>
+                  ⚠ {s.mensagem}
+                </div>
+              )}
 
-          {preview.length === 0 && valorARealocar > 0 && resumoPorClasse.filter((c) => c.desvio < 0 && c.pctMeta > 0).length === 0 && (
-            <p style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", margin: 0 }}>
-              Nenhuma classe abaixo da meta para receber a redistribuição.
-            </p>
+              {s.sugestoes.length > 0 && (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr>
+                      {["Ativo", "Atual", "Ajuste", "Sugerido"].map((h) => (
+                        <th key={h} style={{
+                          fontSize: 9, color: "#9CA3AF", fontWeight: 600,
+                          padding: "4px 8px",
+                          textAlign: h === "Ativo" ? "left" : "right",
+                        } as React.CSSProperties}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {s.sugestoes.map((sug, i) => (
+                      <tr key={i}>
+                        <td style={{ padding: "6px 8px", fontSize: 12, color: "#111827" }}>{sug.ativoNome}</td>
+                        <td style={{ padding: "6px 8px", fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(sug.movimentacaoAtual)}</td>
+                        <td style={{ padding: "6px 8px", fontSize: 12, fontWeight: 600, textAlign: "right", color: sug.delta < 0 ? "#B91C1C" : "#15803D" } as React.CSSProperties}>
+                          {sug.delta >= 0 ? "+" : ""}{formatBRL(sug.delta)}
+                        </td>
+                        <td style={{ padding: "6px 8px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" } as React.CSSProperties}>
+                          {formatBRL(sug.movimentacaoSugerida)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          ))}
+
+          {sugestoes.some((s) => s.podeAjustar) && (
+            <div style={{ padding: "12px 16px", display: "flex", justifyContent: "flex-end", gap: 8, background: "#F8FAFF" }}>
+              <button
+                onClick={() => setSugestoes([])}
+                style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 16px", fontSize: 12, cursor: "pointer", color: "#6B7280" }}
+              >
+                Fechar
+              </button>
+              <button
+                onClick={() => {
+                  const todasSugs = sugestoes.filter((s) => s.podeAjustar).flatMap((s) => s.sugestoes);
+                  onPlanoAcao(planoAcao.map((item) => {
+                    const sug = todasSugs.find((x) => x.ativoId === item.id);
+                    if (!sug) return item;
+                    return { ...item, movimentacaoEditada: sug.movimentacaoSugerida };
+                  }));
+                  setAtivosAjustados((prev) => new Set([...prev, ...todasSugs.map((x) => x.ativoId)]));
+                  setSugestoes([]);
+                }}
+                style={{ background: "#2563EB", color: "white", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+              >
+                Confirmar todos os ajustes
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -774,7 +818,7 @@ export function Etapa3PlanoAcao({
                             marginLeft: 4,
                             whiteSpace: "nowrap" as const,
                           }}>
-                            ✓ Redistribuído
+                            ✓ Ajustado
                           </span>
                         )}
                       </div>
@@ -800,7 +844,6 @@ export function Etapa3PlanoAcao({
                           updateItem(item.id, { movimentacaoEditada: valor });
                           setEditandoMovId(null);
                           setAtivosAjustados((prev) => { const s = new Set(prev); s.delete(item.id); return s; });
-                          setValoresOriginais((prev) => { const m = new Map(prev); m.delete(item.id); return m; });
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") e.currentTarget.blur();
@@ -816,22 +859,15 @@ export function Etapa3PlanoAcao({
                       <div
                         title="Clique para editar"
                         onClick={() => { setEditandoMovId(item.id); setEditandoMovVal(formatInputBRL(efetivo)); }}
-                        style={{ display: "flex", flexDirection: "column", cursor: "pointer", gap: 1 }}
+                        style={{ display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }}
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                          <span style={{
-                            fontSize: 12, fontWeight: 600,
-                            color: efetivo > 0 ? "#15803D" : "#9CA3AF",
-                          }}>
-                            {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
-                          </span>
-                          <span style={{ fontSize: 10, color: movEditado ? "#B45309" : "#D1D5DB" }} title={movEditado ? "Valor editado" : "Editar"}>✎</span>
-                        </div>
-                        {ativosAjustados.has(item.id) && (valoresOriginais.get(item.id) ?? 0) > 0 && (
-                          <div style={{ fontSize: 9, color: "#9CA3AF", textDecoration: "line-through" }}>
-                            {formatBRL(valoresOriginais.get(item.id)!)}
-                          </div>
-                        )}
+                        <span style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: efetivo > 0 ? "#15803D" : "#9CA3AF",
+                        }}>
+                          {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
+                        </span>
+                        <span style={{ fontSize: 10, color: movEditado ? "#B45309" : "#D1D5DB" }} title={movEditado ? "Valor editado" : "Editar"}>✎</span>
                       </div>
                     ) : (
                       <span style={{
