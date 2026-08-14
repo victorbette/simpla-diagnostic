@@ -36,6 +36,7 @@ export interface PlanoAcaoItem {
   prioridade: 'alta' | 'media' | 'baixa';
   valorResgateBRL?: number;
   adicionadoManualmente?: boolean;
+  ajustadoPorRedistribuicao?: boolean;
 }
 
 export interface CarteiraResultado {

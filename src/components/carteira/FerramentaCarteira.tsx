@@ -96,6 +96,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
     adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
     valorResgateBRL: p.valorResgateBRL != null ? Number(p.valorResgateBRL) : undefined,
+    ajustadoPorRedistribuicao: p.ajustadoPorRedistribuicao === true ? true : undefined,
   };
 }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
@@ -116,6 +116,13 @@ export function Etapa3PlanoAcao({
 
   const [ativosAjustados, setAtivosAjustados] = useState<Set<string>>(new Set());
   const [sugestoes, setSugestoes] = useState<SugestaoClasse[]>([]);
+
+  // Reconstruct ativosAjustados from persisted flag whenever plan changes
+  useEffect(() => {
+    if (planoAcao.length > 0) {
+      setAtivosAjustados(new Set(planoAcao.filter((i) => i.ajustadoPorRedistribuicao).map((i) => i.id)));
+    }
+  }, [planoAcao]);
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -531,13 +538,8 @@ export function Etapa3PlanoAcao({
                       onPlanoAcao(planoAcao.map((item) => {
                         const sug = s.sugestoes.find((x) => x.ativoId === item.id);
                         if (!sug) return item;
-                        return { ...item, movimentacaoEditada: sug.movimentacaoSugerida };
+                        return { ...item, movimentacaoEditada: sug.movimentacaoSugerida, ajustadoPorRedistribuicao: true };
                       }));
-                      setAtivosAjustados((prev) => {
-                        const novo = new Set(prev);
-                        s.sugestoes.forEach((x) => novo.add(x.ativoId));
-                        return novo;
-                      });
                       setSugestoes((prev) => prev.filter((x) => x.cardId !== s.cardId));
                     }}
                     style={{
@@ -605,9 +607,8 @@ export function Etapa3PlanoAcao({
                   onPlanoAcao(planoAcao.map((item) => {
                     const sug = todasSugs.find((x) => x.ativoId === item.id);
                     if (!sug) return item;
-                    return { ...item, movimentacaoEditada: sug.movimentacaoSugerida };
+                    return { ...item, movimentacaoEditada: sug.movimentacaoSugerida, ajustadoPorRedistribuicao: true };
                   }));
-                  setAtivosAjustados((prev) => new Set([...prev, ...todasSugs.map((x) => x.ativoId)]));
                   setSugestoes([]);
                 }}
                 style={{ background: "#2563EB", color: "white", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
@@ -841,9 +842,8 @@ export function Etapa3PlanoAcao({
                         onChange={(e) => setEditandoMovVal(e.target.value)}
                         onBlur={() => {
                           const valor = Math.max(0, parseBRL(editandoMovVal));
-                          updateItem(item.id, { movimentacaoEditada: valor });
+                          updateItem(item.id, { movimentacaoEditada: valor, ajustadoPorRedistribuicao: false });
                           setEditandoMovId(null);
-                          setAtivosAjustados((prev) => { const s = new Set(prev); s.delete(item.id); return s; });
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") e.currentTarget.blur();
