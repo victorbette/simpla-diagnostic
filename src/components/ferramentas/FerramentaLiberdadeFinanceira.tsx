@@ -237,7 +237,10 @@ export function FerramentaLiberdadeFinanceira({
   const aporteNecessario = useMemo(() => {
     if (patrimonioPerpetuidade <= 0) return 0;
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const nRaw = Math.round((params.idadeAposentadoria - params.idadeAtual) * 12);
+    // Guard: idadeMeta undefined/NaN causes n=NaN → while(simular(high)<meta) high*=2 loops forever
+    if (!isFinite(nRaw) || nRaw < 1) return 0;
+    const n = nRaw;
 
     // Build objectives impact map keyed by calendar month/year
     const objByMesAno = new Map<string, number>();
@@ -279,7 +282,9 @@ export function FerramentaLiberdadeFinanceira({
     // Binary search — 60 iterations → precision < R$0,01
     let low = 0;
     let high = Math.max(patrimonioPerpetuidade, aporteBase * 4);
-    while (simular(high) < patrimonioPerpetuidade) high *= 2;
+    let guard = 0;
+    while (simular(high) < patrimonioPerpetuidade && ++guard < 100) high *= 2;
+    if (guard >= 100) return 0; // bail out — convergence impossible
 
     for (let i = 0; i < 60; i++) {
       const mid = (low + high) / 2;
