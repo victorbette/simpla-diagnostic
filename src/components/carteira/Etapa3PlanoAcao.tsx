@@ -50,21 +50,35 @@ interface PreviewRedistribuicao {
   label: string;
   cor: string;
   valorAdicional: number;
+  ativoId: string | null;
+  valorAntes: number;
+  valorDepois: number;
 }
 
 function calcularRedistribuicao(
   resumo: Array<{ cardId: CardId; label: string; cor: string; valorFinal: number; valorMeta: number; desvio: number; pctMeta: number }>,
+  planoAcao: PlanoAcaoItem[],
   valorTotal: number,
 ): PreviewRedistribuicao[] {
   const abaixo = resumo.filter((c) => c.desvio < 0 && c.pctMeta > 0);
   const totalDeficit = abaixo.reduce((s, c) => s + (c.valorMeta - c.valorFinal), 0);
   if (totalDeficit <= 0 || valorTotal <= 0) return [];
-  return abaixo.map((c) => ({
-    card: c.cardId,
-    label: c.label,
-    cor: c.cor,
-    valorAdicional: Math.round((valorTotal * (c.valorMeta - c.valorFinal) / totalDeficit) * 100) / 100,
-  }));
+  return abaixo.map((c) => {
+    const valorAdicional = Math.round((valorTotal * (c.valorMeta - c.valorFinal) / totalDeficit) * 100) / 100;
+    const item =
+      planoAcao.find((i) => i.card === c.cardId && (i.acao === "aportar" || i.acao === "novo")) ??
+      planoAcao.find((i) => i.card === c.cardId && i.acao === "manter" && !i.adicionadoManualmente);
+    const valorAntes = item ? (item.movimentacaoEditada ?? item.movimentacaoBRL) : 0;
+    return {
+      card: c.cardId,
+      label: c.label,
+      cor: c.cor,
+      valorAdicional,
+      ativoId: item?.id ?? null,
+      valorAntes,
+      valorDepois: Math.round((valorAntes + valorAdicional) * 100) / 100,
+    };
+  });
 }
 
 function movEfetivo(item: PlanoAcaoItem): number {
@@ -121,6 +135,8 @@ export function Etapa3PlanoAcao({
 
   const [valorARealocar, setValorARealocar] = useState(0);
   const [preview, setPreview] = useState<PreviewRedistribuicao[]>([]);
+  const [ativosAjustados, setAtivosAjustados] = useState<Set<string>>(new Set());
+  const [valoresOriginais, setValoresOriginais] = useState<Map<string, number>>(new Map());
 
   function updateItem(id: string, patch: Partial<PlanoAcaoItem>) {
     onPlanoAcao(planoAcao.map((p) => {
@@ -454,7 +470,7 @@ export function Etapa3PlanoAcao({
             </div>
 
             <button
-              onClick={() => setPreview(calcularRedistribuicao(resumoPorClasse, valorARealocar))}
+              onClick={() => setPreview(calcularRedistribuicao(resumoPorClasse, planoAcao, valorARealocar))}
               disabled={valorARealocar <= 0}
               style={{
                 padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
@@ -493,7 +509,12 @@ export function Etapa3PlanoAcao({
 
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                 <button
-                  onClick={() => { setPreview([]); setValorARealocar(0); }}
+                  onClick={() => {
+                    setPreview([]);
+                    setValorARealocar(0);
+                    setAtivosAjustados(new Set());
+                    setValoresOriginais(new Map());
+                  }}
                   style={{
                     fontSize: 12, color: "#6B7280", background: "white",
                     border: "1px solid #E5E7EB", borderRadius: 6,
@@ -504,34 +525,33 @@ export function Etapa3PlanoAcao({
                 </button>
                 <button
                   onClick={() => {
+                    const novosAjustados = new Set<string>();
+                    const novosOriginais = new Map<string, number>();
                     let updated = [...planoAcao];
                     for (const pv of preview) {
-                      const idx = updated.findIndex(
-                        (i) => i.card === pv.card && (i.acao === "aportar" || i.acao === "novo")
-                      );
-                      if (idx >= 0) {
-                        const item = updated[idx];
-                        const atual = item.movimentacaoEditada ?? item.movimentacaoBRL;
+                      if (!pv.ativoId) continue;
+                      const idx = updated.findIndex((i) => i.id === pv.ativoId);
+                      if (idx < 0) continue;
+                      const item = updated[idx];
+                      novosOriginais.set(pv.ativoId, pv.valorAntes);
+                      novosAjustados.add(pv.ativoId);
+                      if (item.acao === "manter" && !item.adicionadoManualmente) {
                         updated[idx] = {
                           ...item,
-                          movimentacaoEditada: Math.round((atual + pv.valorAdicional) * 100) / 100,
+                          acao: "aportar",
+                          movimentacaoBRL: Math.round((item.valorMetaBRL - item.valorAtualBRL) * 100) / 100,
+                          movimentacaoEditada: Math.round(pv.valorAdicional * 100) / 100,
                         };
                       } else {
-                        const mantIdx = updated.findIndex(
-                          (i) => i.card === pv.card && i.acao === "manter" && !i.adicionadoManualmente
-                        );
-                        if (mantIdx >= 0) {
-                          const item = updated[mantIdx];
-                          updated[mantIdx] = {
-                            ...item,
-                            acao: "aportar",
-                            movimentacaoBRL: Math.round((item.valorMetaBRL - item.valorAtualBRL) * 100) / 100,
-                            movimentacaoEditada: Math.round(pv.valorAdicional * 100) / 100,
-                          };
-                        }
+                        updated[idx] = {
+                          ...item,
+                          movimentacaoEditada: Math.round(pv.valorDepois * 100) / 100,
+                        };
                       }
                     }
                     onPlanoAcao(updated);
+                    setAtivosAjustados(novosAjustados);
+                    setValoresOriginais(novosOriginais);
                     setPreview([]);
                     setValorARealocar(0);
                   }}
@@ -710,9 +730,14 @@ export function Etapa3PlanoAcao({
               return (
                 <div
                   key={item.id}
-                  style={{ borderTop: "1px solid #F3F4F6" }}
+                  style={{
+                    borderTop: "1px solid #F3F4F6",
+                    backgroundColor: ativosAjustados.has(item.id) ? "#F0FDF4" : "white",
+                    borderLeft: ativosAjustados.has(item.id) ? "3px solid #22C55E" : "none",
+                    transition: "background 300ms, border-left 300ms",
+                  }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#F8FAFC")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = ativosAjustados.has(item.id) ? "#F0FDF4" : "white")}
                 >
                   <div style={{ display: "grid", gridTemplateColumns: COLS, gap: 8, padding: "8px 14px", alignItems: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -738,6 +763,20 @@ export function Etapa3PlanoAcao({
                             padding: "1px 6px", borderRadius: 99, flexShrink: 0,
                           }}>⚠ pendente</span>
                         )}
+                        {ativosAjustados.has(item.id) && (
+                          <span style={{
+                            fontSize: 9, fontWeight: 700,
+                            color: "#15803D",
+                            background: "#DCFCE7",
+                            border: "0.5px solid #86EFAC",
+                            padding: "2px 8px",
+                            borderRadius: 99,
+                            marginLeft: 4,
+                            whiteSpace: "nowrap" as const,
+                          }}>
+                            ✓ Redistribuído
+                          </span>
+                        )}
                       </div>
                       {item.segmento && (
                         <span style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.label} · {item.segmento}</span>
@@ -760,6 +799,8 @@ export function Etapa3PlanoAcao({
                           const valor = Math.max(0, parseBRL(editandoMovVal));
                           updateItem(item.id, { movimentacaoEditada: valor });
                           setEditandoMovId(null);
+                          setAtivosAjustados((prev) => { const s = new Set(prev); s.delete(item.id); return s; });
+                          setValoresOriginais((prev) => { const m = new Map(prev); m.delete(item.id); return m; });
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") e.currentTarget.blur();
@@ -775,15 +816,22 @@ export function Etapa3PlanoAcao({
                       <div
                         title="Clique para editar"
                         onClick={() => { setEditandoMovId(item.id); setEditandoMovVal(formatInputBRL(efetivo)); }}
-                        style={{ display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }}
+                        style={{ display: "flex", flexDirection: "column", cursor: "pointer", gap: 1 }}
                       >
-                        <span style={{
-                          fontSize: 12, fontWeight: 600,
-                          color: efetivo > 0 ? "#15803D" : "#9CA3AF",
-                        }}>
-                          {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
-                        </span>
-                        <span style={{ fontSize: 10, color: movEditado ? "#B45309" : "#D1D5DB" }} title={movEditado ? "Valor editado" : "Editar"}>✎</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                          <span style={{
+                            fontSize: 12, fontWeight: 600,
+                            color: efetivo > 0 ? "#15803D" : "#9CA3AF",
+                          }}>
+                            {efetivo > 0 ? `+${formatBRL(efetivo)}` : formatBRL(0)}
+                          </span>
+                          <span style={{ fontSize: 10, color: movEditado ? "#B45309" : "#D1D5DB" }} title={movEditado ? "Valor editado" : "Editar"}>✎</span>
+                        </div>
+                        {ativosAjustados.has(item.id) && (valoresOriginais.get(item.id) ?? 0) > 0 && (
+                          <div style={{ fontSize: 9, color: "#9CA3AF", textDecoration: "line-through" }}>
+                            {formatBRL(valoresOriginais.get(item.id)!)}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <span style={{
