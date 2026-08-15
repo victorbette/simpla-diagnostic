@@ -437,6 +437,7 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
             onCustoVidaChange={setCustoVidaMensal}
             mesesReserva={mesesReserva}
             onMesesReservaChange={setMesesReserva}
+            onPlanoReset={() => setPlanoAcao([])}
           />
         )}
         {etapa === 3 && (

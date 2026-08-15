@@ -22,6 +22,7 @@ interface Props {
   onCustoVidaChange?: (v: number) => void;
   mesesReserva?: number;
   onMesesReservaChange?: (v: number) => void;
+  onPlanoReset?: () => void;
 }
 
 const PERFIL_LABELS: Record<string, string> = {
@@ -52,6 +53,7 @@ export function Etapa2CarteiraRecomendada({
   comecandoDoZero = false, patrimonioColeta = 0,
   custoVidaMensal = 0, onCustoVidaChange,
   mesesReserva = 0, onMesesReservaChange,
+  onPlanoReset,
 }: Props) {
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
@@ -95,6 +97,7 @@ export function Etapa2CarteiraRecomendada({
         onAplicar={(meta, novosAtivos) => {
           onAlocacaoMeta(meta);
           onAtivos(novosAtivos);
+          onPlanoReset?.();
         }}
         custoVidaInicial={custoVidaMensal}
         onCustoVidaChange={onCustoVidaChange}
