@@ -102,6 +102,13 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const excedenteAnual   = tetoPGBLLive > 0 ? Math.max(0, aporteAnualPGBL - tetoPGBLLive) : 0;
   const espacoDisponivel = tetoPGBLLive > 0 ? Math.max(0, tetoPGBLLive - aporteAnualPGBL) : 0;
 
+  const mesAtual = new Date().getMonth() + 1; // 1–12
+  const mesesRestantes = Math.max(0, 12 - mesAtual + 1);
+  const jaInvestidoAno = aporteAnual.value;
+  const aporteMensalDisponivel = mesesRestantes > 0 && espacoDisponivel > 0
+    ? espacoDisponivel / mesesRestantes
+    : 0;
+
   function handleSave() {
     if (!onSave) return;
     onSave({
@@ -415,6 +422,100 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
         )}
       </div>
+
+      {/* ── CARD: Espaço Disponível para Dedução PGBL ────────────────────── */}
+      {tipoDeclaracao === "completa" && renda.value > 0 && (
+        <div style={{
+          background: "#F0F7FF",
+          border: "1px solid #BFDBFE",
+          borderRadius: 12,
+          padding: "16px 20px",
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF", marginBottom: 14 }}>
+            Espaço disponível para dedução PGBL
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            {/* Teto anual */}
+            <div style={{ background: "white", borderRadius: 8, padding: "12px 14px", border: "0.5px solid #E5E7EB" }}>
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>Teto PGBL (12%)</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
+                {fmtBRLInt(tetoPGBLLive)}
+              </div>
+              <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>no ano</div>
+            </div>
+
+            {/* Já investido */}
+            <div style={{ background: "white", borderRadius: 8, padding: "12px 14px", border: "0.5px solid #E5E7EB" }}>
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>Já investido</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: jaInvestidoAno > tetoPGBLLive ? "#B91C1C" : "#111827" }}>
+                {fmtBRLInt(jaInvestidoAno)}
+              </div>
+              <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>em {new Date().getFullYear()}</div>
+            </div>
+
+            {/* Espaço restante */}
+            <div style={{
+              background: espacoDisponivel > 0 ? "#F0FDF4" : "#FEF2F2",
+              borderRadius: 8,
+              padding: "12px 14px",
+              border: `0.5px solid ${espacoDisponivel > 0 ? "#86EFAC" : "#FECACA"}`,
+            }}>
+              <div style={{ fontSize: 10, color: espacoDisponivel > 0 ? "#15803D" : "#B91C1C", marginBottom: 4, fontWeight: 600 }}>
+                {espacoDisponivel > 0 ? "Ainda disponível" : "Teto atingido"}
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: espacoDisponivel > 0 ? "#15803D" : "#B91C1C" }}>
+                {fmtBRLInt(espacoDisponivel)}
+              </div>
+              <div style={{ fontSize: 10, color: espacoDisponivel > 0 ? "#15803D" : "#B91C1C", marginTop: 2 }}>
+                até dezembro
+              </div>
+            </div>
+          </div>
+
+          {/* Sugestão mensal */}
+          {espacoDisponivel > 0 && mesesRestantes > 0 && (
+            <div style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              background: "white",
+              borderRadius: 8,
+              border: "0.5px solid #BFDBFE",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}>
+              <div>
+                <div style={{ fontSize: 11, color: "#374151", fontWeight: 600 }}>
+                  Aporte mensal sugerido para aproveitar o teto até dezembro
+                </div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                  {mesesRestantes} {mesesRestantes === 1 ? "mês restante" : "meses restantes"} no ano
+                </div>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#2563EB", whiteSpace: "nowrap" }}>
+                {fmtBRLInt(aporteMensalDisponivel)}/mês
+              </div>
+            </div>
+          )}
+
+          {/* Aviso teto atingido */}
+          {espacoDisponivel <= 0 && (
+            <div style={{
+              marginTop: 12,
+              padding: "10px 14px",
+              background: "#FEF2F2",
+              borderRadius: 8,
+              border: "0.5px solid #FECACA",
+              fontSize: 11,
+              color: "#B91C1C",
+            }}>
+              O cliente já atingiu ou ultrapassou o teto de dedução do PGBL para {new Date().getFullYear()}.
+              Contribuições adicionais não serão dedutíveis e devem ser direcionadas ao VGBL.
+            </div>
+          )}
+        </div>
+      )}
 
       {sim && (
         <>
