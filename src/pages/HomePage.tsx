@@ -23,6 +23,7 @@ import type { Client } from "@/hooks/useClientStore";
 import { toast } from "sonner";
 import { ConfiguracoesPage } from "@/pages/ConfiguracoesPage";
 import { DiagnosticoPage } from "@/diagnostico/DiagnosticoPage";
+import { TourGuiado } from "@/components/shared/TourGuiado";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,111 @@ function formatarTelefone(valor: string): string {
   return nums.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
 }
 
+// ─── Tour ─────────────────────────────────────────────────────────────────────
+
+const TOUR_KEY = 'simpla_tour_v1_visto';
+
+const PASSOS_TOUR = [
+  {
+    titulo: '👋 Bem-vindo ao Simpla Invest!',
+    conteudo: `Estamos felizes em ter você aqui!
+
+Este é o seu Dashboard — a central de gestão de todos os seus clientes e Financial Plannings.
+
+Vamos fazer um tour rápido para você se familiarizar com o sistema. Levará menos de 2 minutos!`,
+  },
+  {
+    titulo: '🔐 Primeiro passo: redefina sua senha',
+    conteudo: `Por segurança, recomendamos que você redefina sua senha agora, antes de começar a usar o sistema.
+
+Como fazer:
+1. Clique na sua foto ou inicial no canto superior direito
+2. Acesse "Minha conta" ou "Configurações"
+3. Selecione "Alterar senha"
+4. Crie uma senha forte com letras, números e símbolos
+
+⚠️ Nunca compartilhe sua senha com ninguém.`,
+  },
+  {
+    titulo: '⚙️ Configure seu perfil',
+    conteudo: `Antes de gerar relatórios, configure seu perfil de consultor.
+
+Clique na engrenagem (Configurações) e preencha:
+- Nome completo
+- Credenciais (ex: CEA, CFP, CGA)
+- E-mail e telefone
+
+Essas informações aparecem na capa de todos os relatórios PDF gerados para seus clientes.`,
+    alvo: '[data-tour="btn-config"]',
+    posicao: 'bottom' as const,
+  },
+  {
+    titulo: '➕ Cadastre seus clientes',
+    conteudo: `Clique em "Novo Cliente" para cadastrar seus clientes.
+
+Você informará:
+- Nome completo
+- E-mail
+- Telefone
+- Observações
+
+Cada cliente terá seu próprio Financial Planning com todas as seções e ferramentas disponíveis.`,
+    alvo: '[data-tour="btn-novo-cliente"]',
+    posicao: 'bottom' as const,
+  },
+  {
+    titulo: '🔍 Busca e filtros',
+    conteudo: `Use o campo de busca para encontrar clientes pelo nome ou e-mail.
+
+Os filtros permitem visualizar clientes por status do Financial Planning:
+- Pendente — FP não iniciado
+- Em Andamento — em progresso
+- Completo — relatório gerado`,
+    alvo: '[data-tour="filtros"]',
+    posicao: 'bottom' as const,
+  },
+  {
+    titulo: '📋 Botão FP — Financial Planning',
+    conteudo: `O botão "FP" ao lado de cada cliente abre o Financial Planning completo.
+
+Lá você terá acesso a todas as seções:
+- Situação Atual
+- Liberdade Financeira
+- Proteção e Sucessão
+- Planejamento Tributário
+- Gestão de Ativos
+- Resultado e Relatório PDF`,
+    alvo: '[data-tour="btn-fp"]',
+    posicao: 'left' as const,
+  },
+  {
+    titulo: '🏷️ Status do Financial Planning',
+    conteudo: `O badge de status indica o progresso do FP de cada cliente:
+
+🔘 Pendente: nenhuma aba preenchida ainda
+🔵 Em Andamento: processo em curso
+🟢 Completo: relatório PDF gerado
+
+O status é atualizado automaticamente conforme o consultor avança no processo.`,
+    alvo: '[data-tour="badge-status"]',
+    posicao: 'left' as const,
+  },
+  {
+    titulo: '🎉 Tudo pronto!',
+    conteudo: `Você está pronto para usar o Simpla Invest Financial Planning!
+
+Lembre-se:
+🔐 Redefina sua senha se ainda não fez
+⚙️ Configure seu perfil nas Configurações
+👥 Cadastre seus clientes
+📋 Acesse o FP pelo botão azul
+
+Se precisar rever o tour a qualquer momento, clique em "Ver tour" no topo da página.
+
+Bom trabalho! 🚀`,
+  },
+];
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomePage() {
@@ -88,6 +194,7 @@ export function HomePage() {
   const [mostrarDiagnostico, setMostrarDiagnostico] = useState(false);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [tourAtivo, setTourAtivo] = useState(false);
 
   // All hooks must be before conditional returns
   const clientesOrdenados = useMemo(() => {
@@ -124,6 +231,14 @@ export function HomePage() {
       return () => document.removeEventListener("click", fechar);
     }
   }, [menuAberto]);
+
+  useEffect(() => {
+    const visto = localStorage.getItem(TOUR_KEY);
+    if (!visto) {
+      const t = setTimeout(() => setTourAtivo(true), 1000);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   const userEmail = user?.email ?? "";
   const configNome = (() => {
@@ -237,6 +352,16 @@ export function HomePage() {
 
   function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
 
+  function concluirTour() {
+    setTourAtivo(false);
+    localStorage.setItem(TOUR_KEY, 'true');
+  }
+
+  function pularTour() {
+    setTourAtivo(false);
+    localStorage.setItem(TOUR_KEY, 'true');
+  }
+
   function abrirMenu(e: React.MouseEvent, clienteId: string) {
     e.stopPropagation();
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
@@ -310,6 +435,21 @@ export function HomePage() {
               Diagnóstico
             </button>
             <button
+              onClick={() => setTourAtivo(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'none', border: '1px solid rgba(255,255,255,0.35)',
+                borderRadius: 20, padding: '5px 12px',
+                cursor: 'pointer', fontSize: 11, color: 'rgba(255,255,255,0.75)',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'white')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.75)')}
+            >
+              <i className="ti ti-player-play" style={{ fontSize: 12 }} />
+              Ver tour
+            </button>
+            <button
+              data-tour="btn-config"
               onClick={() => setMostrarConfig(true)}
               title="Configurações"
               style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "6px 8px", borderRadius: 6, display: "flex", alignItems: "center", opacity: 0.75 }}
@@ -350,6 +490,7 @@ export function HomePage() {
 
           <div className="flex items-center gap-3 shrink-0">
             <button
+              data-tour="btn-novo-cliente"
               onClick={openNovoCliente}
               className="flex items-center gap-2 text-white text-sm font-medium rounded-lg px-5 py-3 transition hover:opacity-90"
               style={{ backgroundColor: DARK }}
@@ -381,7 +522,7 @@ export function HomePage() {
         </div>
 
         {/* Toolbar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" as const }}>
+        <div data-tour="filtros" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" as const }}>
           <div style={{ position: "relative", flex: "1 1 200px", maxWidth: 320 }}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#9CA3AF" }} />
             <input
@@ -456,7 +597,7 @@ export function HomePage() {
             )}
 
             {/* Data rows */}
-            {clientesOrdenados.map((c) => (
+            {clientesOrdenados.map((c, idx) => (
                 <div
                   key={c.id}
                   style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 120px 40px", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
@@ -485,7 +626,10 @@ export function HomePage() {
                           ? { label: "Em andamento", color: "#2563EB", bg: "#DBEAFE" }
                           : { label: "Não iniciado", color: "#9CA3AF", bg: "#F3F4F6" };
                       return (
-                        <span style={{ fontSize: 11, fontWeight: 500, color: cfg.color, background: cfg.bg, padding: "3px 10px", borderRadius: 99 }}>
+                        <span
+                          {...(idx === 0 ? { 'data-tour': 'badge-status' } : {})}
+                          style={{ fontSize: 11, fontWeight: 500, color: cfg.color, background: cfg.bg, padding: "3px 10px", borderRadius: 99 }}
+                        >
                           {cfg.label}
                         </span>
                       );
@@ -500,6 +644,7 @@ export function HomePage() {
                   {/* AÇÕES */}
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <button
+                      {...(idx === 0 ? { 'data-tour': 'btn-fp' } : {})}
                       onClick={() => handleAbrirFP(c)}
                       title="Financial Planning"
                       style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
@@ -669,6 +814,14 @@ export function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Tour Guiado ── */}
+      <TourGuiado
+        passos={PASSOS_TOUR}
+        ativo={tourAtivo}
+        onConcluir={concluirTour}
+        onPular={pularTour}
+      />
     </div>
   );
 }
