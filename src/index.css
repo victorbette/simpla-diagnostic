@@ -152,6 +152,35 @@
 /* Blocos que só existem na impressão (ex.: texto das observações) */
 .doc-print-only { display: none; }
 
+/* ── Range sliders (Etapa 2 — Carteira Recomendada) ──────────── */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 99px;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: currentColor;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  margin-top: -6px;
+}
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: currentColor;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
 /* Medidor da paginação fluida (PaginaDocFluida): reproduz na tela o layout
    de impressão para medir a altura real dos blocos no modo print */
 .doc-medida-print .doc-screen-only { display: none !important; }

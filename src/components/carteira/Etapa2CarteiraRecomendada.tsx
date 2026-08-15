@@ -220,7 +220,7 @@ export function Etapa2CarteiraRecomendada({
                       step={0.5}
                       value={pct}
                       onChange={(e) => setPct(cardId, parseFloat(e.target.value))}
-                      style={{ width: "100%", accentColor: grupo.cor, height: 4 }}
+                      style={{ width: "100%", accentColor: grupo.cor, height: 8 }}
                     />
 
                     {/* % input */}
@@ -233,7 +233,7 @@ export function Etapa2CarteiraRecomendada({
                         value={pct}
                         onChange={(e) => setPct(cardId, parseFloat(e.target.value) || 0)}
                         style={{
-                          width: 38, textAlign: "right", fontSize: 12, fontWeight: 700,
+                          width: 52, textAlign: "right", fontSize: 13, fontWeight: 700,
                           border: "none", background: "transparent",
                           color: grupo.cor, outline: "none", padding: 0,
                         }}
