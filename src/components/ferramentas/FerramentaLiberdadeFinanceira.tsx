@@ -23,6 +23,8 @@ import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Ajustes {
   usarTaxaCustom: boolean;
@@ -127,6 +129,7 @@ export function FerramentaLiberdadeFinanceira({
   const [salvo, setSalvo] = useState(false);
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
   const [ajustes, setAjustes] = useState<Ajustes>(initialAjustes);
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   const CHAVE = `ferramenta_if_${clientId}`;
 
@@ -467,6 +470,44 @@ export function FerramentaLiberdadeFinanceira({
   const sliderAporteMax = 200000;
   const maxRendaSlider = 200000;
 
+  const AJUDA_LF = {
+    titulo: 'Liberdade Financeira',
+    secoes: [
+      {
+        titulo: '📌 O que é a Liberdade Financeira?',
+        conteudo: `A seção de Liberdade Financeira projeta a jornada do cliente até a independência financeira — o momento em que o patrimônio acumulado gera renda suficiente para manter o padrão de vida sem depender do trabalho ativo.\n\nO cálculo considera o patrimônio atual, os aportes mensais, a rentabilidade estimada e a renda desejada na aposentadoria.`,
+      },
+      {
+        titulo: '💰 Patrimônio Necessário',
+        conteudo: `É o valor total que o cliente precisa acumular para viver dos rendimentos.\n\nCalculado pela fórmula:\nRenda desejada × 12 ÷ 4%\n\nExemplo: renda de R$ 20.000/mês\n→ 20.000 × 12 ÷ 0,04 = R$ 6.000.000\n\nUsamos 4% ao ano como taxa de retirada segura — percentual que permite retiradas perpétuas sem consumir o capital.`,
+      },
+      {
+        titulo: '📈 Projeção Atual',
+        conteudo: `Simula o patrimônio acumulado até a data de aposentadoria considerando:\n\n- Patrimônio financeiro atual\n- Aporte mensal definido\n- Taxa de rentabilidade (IPCA + X%)\n- Crescimento real dos aportes (se ativado)\n- Impacto dos objetivos de vida\n\nSe a projeção atingir o Patrimônio Necessário antes da data alvo, o cliente está no caminho certo.`,
+      },
+      {
+        titulo: '💸 Renda Sustentável',
+        conteudo: `É a renda mensal que o cliente conseguirá gerar com o patrimônio projetado, sem consumir o capital:\n\nRenda = Projeção × 4% ÷ 12\n\nSe a Renda Sustentável for maior ou igual à Renda Desejada, o cliente atinge a independência financeira na data planejada.`,
+      },
+      {
+        titulo: '🎯 Aporte Necessário',
+        conteudo: `É o valor mensal que o cliente precisaria investir para atingir o Patrimônio Necessário exatamente na data alvo, considerando todos os objetivos de vida programados.\n\nSe o aporte atual for maior que o necessário, o cliente chegará antes do prazo.\nSe for menor, precisará de ajustes na estratégia.`,
+      },
+      {
+        titulo: '🏖️ Objetivos de Vida',
+        conteudo: `Permitem simular eventos financeiros ao longo da jornada:\n\n- Entrada: valores que entrarão (herança, venda de imóvel, bônus)\n- Saída: despesas programadas (viagem, faculdade dos filhos, reforma)\n\nCada objetivo impacta diretamente a curva de projeção e o aporte necessário.\n\nRepetição: um objetivo pode se repetir anualmente, semestralmente ou em outros intervalos.\n\nProjeto a Prazo: o valor é diluído em parcelas mensais a partir da data do objetivo.`,
+      },
+      {
+        titulo: '⚙️ Ajustes Avançados',
+        conteudo: `Permitem personalizar dois parâmetros do cálculo:\n\nTaxa de Rentabilidade:\nPor padrão, usamos IPCA + X% baseado no patrimônio e perfil do cliente. O consultor pode sobrescrever com uma taxa personalizada (mínimo 3%).\n\nCrescimento Real dos Aportes:\nSimula o aumento real dos aportes ao longo do tempo. Padrão: 2% ao ano. Representa o crescimento da capacidade de poupança com o aumento real da renda.`,
+      },
+      {
+        titulo: '📊 Gráfico de Projeção',
+        conteudo: `A linha azul mostra a evolução do patrimônio ao longo dos anos até a aposentadoria.\n\nA linha pontilhada laranja representa o Patrimônio Necessário (meta).\n\nQuando a linha azul cruza a linha laranja antes da data alvo, o cliente atingirá a independência financeira antes do prazo planejado.\n\nOs marcadores no gráfico indicam os Objetivos de Vida programados.`,
+      },
+    ],
+  };
+
   if (!result) {
     return (
       <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
@@ -484,9 +525,28 @@ export function FerramentaLiberdadeFinanceira({
         borderRadius: 12, padding: "14px 20px",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 10px" }}>
-          Parâmetros da Simulação
-        </p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>
+            Parâmetros da Simulação
+          </p>
+          <button
+            onClick={() => setPainelAjudaAberto(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "#EFF6FF",
+              border: "1px solid #BFDBFE",
+              borderRadius: 20,
+              padding: "4px 10px",
+              cursor: "pointer",
+              fontSize: 11, fontWeight: 600,
+              color: "#2563EB",
+              fontFamily: "inherit",
+            }}
+          >
+            <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+            Ajuda
+          </button>
+        </div>
 
         {/* 3 campos principais em linha */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, alignItems: "start" }}>
@@ -628,7 +688,13 @@ export function FerramentaLiberdadeFinanceira({
           borderRadius: 8, padding: "8px 12px", marginTop: 10,
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <span style={{ fontSize: 11, color: "#6B7280" }}>Taxa de rentabilidade utilizada</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 11, color: "#6B7280" }}>Taxa de rentabilidade utilizada</span>
+            <Tooltip
+              posicao="right"
+              texto={`Taxa real acima do IPCA calculada automaticamente com base no patrimônio e perfil do cliente.\n\nPode ser personalizada nos Ajustes Avançados.`}
+            />
+          </div>
           <span style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF" }}>
             {ajustes.usarTaxaCustom
               ? formatarTaxaLabel(ajustes.taxaCustomAnual)
@@ -767,9 +833,13 @@ export function FerramentaLiberdadeFinanceira({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-              Patrimônio Necessário
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Patrimônio Necessário</span>
+              <Tooltip
+                posicao="right"
+                texto={`Valor total necessário para gerar a renda desejada para sempre.\n\nFórmula: Renda × 12 ÷ 4%\n\nExemplo: R$ 20k/mês → R$ 6.000.000`}
+              />
+            </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
               {formatCurrency(patrimonioPerpetuidade)}
             </p>
@@ -784,9 +854,13 @@ export function FerramentaLiberdadeFinanceira({
 
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-              Projeção Atual
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Projeção Atual</span>
+              <Tooltip
+                posicao="right"
+                texto={`Patrimônio estimado na data de aposentadoria com o aporte e rentabilidade atuais.`}
+              />
+            </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
               {formatCurrency(projecaoComAporteAtual)}
             </p>
@@ -796,9 +870,13 @@ export function FerramentaLiberdadeFinanceira({
 
         <Card style={{ ...cardGreenTop, border: `0.5px solid ${aporteNecessario <= params.aporteMensal && patrimonioPerpetuidade > 0 ? "#BBF7D0" : "#E5E7EB"}` }}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>
-              Aporte Necessário
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Aporte Necessário</span>
+              <Tooltip
+                posicao="left"
+                texto={`Aporte mensal necessário para atingir o Patrimônio Necessário na data planejada, considerando todos os objetivos de vida.`}
+              />
+            </div>
             <p style={{
               fontSize: 20, fontWeight: 800, margin: 0,
               color: aporteNecessario <= params.aporteMensal ? "#15803D" : "#B91C1C",
@@ -824,9 +902,13 @@ export function FerramentaLiberdadeFinanceira({
 
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>
-              Renda Sustentável
-            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Sustentável</span>
+              <Tooltip
+                posicao="left"
+                texto={`Renda mensal que a projeção atual pode gerar sem consumir o capital.\n\nFórmula: Projeção × 4% ÷ 12`}
+              />
+            </div>
             <p style={{
               fontSize: 20, fontWeight: 800, margin: 0,
               color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827",
@@ -965,6 +1047,14 @@ export function FerramentaLiberdadeFinanceira({
           )}
         </CardContent>
       </Card>}
+
+      {/* ── PAINEL LATERAL DE AJUDA ─────────────────────────────────────────── */}
+      <PainelAjuda
+        titulo={AJUDA_LF.titulo}
+        secoes={AJUDA_LF.secoes}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
 
       {/* ── 7. BOTÃO SALVAR ─────────────────────────────────────────────────── */}
       <style>{`@keyframes lf-spin { to { transform: rotate(360deg); } }`}</style>
