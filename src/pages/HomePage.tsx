@@ -83,18 +83,16 @@ Este é o seu Dashboard — a central de gestão de todos os seus clientes e Fin
 Vamos fazer um tour rápido para você se familiarizar com o sistema. Levará menos de 2 minutos!`,
   },
   {
-    titulo: '🔐 Primeiro passo: redefina sua senha',
+    titulo: '🔐 Redefina sua senha',
     conteudo: `Por segurança, recomendamos que você redefina sua senha antes de começar a usar o sistema.
 
 Como fazer:
-1. Clique na engrenagem de Configurações (destacada abaixo)
+1. Clique na engrenagem de Configurações
 2. Role até a seção "Segurança"
 3. Clique em "Redefinir senha"
 4. Você receberá um e-mail com o link para criar uma nova senha
 
 ⚠️ Use uma senha forte e não a compartilhe com ninguém.`,
-    alvo: '[data-tour="btn-config"]',
-    posicao: 'bottom' as const,
   },
   {
     titulo: '⚙️ Configure seu perfil',
@@ -103,15 +101,13 @@ Como fazer:
 Clique na engrenagem (Configurações) e preencha:
 - Nome completo
 - Credenciais (ex: CEA, CFP, CGA)
-- E-mail e telefone
+- E-mail e telefone de contato
 
 Essas informações aparecem na capa de todos os relatórios PDF gerados para seus clientes.`,
-    alvo: '[data-tour="btn-config"]',
-    posicao: 'bottom' as const,
   },
   {
     titulo: '➕ Cadastre seus clientes',
-    conteudo: `Clique em "Novo Cliente" para cadastrar seus clientes.
+    conteudo: `Clique no botão "Novo Cliente" para cadastrar seus clientes.
 
 Você informará:
 - Nome completo
@@ -120,22 +116,20 @@ Você informará:
 - Observações
 
 Cada cliente terá seu próprio Financial Planning com todas as seções e ferramentas disponíveis.`,
-    alvo: '[data-tour="btn-novo-cliente"]',
-    posicao: 'bottom' as const,
   },
   {
     titulo: '🔍 Busca e filtros',
-    conteudo: `Use o campo de busca para encontrar clientes pelo nome ou e-mail.
+    conteudo: `Use o campo de busca para encontrar clientes pelo nome ou e-mail rapidamente.
 
 Os filtros permitem visualizar clientes por status do Financial Planning:
 - Pendente — FP não iniciado
-- Em Andamento — em progresso
-- Completo — relatório gerado`,
-    alvo: '[data-tour="filtros"]',
-    posicao: 'bottom' as const,
+- Em Andamento — processo em curso
+- Completo — relatório PDF gerado
+
+A ordenação pode ser feita por ordem A→Z ou por atualização mais recente.`,
   },
   {
-    titulo: '📋 Botão FP — Financial Planning',
+    titulo: '📋 Financial Planning (botão FP)',
     conteudo: `O botão "FP" ao lado de cada cliente abre o Financial Planning completo.
 
 Lá você terá acesso a todas as seções:
@@ -144,11 +138,7 @@ Lá você terá acesso a todas as seções:
 - Proteção e Sucessão
 - Planejamento Tributário
 - Gestão de Ativos
-- Resultado e Relatório PDF
-
-💡 Cadastre seu primeiro cliente para ver este botão aparecer na lista.`,
-    alvo: '[data-tour="btn-fp"]',
-    posicao: 'left' as const,
+- Resultado e Relatório PDF`,
   },
   {
     titulo: '🏷️ Status do Financial Planning',
@@ -158,23 +148,19 @@ Lá você terá acesso a todas as seções:
 🔵 Em Andamento: processo em curso
 🟢 Completo: relatório PDF gerado
 
-O status é atualizado automaticamente conforme o consultor avança no processo.
-
-💡 O badge aparecerá ao lado de cada cliente cadastrado.`,
-    alvo: '[data-tour="badge-status"]',
-    posicao: 'left' as const,
+O status é atualizado automaticamente conforme o consultor avança no processo.`,
   },
   {
     titulo: '🎉 Tudo pronto!',
     conteudo: `Você está pronto para usar o Simpla Invest Financial Planning!
 
 Lembre-se:
-🔐 Redefina sua senha se ainda não fez
-⚙️ Configure seu perfil nas Configurações
+🔐 Redefina sua senha nas Configurações
+⚙️ Configure seu perfil antes de gerar relatórios
 👥 Cadastre seus clientes
-📋 Acesse o FP pelo botão azul
+📋 Acesse o FP pelo botão azul ao lado de cada cliente
 
-Se precisar rever o tour a qualquer momento, clique em "Ver tour" no topo da página.
+Se quiser rever o tour a qualquer momento, clique em "Ver tour" no topo da página.
 
 Bom trabalho! 🚀`,
   },
