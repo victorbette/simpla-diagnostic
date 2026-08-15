@@ -3,6 +3,8 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { getAliquotaITCMD } from "@/lib/itcmd";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -210,6 +212,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const [salvo, setSalvo] = useState(false);
   const [invalidezEditada, setInvalidezEditada] = useState<boolean>(() => df.invalidezEditada === true);
   const [doencaGraveEditada, setDoencaGraveEditada] = useState<boolean>(() => df.doencaGraveEditada === true);
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   // Atualiza pctITCMD quando o UF do cliente muda (ex: navegação entre clientes),
   // mas só se o consultor nunca tiver salvo um valor explícito.
@@ -353,8 +356,68 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
   const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiroEstimado) || 0;
 
+  const AJUDA_PROTECAO = {
+    titulo: 'Proteção e Sucessão',
+    secoes: [
+      {
+        titulo: '📌 O que é a Proteção e Sucessão?',
+        conteudo: `Esta seção analisa quanto o cliente precisa em seguros e coberturas para proteger sua família e patrimônio em caso de imprevistos.\n\nSão avaliadas três dimensões:\n- Necessidades Imediatas: custos de inventário e dívidas\n- Necessidades Contínuas: manutenção do padrão de vida da família\n- Coberturas em Vida: invalidez e doenças graves`,
+      },
+      {
+        titulo: '⚡ Necessidades Imediatas',
+        conteudo: `São os custos que surgem imediatamente após um falecimento:\n\nITCMD (Imposto de Transmissão):\nImposto estadual sobre herança. A alíquota varia por estado e é aplicada sobre o patrimônio total. Preenchido automaticamente com base no estado do cliente.\n\nCustos Advocatícios:\nHonorários para abertura de inventário. Padrão de 10% do patrimônio — editável pelo consultor.\n\nDívidas e Financiamentos:\nSaldo de dívidas que precisam ser quitadas.\n\nO total das Necessidades Imediatas é a soma desses três itens.`,
+      },
+      {
+        titulo: '👨‍👩‍👧 Necessidades Contínuas',
+        conteudo: `São os recursos necessários para manter o padrão de vida da família após o falecimento do segurado.\n\nCálculo da família:\n(Despesas mensais - Renda do cônjuge) × 12 × Anos de suporte\n\nCálculo por filho:\nCusto mensal × 12 × (Idade de independência - Idade atual)\n\nSaldo de Previdência:\nDeduzido do total, pois representa um recurso já disponível para a família.\n\nO subtotal contínuo é: Família + Filhos - Previdência`,
+      },
+      {
+        titulo: '🏥 Coberturas em Vida',
+        conteudo: `Proteções para situações onde o cliente continua vivo mas com capacidade de geração de renda comprometida:\n\nInvalidez Permanente:\nCalculado automaticamente como Despesas mensais × 60 (5 anos de cobertura).\nO consultor pode ajustar manualmente.\n\nDoenças Graves:\nCalculado automaticamente como Despesas mensais × 12 (1 ano de cobertura).\nCobre custos de tratamento e recuperação.\n\nAmbas as coberturas podem ser editadas e restauradas ao valor automático.`,
+      },
+      {
+        titulo: '🛡️ Capital Total Necessário',
+        conteudo: `É a soma de todas as necessidades:\n\nSeguro de Vida necessário:\n= Necessidades Imediatas + Necessidades Contínuas\n\nCoberturas em Vida:\n= Invalidez + Doenças Graves\n\nCapital Total:\n= Seguro de Vida + Coberturas em Vida\n\nGap de proteção:\n= Capital Total Necessário - Cobertura Atual\n\nUm gap positivo indica que o cliente está desprotegido. Um gap negativo indica que a cobertura atual é suficiente.`,
+      },
+      {
+        titulo: '📋 Cobertura Atual',
+        conteudo: `Registre os seguros que o cliente já possui:\n\n- Seguro de Vida atual (R$)\n- Seguro de Invalidez atual (R$)\n- Seguro de Doenças Graves atual (R$)\n\nDados de Saúde:\nInformações relevantes para cotação de seguros — altura, peso e se é fumante.\n\nFumantes podem ter prêmios mais elevados e limitações de cobertura em algumas seguradoras.`,
+      },
+      {
+        titulo: '📊 Como interpretar os resultados',
+        conteudo: `O score de Proteção é calculado como:\n\nCobertura Atual ÷ Capital Necessário × 100\n\n0–30: Crítico — proteção insuficiente, risco alto para a família\n31–50: Atenção Urgente — cobertura parcial, lacunas significativas\n51–90: Precisa Desenvolver — proteção em andamento, mas incompleta\n91–100: Caminho Certo — proteção adequada para a situação atual\n\nLembre-se: seguros devem ser revisados periodicamente conforme o patrimônio e a família crescem.`,
+      },
+      {
+        titulo: '💡 Dicas para o consultor',
+        conteudo: `• O ITCMD é preenchido automaticamente com a alíquota do estado do cliente — verifique se está correto para patrimônios com alíquotas progressivas.\n\n- Os custos advocatícios de 10% são uma estimativa conservadora — em inventários complexos podem ser maiores.\n\n- A invalidez × 60 meses e doenças graves × 12 meses são referências. Ajuste conforme o perfil e necessidades específicas do cliente.\n\n- Para clientes com filhos pequenos, o componente de filhos nas Necessidades Contínuas tende a ser o maior.\n\n- Sempre considere o saldo de previdência como um ativo que reduz a necessidade de seguro de vida.`,
+      },
+    ],
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
+
+      {/* ── HEADER COM BOTÃO AJUDA ────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#111827" }}>Proteção e Sucessão</p>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 4,
+            background: "#EFF6FF",
+            border: "1px solid #BFDBFE",
+            borderRadius: 20,
+            padding: "4px 10px",
+            cursor: "pointer",
+            fontSize: 11, fontWeight: 600,
+            color: "#2563EB",
+            fontFamily: "inherit",
+          }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+          Ajuda
+        </button>
+      </div>
 
       {/* ── CARD 1 — Necessidades Imediatas ──────────────────────────────── */}
       <div style={CARD}>
@@ -372,7 +435,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
         <span style={SECTION_LABEL}>Configuração Tributária</span>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>ITCMD (%)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...LABEL, marginBottom: 0 }}>ITCMD (%)</span>
+              <Tooltip posicao="right" texto={`Imposto estadual sobre herança.\nPreenchido automaticamente com a alíquota do estado do cliente.\nEditável pelo consultor.`} />
+            </div>
             <input
               type="number"
               min={0}
@@ -405,7 +471,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             )}
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Custos Advocatícios (%)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...LABEL, marginBottom: 0 }}>Custos Advocatícios (%)</span>
+              <Tooltip posicao="right" texto={`Honorários para abertura de inventário.\nPadrão: 10% do patrimônio.\nEditável pelo consultor.`} />
+            </div>
             <input
               type="number"
               min={0}
@@ -505,14 +574,15 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={{ ...LABEL, display: "flex", alignItems: "center" }}>
-              Despesas Mensais da Família
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...LABEL, marginBottom: 0 }}>Despesas Mensais da Família</span>
               {custoDeVidaColeta > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
+                <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
                   Da coleta
                 </span>
               )}
-            </label>
+              <Tooltip posicao="right" texto={`Despesas mensais da família que precisam ser mantidas após o falecimento do segurado.`} />
+            </div>
             <CurrencyInput value={data.despesasMensais} onChange={(v) => upd({ despesasMensais: v })} />
           </div>
           <div style={FIELD_WRAP}>
@@ -520,7 +590,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
             <CurrencyInput value={data.rendaConjuge} onChange={(v) => upd({ rendaConjuge: v })} />
           </div>
           <div style={FIELD_WRAP}>
-            <label style={LABEL}>Período de Suporte (anos)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...LABEL, marginBottom: 0 }}>Período de Suporte (anos)</span>
+              <Tooltip posicao="right" texto={`Por quantos anos a família precisará do suporte financeiro do seguro até se tornar financeiramente independente.`} />
+            </div>
             <input
               type="number"
               min={1}
@@ -653,10 +726,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...LABEL, marginBottom: 0 }}>Capital para Invalidez Permanente (R$)</span>
               {!invalidezEditada ? (
-                <span style={{ fontSize: 10, color: "#2563EB", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 6, fontWeight: 600, flexShrink: 0 }}>
+                <span style={{ fontSize: 10, color: "#2563EB", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
                   CALCULADO
                 </span>
               ) : (
@@ -665,11 +738,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                     setInvalidezEditada(false);
                     upd({ capitalInvalidez: calc.invalidezCalculada });
                   }}
-                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer", marginLeft: 6, padding: 0 }}
+                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                 >
                   ↺ Restaurar automático
                 </button>
               )}
+              <Tooltip posicao="left" texto={`Cobertura para perda permanente da capacidade de trabalho.\nAutomático: despesas × 60 meses.\nEditável pelo consultor.`} />
             </div>
             <CurrencyInput
               value={invalidezEditada ? (Number(data.capitalInvalidez) || 0) : calc.invalidezCalculada}
@@ -701,6 +775,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                   ↺ Restaurar automático
                 </button>
               )}
+              <Tooltip posicao="left" texto={`Cobertura para diagnóstico de doenças graves (câncer, AVC, infarto, etc.).\nAutomático: despesas × 12 meses.\nEditável pelo consultor.`} />
             </div>
             <CurrencyInput
               value={calc.capitalDoencaGraveEfetivo}
@@ -911,7 +986,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
           {/* Total geral */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#F0F7FF", borderRadius: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Capital Total Necessário</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Capital Total Necessário</span>
+              <Tooltip posicao="left" texto={`Diferença entre o capital necessário e a cobertura atual.\nGap positivo = cliente desprotegido.\nGap negativo = cobertura suficiente.`} />
+            </div>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#1E3A8A" }}>{formatCurrency(calc.capitalNecessario)}</span>
           </div>
         </div>
@@ -942,6 +1020,14 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           )
         )}
       </div>
+
+      {/* ── PAINEL LATERAL DE AJUDA ─────────────────────────────────────────── */}
+      <PainelAjuda
+        titulo={AJUDA_PROTECAO.titulo}
+        secoes={AJUDA_PROTECAO.secoes}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
 
       {/* ── BOTÃO SALVAR ─────────────────────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingBottom: 8 }}>
