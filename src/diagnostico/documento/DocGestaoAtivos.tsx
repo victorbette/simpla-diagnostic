@@ -5,7 +5,7 @@ import { DOC } from "@/lib/documentoStyles";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 
 function formatBRL(v: number): string {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 
 interface Props { lead: Lead; }

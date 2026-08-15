@@ -1,7 +1,7 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
 import type { DadosColetaDiag } from "./types";
 
-const TAXA_MENSAL = Math.pow(1.04, 1 / 12) - 1;
+const TAXA_MENSAL = Math.pow(1.045, 1 / 12) - 1;
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;

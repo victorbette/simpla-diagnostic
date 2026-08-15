@@ -105,7 +105,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
             </div>
           )}
 
-          {leads.map((lead) => (
+          {[...leads].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((lead) => (
             <div
               key={lead.id}
               style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.2fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}

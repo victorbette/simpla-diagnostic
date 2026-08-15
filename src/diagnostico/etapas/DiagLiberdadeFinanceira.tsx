@@ -514,6 +514,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         mesIF={mesIF}
         mesNascimento={mesNascimento}
         patrimonioNecessario={patrimonioPerpetuidade}
+        taxaLabel={ajustes.usarTaxaCustom
+          ? `${ajustes.taxaCustomAnual.toFixed(1)}% a.a. real`
+          : `${(TAXA_PADRAO_ANUAL * 100).toFixed(1)}% a.a. real`}
       />
 
       {/* ── 3. Cards de resultado ── */}
