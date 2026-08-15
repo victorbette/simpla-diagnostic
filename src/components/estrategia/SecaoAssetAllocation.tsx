@@ -2,6 +2,8 @@ import { PieChart as PieChartIcon } from "lucide-react";
 import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/format";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 import { formatBRL, formatPct } from "@/lib/carteira/calculos";
 import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
 import { FerramentaCarteira } from "@/components/carteira";
@@ -40,6 +42,37 @@ const PERFIS: { id: PerfilRisco; label: string; descricao: string; cor: string; 
   { id: "arrojado",             label: "Arrojado",              descricao: "Aceita mais risco por mais retorno",  cor: "#B91C1C", bg: "#FEE2E2" },
 ];
 
+const AJUDA_GESTAO_ATIVOS = [
+  {
+    titulo: "📌 O que é a Gestão de Ativos?",
+    conteudo: `A Gestão de Ativos é a seção onde estruturamos a carteira de investimentos do cliente, comparamos a situação atual com a alocação ideal e definimos o plano de ação para rebalanceamento.\n\nO processo é dividido em 4 etapas dentro da Ferramenta de Gestão de Carteira:\n1. Carteira Atual — o que o cliente tem hoje\n2. Recomendada — o que deveria ter (% por classe)\n3. Plano de Ação — como chegar lá\n4. Resultado — visão final da carteira`,
+  },
+  {
+    titulo: "📊 Alocação Atual × Proposta",
+    conteudo: `O gráfico de pizza compara a distribuição atual da carteira do cliente com a alocação proposta (meta).\n\nAlocação Atual:\nCalculada com base nos ativos informados na Etapa 1 (Carteira Atual), distribuídos por classe.\n\nAlocação Proposta:\nDefinida na Etapa 2 (Recomendada) com base no perfil do cliente e no padrão Simpla Invest.\n\nComeçando do Zero:\nQuando o cliente não tem carteira, exibe apenas a pizza da Alocação Proposta centralizada.`,
+  },
+  {
+    titulo: "🏦 Como sua carteira deverá ficar",
+    conteudo: `Tabela com a composição final da carteira após a execução do Plano de Ação.\n\nMostra cada ativo com:\n- Nome e classe\n- Segmento\n- Vencimento (quando aplicável)\n- Valor final em R$\n\nO Total da carteira recomendada é a soma dos valores meta por classe, calculado como:\n% Meta × (Patrimônio + Aporte Disponível)\n\nEsta tabela é atualizada automaticamente após salvar a carteira na Etapa 4.`,
+  },
+  {
+    titulo: "📈 Alocação Proposta por Classe",
+    conteudo: `Tabela resumida com os percentuais e valores recomendados para cada classe de ativo.\n\nClasses disponíveis:\n- Resgate Longo (Renda Fixa longa)\n- Resgate Rápido (Renda Fixa curta/liquidez)\n- Ações\n- Fundos Imobiliários (FIIs)\n- Exterior\n- Cripto\n- Alternativos\n- Previdência Privada\n\nOs percentuais são definidos na Etapa 2 e os valores são calculados sobre o patrimônio base (atual + aporte).\n\n*Os valores são meramente ilustrativos.`,
+  },
+  {
+    titulo: "🔄 Como usar a Ferramenta de Carteira",
+    conteudo: `Clique em "Abrir Ferramenta de Carteira" para acessar as 4 etapas:\n\nEtapa 1 — Carteira Atual:\nLance todos os ativos que o cliente possui hoje, com valor, segmento e vencimento.\n\nEtapa 2 — Recomendada:\nDefina os percentuais de alocação ideal por classe. O sistema calcula automaticamente os valores com base no patrimônio e aporte disponível.\n\nEtapa 3 — Plano de Ação:\nVisualize e ajuste as movimentações sugeridas (resgates e aportes) para chegar à alocação recomendada.\n\nEtapa 4 — Resultado:\nVisualize a carteira final e salve. Os dados são persistidos no Supabase e refletidos nesta página.`,
+  },
+  {
+    titulo: "⚖️ Padrão Simpla de Alocação",
+    conteudo: `A Simpla Invest segue uma alocação padrão por perfil de risco:\n\nConservador:\nRL 42% | RR 50% | Ações 2% | FIIs 2% | Ext 4% | Cripto 0%\n\nConservador Moderado:\nRL 43% | RR 35% | Ações 7% | FIIs 6% | Ext 9% | Cripto 0%\n\nModerado:\nRL 41% | RR 25% | Ações 13% | FIIs 7% | Ext 13% | Cripto 1%\n\nArrojado:\nRL 37% | RR 15% | Ações 20% | FIIs 9% | Ext 17,5% | Cripto 1,5%\n\nEsses percentuais são aplicados automaticamente na Etapa 2 e podem ser ajustados pelo consultor.`,
+  },
+  {
+    titulo: "💡 Dicas para o consultor",
+    conteudo: `• Lance todos os ativos do cliente na Etapa 1 antes de definir a recomendação — isso garante uma comparação precisa.\n\n• O aporte disponível pré-preenche automaticamente quando o cliente está Começando do Zero.\n\n• Use o botão "Sugerir ajustes por classe" no Plano de Ação para redistribuir valores automaticamente dentro de cada classe.\n\n• Os dados são salvos automaticamente ao navegar entre etapas — não é necessário clicar "Salvar" a cada passo.\n\n• O salvamento definitivo (Supabase) ocorre ao clicar "Salvar Carteira" na Etapa 4.\n\n• Vencimentos informados na Etapa 1 aparecem automaticamente no card "Como sua carteira deverá ficar".`,
+  },
+];
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function SecaoAssetAllocation({
@@ -55,6 +88,7 @@ export function SecaoAssetAllocation({
   onUpdate,
 }: Props) {
   const [carteiraOpen, setCarteiraOpen] = useState(false);
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   function handleCarteiraSave(r: CarteiraResultado) {
     const patrimonio = r.patrimonio;
@@ -193,7 +227,23 @@ export function SecaoAssetAllocation({
   if (!resultadoCarteira) {
     return (
       <>
+        <PainelAjuda
+          titulo="Gestão de Ativos"
+          secoes={AJUDA_GESTAO_ATIVOS}
+          aberto={painelAjudaAberto}
+          onFechar={() => setPainelAjudaAberto(false)}
+        />
         <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Gestão de Ativos</h2>
+            <button
+              onClick={() => setPainelAjudaAberto(true)}
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#2563EB", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
+            >
+              <i className="ti ti-help-circle" style={{ fontSize: 14 }} />
+              Ajuda
+            </button>
+          </div>
           {perfilCard}
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div style={{ backgroundColor: "white", border: "2px dashed #3B82F6", borderRadius: 12, padding: "40px 32px", textAlign: "center", maxWidth: 480, width: "100%", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
@@ -259,12 +309,28 @@ export function SecaoAssetAllocation({
 
   return (
     <>
+      <PainelAjuda
+        titulo="Gestão de Ativos"
+        secoes={AJUDA_GESTAO_ATIVOS}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 20 }}>
 
         {perfilCard}
 
         {/* Section header */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Gestão de Ativos</h2>
+            <button
+              onClick={() => setPainelAjudaAberto(true)}
+              style={{ display: "flex", alignItems: "center", gap: 4, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#2563EB" }}
+            >
+              <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+              Ajuda
+            </button>
+          </div>
           <button
             onClick={() => setCarteiraOpen(true)}
             style={{ fontSize: 12, fontWeight: 600, color: "#000000", backgroundColor: "transparent", border: "1px solid #000000", borderRadius: 6, padding: "6px 14px", cursor: "pointer" }}
@@ -274,11 +340,17 @@ export function SecaoAssetAllocation({
         </div>
 
         {/* Card 2 — Alocação Atual × Proposta */}
-        <CardAlocacaoComparativa
-          macroAtual={rc.macroAtual}
-          macroMeta={rc.macroMeta}
-          patrimonio={rc.patrimonio}
-        />
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Alocação Atual × Proposta</span>
+            <Tooltip posicao="right" texto="Compara a distribuição atual da carteira com a alocação ideal recomendada. Atualizado após salvar a carteira na Etapa 4." />
+          </div>
+          <CardAlocacaoComparativa
+            macroAtual={rc.macroAtual}
+            macroMeta={rc.macroMeta}
+            patrimonio={rc.patrimonio}
+          />
+        </div>
 
         {/* Card 3 — Alocação Proposta por Classe (hierarchical) */}
         <div style={{ ...CARD, padding: 0, overflow: "hidden" }}>
@@ -290,11 +362,15 @@ export function SecaoAssetAllocation({
 
           {/* Table header */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "8px 12px", borderBottom: "0.5px solid #E5E7EB" }}>
-            {(["CLASSE / SUBCLASSE", "%", "R$"] as const).map((h, i) => (
-              <span key={h} style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: i === 0 ? "left" : "right" }}>
-                {h}
-              </span>
-            ))}
+            <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>CLASSE / SUBCLASSE</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+              <Tooltip posicao="left" texto={`Percentual ideal para cada classe conforme o perfil do cliente.\nDefinido na Etapa 2 da ferramenta de Gestão de Carteira.`} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>%</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+              <Tooltip posicao="left" texto={`Valor calculado como:\n% Meta × (Patrimônio + Aporte Disponível)\n\n*Os valores são meramente ilustrativos.`} />
+              <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>R$</span>
+            </div>
           </div>
 
           {/* Groups */}
@@ -350,7 +426,10 @@ export function SecaoAssetAllocation({
 
           {/* Footer */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
+              <Tooltip posicao="top" texto="Soma dos valores meta de todas as classes. Igual ao patrimônio atual + aporte disponível." />
+            </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
             </div>
