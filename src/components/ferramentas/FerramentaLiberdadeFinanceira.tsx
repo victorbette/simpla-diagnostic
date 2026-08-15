@@ -571,7 +571,7 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+              {(params.rendaDesejada ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
             </div>
           </div>
 
@@ -598,7 +598,7 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {params.aporteMensal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+              {(params.aporteMensal ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
             </div>
           </div>
 
@@ -642,7 +642,7 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {params.patrimonioInicial.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
+              {(params.patrimonioInicial ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
             </div>
           </div>
 
