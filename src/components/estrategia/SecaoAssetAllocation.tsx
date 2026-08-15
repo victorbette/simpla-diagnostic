@@ -44,31 +44,31 @@ const PERFIS: { id: PerfilRisco; label: string; descricao: string; cor: string; 
 
 const AJUDA_GESTAO_ATIVOS = [
   {
-    titulo: "📌 O que é a Gestão de Ativos?",
+    titulo: "O que é a Gestão de Ativos?",
     conteudo: `A Gestão de Ativos é a seção onde estruturamos a carteira de investimentos do cliente, comparamos a situação atual com a alocação ideal e definimos o plano de ação para rebalanceamento.\n\nO processo é dividido em 4 etapas dentro da Ferramenta de Gestão de Carteira:\n1. Carteira Atual — o que o cliente tem hoje\n2. Recomendada — o que deveria ter (% por classe)\n3. Plano de Ação — como chegar lá\n4. Resultado — visão final da carteira`,
   },
   {
-    titulo: "📊 Alocação Atual × Proposta",
+    titulo: "Alocação Atual × Proposta",
     conteudo: `O gráfico de pizza compara a distribuição atual da carteira do cliente com a alocação proposta (meta).\n\nAlocação Atual:\nCalculada com base nos ativos informados na Etapa 1 (Carteira Atual), distribuídos por classe.\n\nAlocação Proposta:\nDefinida na Etapa 2 (Recomendada) com base no perfil do cliente e no padrão Simpla Invest.\n\nComeçando do Zero:\nQuando o cliente não tem carteira, exibe apenas a pizza da Alocação Proposta centralizada.`,
   },
   {
-    titulo: "🏦 Como sua carteira deverá ficar",
+    titulo: "Como sua carteira deverá ficar",
     conteudo: `Tabela com a composição final da carteira após a execução do Plano de Ação.\n\nMostra cada ativo com:\n- Nome e classe\n- Segmento\n- Vencimento (quando aplicável)\n- Valor final em R$\n\nO Total da carteira recomendada é a soma dos valores meta por classe, calculado como:\n% Meta × (Patrimônio + Aporte Disponível)\n\nEsta tabela é atualizada automaticamente após salvar a carteira na Etapa 4.`,
   },
   {
-    titulo: "📈 Alocação Proposta por Classe",
+    titulo: "Alocação Proposta por Classe",
     conteudo: `Tabela resumida com os percentuais e valores recomendados para cada classe de ativo.\n\nClasses disponíveis:\n- Resgate Longo (Renda Fixa longa)\n- Resgate Rápido (Renda Fixa curta/liquidez)\n- Ações\n- Fundos Imobiliários (FIIs)\n- Exterior\n- Cripto\n- Alternativos\n- Previdência Privada\n\nOs percentuais são definidos na Etapa 2 e os valores são calculados sobre o patrimônio base (atual + aporte).\n\n*Os valores são meramente ilustrativos.`,
   },
   {
-    titulo: "🔄 Como usar a Ferramenta de Carteira",
+    titulo: "Como usar a Ferramenta de Carteira",
     conteudo: `Clique em "Abrir Ferramenta de Carteira" para acessar as 4 etapas:\n\nEtapa 1 — Carteira Atual:\nLance todos os ativos que o cliente possui hoje, com valor, segmento e vencimento.\n\nEtapa 2 — Recomendada:\nDefina os percentuais de alocação ideal por classe. O sistema calcula automaticamente os valores com base no patrimônio e aporte disponível.\n\nEtapa 3 — Plano de Ação:\nVisualize e ajuste as movimentações sugeridas (resgates e aportes) para chegar à alocação recomendada.\n\nEtapa 4 — Resultado:\nVisualize a carteira final e salve. Os dados são persistidos no Supabase e refletidos nesta página.`,
   },
   {
-    titulo: "⚖️ Padrão Simpla de Alocação",
+    titulo: "Padrão Simpla de Alocação",
     conteudo: `A Simpla Invest segue uma alocação padrão por perfil de risco:\n\nConservador:\nRL 42% | RR 50% | Ações 2% | FIIs 2% | Ext 4% | Cripto 0%\n\nConservador Moderado:\nRL 43% | RR 35% | Ações 7% | FIIs 6% | Ext 9% | Cripto 0%\n\nModerado:\nRL 41% | RR 25% | Ações 13% | FIIs 7% | Ext 13% | Cripto 1%\n\nArrojado:\nRL 37% | RR 15% | Ações 20% | FIIs 9% | Ext 17,5% | Cripto 1,5%\n\nEsses percentuais são aplicados automaticamente na Etapa 2 e podem ser ajustados pelo consultor.`,
   },
   {
-    titulo: "💡 Dicas para o consultor",
+    titulo: "Dicas para o consultor",
     conteudo: `• Lance todos os ativos do cliente na Etapa 1 antes de definir a recomendação — isso garante uma comparação precisa.\n\n• O aporte disponível pré-preenche automaticamente quando o cliente está Começando do Zero.\n\n• Use o botão "Sugerir ajustes por classe" no Plano de Ação para redistribuir valores automaticamente dentro de cada classe.\n\n• Os dados são salvos automaticamente ao navegar entre etapas — não é necessário clicar "Salvar" a cada passo.\n\n• O salvamento definitivo (Supabase) ocorre ao clicar "Salvar Carteira" na Etapa 4.\n\n• Vencimentos informados na Etapa 1 aparecem automaticamente no card "Como sua carteira deverá ficar".`,
   },
 ];

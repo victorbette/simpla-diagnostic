@@ -474,35 +474,35 @@ export function FerramentaLiberdadeFinanceira({
     titulo: 'Liberdade Financeira',
     secoes: [
       {
-        titulo: '📌 O que é a Liberdade Financeira?',
+        titulo: 'O que é a Liberdade Financeira?',
         conteudo: `A seção de Liberdade Financeira projeta a jornada do cliente até a independência financeira — o momento em que o patrimônio acumulado gera renda suficiente para manter o padrão de vida sem depender do trabalho ativo.\n\nO cálculo considera o patrimônio atual, os aportes mensais, a rentabilidade estimada e a renda desejada na aposentadoria.`,
       },
       {
-        titulo: '💰 Patrimônio Necessário',
+        titulo: 'Patrimônio Necessário',
         conteudo: `É o valor total que o cliente precisa acumular para viver dos rendimentos.\n\nCalculado pela fórmula:\nRenda desejada × 12 ÷ 4%\n\nExemplo: renda de R$ 20.000/mês\n→ 20.000 × 12 ÷ 0,04 = R$ 6.000.000\n\nUsamos 4% ao ano como taxa de retirada segura — percentual que permite retiradas perpétuas sem consumir o capital.`,
       },
       {
-        titulo: '📈 Projeção Atual',
+        titulo: 'Projeção Atual',
         conteudo: `Simula o patrimônio acumulado até a data de aposentadoria considerando:\n\n- Patrimônio financeiro atual\n- Aporte mensal definido\n- Taxa de rentabilidade (IPCA + X%)\n- Crescimento real dos aportes (se ativado)\n- Impacto dos objetivos de vida\n\nSe a projeção atingir o Patrimônio Necessário antes da data alvo, o cliente está no caminho certo.`,
       },
       {
-        titulo: '💸 Renda Sustentável',
+        titulo: 'Renda Sustentável',
         conteudo: `É a renda mensal que o cliente conseguirá gerar com o patrimônio projetado, sem consumir o capital:\n\nRenda = Projeção × 4% ÷ 12\n\nSe a Renda Sustentável for maior ou igual à Renda Desejada, o cliente atinge a independência financeira na data planejada.`,
       },
       {
-        titulo: '🎯 Aporte Necessário',
+        titulo: 'Aporte Necessário',
         conteudo: `É o valor mensal que o cliente precisaria investir para atingir o Patrimônio Necessário exatamente na data alvo, considerando todos os objetivos de vida programados.\n\nSe o aporte atual for maior que o necessário, o cliente chegará antes do prazo.\nSe for menor, precisará de ajustes na estratégia.`,
       },
       {
-        titulo: '🏖️ Objetivos de Vida',
+        titulo: 'Objetivos de Vida',
         conteudo: `Permitem simular eventos financeiros ao longo da jornada:\n\n- Entrada: valores que entrarão (herança, venda de imóvel, bônus)\n- Saída: despesas programadas (viagem, faculdade dos filhos, reforma)\n\nCada objetivo impacta diretamente a curva de projeção e o aporte necessário.\n\nRepetição: um objetivo pode se repetir anualmente, semestralmente ou em outros intervalos.\n\nProjeto a Prazo: o valor é diluído em parcelas mensais a partir da data do objetivo.`,
       },
       {
-        titulo: '⚙️ Ajustes Avançados',
+        titulo: 'Ajustes Avançados',
         conteudo: `Permitem personalizar dois parâmetros do cálculo:\n\nTaxa de Rentabilidade:\nPor padrão, usamos IPCA + X% baseado no patrimônio e perfil do cliente. O consultor pode sobrescrever com uma taxa personalizada (mínimo 3%).\n\nCrescimento Real dos Aportes:\nSimula o aumento real dos aportes ao longo do tempo. Padrão: 2% ao ano. Representa o crescimento da capacidade de poupança com o aumento real da renda.`,
       },
       {
-        titulo: '📊 Gráfico de Projeção',
+        titulo: 'Gráfico de Projeção',
         conteudo: `A linha azul mostra a evolução do patrimônio ao longo dos anos até a aposentadoria.\n\nA linha pontilhada laranja representa o Patrimônio Necessário (meta).\n\nQuando a linha azul cruza a linha laranja antes da data alvo, o cliente atingirá a independência financeira antes do prazo planejado.\n\nOs marcadores no gráfico indicam os Objetivos de Vida programados.`,
       },
     ],

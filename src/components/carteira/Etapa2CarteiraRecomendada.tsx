@@ -29,31 +29,31 @@ interface Props {
 
 const AJUDA_ETAPA2 = [
   {
-    titulo: "📌 O que fazer nesta etapa?",
+    titulo: "O que fazer nesta etapa?",
     conteudo: `Defina a alocação ideal para o cliente — quanto (em %) cada classe de ativo deve representar na carteira final.\n\nO sistema aplica automaticamente o padrão Simpla Invest baseado no perfil do cliente. O consultor pode ajustar os percentuais conforme necessário.\n\nOs valores em R$ são calculados automaticamente com base no patrimônio atual + aporte disponível.`,
   },
   {
-    titulo: "⚖️ Padrão Simpla de Alocação",
+    titulo: "Padrão Simpla de Alocação",
     conteudo: `A alocação é carregada automaticamente ao clicar "Aplicar Recomendação Simpla":\n\nConservador:\nRL 42% | RR 50% | Ações 2% | FIIs 2% | Ext 4% | Cripto 0%\n\nConservador Moderado:\nRL 43% | RR 35% | Ações 7% | FIIs 6% | Ext 9% | Cripto 0%\n\nModerado:\nRL 41% | RR 25% | Ações 13% | FIIs 7% | Ext 13% | Cripto 1%\n\nArrojado:\nRL 37% | RR 15% | Ações 20% | FIIs 9% | Ext 17,5% | Cripto 1,5%\n\nAtenção: ao aplicar a recomendação, todos os ajustes manuais anteriores são desfeitos.`,
   },
   {
-    titulo: "💰 Aporte Disponível",
+    titulo: "Aporte Disponível",
     conteudo: `Valor adicional que o cliente tem disponível para investir além do patrimônio atual.\n\nPara clientes Começando do Zero:\nPreenchido automaticamente com o Patrimônio Financeiro da Situação Atual.\n\nPara demais clientes:\nInformado manualmente pelo consultor.\n\nO aporte é somado ao patrimônio atual para calcular o patrimônio base de todas as distribuições:\nBase = Patrimônio Atual + Aporte Disponível`,
   },
   {
-    titulo: "🍽️ Custo de Vida Mensal",
+    titulo: "Custo de Vida Mensal",
     conteudo: `Usado para calcular o quanto da carteira deve ficar em Resgate Rápido (reserva de emergência).\n\nPadrão: pré-preenchido com o valor da Situação Atual.\n\nMeses de Reserva:\nDefine quantos meses de custo de vida devem estar disponíveis em Resgate Rápido.\n\nExemplo: custo de vida R$ 10.000 × 6 meses = R$ 60.000 em Resgate Rápido mínimo.`,
   },
   {
-    titulo: "📊 Como ajustar os percentuais",
+    titulo: "Como ajustar os percentuais",
     conteudo: `Cada classe tem um slider ou input para definir o percentual recomendado.\n\nRegras:\n- A soma de todos os percentuais deve totalizar 100%\n- O sistema avisa quando o total está diferente de 100%\n- Valores em R$ são calculados automaticamente\n\nPara adicionar ativos específicos por classe:\nUse a lista de ativos recomendados abaixo dos percentuais — Nome e Valor são definidos pelo sistema (bloqueados) e o Segmento pode ser ajustado.`,
   },
   {
-    titulo: "📝 Ativos Recomendados por Classe",
+    titulo: "Ativos Recomendados por Classe",
     conteudo: `Abaixo dos percentuais, cada classe exibe os ativos recomendados para compor aquela alocação.\n\nNome e Valor: bloqueados (definidos pelo sistema com base nos percentuais).\n\nSegmento: editável — use para indicar o subsetor recomendado.\n\nOs ativos desta lista são carregados automaticamente no Plano de Ação como sugestões de onde alocar os recursos.`,
   },
   {
-    titulo: "💡 Dicas para o consultor",
+    titulo: "Dicas para o consultor",
     conteudo: `• Aplique primeiro o padrão Simpla e ajuste pontualmente — isso é mais eficiente que montar do zero.\n\n• O total deve ser exatamente 100% antes de avançar para o Plano de Ação.\n\n• Para clientes com previdência privada significativa, considere reduzir Resgate Longo proporcionalmente.\n\n• Alternativos e Previdência Privada têm 0% no padrão Simpla — adicione apenas quando o cliente já possui esses produtos e eles fazem parte da estratégia.\n\n• Ao aplicar a recomendação Simpla após ajustes manuais, todos os ajustes são revertidos — inclusive os feitos pelo painel de redistribuição.`,
   },
 ];

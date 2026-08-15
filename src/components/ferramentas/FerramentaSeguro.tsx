@@ -360,35 +360,35 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
     titulo: 'Proteção e Sucessão',
     secoes: [
       {
-        titulo: '📌 O que é a Proteção e Sucessão?',
+        titulo: 'O que é a Proteção e Sucessão?',
         conteudo: `Esta seção analisa quanto o cliente precisa em seguros e coberturas para proteger sua família e patrimônio em caso de imprevistos.\n\nSão avaliadas três dimensões:\n- Necessidades Imediatas: custos de inventário e dívidas\n- Necessidades Contínuas: manutenção do padrão de vida da família\n- Coberturas em Vida: invalidez e doenças graves`,
       },
       {
-        titulo: '⚡ Necessidades Imediatas',
+        titulo: 'Necessidades Imediatas',
         conteudo: `São os custos que surgem imediatamente após um falecimento:\n\nITCMD (Imposto de Transmissão):\nImposto estadual sobre herança. A alíquota varia por estado e é aplicada sobre o patrimônio total. Preenchido automaticamente com base no estado do cliente.\n\nCustos Advocatícios:\nHonorários para abertura de inventário. Padrão de 10% do patrimônio — editável pelo consultor.\n\nDívidas e Financiamentos:\nSaldo de dívidas que precisam ser quitadas.\n\nO total das Necessidades Imediatas é a soma desses três itens.`,
       },
       {
-        titulo: '👨‍👩‍👧 Necessidades Contínuas',
+        titulo: 'Necessidades Contínuas',
         conteudo: `São os recursos necessários para manter o padrão de vida da família após o falecimento do segurado.\n\nCálculo da família:\n(Despesas mensais - Renda do cônjuge) × 12 × Anos de suporte\n\nCálculo por filho:\nCusto mensal × 12 × (Idade de independência - Idade atual)\n\nSaldo de Previdência:\nDeduzido do total, pois representa um recurso já disponível para a família.\n\nO subtotal contínuo é: Família + Filhos - Previdência`,
       },
       {
-        titulo: '🏥 Coberturas em Vida',
+        titulo: 'Coberturas em Vida',
         conteudo: `Proteções para situações onde o cliente continua vivo mas com capacidade de geração de renda comprometida:\n\nInvalidez Permanente:\nCalculado automaticamente como Despesas mensais × 60 (5 anos de cobertura).\nO consultor pode ajustar manualmente.\n\nDoenças Graves:\nCalculado automaticamente como Despesas mensais × 12 (1 ano de cobertura).\nCobre custos de tratamento e recuperação.\n\nAmbas as coberturas podem ser editadas e restauradas ao valor automático.`,
       },
       {
-        titulo: '🛡️ Capital Total Necessário',
+        titulo: 'Capital Total Necessário',
         conteudo: `É a soma de todas as necessidades:\n\nSeguro de Vida necessário:\n= Necessidades Imediatas + Necessidades Contínuas\n\nCoberturas em Vida:\n= Invalidez + Doenças Graves\n\nCapital Total:\n= Seguro de Vida + Coberturas em Vida\n\nGap de proteção:\n= Capital Total Necessário - Cobertura Atual\n\nUm gap positivo indica que o cliente está desprotegido. Um gap negativo indica que a cobertura atual é suficiente.`,
       },
       {
-        titulo: '📋 Cobertura Atual',
+        titulo: 'Cobertura Atual',
         conteudo: `Registre os seguros que o cliente já possui:\n\n- Seguro de Vida atual (R$)\n- Seguro de Invalidez atual (R$)\n- Seguro de Doenças Graves atual (R$)\n\nDados de Saúde:\nInformações relevantes para cotação de seguros — altura, peso e se é fumante.\n\nFumantes podem ter prêmios mais elevados e limitações de cobertura em algumas seguradoras.`,
       },
       {
-        titulo: '📊 Como interpretar os resultados',
+        titulo: 'Como interpretar os resultados',
         conteudo: `O score de Proteção é calculado como:\n\nCobertura Atual ÷ Capital Necessário × 100\n\n0–30: Crítico — proteção insuficiente, risco alto para a família\n31–50: Atenção Urgente — cobertura parcial, lacunas significativas\n51–90: Precisa Desenvolver — proteção em andamento, mas incompleta\n91–100: Caminho Certo — proteção adequada para a situação atual\n\nLembre-se: seguros devem ser revisados periodicamente conforme o patrimônio e a família crescem.`,
       },
       {
-        titulo: '💡 Dicas para o consultor',
+        titulo: 'Dicas para o consultor',
         conteudo: `• O ITCMD é preenchido automaticamente com a alíquota do estado do cliente — verifique se está correto para patrimônios com alíquotas progressivas.\n\n- Os custos advocatícios de 10% são uma estimativa conservadora — em inventários complexos podem ser maiores.\n\n- A invalidez × 60 meses e doenças graves × 12 meses são referências. Ajuste conforme o perfil e necessidades específicas do cliente.\n\n- Para clientes com filhos pequenos, o componente de filhos nas Necessidades Contínuas tende a ser o maior.\n\n- Sempre considere o saldo de previdência como um ativo que reduz a necessidade de seguro de vida.`,
       },
     ],

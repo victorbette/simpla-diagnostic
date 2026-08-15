@@ -193,35 +193,35 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
     titulo: 'Planejamento Tributário',
     secoes: [
       {
-        titulo: '📌 O que é o Planejamento Tributário?',
+        titulo: 'O que é o Planejamento Tributário?',
         conteudo: `Esta seção analisa a eficiência fiscal do cliente e identifica oportunidades legais de redução do Imposto de Renda.\n\nO foco principal é a utilização do PGBL (Plano Gerador de Benefício Livre) como instrumento de dedução fiscal para quem declara pelo modelo completo.\n\nUma boa estratégia tributária pode representar uma economia significativa ao longo dos anos — recursos que permanecem investidos e continuam crescendo.`,
       },
       {
-        titulo: '📝 Modelo de Declaração',
+        titulo: 'Modelo de Declaração',
         conteudo: `Modelo Simplificado:\nA Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável (limitado a R$ 16.754,34 em 2026). É mais vantajoso quando as deduções individuais são menores que esse desconto.\n\nNeste modelo, contribuições ao PGBL NÃO geram dedução adicional.\n\nModelo Completo:\nPermite deduzir despesas reais: médicas, educação, dependentes e contribuições ao PGBL (até 12% da renda bruta anual).\n\nÉ mais vantajoso quando a soma das deduções supera o desconto do modelo simplificado.\n\nNão sei:\nQuando o cliente não sabe qual modelo utiliza, o planejamento tributário fica marcado como "Não avaliado" e não impacta o score.`,
       },
       {
-        titulo: '💰 O que é o PGBL?',
+        titulo: 'O que é o PGBL?',
         conteudo: `PGBL (Plano Gerador de Benefício Livre) é um plano de previdência privada com benefício fiscal exclusivo para quem declara pelo modelo completo.\n\nComo funciona o benefício:\nContribuições ao PGBL podem ser deduzidas da base de cálculo do IR, limitadas a 12% da renda bruta anual tributável.\n\nEfeito prático:\nSe o cliente tem renda anual de R$ 240.000 e contribui R$ 28.800 (12%) ao PGBL, a base de cálculo do IR reduz em R$ 28.800 — gerando economia imediata de imposto.\n\nImportante: o IR é apenas diferido, não eliminado. No resgate, incidirá alíquota sobre o total acumulado. Por isso é ideal para acumulação de longo prazo.`,
       },
       {
-        titulo: '📊 Teto do PGBL',
+        titulo: 'Teto do PGBL',
         conteudo: `O limite legal de dedução é 12% da Renda Bruta Anual Tributável.\n\nExemplo:\nRenda anual: R$ 240.000\nTeto PGBL: R$ 240.000 × 12% = R$ 28.800/ano\nou R$ 2.400/mês\n\nAproveitamento:\nQuanto mais próximo do teto o cliente contribui, maior a eficiência fiscal e melhor o score tributário.\n\n0% do teto → score baixo (oportunidade desperdiçada)\n100% do teto → score máximo (máxima eficiência)`,
       },
       {
-        titulo: '🧮 Como o IR é calculado?',
+        titulo: 'Como o IR é calculado?',
         conteudo: `Tabela IRPF 2026 (anual):\n\nAté R$ 26.963,20 → isento\nR$ 26.963,21 a R$ 33.919,80 → 7,5%\nR$ 33.919,81 a R$ 45.012,60 → 15%\nR$ 45.012,61 a R$ 55.976,16 → 22,5%\nAcima de R$ 55.976,16 → 27,5%\n\nDeduções no modelo completo:\n- Dependentes: R$ 2.275,08/ano por dependente\n- Despesas dedutíveis: médicas, educação, etc.\n- PGBL: até 12% da renda bruta\n\nA base de cálculo é: Renda - Deduções - PGBL`,
       },
       {
-        titulo: '💡 Economia e Diferimento',
+        titulo: 'Economia e Diferimento',
         conteudo: `A economia fiscal é a diferença entre o IR sem PGBL e o IR com PGBL:\n\nEconomia = IR (sem PGBL) - IR (com PGBL)\n\nEssa economia não desaparece — ela fica investida na previdência, continuando a render até o resgate.\n\nDiferimento:\nO benefício do PGBL é o diferimento do IR — você paga o imposto no futuro (no resgate) em vez de agora. Como o valor fica investido mais tempo, o resultado final é maior mesmo pagando IR no resgate.`,
       },
       {
-        titulo: '📈 Score Tributário',
+        titulo: 'Score Tributário',
         conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100\n(não há como otimizar, está no modelo correto)\n\nNão sabe / Não analisado → "Não avaliado"\n(sem impacto no score geral)\n\nCompleta + sem PGBL → score 0\n(grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
       },
       {
-        titulo: '💡 Dicas para o consultor',
+        titulo: 'Dicas para o consultor',
         conteudo: `• Sempre verifique se o modelo simplificado ou completo é mais vantajoso antes de recomendar o PGBL.\n\n- O PGBL só faz sentido para quem declara pelo modelo completo. Para o modelo simplificado, o VGBL é mais indicado (sem dedução, mas sem IR sobre o total no resgate).\n\n- Contribuições acima do teto de 12% não são dedutíveis — o excedente deve ir para VGBL.\n\n- Para profissionais autônomos com renda variável, calcule o teto com base na renda tributável média anual.\n\n- O benefício é ainda maior para quem está na alíquota marginal de 27,5% — a economia por real deduzido é máxima nessa faixa.`,
       },
     ],

@@ -74,17 +74,17 @@ function formatarTelefone(valor: string): string {
 const TOUR_KEY = 'simpla_tour_v1_visto';
 
 const PASSOS_TOUR = [
-  {
-    titulo: '👋 Bem-vindo ao Simpla Invest!',
-    conteudo: `Estamos felizes em ter você aqui!
+ {
+   titulo: 'Bem-vindo ao Simpla Invest!',
+   conteudo:`Estamos felizes em ter você aqui!
 
 Este é o seu Dashboard — a central de gestão de todos os seus clientes e Financial Plannings.
 
 Vamos fazer um tour rápido para você se familiarizar com o sistema. Levará menos de 2 minutos!`,
-  },
-  {
-    titulo: '🔐 Redefina sua senha',
-    conteudo: `Por segurança, recomendamos que você redefina sua senha antes de começar a usar o sistema.
+ },
+ {
+   titulo: 'Redefina sua senha',
+   conteudo:`Por segurança, recomendamos que você redefina sua senha antes de começar a usar o sistema.
 
 Como fazer:
 1. Clique na engrenagem de Configurações
@@ -92,11 +92,11 @@ Como fazer:
 3. Clique em "Redefinir senha"
 4. Você receberá um e-mail com o link para criar uma nova senha
 
-⚠️ Use uma senha forte e não a compartilhe com ninguém.`,
-  },
-  {
-    titulo: '⚙️ Configure seu perfil',
-    conteudo: `Antes de gerar relatórios, configure seu perfil de consultor.
+Use uma senha forte e não a compartilhe com ninguém.`,
+ },
+ {
+   titulo: 'Configure seu perfil',
+   conteudo:`Antes de gerar relatórios, configure seu perfil de consultor.
 
 Clique na engrenagem (Configurações) e preencha:
 - Nome completo
@@ -104,10 +104,10 @@ Clique na engrenagem (Configurações) e preencha:
 - E-mail e telefone de contato
 
 Essas informações aparecem na capa de todos os relatórios PDF gerados para seus clientes.`,
-  },
-  {
-    titulo: '➕ Cadastre seus clientes',
-    conteudo: `Clique no botão "Novo Cliente" para cadastrar seus clientes.
+ },
+ {
+   titulo: 'Cadastre seus clientes',
+   conteudo:`Clique no botão "Novo Cliente" para cadastrar seus clientes.
 
 Você informará:
 - Nome completo
@@ -116,10 +116,10 @@ Você informará:
 - Observações
 
 Cada cliente terá seu próprio Financial Planning com todas as seções e ferramentas disponíveis.`,
-  },
-  {
-    titulo: '🔍 Busca e filtros',
-    conteudo: `Use o campo de busca para encontrar clientes pelo nome ou e-mail rapidamente.
+ },
+ {
+   titulo: 'Busca e filtros',
+   conteudo:`Use o campo de busca para encontrar clientes pelo nome ou e-mail rapidamente.
 
 Os filtros permitem visualizar clientes por status do Financial Planning:
 - Pendente — FP não iniciado
@@ -127,10 +127,10 @@ Os filtros permitem visualizar clientes por status do Financial Planning:
 - Completo — relatório PDF gerado
 
 A ordenação pode ser feita por ordem A→Z ou por atualização mais recente.`,
-  },
-  {
-    titulo: '📋 Financial Planning (botão FP)',
-    conteudo: `O botão "FP" ao lado de cada cliente abre o Financial Planning completo.
+ },
+ {
+   titulo: 'Financial Planning (botão FP)',
+   conteudo:`O botão "FP" ao lado de cada cliente abre o Financial Planning completo.
 
 Lá você terá acesso a todas as seções:
 - Situação Atual
@@ -139,31 +139,31 @@ Lá você terá acesso a todas as seções:
 - Planejamento Tributário
 - Gestão de Ativos
 - Resultado e Relatório PDF`,
-  },
-  {
-    titulo: '🏷️ Status do Financial Planning',
-    conteudo: `O badge de status indica o progresso do FP de cada cliente:
+ },
+ {
+   titulo: 'Status do Financial Planning',
+   conteudo:`O badge de status indica o progresso do FP de cada cliente:
 
-🔘 Pendente: nenhuma aba preenchida ainda
-🔵 Em Andamento: processo em curso
-🟢 Completo: relatório PDF gerado
+Pendente: nenhuma aba preenchida ainda
+Em Andamento: processo em curso
+Completo: relatório PDF gerado
 
 O status é atualizado automaticamente conforme o consultor avança no processo.`,
-  },
-  {
-    titulo: '🎉 Tudo pronto!',
-    conteudo: `Você está pronto para usar o Simpla Invest Financial Planning!
+ },
+ {
+   titulo: 'Tudo pronto!',
+   conteudo:`Você está pronto para usar o Simpla Invest Financial Planning!
 
 Lembre-se:
-🔐 Redefina sua senha nas Configurações
-⚙️ Configure seu perfil antes de gerar relatórios
-👥 Cadastre seus clientes
-📋 Acesse o FP pelo botão azul ao lado de cada cliente
+Redefina sua senha nas Configurações
+Configure seu perfil antes de gerar relatórios
+Cadastre seus clientes
+Acesse o FP pelo botão azul ao lado de cada cliente
 
 Se quiser rever o tour a qualquer momento, clique em "Ver tour" no topo da página.
 
-Bom trabalho! 🚀`,
-  },
+Bom trabalho!`,
+ },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -501,8 +501,8 @@ export function HomePage() {
             { label: "Em Andamento",       value: totalAndamento, color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", icon: "ti-loader-2" },
             { label: "Sem FP",             value: totalSemFP,    color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB", icon: "ti-file-off" },
           ].map(({ label, value, color, bg, border, icon }) => (
-            <div key={label} style={{ background: bg, border: `0.5px solid ${border}`, borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div key={label} style={{ background: bg, border:`0.5px solid ${border}`, borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 8, background:`${color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <i className={`ti ${icon}`} style={{ fontSize: 18, color }} />
               </div>
               <div>

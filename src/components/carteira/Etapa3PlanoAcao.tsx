@@ -20,35 +20,35 @@ type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
 
 const AJUDA_ETAPA3 = [
   {
-    titulo: "📌 O que é o Plano de Ação?",
+    titulo: "O que é o Plano de Ação?",
     conteudo: `O Plano de Ação define as movimentações necessárias para transformar a carteira atual na carteira recomendada.\n\nO sistema gera automaticamente as sugestões com base na comparação entre Etapa 1 (atual) e Etapa 2 (recomendada).\n\nO consultor pode revisar e ajustar cada movimentação antes de avançar para o Resultado.`,
   },
   {
-    titulo: "🔄 Tipos de Ação",
+    titulo: "Tipos de Ação",
     conteudo: `Cada ativo recebe uma ação sugerida:\n\nManter:\nO ativo está dentro da meta — nenhuma movimentação necessária.\n\nResgatar Total:\nO ativo deve ser totalmente resgatado e os recursos realocados em outras classes.\n\nResgatar Parcial:\nApenas parte do ativo deve ser resgatada. O valor de resgate pode ser ajustado manualmente.\n\nAportar:\nO ativo está abaixo da meta — deve receber novos recursos.\n\nNovo:\nAtivo que não existe na carteira atual mas deve ser adicionado conforme a recomendação.`,
   },
   {
-    titulo: "📊 Conferência por Classe",
+    titulo: "Conferência por Classe",
     conteudo: `Painel que mostra o desvio de cada classe em relação à meta após as movimentações:\n\n% Atual: percentual atual da classe\n% Meta: percentual alvo definido na Etapa 2\n% Final: percentual após todas as movimentações\nSaldo vs Meta: diferença em R$ entre o final e a meta\n\nVerde: dentro da tolerância (desvio ≤ 2%)\nAmarelo: atenção (desvio entre 2% e 5%)\nVermelho: rebalanceamento necessário (desvio > 5%)`,
   },
   {
-    titulo: "⚖️ Sugerir Ajustes por Classe",
+    titulo: "Sugerir Ajustes por Classe",
     conteudo: `Botão que analisa automaticamente os desvios dentro de cada classe e sugere ajustes nos aportes.\n\nComo funciona:\n- Classe acima da meta → reduz proporcionalmente os aportes dos ativos daquela classe\n- Classe abaixo da meta → aumenta proporcionalmente os aportes dos ativos daquela classe\n\nA redistribuição acontece DENTRO de cada classe — não move recursos entre classes.\n\nO consultor pode confirmar classe por classe ou confirmar todos de uma vez. Ativos ajustados são marcados com badge verde "✓ Ajustado".`,
   },
   {
-    titulo: "📅 Vencimento",
+    titulo: "Vencimento",
     conteudo: `Campo de texto livre para informar o vencimento de ativos de renda fixa no plano de ação.\n\nUse o formato que preferir:\n- Jan/2026\n- 15/03/2027\n- 2028\n\nO vencimento informado aqui tem prioridade sobre o vencimento da Etapa 1 e aparece no card "Como sua carteira deverá ficar".`,
   },
   {
-    titulo: "📝 Observações",
+    titulo: "Observações",
     conteudo: `Campo para registrar justificativas ou instruções específicas para cada movimentação.\n\nObrigatório apenas para:\n- Ativos adicionados manualmente pelo consultor\n\nPara ativos recomendados (vindos da Etapa 2), a observação é opcional mesmo quando o valor é editado.\n\nAs observações aparecem no relatório PDF na seção de Gestão de Ativos.`,
   },
   {
-    titulo: "➕ Adicionar ativo manualmente",
+    titulo: "Adicionar ativo manualmente",
     conteudo: `O consultor pode adicionar ativos que não estavam na carteira atual nem na recomendação:\n\n1. Clique em "+ Adicionar ativo" dentro da classe desejada\n2. Informe o nome, valor e justificativa\n3. O ativo aparece marcado como "Manual" no plano\n\nAtivos adicionados manualmente exigem observação obrigatória para justificar a inclusão.`,
   },
   {
-    titulo: "💡 Dicas para o consultor",
+    titulo: "Dicas para o consultor",
     conteudo: `• Verifique a Conferência por Classe antes de avançar — garante que todas as classes estão próximas da meta.\n\n• Use "Sugerir Ajustes por Classe" para redistribuir automaticamente valores dentro de cada classe com desvio.\n\n• Ativos com vencimento próximo são bons candidatos a resgate total — os recursos podem ser realocados mais eficientemente.\n\n• Ao aplicar a Recomendação Simpla na Etapa 2 após edições aqui, o plano de ação é regenerado e os ajustes são perdidos.\n\n• Os dados são salvos automaticamente ao avançar para a Etapa 4.`,
   },
 ];
