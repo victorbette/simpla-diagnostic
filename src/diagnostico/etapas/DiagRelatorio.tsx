@@ -6,7 +6,6 @@ import {
 } from "@/lib/documentoConfig";
 import { gerarPDF } from "@/lib/gerarPDF";
 import { DocCapa } from "@/components/estrategia/documento/DocCapa";
-import { ContracapaDiag } from "../documento/ContracapaDiag";
 import { DocDisclaimerDiag } from "../documento/DocDisclaimerDiag";
 import { DocDiagnosticoInicial } from "../documento/DocDiagnosticoInicial";
 import { DocLFDiag } from "../documento/DocLFDiag";
@@ -107,35 +106,14 @@ export function DiagRelatorio({ lead }: Props) {
         {/* Página 2 — Diagnóstico Inicial */}
         <DocDiagnosticoInicial lead={lead} />
 
-        {/* Contracapa — Liberdade Financeira */}
-        <ContracapaDiag
-          titulo="Liberdade Financeira"
-          subtitulo="A simulação da sua jornada rumo à independência financeira"
-          icone="ti-beach"
-        />
-
         {/* Página 3 — Liberdade Financeira */}
         <DocLFDiag lead={lead} />
-
-        {/* Contracapa — Gestão de Ativos */}
-        <ContracapaDiag
-          titulo="Gestão de Ativos"
-          subtitulo="A análise dos seus investimentos e estratégia de alocação"
-          icone="ti-chart-pie"
-        />
 
         {/* Página 4 — Gestão de Ativos */}
         <DocGestaoAtivos lead={lead} />
 
         {/* Página 5 — Blindagem Patrimonial */}
         <DocBlindagemPatrimonial lead={lead} />
-
-        {/* Contracapa — Próximos Passos */}
-        <ContracapaDiag
-          titulo="Próximos Passos"
-          subtitulo="Os passos concretos para transformar o diagnóstico em ação"
-          icone="ti-target-arrow"
-        />
 
         {/* Página 6 — Mãos à Obra */}
         <DocMaosAObraDiag nomeCliente={lead.nome} />
