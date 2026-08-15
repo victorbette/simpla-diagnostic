@@ -5,6 +5,7 @@ import {
   calcularRecomendacao, paraAlocacaoMeta, paraAtivosRecomendados,
 } from "@/lib/carteira/alocacaoSimpla";
 import { useAllocationModel } from "@/hooks/useAllocationModel";
+import { Tooltip } from "@/components/shared/Tooltip";
 
 interface Props {
   clientProfile: string | null;
@@ -115,9 +116,10 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
             padding: "12px 0", borderTop: "0.5px solid #F3F4F6",
           }}>
             <div>
-              <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>
-                Custo de vida mensal
-              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280" }}>Custo de vida mensal</label>
+                <Tooltip posicao="right" texto={`Base para calcular a reserva em Resgate Rápido.\nPré-preenchido da Situação Atual.\nReserva = Custo de Vida × Meses de Reserva.`} />
+              </div>
               <input
                 type="text"
                 value={custoVidaText}
@@ -144,9 +146,10 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
               )}
             </div>
             <div>
-              <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>
-                Meses de reserva
-              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280" }}>Meses de reserva</label>
+                <Tooltip posicao="right" texto={`Quantidade de meses de custo de vida que deve estar disponível em Resgate Rápido.\nRecomendado: mínimo 6 meses.`} />
+              </div>
               <input
                 type="number"
                 min={0}
@@ -189,15 +192,18 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
                 Patrimônio investido: <strong style={{ color: "#111827" }}>{formatBRL(rec.patrimonioInvestido)}</strong>
                 {rec.reservaEmergencia > 0 && " · reserva somada ao Resgate Rápido"}
               </span>
-              <button
-                onClick={aplicar}
-                style={{
-                  fontSize: 12, fontWeight: 600, color: "white", background: "#2563EB",
-                  border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer",
-                }}
-              >
-                Aplicar recomendação
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Tooltip posicao="bottom" texto={`Carrega a alocação padrão Simpla Invest baseada no perfil do cliente.\nAtenção: desfaz todos os ajustes manuais anteriores.`} />
+                <button
+                  onClick={aplicar}
+                  style={{
+                    fontSize: 12, fontWeight: 600, color: "white", background: "#2563EB",
+                    border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer",
+                  }}
+                >
+                  Aplicar recomendação
+                </button>
+              </div>
             </div>
           )}
           {!clientProfile && (

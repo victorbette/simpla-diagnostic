@@ -4,6 +4,8 @@ import { CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard } from "./CarteiraCard";
 import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
   ativos: Ativo[];
@@ -24,6 +26,37 @@ interface Props {
   onMesesReservaChange?: (v: number) => void;
   onPlanoReset?: () => void;
 }
+
+const AJUDA_ETAPA2 = [
+  {
+    titulo: "📌 O que fazer nesta etapa?",
+    conteudo: `Defina a alocação ideal para o cliente — quanto (em %) cada classe de ativo deve representar na carteira final.\n\nO sistema aplica automaticamente o padrão Simpla Invest baseado no perfil do cliente. O consultor pode ajustar os percentuais conforme necessário.\n\nOs valores em R$ são calculados automaticamente com base no patrimônio atual + aporte disponível.`,
+  },
+  {
+    titulo: "⚖️ Padrão Simpla de Alocação",
+    conteudo: `A alocação é carregada automaticamente ao clicar "Aplicar Recomendação Simpla":\n\nConservador:\nRL 42% | RR 50% | Ações 2% | FIIs 2% | Ext 4% | Cripto 0%\n\nConservador Moderado:\nRL 43% | RR 35% | Ações 7% | FIIs 6% | Ext 9% | Cripto 0%\n\nModerado:\nRL 41% | RR 25% | Ações 13% | FIIs 7% | Ext 13% | Cripto 1%\n\nArrojado:\nRL 37% | RR 15% | Ações 20% | FIIs 9% | Ext 17,5% | Cripto 1,5%\n\nAtenção: ao aplicar a recomendação, todos os ajustes manuais anteriores são desfeitos.`,
+  },
+  {
+    titulo: "💰 Aporte Disponível",
+    conteudo: `Valor adicional que o cliente tem disponível para investir além do patrimônio atual.\n\nPara clientes Começando do Zero:\nPreenchido automaticamente com o Patrimônio Financeiro da Situação Atual.\n\nPara demais clientes:\nInformado manualmente pelo consultor.\n\nO aporte é somado ao patrimônio atual para calcular o patrimônio base de todas as distribuições:\nBase = Patrimônio Atual + Aporte Disponível`,
+  },
+  {
+    titulo: "🍽️ Custo de Vida Mensal",
+    conteudo: `Usado para calcular o quanto da carteira deve ficar em Resgate Rápido (reserva de emergência).\n\nPadrão: pré-preenchido com o valor da Situação Atual.\n\nMeses de Reserva:\nDefine quantos meses de custo de vida devem estar disponíveis em Resgate Rápido.\n\nExemplo: custo de vida R$ 10.000 × 6 meses = R$ 60.000 em Resgate Rápido mínimo.`,
+  },
+  {
+    titulo: "📊 Como ajustar os percentuais",
+    conteudo: `Cada classe tem um slider ou input para definir o percentual recomendado.\n\nRegras:\n- A soma de todos os percentuais deve totalizar 100%\n- O sistema avisa quando o total está diferente de 100%\n- Valores em R$ são calculados automaticamente\n\nPara adicionar ativos específicos por classe:\nUse a lista de ativos recomendados abaixo dos percentuais — Nome e Valor são definidos pelo sistema (bloqueados) e o Segmento pode ser ajustado.`,
+  },
+  {
+    titulo: "📝 Ativos Recomendados por Classe",
+    conteudo: `Abaixo dos percentuais, cada classe exibe os ativos recomendados para compor aquela alocação.\n\nNome e Valor: bloqueados (definidos pelo sistema com base nos percentuais).\n\nSegmento: editável — use para indicar o subsetor recomendado.\n\nOs ativos desta lista são carregados automaticamente no Plano de Ação como sugestões de onde alocar os recursos.`,
+  },
+  {
+    titulo: "💡 Dicas para o consultor",
+    conteudo: `• Aplique primeiro o padrão Simpla e ajuste pontualmente — isso é mais eficiente que montar do zero.\n\n• O total deve ser exatamente 100% antes de avançar para o Plano de Ação.\n\n• Para clientes com previdência privada significativa, considere reduzir Resgate Longo proporcionalmente.\n\n• Alternativos e Previdência Privada têm 0% no padrão Simpla — adicione apenas quando o cliente já possui esses produtos e eles fazem parte da estratégia.\n\n• Ao aplicar a recomendação Simpla após ajustes manuais, todos os ajustes são revertidos — inclusive os feitos pelo painel de redistribuição.`,
+  },
+];
 
 const PERFIL_LABELS: Record<string, string> = {
   conservador: "Conservador",
@@ -58,6 +91,7 @@ export function Etapa2CarteiraRecomendada({
   const [aporteText, setAporteText] = useState(
     aporteDisponivel > 0 ? formatBRL(aporteDisponivel) : ""
   );
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   useEffect(() => {
     if (aporteDisponivel > 0) {
@@ -87,7 +121,25 @@ export function Etapa2CarteiraRecomendada({
   }
 
   return (
+    <>
+    <PainelAjuda
+      titulo="Etapa 2 — Recomendada"
+      secoes={AJUDA_ETAPA2}
+      aberto={painelAjudaAberto}
+      onFechar={() => setPainelAjudaAberto(false)}
+    />
     <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%" }}>
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Carteira Recomendada</h3>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{ display: "flex", alignItems: "center", gap: 4, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#2563EB" }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+          Ajuda
+        </button>
+      </div>
 
       {/* ── RECOMENDAÇÃO SIMPLA (planilha de alocação) ── */}
       <PainelRecomendacaoSimpla
@@ -204,12 +256,15 @@ export function Etapa2CarteiraRecomendada({
         <div style={{ marginTop: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontSize: 12, color: "#6B7280" }}>Total alocado</span>
-            <span style={{
-              fontSize: 13, fontWeight: 600,
-              color: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#B45309",
-            }}>
-              {totalAlocado.toFixed(1)}%
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Tooltip posicao="left" texto={`A soma de todos os percentuais deve ser exatamente 100% antes de avançar.\nO sistema avisa quando o total está divergente.`} />
+              <span style={{
+                fontSize: 13, fontWeight: 600,
+                color: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#B45309",
+              }}>
+                {totalAlocado.toFixed(1)}%
+              </span>
+            </div>
           </div>
           <div style={{
             borderRadius: 99, padding: 3,
@@ -283,7 +338,10 @@ export function Etapa2CarteiraRecomendada({
             <i className="ti ti-cash" style={{ fontSize: 20, color: "#15803D" }} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#111827" }}>Aporte Disponível</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#111827" }}>Aporte Disponível</p>
+              <Tooltip posicao="right" texto={`Valor adicional para investir além do patrimônio atual.\nSomado ao patrimônio para calcular as metas em R$.\nPré-preenchido para clientes Começando do Zero.`} />
+            </div>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6B7280" }}>
               Valor a ser distribuído na carteira recomendada
             </p>
@@ -350,5 +408,6 @@ export function Etapa2CarteiraRecomendada({
         />
       ))}
     </div>
+    </>
   );
 }
