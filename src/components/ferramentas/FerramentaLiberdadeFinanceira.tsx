@@ -566,13 +566,17 @@ export function FerramentaLiberdadeFinanceira({
             <input
               type="range"
               min={0} max={200000} step={500}
-              value={params.rendaDesejada}
+              value={params.rendaDesejada ?? 0}
               onChange={(e) => { setP({ rendaDesejada: Number(e.target.value) }); setRendaEditada(Number(e.target.value) !== rendaDesejadaColeta); }}
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {(params.rendaDesejada ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
-            </div>
+            <input
+              type="number"
+              min={0} max={200000} step={500}
+              value={params.rendaDesejada ?? 0}
+              onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+              style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
+            />
           </div>
 
           {/* Aporte Mensal */}
@@ -593,13 +597,17 @@ export function FerramentaLiberdadeFinanceira({
             <input
               type="range"
               min={0} max={200000} step={500}
-              value={params.aporteMensal}
+              value={params.aporteMensal ?? 0}
               onChange={(e) => setP({ aporteMensal: Number(e.target.value) })}
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {(params.aporteMensal ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
-            </div>
+            <input
+              type="number"
+              min={0} max={200000} step={500}
+              value={params.aporteMensal ?? 0}
+              onChange={(e) => setP({ aporteMensal: e.target.value === "" ? 0 : Number(e.target.value) })}
+              style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
+            />
           </div>
 
           {/* Aposentadoria */}
@@ -610,13 +618,17 @@ export function FerramentaLiberdadeFinanceira({
             <input
               type="range"
               min={40} max={90} step={1}
-              value={params.idadeAposentadoria}
+              value={params.idadeAposentadoria ?? 60}
               onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {params.idadeAposentadoria} anos
-            </div>
+            <input
+              type="number"
+              min={40} max={90} step={1}
+              value={params.idadeAposentadoria ?? 60}
+              onChange={(e) => setP({ idadeAposentadoria: e.target.value === "" ? 60 : Number(e.target.value) })}
+              style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
+            />
           </div>
 
           {/* Patrimônio Financeiro */}
@@ -637,13 +649,17 @@ export function FerramentaLiberdadeFinanceira({
             <input
               type="range"
               min={0} max={10000000} step={10000}
-              value={params.patrimonioInicial}
+              value={params.patrimonioInicial ?? 0}
               onChange={(e) => { setP({ patrimonioInicial: Number(e.target.value) }); setPatrimonioEditado(Number(e.target.value) !== patrimonioColeta); }}
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#111827", marginTop: 3, textAlign: "center" }}>
-              {(params.patrimonioInicial ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
-            </div>
+            <input
+              type="number"
+              min={0} max={10000000} step={10000}
+              value={params.patrimonioInicial ?? 0}
+              onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+              style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
+            />
           </div>
 
         </div>
