@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   User, DollarSign, PieChart, Plus, X,
 } from "lucide-react";
@@ -11,6 +12,8 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "./AtivoForm";
 import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
 import { calcularIdade } from "@/lib/format";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 const UFS = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
@@ -31,6 +34,33 @@ const PERFIS = [
   { id: "conservador_moderado", label: "Conservador Moderado", descricao: "Equilíbrio com mais segurança" },
   { id: "moderado",             label: "Moderado",             descricao: "Equilíbrio entre risco e retorno" },
   { id: "arrojado",             label: "Arrojado",             descricao: "Aceita mais risco por mais retorno" },
+];
+
+const AJUDA_SITUACAO_ATUAL = [
+  {
+    titulo: "O que é a Situação Atual?",
+    conteudo: `Esta seção reúne os dados essenciais do cliente para gerar um diagnóstico financeiro completo.\n\nAs informações preenchidas aqui são a base de todos os cálculos do planejamento: liberdade financeira, proteção, tributação e carteira recomendada.\n\nQuanto mais precisos os dados, mais assertivas serão as recomendações.`,
+  },
+  {
+    titulo: "Patrimônio Financeiro vs. Total",
+    conteudo: `Patrimônio Total: soma de todos os bens do cliente — imóveis, veículos, investimentos e outros ativos.\n\nPatrimônio Financeiro: apenas os ativos investidos e com liquidez — CDB, fundos, ações, previdência, poupança etc.\n\nO planejamento foca no patrimônio financeiro para calcular rentabilidade, alocação e metas de independência. Imóveis e bens entram como contexto patrimonial.`,
+  },
+  {
+    titulo: "Renda e Custo de Vida",
+    conteudo: `Renda Mensal Bruta: total recebido antes de impostos — salário, pró-labore, aluguéis, dividendos, pensões.\n\nCusto de Vida Mensal: tudo o que o cliente gasta regularmente — moradia, alimentação, transporte, saúde, lazer, educação.\n\nA diferença entre renda e custo de vida determina o potencial de aporte e a folga financeira do cliente.`,
+  },
+  {
+    titulo: "Aporte Mensal e Liberdade Financeira",
+    conteudo: `O aporte mensal médio é o valor que o cliente investe regularmente todo mês.\n\nEle é a alavanca mais poderosa do planejamento: pequenos aumentos no aporte podem antecipar anos na conquista da liberdade financeira.\n\nNa simulação de liberdade financeira, o sistema calcula quanto seria necessário aportar para atingir a meta no prazo desejado.`,
+  },
+  {
+    titulo: "Idade de Aposentadoria",
+    conteudo: `Define o prazo do planejamento — a data-alvo para o cliente conquistar a independência financeira.\n\nQuanto mais cedo a meta, maior o esforço mensal necessário ou maior o patrimônio já acumulado exigido.\n\nNão precisa ser a aposentadoria formal pelo INSS. Pode ser a idade em que o cliente deseja ter liberdade de escolha — trabalhar ou não por prazer.`,
+  },
+  {
+    titulo: "Perfil de Investidor e Carteira",
+    conteudo: `O perfil de investidor (suitability) define a tolerância ao risco do cliente e calibra todas as recomendações de alocação.\n\nConservador: prioriza segurança e liquidez, aceita menor rentabilidade.\nModerado: equilíbrio entre proteção e crescimento.\nArrojado: aceita volatilidade em busca de maior retorno no longo prazo.\n\nA carteira atual mostra como o patrimônio financeiro está distribuído entre as classes de ativos — base para o diagnóstico de adequação ao perfil.`,
+  },
 ];
 
 
@@ -79,6 +109,7 @@ function SecaoCard({
 
 export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo }: Props) {
   const dados = plan.dadosCliente;
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   const setDados = <K extends keyof DadosCliente>(key: K, val: DadosCliente[K]) =>
     onChange({ dadosCliente: { ...dados, [key]: val } });
@@ -109,6 +140,18 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
 
   return (
     <div style={{ padding: "24px 32px", width: "100%", boxSizing: "border-box" }}>
+
+      {/* ─── Cabeçalho ─── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0 }}>Situação Atual</h2>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, color: "#2563EB", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontFamily: "inherit" }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 14 }} />
+          Ajuda
+        </button>
+      </div>
 
       {/* ─── SEÇÃO 1: Dados Pessoais ─── */}
       <SecaoCard color="#2563EB" Icon={User} title="Dados Pessoais" subtitle="Informações básicas, localização e perfil do cliente">
@@ -344,13 +387,16 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
           {([
             { label: "Patrimônio total estimado", key: "patrimonioTotalEstimado", hint: "Inclui imóveis e bens" },
-            { label: "Patrimônio financeiro", key: "patrimonioFinanceiroEstimado", hint: "Apenas investimentos" },
-            { label: "Renda mensal", key: "rendaMensal" },
-            { label: "Custo de vida mensal", key: "custoDeVidaMensal" },
-            { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal" },
-          ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
+            { label: "Patrimônio financeiro", key: "patrimonioFinanceiroEstimado", hint: "Apenas investimentos", tooltip: "Valor total dos investimentos com liquidez: CDB, fundos, ações, previdência etc. Não inclui imóveis ou veículos." },
+            { label: "Renda mensal", key: "rendaMensal", tooltip: "Renda bruta mensal total: salário, pró-labore, aluguéis, dividendos e demais fontes de receita." },
+            { label: "Custo de vida mensal", key: "custoDeVidaMensal", tooltip: "Total gasto mensalmente: moradia, alimentação, transporte, saúde, lazer e demais despesas recorrentes." },
+            { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal", tooltip: "Quanto o cliente investe por mês em média. Base para simular o crescimento do patrimônio e antecipar a independência financeira." },
+          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint, tooltip }) => (
             <div key={key} className={fieldCls}>
-              <Label className={labelCls}>{label}</Label>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Label className={labelCls}>{label}</Label>
+                {tooltip && <Tooltip texto={tooltip} posicao="right" />}
+              </div>
               <CurrencyInput
                 value={dados[key] as number}
                 onChange={(v) => setDados(key, v as DadosCliente[typeof key])}
@@ -361,7 +407,10 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
 
           {/* Idade de Aposentadoria */}
           <div className={fieldCls}>
-            <label style={{ fontSize: 11, color: "#6B7280" }}>Idade de Aposentadoria</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 11, color: "#6B7280" }}>Idade de Aposentadoria</label>
+              <Tooltip texto="Idade alvo para conquistar a independência financeira. Quanto mais cedo a meta, maior o esforço mensal necessário." posicao="right" />
+            </div>
             <input
               type="number"
               value={dados.idadeMeta ?? 60}
@@ -374,11 +423,14 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           </div>
 
           {([
-            { label: "Renda Mensal Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria", hint: "Quanto deseja receber por mês na aposentadoria" },
+            { label: "Renda Mensal Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria", hint: "Quanto deseja receber por mês na aposentadoria", tooltip: "Renda mensal que o cliente quer ter ao atingir a liberdade financeira. Usada para calcular o patrimônio necessário e o aporte ideal." },
             { label: "Gasto mensal no cartão (familiar)", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
-          ] as { label: string; key: keyof DadosCliente; hint?: string }[]).map(({ label, key, hint }) => (
+          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint, tooltip }) => (
             <div key={key} className={fieldCls}>
-              <Label className={labelCls}>{label}</Label>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <Label className={labelCls}>{label}</Label>
+                {tooltip && <Tooltip texto={tooltip} posicao="right" />}
+              </div>
               <CurrencyInput
                 value={dados[key] as number}
                 onChange={(v) => setDados(key, v as DadosCliente[typeof key])}
@@ -476,8 +528,11 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
 
         {/* Perfil de Investidor */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8, fontWeight: 600 }}>
-            Perfil de Investidor
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+            <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+              Perfil de Investidor
+            </div>
+            <Tooltip texto="Define como as recomendações de investimento serão calibradas. Conservador prioriza segurança; arrojado aceita volatilidade em busca de maior retorno no longo prazo." posicao="right" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
             {PERFIS.map((p) => {
@@ -510,6 +565,13 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           </div>
         </div>
 
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+          <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+            Carteira de Investimentos
+          </div>
+          <Tooltip texto="Distribua o patrimônio financeiro entre as classes de ativos. A alocação atual influencia o diagnóstico e as recomendações de realocação." posicao="left" />
+        </div>
+
         <AtivoForm
           value={plan.ativosAtuais}
           suitabilityPerfil={dados.suitabilityPerfil}
@@ -519,6 +581,13 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
         />
 
       </SecaoCard>
+
+      <PainelAjuda
+        titulo="Situação Atual"
+        secoes={AJUDA_SITUACAO_ATUAL}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
 
       {/* Botão Salvar */}
       {onSalvar && (
