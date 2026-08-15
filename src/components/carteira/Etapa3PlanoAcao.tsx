@@ -3,6 +3,8 @@ import type { PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
   planoAcao: PlanoAcaoItem[];
@@ -15,6 +17,41 @@ interface Props {
 }
 
 type Filtro = "todos" | "aportar" | "resgatar" | "manter" | "novo";
+
+const AJUDA_ETAPA3 = [
+  {
+    titulo: "📌 O que é o Plano de Ação?",
+    conteudo: `O Plano de Ação define as movimentações necessárias para transformar a carteira atual na carteira recomendada.\n\nO sistema gera automaticamente as sugestões com base na comparação entre Etapa 1 (atual) e Etapa 2 (recomendada).\n\nO consultor pode revisar e ajustar cada movimentação antes de avançar para o Resultado.`,
+  },
+  {
+    titulo: "🔄 Tipos de Ação",
+    conteudo: `Cada ativo recebe uma ação sugerida:\n\nManter:\nO ativo está dentro da meta — nenhuma movimentação necessária.\n\nResgatar Total:\nO ativo deve ser totalmente resgatado e os recursos realocados em outras classes.\n\nResgatar Parcial:\nApenas parte do ativo deve ser resgatada. O valor de resgate pode ser ajustado manualmente.\n\nAportar:\nO ativo está abaixo da meta — deve receber novos recursos.\n\nNovo:\nAtivo que não existe na carteira atual mas deve ser adicionado conforme a recomendação.`,
+  },
+  {
+    titulo: "📊 Conferência por Classe",
+    conteudo: `Painel que mostra o desvio de cada classe em relação à meta após as movimentações:\n\n% Atual: percentual atual da classe\n% Meta: percentual alvo definido na Etapa 2\n% Final: percentual após todas as movimentações\nSaldo vs Meta: diferença em R$ entre o final e a meta\n\nVerde: dentro da tolerância (desvio ≤ 2%)\nAmarelo: atenção (desvio entre 2% e 5%)\nVermelho: rebalanceamento necessário (desvio > 5%)`,
+  },
+  {
+    titulo: "⚖️ Sugerir Ajustes por Classe",
+    conteudo: `Botão que analisa automaticamente os desvios dentro de cada classe e sugere ajustes nos aportes.\n\nComo funciona:\n- Classe acima da meta → reduz proporcionalmente os aportes dos ativos daquela classe\n- Classe abaixo da meta → aumenta proporcionalmente os aportes dos ativos daquela classe\n\nA redistribuição acontece DENTRO de cada classe — não move recursos entre classes.\n\nO consultor pode confirmar classe por classe ou confirmar todos de uma vez. Ativos ajustados são marcados com badge verde "✓ Ajustado".`,
+  },
+  {
+    titulo: "📅 Vencimento",
+    conteudo: `Campo de texto livre para informar o vencimento de ativos de renda fixa no plano de ação.\n\nUse o formato que preferir:\n- Jan/2026\n- 15/03/2027\n- 2028\n\nO vencimento informado aqui tem prioridade sobre o vencimento da Etapa 1 e aparece no card "Como sua carteira deverá ficar".`,
+  },
+  {
+    titulo: "📝 Observações",
+    conteudo: `Campo para registrar justificativas ou instruções específicas para cada movimentação.\n\nObrigatório apenas para:\n- Ativos adicionados manualmente pelo consultor\n\nPara ativos recomendados (vindos da Etapa 2), a observação é opcional mesmo quando o valor é editado.\n\nAs observações aparecem no relatório PDF na seção de Gestão de Ativos.`,
+  },
+  {
+    titulo: "➕ Adicionar ativo manualmente",
+    conteudo: `O consultor pode adicionar ativos que não estavam na carteira atual nem na recomendação:\n\n1. Clique em "+ Adicionar ativo" dentro da classe desejada\n2. Informe o nome, valor e justificativa\n3. O ativo aparece marcado como "Manual" no plano\n\nAtivos adicionados manualmente exigem observação obrigatória para justificar a inclusão.`,
+  },
+  {
+    titulo: "💡 Dicas para o consultor",
+    conteudo: `• Verifique a Conferência por Classe antes de avançar — garante que todas as classes estão próximas da meta.\n\n• Use "Sugerir Ajustes por Classe" para redistribuir automaticamente valores dentro de cada classe com desvio.\n\n• Ativos com vencimento próximo são bons candidatos a resgate total — os recursos podem ser realocados mais eficientemente.\n\n• Ao aplicar a Recomendação Simpla na Etapa 2 após edições aqui, o plano de ação é regenerado e os ajustes são perdidos.\n\n• Os dados são salvos automaticamente ao avançar para a Etapa 4.`,
+  },
+];
 
 const TIPO_CONFIG: Record<PlanoAcaoItem["acao"], { bg: string; color: string; label: string }> = {
   manter:           { bg: "#F3F4F6", color: "#6B7280", label: "→ Manter" },
@@ -89,6 +126,7 @@ function placeholderObservacao(item: PlanoAcaoItem): string {
 export function Etapa3PlanoAcao({
   planoAcao, onPlanoAcao, notasConsultor, onNotasConsultor, patrimonio, aporteDisponivel, macroMeta,
 }: Props) {
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [editandoMovId, setEditandoMovId] = useState<string | null>(null);
   const [editandoMovVal, setEditandoMovVal] = useState<string>("");
@@ -311,7 +349,24 @@ export function Etapa3PlanoAcao({
   const COLS = "2fr 1fr 1fr 1fr 1fr 1.5fr 0.8fr 0.8fr";
 
   return (
+    <>
+    <PainelAjuda
+      titulo="Etapa 3 — Plano de Ação"
+      secoes={AJUDA_ETAPA3}
+      aberto={painelAjudaAberto}
+      onFechar={() => setPainelAjudaAberto(false)}
+    />
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: "#111827", margin: 0 }}>Plano de Ação</h3>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{ display: "flex", alignItems: "center", gap: 4, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#2563EB" }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+          Ajuda
+        </button>
+      </div>
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {[
@@ -386,19 +441,22 @@ export function Etapa3PlanoAcao({
               <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Conferência por Classe</span>
               <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>após execução do plano</span>
             </div>
-            <button
-              onClick={() => setSugestoes(calcularSugestoesPorClasse())}
-              style={{
-                background: "#2563EB", color: "white",
-                border: "none", borderRadius: 8,
-                padding: "7px 14px", fontSize: 12,
-                fontWeight: 600, cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 6,
-              }}
-            >
-              <i className="ti ti-adjustments-horizontal" style={{ fontSize: 13 }} />
-              Sugerir ajustes por classe
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Tooltip posicao="top" texto={`Redistribui automaticamente os aportes dentro de cada classe para minimizar desvios da meta.\nNão move recursos entre classes.`} />
+              <button
+                onClick={() => setSugestoes(calcularSugestoesPorClasse())}
+                style={{
+                  background: "#2563EB", color: "white",
+                  border: "none", borderRadius: 8,
+                  padding: "7px 14px", fontSize: 12,
+                  fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <i className="ti ti-adjustments-horizontal" style={{ fontSize: 13 }} />
+                Sugerir ajustes por classe
+              </button>
+            </div>
           </div>
 
           <div style={{
@@ -418,7 +476,10 @@ export function Etapa3PlanoAcao({
             <span style={{ textAlign: "right" }}>% Atual</span>
             <span style={{ textAlign: "right" }}>% Meta</span>
             <span style={{ textAlign: "right" }}>% Final</span>
-            <span style={{ textAlign: "right" }}>Saldo vs Meta</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+              <Tooltip posicao="left" texto={`Diferença em R$ entre o valor final e a meta da classe.\nPositivo: acima da meta.\nNegativo: abaixo da meta.`} />
+              <span>Saldo vs Meta</span>
+            </div>
           </div>
 
           {resumoPorClasse.map((c) => {
@@ -650,10 +711,25 @@ export function Etapa3PlanoAcao({
             <div style={{
               display: "grid", gridTemplateColumns: COLS,
               gap: 8, padding: "6px 14px", backgroundColor: "#1E3A8A",
+              alignItems: "center",
             }}>
-              {["Ativo", "Atual R$", "Meta R$", "Movimentação", "Ação", "Observação", "Vencimento", "Prioridade"].map((h) => (
-                <span key={h} style={{ color: "white", fontSize: 11, fontWeight: 600 }}>{h}</span>
-              ))}
+              <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Ativo</span>
+              <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Atual R$</span>
+              <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Meta R$</span>
+              <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Movimentação</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Ação</span>
+                <Tooltip posicao="top" texto={`Manter: sem movimentação.\nResgatar Total: liquidar o ativo.\nResgatar Parcial: resgatar parte.\nAportar: adicionar recursos.\nNovo: criar posição nova.`} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Observação</span>
+                <Tooltip posicao="top" texto={`Obrigatória apenas para ativos adicionados manualmente.\nOpcional para ativos recomendados, mesmo com valor editado.`} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Vencimento</span>
+                <Tooltip posicao="top" texto={`Texto livre: "Jan/2026", "15/03/2027".\nTem prioridade sobre o vencimento da Etapa 1.\nAparece no card final da carteira.`} />
+              </div>
+              <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Prioridade</span>
             </div>
 
             {groupItems.map((item) => {
@@ -1258,5 +1334,6 @@ export function Etapa3PlanoAcao({
         />
       </div>
     </div>
+    </>
   );
 }
