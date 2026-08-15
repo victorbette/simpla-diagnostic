@@ -84,15 +84,17 @@ Vamos fazer um tour rápido para você se familiarizar com o sistema. Levará me
   },
   {
     titulo: '🔐 Primeiro passo: redefina sua senha',
-    conteudo: `Por segurança, recomendamos que você redefina sua senha agora, antes de começar a usar o sistema.
+    conteudo: `Por segurança, recomendamos que você redefina sua senha antes de começar a usar o sistema.
 
 Como fazer:
-1. Clique na sua foto ou inicial no canto superior direito
-2. Acesse "Minha conta" ou "Configurações"
-3. Selecione "Alterar senha"
-4. Crie uma senha forte com letras, números e símbolos
+1. Clique na engrenagem de Configurações (destacada abaixo)
+2. Role até a seção "Segurança"
+3. Clique em "Redefinir senha"
+4. Você receberá um e-mail com o link para criar uma nova senha
 
-⚠️ Nunca compartilhe sua senha com ninguém.`,
+⚠️ Use uma senha forte e não a compartilhe com ninguém.`,
+    alvo: '[data-tour="btn-config"]',
+    posicao: 'bottom' as const,
   },
   {
     titulo: '⚙️ Configure seu perfil',
@@ -142,7 +144,9 @@ Lá você terá acesso a todas as seções:
 - Proteção e Sucessão
 - Planejamento Tributário
 - Gestão de Ativos
-- Resultado e Relatório PDF`,
+- Resultado e Relatório PDF
+
+💡 Cadastre seu primeiro cliente para ver este botão aparecer na lista.`,
     alvo: '[data-tour="btn-fp"]',
     posicao: 'left' as const,
   },
@@ -154,7 +158,9 @@ Lá você terá acesso a todas as seções:
 🔵 Em Andamento: processo em curso
 🟢 Completo: relatório PDF gerado
 
-O status é atualizado automaticamente conforme o consultor avança no processo.`,
+O status é atualizado automaticamente conforme o consultor avança no processo.
+
+💡 O badge aparecerá ao lado de cada cliente cadastrado.`,
     alvo: '[data-tour="badge-status"]',
     posicao: 'left' as const,
   },
