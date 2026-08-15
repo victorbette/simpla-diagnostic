@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import {
   calcularProjecaoIF,
@@ -12,8 +11,8 @@ import {
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
-const TAXA_PADRAO_ANUAL = 0.045;
-const TAXA_RET_MENSAL   = Math.pow(1.04, 1 / 12) - 1; // taxa de retirada: 4% a.a.
+const TAXA_PADRAO_DIAG = 6.0; // IPCA + 6%
+const TAXA_RET_MENSAL  = Math.pow(1.04, 1 / 12) - 1;
 
 interface Ajustes {
   usarTaxaCustom: boolean;
@@ -24,7 +23,7 @@ interface Ajustes {
 
 const initialAjustes: Ajustes = {
   usarTaxaCustom: false,
-  taxaCustomAnual: 4.5,
+  taxaCustomAnual: TAXA_PADRAO_DIAG,
   usarCrescimentoAportes: false,
   crescimentoAportesAnual: 3.0,
 };
@@ -93,7 +92,7 @@ function parseDateNasc(s: string): { ano: number; mes: number } | null {
 }
 
 function fmtBRL(v: number) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalvar }: Props) {
@@ -105,16 +104,16 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 30;
 
-  const patrimonioColeta = Number(dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteColeta = Number(dadosColeta.aporteMensal) || 0;
+  const patrimonioColeta    = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteColeta        = Number(dadosColeta.aporteMensal) || 0;
   const rendaDesejadaColeta = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
 
   const initialParams: UIParams = {
-    idadeAtual: idadeAtualCalculada,
+    idadeAtual:         idadeAtualCalculada,
     idadeAposentadoria: Number(dadosLF.idadeAlvo) || Number(dadosColeta.idadeMeta) || 60,
-    patrimonioInicial: Number(dadosLF.patrimonioInicial) || patrimonioColeta,
-    aporteMensal: Number(dadosLF.aporteMensal) || aporteColeta,
-    rendaDesejada: Number(dadosLF.rendaDesejada) || rendaDesejadaColeta,
+    patrimonioInicial:  Number(dadosLF.patrimonioInicial) || patrimonioColeta,
+    aporteMensal:       Number(dadosLF.aporteMensal) || aporteColeta,
+    rendaDesejada:      Number(dadosLF.rendaDesejada) || rendaDesejadaColeta,
   };
 
   const [params, setParams] = useState<UIParams>(initialParams);
@@ -132,6 +131,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   const [ajustes, setAjustes] = useState<Ajustes>(() =>
     dadosLF.ajustes ? { ...initialAjustes, ...dadosLF.ajustes } : initialAjustes
   );
+  const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
   const isFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
@@ -157,25 +157,31 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
       ...prev,
       idadeAtual: idadeAtualCalculada,
       patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
-      aporteMensal: !aporteEditado ? aporteColeta : prev.aporteMensal,
-      rendaDesejada: !rendaEditada ? rendaDesejadaColeta : prev.rendaDesejada,
+      aporteMensal:      !aporteEditado     ? aporteColeta     : prev.aporteMensal,
+      rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
 
+  // ── Taxa efetiva ─────────────────────────────────────────────────────────
+  const taxaAnualEfetiva = ajustes.usarTaxaCustom
+    ? ajustes.taxaCustomAnual / 100
+    : TAXA_PADRAO_DIAG / 100;
+
+  const taxaLabel = ajustes.usarTaxaCustom
+    ? `IPCA + ${ajustes.taxaCustomAnual.toFixed(2).replace(".", ",")}%`
+    : "IPCA + 6,00%";
+
   // ── Ajustes avançados — derived rates ────────────────────────────────────
   const ajustesCalc = useMemo(() => {
-    const taxaAnualCombinada = ajustes.usarTaxaCustom
-      ? ajustes.taxaCustomAnual / 100
-      : TAXA_PADRAO_ANUAL;
-    const taxaMensal = Math.pow(1 + taxaAnualCombinada, 1 / 12) - 1;
+    const taxaMensal = Math.pow(1 + taxaAnualEfetiva, 1 / 12) - 1;
     const crescimentoMensal = ajustes.usarCrescimentoAportes
       ? Math.pow(1 + ajustes.crescimentoAportesAnual / 100, 1 / 12) - 1
       : 0;
-    return { taxaAnualCombinada, taxaMensal, crescimentoMensal };
-  }, [ajustes]);
+    return { taxaMensal, crescimentoMensal };
+  }, [taxaAnualEfetiva, ajustes.usarCrescimentoAportes, ajustes.crescimentoAportesAnual]);
 
   const patrimonioPerpetuidade = useMemo(() => {
     if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
@@ -183,24 +189,23 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }, [params.rendaDesejada]);
 
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
-    idadeAtual: params.idadeAtual,
-    idadeMeta: params.idadeAposentadoria,
-    idadeMaxima: 100,
-    patrimonioInicial: params.patrimonioInicial,
-    aporteMensal: params.aporteMensal,
+    idadeAtual:          params.idadeAtual,
+    idadeMeta:           params.idadeAposentadoria,
+    idadeMaxima:         100,
+    patrimonioInicial:   params.patrimonioInicial,
+    aporteMensal:        params.aporteMensal,
     rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual: ajustesCalc.taxaAnualCombinada,
+    taxaRetornoAnual:    taxaAnualEfetiva,
     anoNascimento,
     mesNascimento,
-    objetivos: [],
-  }), [params, anoNascimento, mesNascimento, ajustesCalc]);
+    objetivos:           [],
+  }), [params, anoNascimento, mesNascimento, taxaAnualEfetiva]);
 
   const result = useMemo(() => {
     try { return calcularProjecaoIF(projecaoParams); }
     catch { return null; }
   }, [projecaoParams]);
 
-  // When growing aportes is active, compute patrimônio with compounding aporte
   const patrimonioProjetado = useMemo(() => {
     if (!ajustes.usarCrescimentoAportes) {
       return result?.patrimonioNaIF ?? 0;
@@ -229,7 +234,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ? result.mesInicioRetirada
     : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
 
-  // ── Gráfico: reconstrói curva com crescimento de aportes quando ativo ──
   const projecaoGrafico = useMemo((): PontoProjecao[] => {
     if (!result) return [];
     if (!ajustes.usarCrescimentoAportes) return result.projecao;
@@ -263,7 +267,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return pontos;
   }, [result, ajustes.usarCrescimentoAportes, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, ajustesCalc.taxaMensal, ajustesCalc.crescimentoMensal, mesIF]);
 
-  // ── Análise de Sensibilidade ──
+  // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
     const aporteC = Math.max(0, params.aporteMensal * (1 + pct / 100));
     const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
@@ -320,204 +324,273 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── 1. Parâmetros ── */}
-      <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#000000", margin: "0 0 12px" }}>
-          Parâmetros da simulação
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 12 }}>
+      {/* ── 1+2. PARÂMETROS + GRÁFICO LADO A LADO ──────────────────────────── */}
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, minHeight: 14, lineHeight: 1 }}>Idade atual</label>
-            <div style={{ position: "relative" }}>
-              <Input
-                type="number"
-                value={params.idadeAtual}
-                readOnly
-                style={{ borderColor: "#BFDBFE", borderLeft: "3px solid #2563EB", color: "#000000", backgroundColor: "#EFF6FF", cursor: "not-allowed", padding: "6px 10px", fontSize: 12 }}
-              />
-              <span style={{ position: "absolute", top: 7, right: 6, fontSize: 9, color: "#2563EB", fontWeight: 600, pointerEvents: "none" }}>✓</span>
-            </div>
-          </div>
+        {/* Card estreito — Parâmetros */}
+        <div style={{
+          flex: "0 0 300px", width: 300,
+          background: "white", border: "0.5px solid #E5E7EB",
+          borderRadius: 12, padding: "16px 18px",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: "0 0 14px" }}>
+            Parâmetros da Simulação
+          </p>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, minHeight: 14, lineHeight: 1 }}>Aposentadoria</label>
-            <Input
-              type="number"
-              min={params.idadeAtual + 1}
-              max={90}
-              value={params.idadeAposentadoria}
-              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
-              style={{ borderColor: "#BFDBFE", color: "#000000", padding: "6px 10px", fontSize: 12 }}
-            />
-          </div>
+          {/* 4 campos em coluna */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
-              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Patrimônio</label>
-              {patrimonioEditado && (
-                <button onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                  ↺
-                </button>
-              )}
-            </div>
-            <CurrencyInput
-              value={params.patrimonioInicial}
-              onChange={(v) => { setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
-            />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
-              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Aporte mensal</label>
-              {aporteEditado && (
-                <button onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                  ↺
-                </button>
-              )}
-            </div>
-            <CurrencyInput value={params.aporteMensal} onChange={(v) => { setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }} />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <div style={{ display: "flex", alignItems: "center", minHeight: 14 }}>
-              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500, lineHeight: 1 }}>Renda desejada</label>
-              {rendaEditada && (
-                <button onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}>
-                  ↺
-                </button>
-              )}
-            </div>
-            <CurrencyInput
-              value={params.rendaDesejada}
-              onChange={(v) => { setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
-            />
-          </div>
-
-        </div>
-
-        {/* Ajustes avançados — footer integrado */}
-        <div style={{ marginTop: 10, paddingTop: 8, borderTop: "0.5px solid #F3F4F6" }}>
-          <button
-            onClick={() => setMostrarAjustes(v => !v)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              background: "none", border: "none", padding: 0,
-              cursor: "pointer", fontSize: 12,
-              color: mostrarAjustes ? "#2563EB" : "#6B7280",
-              fontFamily: "inherit",
-            }}
-          >
-            <i className="ti ti-adjustments-horizontal" style={{ fontSize: 14 }} />
-            Ajustes avançados
-            <i className={`ti ti-chevron-${mostrarAjustes ? "up" : "down"}`} style={{ fontSize: 11, marginLeft: 2 }} />
-            {ajustes.usarTaxaCustom && (
-              <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
-                IPCA+{ajustes.taxaCustomAnual}%
-              </span>
-            )}
-            {ajustes.usarCrescimentoAportes && (
-              <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
-                Crescimento {ajustes.crescimentoAportesAnual}%
-              </span>
-            )}
-          </button>
-
-          {mostrarAjustes && (
-            <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
-
-              {/* 1. Taxa de retorno personalizada */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button
-                    role="switch"
-                    aria-checked={ajustes.usarTaxaCustom}
-                    onClick={() => setAjustes(a => ({ ...a, usarTaxaCustom: !a.usarTaxaCustom }))}
-                    style={{
-                      width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
-                      background: ajustes.usarTaxaCustom ? "#2563EB" : "#D1D5DB",
-                      border: "none", cursor: "pointer", position: "relative",
-                    }}
-                  >
-                    <span style={{ position: "absolute", top: 2, left: ajustes.usarTaxaCustom ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
-                  </button>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Taxa de retorno personalizada</span>
-                </div>
-                {ajustes.usarTaxaCustom && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
-                    <Input
-                      type="number" min={0} max={30} step={0.1}
-                      value={ajustes.taxaCustomAnual}
-                      onChange={(e) => setAjustes(a => ({ ...a, taxaCustomAnual: Number(e.target.value) }))}
-                      style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
-                    />
-                    <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>(padrão: {(TAXA_PADRAO_ANUAL * 100).toFixed(1)}%)</span>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ borderTop: "0.5px solid #F3F4F6" }} />
-
-              {/* 2. Crescimento real de aportes */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <button
-                    role="switch"
-                    aria-checked={ajustes.usarCrescimentoAportes}
-                    onClick={() => setAjustes(a => ({ ...a, usarCrescimentoAportes: !a.usarCrescimentoAportes }))}
-                    style={{
-                      width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
-                      background: ajustes.usarCrescimentoAportes ? "#2563EB" : "#D1D5DB",
-                      border: "none", cursor: "pointer", position: "relative",
-                    }}
-                  >
-                    <span style={{ position: "absolute", top: 2, left: ajustes.usarCrescimentoAportes ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
-                  </button>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Crescimento real de aportes</span>
-                </div>
-                {ajustes.usarCrescimentoAportes && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
-                    <Input
-                      type="number" min={0} max={20} step={0.1}
-                      value={ajustes.crescimentoAportesAnual}
-                      onChange={(e) => setAjustes(a => ({ ...a, crescimentoAportesAnual: Number(e.target.value) }))}
-                      style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
-                    />
-                    <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF" }}>crescimento anual do aporte</span>
-                  </div>
-                )}
-              </div>
-
-              {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
-                <div style={{ padding: "8px 12px", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8, fontSize: 11, color: "#1E40AF" }}>
-                  Taxa efetiva anual: <strong>{(ajustesCalc.taxaAnualCombinada * 100).toFixed(2)}% a.a.</strong>
-                  {ajustes.usarCrescimentoAportes && (
-                    <> · Crescimento do aporte: <strong>{ajustes.crescimentoAportesAnual.toFixed(1)}% a.a.</strong></>
+            {/* Renda Desejada */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda Desejada</label>
+                  {rendaEditada && (
+                    <button
+                      onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                      style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >↺</button>
                   )}
                 </div>
-              )}
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                  {fmtBRL(params.rendaDesejada ?? 0)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0} max={200000} step={500}
+                value={params.rendaDesejada ?? 0}
+                onChange={(e) => { const v = Number(e.target.value); setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+                style={{ width: "100%", accentColor: "#2563EB" }}
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={campoFocado === "rendaDesejada" ? String(params.rendaDesejada ?? 0) : fmtBRL(params.rendaDesejada ?? 0)}
+                onFocus={() => setCampoFocado("rendaDesejada")}
+                onBlur={() => setCampoFocado(null)}
+                onChange={(e) => { const v = Number(e.target.value.replace(/[^0-9]/g, "")) || 0; setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+                style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
             </div>
-          )}
+
+            {/* Aporte Mensal */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte Mensal</label>
+                  {aporteEditado && (
+                    <button
+                      onClick={() => { setP({ aporteMensal: aporteColeta }); setAporteEditado(false); }}
+                      style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >↺</button>
+                  )}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                  {fmtBRL(params.aporteMensal ?? 0)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0} max={200000} step={500}
+                value={params.aporteMensal ?? 0}
+                onChange={(e) => { const v = Number(e.target.value); setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }}
+                style={{ width: "100%", accentColor: "#2563EB" }}
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={campoFocado === "aporteMensal" ? String(params.aporteMensal ?? 0) : fmtBRL(params.aporteMensal ?? 0)}
+                onFocus={() => setCampoFocado("aporteMensal")}
+                onBlur={() => setCampoFocado(null)}
+                onChange={(e) => { const v = Number(e.target.value.replace(/[^0-9]/g, "")) || 0; setP({ aporteMensal: v }); setAporteEditado(v !== aporteColeta); }}
+                style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+
+            {/* Aposentadoria */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                  {params.idadeAposentadoria ?? 60} anos
+                </span>
+              </div>
+              <input
+                type="range"
+                min={40} max={90} step={1}
+                value={params.idadeAposentadoria ?? 60}
+                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                style={{ width: "100%", accentColor: "#2563EB" }}
+              />
+              <input
+                type="number"
+                min={40} max={90} step={1}
+                value={params.idadeAposentadoria ?? 60}
+                onChange={(e) => setP({ idadeAposentadoria: e.target.value === "" ? 60 : Number(e.target.value) })}
+                style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+
+            {/* Patrimônio */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio</label>
+                  {patrimonioEditado && (
+                    <button
+                      onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                      style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >↺</button>
+                  )}
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                  {fmtBRL(params.patrimonioInicial ?? 0)}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0} max={10000000} step={10000}
+                value={params.patrimonioInicial ?? 0}
+                onChange={(e) => { const v = Number(e.target.value); setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+                style={{ width: "100%", accentColor: "#2563EB" }}
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={campoFocado === "patrimonioInicial" ? String(params.patrimonioInicial ?? 0) : fmtBRL(params.patrimonioInicial ?? 0)}
+                onFocus={() => setCampoFocado("patrimonioInicial")}
+                onBlur={() => setCampoFocado(null)}
+                onChange={(e) => { const v = Number(e.target.value.replace(/[^0-9]/g, "")) || 0; setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+                style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+
+          </div>
+
+          {/* Ajustes avançados */}
+          <div style={{ marginTop: 10, paddingTop: 8, borderTop: "0.5px solid #F3F4F6" }}>
+            <button
+              onClick={() => setMostrarAjustes(v => !v)}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                background: "none", border: "none", padding: 0,
+                cursor: "pointer", fontSize: 12,
+                color: mostrarAjustes ? "#2563EB" : "#6B7280",
+                fontFamily: "inherit",
+              }}
+            >
+              <i className="ti ti-adjustments-horizontal" style={{ fontSize: 14 }} />
+              Ajustes avançados
+              <i className={`ti ti-chevron-${mostrarAjustes ? "up" : "down"}`} style={{ fontSize: 11, marginLeft: 2 }} />
+              {ajustes.usarTaxaCustom && (
+                <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
+                  IPCA+{ajustes.taxaCustomAnual}%
+                </span>
+              )}
+              {ajustes.usarCrescimentoAportes && (
+                <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
+                  Crescimento {ajustes.crescimentoAportesAnual}%
+                </span>
+              )}
+            </button>
+
+            {mostrarAjustes && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 10 }}>
+
+                {/* Taxa de retorno personalizada */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      role="switch"
+                      aria-checked={ajustes.usarTaxaCustom}
+                      onClick={() => setAjustes(a => ({ ...a, usarTaxaCustom: !a.usarTaxaCustom }))}
+                      style={{
+                        width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
+                        background: ajustes.usarTaxaCustom ? "#2563EB" : "#D1D5DB",
+                        border: "none", cursor: "pointer", position: "relative",
+                      }}
+                    >
+                      <span style={{ position: "absolute", top: 2, left: ajustes.usarTaxaCustom ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
+                    </button>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Taxa de retorno personalizada</span>
+                  </div>
+                  {ajustes.usarTaxaCustom && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
+                      <Input
+                        type="number" min={0} max={30} step={0.1}
+                        value={ajustes.taxaCustomAnual}
+                        onChange={(e) => setAjustes(a => ({ ...a, taxaCustomAnual: Number(e.target.value) }))}
+                        style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
+                      />
+                      <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>(padrão: {TAXA_PADRAO_DIAG.toFixed(1)}%)</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ borderTop: "0.5px solid #F3F4F6" }} />
+
+                {/* Crescimento real de aportes */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <button
+                      role="switch"
+                      aria-checked={ajustes.usarCrescimentoAportes}
+                      onClick={() => setAjustes(a => ({ ...a, usarCrescimentoAportes: !a.usarCrescimentoAportes }))}
+                      style={{
+                        width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
+                        background: ajustes.usarCrescimentoAportes ? "#2563EB" : "#D1D5DB",
+                        border: "none", cursor: "pointer", position: "relative",
+                      }}
+                    >
+                      <span style={{ position: "absolute", top: 2, left: ajustes.usarCrescimentoAportes ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
+                    </button>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Crescimento real de aportes</span>
+                  </div>
+                  {ajustes.usarCrescimentoAportes && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
+                      <Input
+                        type="number" min={0} max={20} step={0.1}
+                        value={ajustes.crescimentoAportesAnual}
+                        onChange={(e) => setAjustes(a => ({ ...a, crescimentoAportesAnual: Number(e.target.value) }))}
+                        style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
+                      />
+                      <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
+                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>crescimento anual do aporte</span>
+                    </div>
+                  )}
+                </div>
+
+                {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
+                  <div style={{ padding: "8px 12px", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8, fontSize: 11, color: "#1E40AF" }}>
+                    Taxa efetiva anual: <strong>{(taxaAnualEfetiva * 100).toFixed(2)}% a.a.</strong>
+                    {ajustes.usarCrescimentoAportes && (
+                      <> · Crescimento do aporte: <strong>{ajustes.crescimentoAportesAnual.toFixed(1)}% a.a.</strong></>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Liberdade Financeira" />
+        </div>
+
+        {/* Card largo — Gráfico */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <CardProjecaoPatrimonial
+            projecao={projecaoGrafico}
+            objetivos={[]}
+            height={420}
+            mesIF={mesIF}
+            mesNascimento={mesNascimento}
+            patrimonioNecessario={patrimonioPerpetuidade}
+            taxaLabel={taxaLabel}
+          />
         </div>
       </div>
-
-      {/* ── 2. Gráfico ── */}
-      <CardProjecaoPatrimonial
-        projecao={projecaoGrafico}
-        objetivos={[]}
-        height={320}
-        mesIF={mesIF}
-        mesNascimento={mesNascimento}
-        patrimonioNecessario={patrimonioPerpetuidade}
-        taxaLabel={ajustes.usarTaxaCustom
-          ? `${ajustes.taxaCustomAnual.toFixed(1)}% a.a. real`
-          : `${(TAXA_PADRAO_ANUAL * 100).toFixed(1)}% a.a. real`}
-      />
 
       {/* ── 3. Cards de resultado ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
@@ -542,15 +615,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Sustentável</p>
             <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827" }} className="tabular-nums">
               {rendaSustentavel > 0
-                ? rendaSustentavel.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
+                ? fmtBRL(rendaSustentavel)
                 : "—"}
             </p>
             <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>/mês com a projeção atual</p>
             {params.rendaDesejada > 0 && rendaSustentavel > 0 && (
               <p style={{ fontSize: 10, marginTop: 4, fontWeight: 500, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }}>
                 {rendaSustentavel >= params.rendaDesejada
-                  ? `✓ Meta de ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês atingida`
-                  : `Meta: ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`}
+                  ? `✓ Meta de ${fmtBRL(params.rendaDesejada)}/mês atingida`
+                  : `Meta: ${fmtBRL(params.rendaDesejada)}/mês`}
               </p>
             )}
           </CardContent>
@@ -615,7 +688,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         </div>
       </div>
 
-      <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Liberdade Financeira" />
     </div>
   );
 }
