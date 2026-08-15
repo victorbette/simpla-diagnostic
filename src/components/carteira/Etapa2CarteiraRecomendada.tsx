@@ -220,7 +220,7 @@ export function Etapa2CarteiraRecomendada({
                       step={0.5}
                       value={pct}
                       onChange={(e) => setPct(cardId, parseFloat(e.target.value))}
-                      style={{ width: "100%", accentColor: grupo.cor, height: 8 }}
+                      style={{ width: "100%", accentColor: grupo.cor, height: 8, ['--slider-color' as string]: grupo.cor } as React.CSSProperties}
                     />
 
                     {/* % input */}
