@@ -467,6 +467,9 @@ export function FerramentaLiberdadeFinanceira({
   };
 
 
+  const formatBRL = (v: number) =>
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
   const AJUDA_LF = {
     titulo: 'Liberdade Financeira',
     secoes: [
@@ -516,13 +519,15 @@ export function FerramentaLiberdadeFinanceira({
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── 1. CARD PARÂMETROS DA SIMULAÇÃO ────────────────────────────────── */}
+      {/* ── 1+2. PARÂMETROS + GRÁFICO LADO A LADO ──────────────────────────── */}
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
       <div style={{
+        flex: "0 0 300px", width: 300,
         background: "white", border: "0.5px solid #E5E7EB",
-        borderRadius: 12, padding: "14px 20px",
+        borderRadius: 12, padding: "16px 18px",
         boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>
             Parâmetros da Simulação
           </p>
@@ -545,23 +550,24 @@ export function FerramentaLiberdadeFinanceira({
           </button>
         </div>
 
-        {/* 4 campos em linha */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+        {/* 4 campos em coluna */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
 
           {/* Renda Desejada */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
-              <label style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap" }}>
-                Renda Desejada (R$)
-              </label>
-              {rendaEditada && (
-                <button
-                  onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺
-                </button>
-              )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Renda Desejada</label>
+                {rendaEditada && (
+                  <button
+                    onClick={() => { setP({ rendaDesejada: rendaDesejadaColeta }); setRendaEditada(false); }}
+                    style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >↺</button>
+                )}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                {formatBRL(params.rendaDesejada ?? 0)}
+              </span>
             </div>
             <input
               type="range"
@@ -581,18 +587,19 @@ export function FerramentaLiberdadeFinanceira({
 
           {/* Aporte Mensal */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
-              <label style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap" }}>
-                Aporte Mensal (R$)
-              </label>
-              {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
-                <button
-                  onClick={() => setP({ aporteMensal: aporteColeta })}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺
-                </button>
-              )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aporte Mensal</label>
+                {aporteColeta > 0 && params.aporteMensal !== aporteColeta && (
+                  <button
+                    onClick={() => setP({ aporteMensal: aporteColeta })}
+                    style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >↺</button>
+                )}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                {formatBRL(params.aporteMensal ?? 0)}
+              </span>
             </div>
             <input
               type="range"
@@ -612,9 +619,12 @@ export function FerramentaLiberdadeFinanceira({
 
           {/* Aposentadoria */}
           <div>
-            <label style={{ fontSize: 10, color: "#6B7280", display: "block", marginBottom: 3, whiteSpace: "nowrap" }}>
-              Aposentadoria (anos)
-            </label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                {params.idadeAposentadoria ?? 60} anos
+              </span>
+            </div>
             <input
               type="range"
               min={40} max={90} step={1}
@@ -631,20 +641,21 @@ export function FerramentaLiberdadeFinanceira({
             />
           </div>
 
-          {/* Patrimônio Financeiro */}
+          {/* Patrimônio */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
-              <label style={{ fontSize: 10, color: "#6B7280", whiteSpace: "nowrap" }}>
-                Patrimônio (R$)
-              </label>
-              {patrimonioEditado && (
-                <button
-                  onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
-                  style={{ marginLeft: 6, fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  ↺
-                </button>
-              )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio</label>
+                {patrimonioEditado && (
+                  <button
+                    onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
+                    style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >↺</button>
+                )}
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                {formatBRL(params.patrimonioInicial ?? 0)}
+              </span>
             </div>
             <input
               type="range"
@@ -775,20 +786,23 @@ export function FerramentaLiberdadeFinanceira({
         </div>
       </div>
 
-      {/* ── 2. GRÁFICO ──────────────────────────────────────────────────────── */}
-      <CardProjecaoPatrimonial
-        projecao={dadosGrafico}
-        objetivos={objetivosAtivos}
-        height={420}
-        mesIF={mesIF}
-        mesNascimento={mesNascimento}
-        patrimonioNecessario={patrimonioPerpetuidade}
-        taxaLabel={
-          ajustes.usarTaxaCustom
-            ? formatarTaxaLabel(ajustes.taxaCustomAnual)
-            : formatarTaxaLabel(taxaPadrao)
-        }
-      />
+        {/* Card Projeção Patrimonial — largo */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <CardProjecaoPatrimonial
+            projecao={dadosGrafico}
+            objetivos={objetivosAtivos}
+            height={420}
+            mesIF={mesIF}
+            mesNascimento={mesNascimento}
+            patrimonioNecessario={patrimonioPerpetuidade}
+            taxaLabel={
+              ajustes.usarTaxaCustom
+                ? formatarTaxaLabel(ajustes.taxaCustomAnual)
+                : formatarTaxaLabel(taxaPadrao)
+            }
+          />
+        </div>
+      </div>
 
       {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
