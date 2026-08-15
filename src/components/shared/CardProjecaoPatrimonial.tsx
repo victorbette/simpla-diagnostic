@@ -11,6 +11,7 @@ interface Props {
   mesNascimento?: number;
   height?: number;
   interativo?: boolean;
+  taxaLabel?: string;
 }
 
 export function CardProjecaoPatrimonial({
@@ -21,6 +22,7 @@ export function CardProjecaoPatrimonial({
   mesNascimento,
   height = 420,
   interativo = true,
+  taxaLabel,
 }: Props) {
   return (
     <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "none" }}>
@@ -37,6 +39,24 @@ export function CardProjecaoPatrimonial({
           patrimonioNecessario={patrimonioNecessario}
           interativo={interativo}
         />
+        {taxaLabel && (
+          <div style={{
+            marginTop: 6,
+            fontSize: 10,
+            color: "#9CA3AF",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+          }}>
+            <span style={{
+              width: 10, height: 2,
+              background: "#9CA3AF",
+              display: "inline-block",
+              borderRadius: 99,
+            }} />
+            Taxa utilizada: {taxaLabel}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
