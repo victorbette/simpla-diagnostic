@@ -129,6 +129,7 @@ export function FerramentaLiberdadeFinanceira({
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
   const [ajustes, setAjustes] = useState<Ajustes>(initialAjustes);
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
+  const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
   const CHAVE = `ferramenta_if_${clientId}`;
 
@@ -577,10 +578,12 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <input
-              type="number"
-              min={0} max={200000} step={500}
-              value={params.rendaDesejada ?? 0}
-              onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
+              type="text"
+              inputMode="numeric"
+              value={campoFocado === "rendaDesejada" ? String(params.rendaDesejada ?? 0) : formatBRL(params.rendaDesejada ?? 0)}
+              onFocus={() => setCampoFocado("rendaDesejada")}
+              onBlur={() => setCampoFocado(null)}
+              onChange={(e) => { const v = Number(e.target.value.replace(/[^0-9]/g, "")) || 0; setP({ rendaDesejada: v }); setRendaEditada(v !== rendaDesejadaColeta); }}
               style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
             />
           </div>
@@ -609,10 +612,12 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <input
-              type="number"
-              min={0} max={200000} step={500}
-              value={params.aporteMensal ?? 0}
-              onChange={(e) => setP({ aporteMensal: e.target.value === "" ? 0 : Number(e.target.value) })}
+              type="text"
+              inputMode="numeric"
+              value={campoFocado === "aporteMensal" ? String(params.aporteMensal ?? 0) : formatBRL(params.aporteMensal ?? 0)}
+              onFocus={() => setCampoFocado("aporteMensal")}
+              onBlur={() => setCampoFocado(null)}
+              onChange={(e) => setP({ aporteMensal: Number(e.target.value.replace(/[^0-9]/g, "")) || 0 })}
               style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
             />
           </div>
@@ -665,10 +670,12 @@ export function FerramentaLiberdadeFinanceira({
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <input
-              type="number"
-              min={0} max={10000000} step={10000}
-              value={params.patrimonioInicial ?? 0}
-              onChange={(e) => { const v = e.target.value === "" ? 0 : Number(e.target.value); setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
+              type="text"
+              inputMode="numeric"
+              value={campoFocado === "patrimonioInicial" ? String(params.patrimonioInicial ?? 0) : formatBRL(params.patrimonioInicial ?? 0)}
+              onFocus={() => setCampoFocado("patrimonioInicial")}
+              onBlur={() => setCampoFocado(null)}
+              onChange={(e) => { const v = Number(e.target.value.replace(/[^0-9]/g, "")) || 0; setP({ patrimonioInicial: v }); setPatrimonioEditado(v !== patrimonioColeta); }}
               style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
             />
           </div>
