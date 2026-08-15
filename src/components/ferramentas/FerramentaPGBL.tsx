@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip,
+  LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip,
   CartesianGrid, ResponsiveContainer,
   BarChart, Bar, Cell, LabelList,
 } from "recharts";
@@ -8,6 +8,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import { formatBRL, DEDUCAO_DEPENDENTE } from "@/lib/tax";
 import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simularDeclaracao";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 export interface SavedPGBLResult {
   tipoDeclaracao?: string;
@@ -64,6 +66,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const saldoAtual  = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? 0);
   const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? 0));
   const [salvo, setSalvo] = useState(false);
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   const sim = useMemo(() => {
     if (renda.value <= 0) return null;
@@ -186,12 +189,76 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const fmtBRLInt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
+  const AJUDA_TRIBUTARIO = {
+    titulo: 'Planejamento Tributário',
+    secoes: [
+      {
+        titulo: '📌 O que é o Planejamento Tributário?',
+        conteudo: `Esta seção analisa a eficiência fiscal do cliente e identifica oportunidades legais de redução do Imposto de Renda.\n\nO foco principal é a utilização do PGBL (Plano Gerador de Benefício Livre) como instrumento de dedução fiscal para quem declara pelo modelo completo.\n\nUma boa estratégia tributária pode representar uma economia significativa ao longo dos anos — recursos que permanecem investidos e continuam crescendo.`,
+      },
+      {
+        titulo: '📝 Modelo de Declaração',
+        conteudo: `Modelo Simplificado:\nA Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável (limitado a R$ 16.754,34 em 2026). É mais vantajoso quando as deduções individuais são menores que esse desconto.\n\nNeste modelo, contribuições ao PGBL NÃO geram dedução adicional.\n\nModelo Completo:\nPermite deduzir despesas reais: médicas, educação, dependentes e contribuições ao PGBL (até 12% da renda bruta anual).\n\nÉ mais vantajoso quando a soma das deduções supera o desconto do modelo simplificado.\n\nNão sei:\nQuando o cliente não sabe qual modelo utiliza, o planejamento tributário fica marcado como "Não avaliado" e não impacta o score.`,
+      },
+      {
+        titulo: '💰 O que é o PGBL?',
+        conteudo: `PGBL (Plano Gerador de Benefício Livre) é um plano de previdência privada com benefício fiscal exclusivo para quem declara pelo modelo completo.\n\nComo funciona o benefício:\nContribuições ao PGBL podem ser deduzidas da base de cálculo do IR, limitadas a 12% da renda bruta anual tributável.\n\nEfeito prático:\nSe o cliente tem renda anual de R$ 240.000 e contribui R$ 28.800 (12%) ao PGBL, a base de cálculo do IR reduz em R$ 28.800 — gerando economia imediata de imposto.\n\nImportante: o IR é apenas diferido, não eliminado. No resgate, incidirá alíquota sobre o total acumulado. Por isso é ideal para acumulação de longo prazo.`,
+      },
+      {
+        titulo: '📊 Teto do PGBL',
+        conteudo: `O limite legal de dedução é 12% da Renda Bruta Anual Tributável.\n\nExemplo:\nRenda anual: R$ 240.000\nTeto PGBL: R$ 240.000 × 12% = R$ 28.800/ano\nou R$ 2.400/mês\n\nAproveitamento:\nQuanto mais próximo do teto o cliente contribui, maior a eficiência fiscal e melhor o score tributário.\n\n0% do teto → score baixo (oportunidade desperdiçada)\n100% do teto → score máximo (máxima eficiência)`,
+      },
+      {
+        titulo: '🧮 Como o IR é calculado?',
+        conteudo: `Tabela IRPF 2026 (anual):\n\nAté R$ 26.963,20 → isento\nR$ 26.963,21 a R$ 33.919,80 → 7,5%\nR$ 33.919,81 a R$ 45.012,60 → 15%\nR$ 45.012,61 a R$ 55.976,16 → 22,5%\nAcima de R$ 55.976,16 → 27,5%\n\nDeduções no modelo completo:\n- Dependentes: R$ 2.275,08/ano por dependente\n- Despesas dedutíveis: médicas, educação, etc.\n- PGBL: até 12% da renda bruta\n\nA base de cálculo é: Renda - Deduções - PGBL`,
+      },
+      {
+        titulo: '💡 Economia e Diferimento',
+        conteudo: `A economia fiscal é a diferença entre o IR sem PGBL e o IR com PGBL:\n\nEconomia = IR (sem PGBL) - IR (com PGBL)\n\nEssa economia não desaparece — ela fica investida na previdência, continuando a render até o resgate.\n\nDiferimento:\nO benefício do PGBL é o diferimento do IR — você paga o imposto no futuro (no resgate) em vez de agora. Como o valor fica investido mais tempo, o resultado final é maior mesmo pagando IR no resgate.`,
+      },
+      {
+        titulo: '📈 Score Tributário',
+        conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100\n(não há como otimizar, está no modelo correto)\n\nNão sabe / Não analisado → "Não avaliado"\n(sem impacto no score geral)\n\nCompleta + sem PGBL → score 0\n(grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
+      },
+      {
+        titulo: '💡 Dicas para o consultor',
+        conteudo: `• Sempre verifique se o modelo simplificado ou completo é mais vantajoso antes de recomendar o PGBL.\n\n- O PGBL só faz sentido para quem declara pelo modelo completo. Para o modelo simplificado, o VGBL é mais indicado (sem dedução, mas sem IR sobre o total no resgate).\n\n- Contribuições acima do teto de 12% não são dedutíveis — o excedente deve ir para VGBL.\n\n- Para profissionais autônomos com renda variável, calcule o teto com base na renda tributável média anual.\n\n- O benefício é ainda maior para quem está na alíquota marginal de 27,5% — a economia por real deduzido é máxima nessa faixa.`,
+      },
+    ],
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+      {/* ── HEADER COM BOTÃO AJUDA ────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#111827" }}>Planejamento Tributário</p>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 4,
+            background: "#EFF6FF",
+            border: "1px solid #BFDBFE",
+            borderRadius: 20,
+            padding: "4px 10px",
+            cursor: "pointer",
+            fontSize: 11, fontWeight: 600,
+            color: "#2563EB",
+            fontFamily: "inherit",
+          }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+          Ajuda
+        </button>
+      </div>
+
       {/* ── CARD 1: Tipo de Declaração ─────────────────────────────────────── */}
       <div style={cardStyle("")}>
-        {cardHeader("ti-file-text", "Tipo de Declaração IR")}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6", marginBottom: 16 }}>
+          <i className="ti ti-file-text" style={{ fontSize: 18, color: "#2563EB" }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Tipo de Declaração IR</span>
+          <Tooltip posicao="right" texto={`Simplificada: desconto padrão de 20% (sem PGBL).\nCompleta: deduções reais + PGBL até 12% da renda.\nNão sei: não impacta o score.`} />
+        </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {TIPOS_DECLARACAO.map((tipo) => {
             const ativo = tipoDeclaracao === tipo.id;
@@ -244,24 +311,36 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
 
           <div>
-            <span style={labelStyle}>Renda Bruta Anual Tributável (R$)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...labelStyle, marginBottom: 0 }}>Renda Bruta Anual Tributável (R$)</span>
+              <Tooltip posicao="right" texto={`Total de rendimentos tributáveis no ano, incluindo salários, pró-labore e outras rendas tributáveis.\nBase para calcular o teto do PGBL (12%).`} />
+            </div>
             <input type="text" value={renda.display} onChange={renda.onChange} onBlur={renda.onBlur} placeholder="0,00" style={inputStyle} />
           </div>
 
           <div>
-            <span style={labelStyle}>Despesas Dedutíveis (R$)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...labelStyle, marginBottom: 0 }}>Despesas Dedutíveis (R$)</span>
+              <Tooltip posicao="right" texto={`Despesas que reduzem a base de cálculo do IR no modelo completo:\n• Médicas (sem limite)\n• Educação (até R$ 3.561,50/ano)\n• Pensão alimentícia`} />
+            </div>
             <input type="text" value={despesas.display} onChange={despesas.onChange} onBlur={despesas.onBlur} placeholder="0,00" style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Saúde, educação, pensão alimentícia</p>
           </div>
 
           <div>
-            <span style={labelStyle}>Dependentes</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...labelStyle, marginBottom: 0 }}>Dependentes</span>
+              <Tooltip posicao="right" texto={`Cada dependente deduz R$ 2.275,08/ano da base de cálculo do IR.\n\nPode incluir cônjuge, filhos até 21 anos (ou 24 se universitários), pais, etc.`} />
+            </div>
             <input type="number" min={0} max={10} value={dependentes} onChange={(e) => setDependentes(e.target.value)} style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{formatBRL(DEDUCAO_DEPENDENTE)}/dep/ano deduzidos</p>
           </div>
 
           <div>
-            <span style={labelStyle}>Saldo Atual na Previdência (R$)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...labelStyle, marginBottom: 0 }}>Saldo Atual na Previdência (R$)</span>
+              <Tooltip posicao="right" texto={`Saldo atual acumulado em previdência privada (PGBL/VGBL).\nUsado como referência para análise patrimonial.`} />
+            </div>
             <input
               type="text"
               value={saldoAtual.display}
@@ -276,7 +355,10 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           </div>
 
           <div style={{ gridColumn: "span 2" }}>
-            <span style={labelStyle}>Investimento em Previdência Privada (PGBL) no ano vigente (R$)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <span style={{ ...labelStyle, marginBottom: 0 }}>Investimento em Previdência Privada (PGBL) no ano vigente (R$)</span>
+              <Tooltip posicao="left" texto={`Valor total contribuído ao PGBL no ano vigente.\nLimitado a 12% da renda bruta anual.\n\nTeto: ${formatBRL(tetoPGBLLive)}/ano`} />
+            </div>
             <input
               type="text"
               value={aporteAnual.display}
@@ -289,8 +371,11 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               Total investido em PGBL no ano fiscal vigente
             </p>
             {tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
-                <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
+                  <Tooltip posicao="right" texto={`Limite máximo de dedução com PGBL = 12% da renda bruta anual.\n\nContribuições acima desse valor não são dedutíveis e devem ir para VGBL.`} />
+                </div>
                 <span style={{
                   fontWeight: 600,
                   color: aproveitamentoPct >= 80 ? "#15803D" : aproveitamentoPct >= 50 ? "#B45309" : "#B91C1C",
@@ -381,8 +466,11 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
                 {dadosGrafico.map((d) => (
                   <div key={d.label} style={{ background: d.bg, borderRadius: 8, padding: "12px 16px", textAlign: "center" }}>
-                    <div style={{ fontSize: 10, color: d.fill, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
-                      {d.label}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: d.fill, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                      <span>{d.label}</span>
+                      {d.label === "Economia" && (
+                        <Tooltip posicao="left" texto={`Redução do IR obtida com as contribuições ao PGBL.\n\nCalculada como: IR sem PGBL - IR com PGBL.\n\nEste valor fica investido na previdência em vez de ir ao fisco.`} />
+                      )}
                     </div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: d.fill }}>
                       {d.valor > 0 ? fmtBRLInt(d.valor) : "—"}
@@ -413,7 +501,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip
+                  <RechartsTooltip
                     formatter={(v: unknown) => [fmtBRLInt(Number(v)), ""]}
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
                   />
@@ -478,7 +566,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                     }}
                     width={80}
                   />
-                  <Tooltip
+                  <RechartsTooltip
                     formatter={(value: unknown, name: unknown) => [
                       Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
                       name === "semPGBL" ? "Sem PGBL" : "Com PGBL + restituição",
@@ -523,6 +611,14 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           ) : null}
         </>
       )}
+
+      {/* ── PAINEL LATERAL DE AJUDA ─────────────────────────────────────────── */}
+      <PainelAjuda
+        titulo={AJUDA_TRIBUTARIO.titulo}
+        secoes={AJUDA_TRIBUTARIO.secoes}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
 
       {/* ── Salvar ────────────────────────────────────────────────────────── */}
       {onSave && (
