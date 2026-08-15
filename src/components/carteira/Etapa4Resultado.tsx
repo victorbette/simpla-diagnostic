@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Save } from "lucide-react";
 import type { Ativo, PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
+import { Tooltip } from "@/components/shared/Tooltip";
+import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
   ativosAtuais: Ativo[];
@@ -17,6 +19,37 @@ interface Props {
   salvando: boolean;
   salvo: boolean;
 }
+
+const AJUDA_ETAPA4 = [
+  {
+    titulo: "O que é o Resultado?",
+    conteudo: "A Etapa 4 consolida tudo que foi planejado: mostra o patrimônio atual, os aportes e resgates previstos, a alocação por classe antes e depois, e como a carteira ficará após a execução do plano.",
+  },
+  {
+    titulo: "Patrimônio Atual",
+    conteudo: "Soma de todos os ativos informados na Etapa 1 — Carteira Atual. É o ponto de partida do planejamento.",
+  },
+  {
+    titulo: "Patrimônio Final",
+    conteudo: "Estimativa do patrimônio após a execução do plano: soma dos ativos mantidos + aportes realizados − resgates efetuados. Reflete o resultado esperado da carteira proposta.",
+  },
+  {
+    titulo: "Total de Aportes",
+    conteudo: "Soma de todos os valores de aporte e novos investimentos definidos no Plano de Ação. Representa o capital novo que será aplicado.",
+  },
+  {
+    titulo: "Total de Resgates",
+    conteudo: "Soma de todos os resgates (parciais e totais) previstos no Plano de Ação. Representa o capital que será retirado da carteira.",
+  },
+  {
+    titulo: "Comparativo por Classe",
+    conteudo: "Tabela que mostra, para cada classe de ativo, o valor atual versus o valor proposto após o plano, e a diferença em reais. Positivo = aumento de exposição; negativo = redução.",
+  },
+  {
+    titulo: "Como salvar",
+    conteudo: "Clique em 'Salvar carteira' para registrar o planejamento completo. Após salvar, o diagnóstico fica disponível para consulta e impressão. Você pode voltar às etapas anteriores e salvar novamente para atualizar.",
+  },
+];
 
 function calcularValorFinal(item: PlanoAcaoItem): number {
   switch (item.acao) {
@@ -39,6 +72,7 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
 }
 
 export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
+  const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
   const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
   const patrimonioBase  = patrimonioTotal + aporteDisponivel;
   // kept for prop-pass compat (CardAlocacaoComparativa, CardSelecaoAtivos)
@@ -113,12 +147,38 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
     [planoAcao, ativosAtuais]
   );
 
+  const patrimonioFinal = carteiraFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+
   const cardStyle = (_accent?: string): React.CSSProperties => ({
     border: "0.5px solid #E5E7EB",
     borderRadius: 10, backgroundColor: "white", overflow: "hidden",
   });
 
   return (
+    <>
+      <PainelAjuda
+        titulo="Resultado — Ajuda"
+        secoes={AJUDA_ETAPA4}
+        aberto={painelAjudaAberto}
+        onFechar={() => setPainelAjudaAberto(false)}
+      />
+
+      {/* Page header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>Resultado</span>
+        <button
+          onClick={() => setPainelAjudaAberto(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 5,
+            fontSize: 12, color: "#2563EB", background: "#EFF6FF",
+            border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "4px 10px", cursor: "pointer",
+          }}
+        >
+          <i className="ti ti-help-circle" style={{ fontSize: 14 }} />
+          Ajuda
+        </button>
+      </div>
+
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
 
       {/* Visão Geral */}
@@ -126,17 +186,39 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
         <div style={{ padding: "10px 16px", borderBottom: "1px solid #BFDBFE", fontSize: 13, fontWeight: 600, color: "#111827" }}>
           Visão Geral
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
-          {[
-            { label: "Patrimônio Total", value: formatBRL(patrimonioTotal), color: "#1E3A8A" },
-            { label: "Total Aportes",    value: formatBRL(totalAportes), color: "#15803D" },
-            { label: "Total Resgates",   value: formatBRL(totalResgates), color: "#B91C1C" },
-          ].map(({ label, value, color }, i) => (
-            <div key={label} style={{ padding: 16, borderLeft: i > 0 ? "1px solid #BFDBFE" : "none" }}>
-              <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: "0 0 4px" }}>{label}</p>
-              <p style={{ fontSize: 22, fontWeight: 700, color, margin: 0 }}>{value}</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+          {/* Patrimônio Atual */}
+          <div style={{ padding: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Patrimônio Atual</p>
+              <Tooltip posicao="right" texto="Soma de todos os ativos da Carteira Atual (Etapa 1). Ponto de partida do planejamento." />
             </div>
-          ))}
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#1E3A8A", margin: 0 }}>{formatBRL(patrimonioTotal)}</p>
+          </div>
+          {/* Patrimônio Final */}
+          <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Patrimônio Final</p>
+              <Tooltip posicao="right" texto="Estimativa após execução do plano: ativos mantidos + aportes − resgates. Reflete o resultado esperado da carteira proposta." />
+            </div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#2563EB", margin: 0 }}>{formatBRL(patrimonioFinal)}</p>
+          </div>
+          {/* Total Aportes */}
+          <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Total Aportes</p>
+              <Tooltip posicao="right" texto="Soma de todos os aportes e novos investimentos definidos no Plano de Ação. Capital novo a ser aplicado." />
+            </div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(totalAportes)}</p>
+          </div>
+          {/* Total Resgates */}
+          <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Total Resgates</p>
+              <Tooltip posicao="right" texto="Soma de todos os resgates (parciais e totais) previstos no Plano de Ação. Capital a ser retirado da carteira." />
+            </div>
+            <p style={{ fontSize: 20, fontWeight: 700, color: "#B91C1C", margin: 0 }}>{formatBRL(totalResgates)}</p>
+          </div>
         </div>
       </div>
 
@@ -156,11 +238,20 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
           <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
             <thead style={{ backgroundColor: "#1E3A8A" }}>
               <tr>
-                {["Classe", "R$ Atual", "R$ Proposta", "Diferença"].map((h) => (
-                  <th key={h} style={{ padding: "8px 14px", textAlign: h === "Classe" ? "left" : "right", color: "white", fontWeight: 600, fontSize: 11 }}>
-                    {h}
-                  </th>
-                ))}
+                <th style={{ padding: "8px 14px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Classe</th>
+                <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>R$ Atual</th>
+                <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                    R$ Proposta
+                    <Tooltip posicao="top" texto="Valor alvo por classe: % meta × (patrimônio + aporte disponível). É o quanto deveria haver nessa classe após o plano." />
+                  </div>
+                </th>
+                <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
+                    Diferença
+                    <Tooltip posicao="top" texto="Proposta − Atual. Positivo = aumentar exposição nessa classe; negativo = reduzir." />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -237,7 +328,8 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
       />
 
       {/* Save button */}
-      <div style={{ display: "flex", justifyContent: "center", paddingBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, paddingBottom: 8 }}>
+        <Tooltip posicao="top" texto="Salva o planejamento completo. Após salvar, o diagnóstico fica disponível para consulta e impressão. Você pode voltar às etapas anteriores e salvar novamente para atualizar." />
         <button
           onClick={onSalvar}
           disabled={salvando}
@@ -257,5 +349,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
         </button>
       </div>
     </div>
+    </>
   );
 }
