@@ -6,26 +6,20 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   type ProjecaoIFParams,
-  type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
-const TAXA_PADRAO_DIAG = 6.0; // IPCA + 6%
-const TAXA_RET_MENSAL  = Math.pow(1.04, 1 / 12) - 1;
+const TAXA_PADRAO_DIAG = 6.0; // IPCA+6% padrão da seção LF
 
 interface Ajustes {
   usarTaxaCustom: boolean;
   taxaCustomAnual: number;
-  usarCrescimentoAportes: boolean;
-  crescimentoAportesAnual: number;
 }
 
 const initialAjustes: Ajustes = {
   usarTaxaCustom: false,
   taxaCustomAnual: TAXA_PADRAO_DIAG,
-  usarCrescimentoAportes: false,
-  crescimentoAportesAnual: 3.0,
 };
 
 interface UIParams {
@@ -128,9 +122,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   );
 
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
-  const [ajustes, setAjustes] = useState<Ajustes>(() =>
-    dadosLF.ajustes ? { ...initialAjustes, ...dadosLF.ajustes } : initialAjustes
-  );
+  const [ajustes, setAjustes] = useState<Ajustes>(() => {
+    if (dadosLF.ajustes) {
+      return { ...initialAjustes, usarTaxaCustom: dadosLF.ajustes.usarTaxaCustom, taxaCustomAnual: dadosLF.ajustes.taxaCustomAnual };
+    }
+    return initialAjustes;
+  });
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
   const isFirstRender = useRef(true);
@@ -174,20 +171,33 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ? `IPCA + ${ajustes.taxaCustomAnual.toFixed(2).replace(".", ",")}%`
     : "IPCA + 6,00%";
 
-  // ── Ajustes avançados — derived rates ────────────────────────────────────
-  const ajustesCalc = useMemo(() => {
-    const taxaMensal = Math.pow(1 + taxaAnualEfetiva, 1 / 12) - 1;
-    const crescimentoMensal = ajustes.usarCrescimentoAportes
-      ? Math.pow(1 + ajustes.crescimentoAportesAnual / 100, 1 / 12) - 1
-      : 0;
-    return { taxaMensal, crescimentoMensal };
-  }, [taxaAnualEfetiva, ajustes.usarCrescimentoAportes, ajustes.crescimentoAportesAnual]);
+  const taxaMensal = useMemo(
+    () => Math.pow(1 + taxaAnualEfetiva, 1 / 12) - 1,
+    [taxaAnualEfetiva]
+  );
 
+  // ── Projeção FV simples ───────────────────────────────────────────────────
   const patrimonioPerpetuidade = useMemo(() => {
     if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
     return calcularPatrimonioPerpetuidade(params.rendaDesejada);
   }, [params.rendaDesejada]);
 
+  const patrimonioProjetado = useMemo(() => {
+    const meses = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    if (meses === 0) return params.patrimonioInicial;
+    const f = Math.pow(1 + taxaMensal, meses);
+    if (!isFinite(f)) return params.patrimonioInicial;
+    return Math.max(0, Math.round(
+      params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal
+    ));
+  }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, taxaMensal]);
+
+  const rendaSustentavel = useMemo(() => {
+    if (patrimonioProjetado <= 0) return 0;
+    return (patrimonioProjetado * 0.04) / 12;
+  }, [patrimonioProjetado]);
+
+  // ── Gráfico — usa calcularProjecaoIF para obter curva e mesIF ────────────
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual:          params.idadeAtual,
     idadeMeta:           params.idadeAposentadoria,
@@ -206,109 +216,32 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     catch { return null; }
   }, [projecaoParams]);
 
-  const patrimonioProjetado = useMemo(() => {
-    if (!ajustes.usarCrescimentoAportes) {
-      return result?.patrimonioNaIF ?? 0;
-    }
-    const meses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
-    let saldo = params.patrimonioInicial;
-    let aporte = params.aporteMensal;
-    for (let m = 0; m < meses; m++) {
-      saldo = saldo * (1 + ajustesCalc.taxaMensal) + aporte;
-      aporte *= (1 + ajustesCalc.crescimentoMensal);
-    }
-    return Math.max(0, Math.round(saldo));
-  }, [
-    ajustes.usarCrescimentoAportes, result,
-    params.patrimonioInicial, params.aporteMensal,
-    params.idadeAtual, params.idadeAposentadoria,
-    ajustesCalc,
-  ]);
-
-  const rendaSustentavel = useMemo(() => {
-    if (patrimonioProjetado <= 0) return 0;
-    return (patrimonioProjetado * 0.04) / 12;
-  }, [patrimonioProjetado]);
-
   const mesIF = result
     ? result.mesInicioRetirada
     : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
 
-  const projecaoGrafico = useMemo((): PontoProjecao[] => {
-    if (!result) return [];
-    if (!ajustes.usarCrescimentoAportes) return result.projecao;
-
-    const p0 = result.projecao[0];
-    if (!p0) return result.projecao;
-
-    let anoAtual = p0.ano;
-    let mesAtual = p0.mesDoAno;
-    let patrimonio = params.patrimonioInicial;
-    let aporte = params.aporteMensal;
-
-    const pontos: PontoProjecao[] = [
-      { mes: 0, ano: anoAtual, mesDoAno: mesAtual, idade: p0.idade, patrimonio: Math.round(patrimonio), fase: "acumulacao" },
-    ];
-
-    const totalMeses = result.projecao.length - 1;
-    for (let m = 1; m <= totalMeses; m++) {
-      mesAtual++;
-      if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
-      const idadeNoMes = Math.round((p0.idade + m / 12) * 10) / 10;
-      if (m <= mesIF) {
-        patrimonio = patrimonio * (1 + ajustesCalc.taxaMensal) + aporte;
-        aporte *= (1 + ajustesCalc.crescimentoMensal);
-        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.max(0, Math.round(patrimonio)), fase: "acumulacao" });
-      } else {
-        patrimonio = Math.max(0, patrimonio * (1 + TAXA_RET_MENSAL) - params.rendaDesejada);
-        pontos.push({ mes: m, ano: anoAtual, mesDoAno: mesAtual, idade: idadeNoMes, patrimonio: Math.round(patrimonio), fase: "decumulacao" });
-      }
-    }
-    return pontos;
-  }, [result, ajustes.usarCrescimentoAportes, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, ajustesCalc.taxaMensal, ajustesCalc.crescimentoMensal, mesIF]);
+  const projecaoGrafico = result?.projecao ?? [];
 
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
     const aporteC = Math.max(0, params.aporteMensal * (1 + pct / 100));
     const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
-    const f = Math.pow(1 + ajustesCalc.taxaMensal, n);
-    let fv: number;
-    if (ajustes.usarCrescimentoAportes) {
-      let saldo = params.patrimonioInicial;
-      let ap = aporteC;
-      for (let m = 0; m < n; m++) {
-        saldo = saldo * (1 + ajustesCalc.taxaMensal) + ap;
-        ap *= (1 + ajustesCalc.crescimentoMensal);
-      }
-      fv = saldo;
-    } else {
-      fv = params.patrimonioInicial * f + aporteC * (f - 1) / ajustesCalc.taxaMensal;
-    }
+    const f = Math.pow(1 + taxaMensal, n);
+    const fv = isFinite(f) ? params.patrimonioInicial * f + aporteC * (f - 1) / taxaMensal : params.patrimonioInicial;
     const pctMeta = patrimonioPerpetuidade > 0
       ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
     return { pctVariacao: pct, aporteC, pctMeta };
-  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, patrimonioPerpetuidade, ajustesCalc, ajustes.usarCrescimentoAportes]);
+  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, patrimonioPerpetuidade, taxaMensal]);
 
   const cenariosIdade = useMemo(() => [-5, -2, 0, 2, 5].map(delta => {
     const idadeC = Math.max(params.idadeAtual + 1, params.idadeAposentadoria + delta);
     const n = Math.max(1, Math.round((idadeC - params.idadeAtual) * 12));
-    const f = Math.pow(1 + ajustesCalc.taxaMensal, n);
-    let fv: number;
-    if (ajustes.usarCrescimentoAportes) {
-      let saldo = params.patrimonioInicial;
-      let ap = params.aporteMensal;
-      for (let m = 0; m < n; m++) {
-        saldo = saldo * (1 + ajustesCalc.taxaMensal) + ap;
-        ap *= (1 + ajustesCalc.crescimentoMensal);
-      }
-      fv = saldo;
-    } else {
-      fv = params.patrimonioInicial * f + params.aporteMensal * (f - 1) / ajustesCalc.taxaMensal;
-    }
+    const f = Math.pow(1 + taxaMensal, n);
+    const fv = isFinite(f) ? params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal : params.patrimonioInicial;
     const pctMeta = patrimonioPerpetuidade > 0
       ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
     return { delta, idadeC, pctMeta };
-  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, ajustesCalc, ajustes.usarCrescimentoAportes]);
+  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, taxaMensal]);
 
   if (!result) {
     return (
@@ -320,6 +253,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
   const corMeta = (pct: number) =>
     pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
+
+  const ifAlcancada = patrimonioProjetado >= patrimonioPerpetuidade && patrimonioPerpetuidade > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -469,7 +404,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
           </div>
 
-          {/* Ajustes avançados */}
+          {/* Ajustes avançados — apenas taxa custom */}
           <div style={{ marginTop: 10, paddingTop: 8, borderTop: "0.5px solid #F3F4F6" }}>
             <button
               onClick={() => setMostrarAjustes(v => !v)}
@@ -487,11 +422,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
               {ajustes.usarTaxaCustom && (
                 <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
                   IPCA+{ajustes.taxaCustomAnual}%
-                </span>
-              )}
-              {ajustes.usarCrescimentoAportes && (
-                <span style={{ fontSize: 9, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99, marginLeft: 4 }}>
-                  Crescimento {ajustes.crescimentoAportesAnual}%
                 </span>
               )}
             </button>
@@ -530,45 +460,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
                   )}
                 </div>
 
-                <div style={{ borderTop: "0.5px solid #F3F4F6" }} />
-
-                {/* Crescimento real de aportes */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button
-                      role="switch"
-                      aria-checked={ajustes.usarCrescimentoAportes}
-                      onClick={() => setAjustes(a => ({ ...a, usarCrescimentoAportes: !a.usarCrescimentoAportes }))}
-                      style={{
-                        width: 36, height: 20, borderRadius: 9999, flexShrink: 0,
-                        background: ajustes.usarCrescimentoAportes ? "#2563EB" : "#D1D5DB",
-                        border: "none", cursor: "pointer", position: "relative",
-                      }}
-                    >
-                      <span style={{ position: "absolute", top: 2, left: ajustes.usarCrescimentoAportes ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white" }} />
-                    </button>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>Crescimento real de aportes</span>
-                  </div>
-                  {ajustes.usarCrescimentoAportes && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 44 }}>
-                      <Input
-                        type="number" min={0} max={20} step={0.1}
-                        value={ajustes.crescimentoAportesAnual}
-                        onChange={(e) => setAjustes(a => ({ ...a, crescimentoAportesAnual: Number(e.target.value) }))}
-                        style={{ width: 80, padding: "4px 8px", fontSize: 12, borderColor: "#BFDBFE" }}
-                      />
-                      <span style={{ fontSize: 12, color: "#6B7280" }}>% a.a. real</span>
-                      <span style={{ fontSize: 11, color: "#9CA3AF" }}>crescimento anual do aporte</span>
-                    </div>
-                  )}
-                </div>
-
-                {(ajustes.usarTaxaCustom || ajustes.usarCrescimentoAportes) && (
+                {ajustes.usarTaxaCustom && (
                   <div style={{ padding: "8px 12px", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 8, fontSize: 11, color: "#1E40AF" }}>
                     Taxa efetiva anual: <strong>{(taxaAnualEfetiva * 100).toFixed(2)}% a.a.</strong>
-                    {ajustes.usarCrescimentoAportes && (
-                      <> · Crescimento do aporte: <strong>{ajustes.crescimentoAportesAnual.toFixed(1)}% a.a.</strong></>
-                    )}
                   </div>
                 )}
               </div>
@@ -605,7 +499,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>Projeção Atual</p>
-            <p style={{ fontSize: 17, fontWeight: 700, color: result.ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(patrimonioProjetado)}</p>
+            <p style={{ fontSize: 17, fontWeight: 700, color: ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(patrimonioProjetado)}</p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
           </CardContent>
         </Card>
@@ -614,9 +508,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Sustentável</p>
             <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827" }} className="tabular-nums">
-              {rendaSustentavel > 0
-                ? fmtBRL(rendaSustentavel)
-                : "—"}
+              {rendaSustentavel > 0 ? fmtBRL(rendaSustentavel) : "—"}
             </p>
             <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>/mês com a projeção atual</p>
             {params.rendaDesejada > 0 && rendaSustentavel > 0 && (

@@ -42,8 +42,6 @@ export interface DadosLFDiag {
   ajustes?: {
     usarTaxaCustom: boolean;
     taxaCustomAnual: number;
-    usarCrescimentoAportes: boolean;
-    crescimentoAportesAnual: number;
   };
 }
 

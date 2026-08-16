@@ -1,7 +1,7 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
 import type { DadosColetaDiag } from "./types";
 
-const TAXA_MENSAL = Math.pow(1.06, 1 / 12) - 1;
+const TAXA_MENSAL = Math.pow(1.05, 1 / 12) - 1; // IPCA+5% — taxa do Diagnóstico Inicial
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -54,7 +54,7 @@ export function calcularScoresDiag(
   const rendaDesejada   = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
   const idadeMeta       = Number(dadosColeta.idadeMeta) || 60;
   const patrimonioNec   = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
-  const nMeses          = Math.max(0, (idadeMeta - idadeAtual) * 12);
+  const nMeses          = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
   const f               = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
   const projecao        = nMeses > 0 && isFinite(f)
     ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL
