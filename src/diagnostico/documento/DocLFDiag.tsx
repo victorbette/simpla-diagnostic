@@ -51,6 +51,9 @@ export function DocLFDiag({ lead }: Props) {
 
   const TAXA_ANUAL  = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : 0.06;
   const TAXA_MENSAL = Math.pow(1 + TAXA_ANUAL, 1 / 12) - 1;
+  const taxaLabel = usarTaxaCustom
+    ? `IPCA + ${taxaCustomAnual.toFixed(2).replace(".", ",")}%`
+    : "IPCA + 6,00%";
 
   const nMesesBase = Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
 
@@ -94,7 +97,7 @@ export function DocLFDiag({ lead }: Props) {
   const idadeAtualColeta = dadosColeta.dataNascimento
     ? Math.floor((Date.now() - new Date(dadosColeta.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 0;
-  const TAXA_MENSAL_TEXTO = Math.pow(1.04, 1 / 12) - 1;
+  const TAXA_MENSAL_TEXTO = Math.pow(1.05, 1 / 12) - 1;
   const nMesesTexto = Math.max(0, Math.round((idadeMetaColeta - idadeAtualColeta) * 12));
   const fTexto = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
   const projecaoAtual = nMesesTexto > 0 && isFinite(fTexto)
@@ -204,27 +207,32 @@ export function DocLFDiag({ lead }: Props) {
     chave: "cards",
     grudaNoProximo: lfTemDados,
     node: (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
-          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-            Projeção Atual
+      <>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 4 }}>
+          <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
+              Projeção Atual
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
+              {formatBRL(projecaoNaIF)}
+            </div>
+            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Aos {idadeMeta} anos</div>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
-            {formatBRL(projecaoNaIF)}
-          </div>
-          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Aos {idadeMeta} anos</div>
-        </div>
 
-        <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
-          <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-            Renda Sustentável
+          <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
+              Renda Sustentável
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: rendaSustentavel >= rendaDesejada && rendaSustentavel > 0 ? "#15803D" : "#111827" }}>
+              {rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "—"}
+            </div>
+            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Com a projeção atual</div>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: rendaSustentavel >= rendaDesejada && rendaSustentavel > 0 ? "#15803D" : "#111827" }}>
-            {rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "—"}
-          </div>
-          <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>Com a projeção atual</div>
         </div>
-      </div>
+        <div style={{ fontSize: 8, color: "#9CA3AF", textAlign: "right" as const, marginBottom: 10 }}>
+          Taxa de retorno: {taxaLabel}
+        </div>
+      </>
     ),
   });
 

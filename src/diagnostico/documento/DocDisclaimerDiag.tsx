@@ -6,13 +6,9 @@ interface Props {
   config: ConfigConsultor;
 }
 
-const TEXTO_DISCLAIMER = `Esse Relatório não se destina à circulação geral, tampouco pode ser reproduzido. Não será assumida responsabilidade ou contingência por danos causados ou por eventual perda incorrida por qualquer parte envolvida, como resultado da circulação, publicação, reprodução ou uso deste documento com outra finalidade.
+const TEXTO_DISCLAIMER = `Esse Relatório não se destina à circulação geral, tampouco pode ser reproduzido. Não será assumida responsabilidade por danos causados ou por eventual perda incorrida por qualquer parte, como resultado da circulação, publicação, reprodução ou uso deste documento com outra finalidade. A Simpla Invest é uma Consultoria de Investimentos independente, registrada na CVM, dedicada a oferecer planejamento financeiro personalizado e livre de conflitos de interesse.
 
-A Simpla Invest é uma Consultoria de Investimentos independente, registrada na CVM, dedicada a oferecer planejamento financeiro personalizado e livre de conflitos de interesse.
-
-A Simpla Invest declara que segue as regras de conduta expressas nos termos da Resolução CVM nº 19/2021. Além disso, não está em situação que possa afetar a imparcialidade do relatório ou que possa configurar conflito de interesse.
-
-A elaboração desse material se deu de maneira independente e individualizada, e o conteúdo nele divulgado não pode ser copiado, reproduzido ou distribuído, no todo ou em parte, a terceiros, sem autorização prévia.
+A Simpla Invest declara que segue as regras de conduta expressas nos termos da Resolução CVM nº 19/2021 e não está em situação que possa afetar a imparcialidade do relatório ou que possa configurar conflito de interesse. A elaboração desse material se deu de maneira independente e individualizada, e o conteúdo nele divulgado não pode ser copiado, reproduzido ou distribuído, no todo ou em parte, a terceiros, sem autorização prévia.
 
 As premissas utilizadas são de total ciência e entendimento da persona a qual o estudo se dedica. Os resultados apresentados tratam-se de projeções, não havendo controle absoluto sobre os resultados e, portanto, não se caracterizam como promessas de rentabilidade futura. O Relatório possui caráter exclusivamente educativo.`;
 

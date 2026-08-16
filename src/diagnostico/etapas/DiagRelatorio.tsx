@@ -115,11 +115,11 @@ export function DiagRelatorio({ lead }: Props) {
         {/* Página 5 — Blindagem Patrimonial */}
         <DocBlindagemPatrimonial lead={lead} />
 
-        {/* Página 6 — Mãos à Obra */}
-        <DocMaosAObraDiag nomeCliente={lead.nome} />
-
-        {/* Página 7 — Próximos Passos */}
+        {/* Página 6 — Próximos Passos */}
         <DocProximosPassosDiag nomeCliente={lead.nome} />
+
+        {/* Página 7 — Mãos à Obra */}
+        <DocMaosAObraDiag nomeCliente={lead.nome} />
 
         {/* Página 8 — Disclaimer */}
         <DocDisclaimerDiag nomeCliente={lead.nome} config={config} />
