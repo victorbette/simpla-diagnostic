@@ -14,7 +14,7 @@ import { RodapePagina } from "./RodapePagina";
 
 interface Props {
   nomeCliente: string;
-  plan: FinancialPlan;
+  plan?: FinancialPlan;
   resultados: ResultadosEstrategia;
 }
 
@@ -193,18 +193,21 @@ function TabelaCarteiraFinal({
 }
 
 /** Página "Alocação Atual x Proposta" — pizzas comparativas + carteira final (v4 p.10) */
-export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Props) {
+export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
   const rc = resultados.carteira;
   if (!rc) return null;
 
-  const comecandoDoZero = plan.dadosCliente.comecandoDoZero === true;
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   const dadosAtual = montarFatias(rc.macroAtual, patrimonio);
   const dadosProposta = montarFatias(rc.macroMeta, patrimonioMeta);
 
-  const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? []);
+  // Mostra "Carteira Atual" sempre que houver dados reais — independente do flag
+  // comecandoDoZero, que pode estar desatualizado se o consultor preencheu ativos depois.
+  const temCarteiraAtual = Object.values(rc.macroAtual ?? {}).some((v) => (v as number) > 0);
+
+  const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
   const totalSomaMeta = ativosFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
   const linhas = montarLinhas(ativosFinal, rc.macroMeta ?? {}, patrimonioMeta);
   const blocos = linhas.length > 0 ? dividirLinhas(linhas) : [];
@@ -214,16 +217,16 @@ export function DocAlocacaoAtualProposta({ nomeCliente, plan, resultados }: Prop
       <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
         <HeaderSecao titulo="Alocação Atual x Proposta" />
 
-        {comecandoDoZero ? (
+        {temCarteiraAtual ? (
+          <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <PizzaPrint titulo="Carteira Atual" dados={dadosAtual} />
+            <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
+          </div>
+        ) : (
           <div className="doc-card" style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
             <div style={{ width: "50%" }}>
               <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
             </div>
-          </div>
-        ) : (
-          <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-            <PizzaPrint titulo="Carteira Atual" dados={dadosAtual} />
-            <PizzaPrint titulo="Alocação Proposta" dados={dadosProposta} />
           </div>
         )}
 
