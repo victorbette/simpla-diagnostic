@@ -5,7 +5,6 @@ import {
   calcularRecomendacao, paraAlocacaoMeta, paraAtivosRecomendados,
 } from "@/lib/carteira/alocacaoSimpla";
 import { useAllocationModel } from "@/hooks/useAllocationModel";
-import { Tooltip } from "@/components/shared/Tooltip";
 
 interface Props {
   clientProfile: string | null;
@@ -118,7 +117,6 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
                 <label style={{ fontSize: 11, color: "#6B7280" }}>Custo de vida mensal</label>
-                <Tooltip posicao="right" texto={`Base para calcular a reserva em Resgate Rápido.\nPré-preenchido da Situação Atual.\nReserva = Custo de Vida × Meses de Reserva.`} />
               </div>
               <input
                 type="text"
@@ -148,7 +146,6 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
                 <label style={{ fontSize: 11, color: "#6B7280" }}>Meses de reserva</label>
-                <Tooltip posicao="right" texto={`Quantidade de meses de custo de vida que deve estar disponível em Resgate Rápido.\nRecomendado: mínimo 6 meses.`} />
               </div>
               <input
                 type="number"
@@ -193,7 +190,6 @@ export function PainelRecomendacaoSimpla({ clientProfile, patrimonioMeta, temAti
                 {rec.reservaEmergencia > 0 && " · reserva somada ao Resgate Rápido"}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <Tooltip posicao="bottom" texto={`Carrega a alocação padrão Simpla Invest baseada no perfil do cliente.\nAtenção: desfaz todos os ajustes manuais anteriores.`} />
                 <button
                   onClick={aplicar}
                   style={{

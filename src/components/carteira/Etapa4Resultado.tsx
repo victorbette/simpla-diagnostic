@@ -5,7 +5,6 @@ import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CardSelecaoAtivos } from "@/components/shared/CardSelecaoAtivos";
 import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
@@ -191,7 +190,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
           <div style={{ padding: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Patrimônio Atual</p>
-              <Tooltip posicao="right" texto="Soma de todos os ativos da Carteira Atual (Etapa 1). Ponto de partida do planejamento." />
             </div>
             <p style={{ fontSize: 20, fontWeight: 700, color: "#1E3A8A", margin: 0 }}>{formatBRL(patrimonioTotal)}</p>
           </div>
@@ -199,7 +197,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
           <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Patrimônio Final</p>
-              <Tooltip posicao="right" texto="Estimativa após execução do plano: ativos mantidos + aportes − resgates. Reflete o resultado esperado da carteira proposta." />
             </div>
             <p style={{ fontSize: 20, fontWeight: 700, color: "#2563EB", margin: 0 }}>{formatBRL(patrimonioFinal)}</p>
           </div>
@@ -207,7 +204,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
           <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Total Aportes</p>
-              <Tooltip posicao="right" texto="Soma de todos os aportes e novos investimentos definidos no Plano de Ação. Capital novo a ser aplicado." />
             </div>
             <p style={{ fontSize: 20, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(totalAportes)}</p>
           </div>
@@ -215,7 +211,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
           <div style={{ padding: 16, borderLeft: "1px solid #BFDBFE" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <p style={{ fontSize: 11, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>Total Resgates</p>
-              <Tooltip posicao="right" texto="Soma de todos os resgates (parciais e totais) previstos no Plano de Ação. Capital a ser retirado da carteira." />
             </div>
             <p style={{ fontSize: 20, fontWeight: 700, color: "#B91C1C", margin: 0 }}>{formatBRL(totalResgates)}</p>
           </div>
@@ -241,16 +236,10 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
                 <th style={{ padding: "8px 14px", textAlign: "left", color: "white", fontWeight: 600, fontSize: 11 }}>Classe</th>
                 <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>R$ Atual</th>
                 <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                    R$ Proposta
-                    <Tooltip posicao="top" texto="Valor alvo por classe: % meta × (patrimônio + aporte disponível). É o quanto deveria haver nessa classe após o plano." />
-                  </div>
+                  R$ Proposta
                 </th>
                 <th style={{ padding: "8px 14px", textAlign: "right", color: "white", fontWeight: 600, fontSize: 11 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                    Diferença
-                    <Tooltip posicao="top" texto="Proposta − Atual. Positivo = aumentar exposição nessa classe; negativo = reduzir." />
-                  </div>
+                  Diferença
                 </th>
               </tr>
             </thead>
@@ -329,7 +318,6 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
 
       {/* Save button */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, paddingBottom: 8 }}>
-        <Tooltip posicao="top" texto="Salva o planejamento completo. Após salvar, o diagnóstico fica disponível para consulta e impressão. Você pode voltar às etapas anteriores e salvar novamente para atualizar." />
         <button
           onClick={onSalvar}
           disabled={salvando}

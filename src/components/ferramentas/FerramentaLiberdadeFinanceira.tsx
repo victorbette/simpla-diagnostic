@@ -22,7 +22,6 @@ import type { ObjetivoVida } from "@/types/objetivos";
 import { OBJETIVO_META, isEntradaObjetivo } from "@/types/objetivos";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Ajustes {
@@ -817,10 +816,6 @@ export function FerramentaLiberdadeFinanceira({
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Patrimônio Necessário</span>
-              <Tooltip
-                posicao="right"
-                texto={`Valor total necessário para gerar a renda desejada para sempre.\n\nFórmula: Renda × 12 ÷ 4%\n\nExemplo: R$ 20k/mês → R$ 6.000.000`}
-              />
             </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
               {formatCurrency(patrimonioPerpetuidade)}
@@ -838,10 +833,6 @@ export function FerramentaLiberdadeFinanceira({
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Projeção Atual</span>
-              <Tooltip
-                posicao="right"
-                texto={`Patrimônio estimado na data de aposentadoria com o aporte e rentabilidade atuais.`}
-              />
             </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
               {formatCurrency(projecaoComAporteAtual)}
@@ -854,10 +845,6 @@ export function FerramentaLiberdadeFinanceira({
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Aporte Necessário</span>
-              <Tooltip
-                posicao="left"
-                texto={`Aporte mensal necessário para atingir o Patrimônio Necessário na data planejada, considerando todos os objetivos de vida.`}
-              />
             </div>
             <p style={{
               fontSize: 20, fontWeight: 800, margin: 0,
@@ -886,10 +873,6 @@ export function FerramentaLiberdadeFinanceira({
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Sustentável</span>
-              <Tooltip
-                posicao="left"
-                texto={`Renda mensal que a projeção atual pode gerar sem consumir o capital.\n\nFórmula: Projeção × 4% ÷ 12`}
-              />
             </div>
             <p style={{
               fontSize: 20, fontWeight: 800, margin: 0,

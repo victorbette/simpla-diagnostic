@@ -12,7 +12,6 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { AtivoForm } from "./AtivoForm";
 import type { FinancialPlan, DadosCliente, PerfilRisco } from "@/types/financialPlanning";
 import { calcularIdade } from "@/lib/format";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 const UFS = [
@@ -391,11 +390,10 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
             { label: "Renda mensal", key: "rendaMensal", tooltip: "Renda bruta mensal total: salário, pró-labore, aluguéis, dividendos e demais fontes de receita." },
             { label: "Custo de vida mensal", key: "custoDeVidaMensal", tooltip: "Total gasto mensalmente: moradia, alimentação, transporte, saúde, lazer e demais despesas recorrentes." },
             { label: "Aporte mensal médio", key: "aportesMensalMedio", hint: "Média mensal", tooltip: "Quanto o cliente investe por mês em média. Base para simular o crescimento do patrimônio e antecipar a independência financeira." },
-          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint, tooltip }) => (
+          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint }) => (
             <div key={key} className={fieldCls}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Label className={labelCls}>{label}</Label>
-                {tooltip && <Tooltip texto={tooltip} posicao="right" />}
               </div>
               <CurrencyInput
                 value={dados[key] as number}
@@ -409,7 +407,6 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           <div className={fieldCls}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <label style={{ fontSize: 11, color: "#6B7280" }}>Idade de Aposentadoria</label>
-              <Tooltip texto="Idade alvo para conquistar a independência financeira. Quanto mais cedo a meta, maior o esforço mensal necessário." posicao="right" />
             </div>
             <input
               type="number"
@@ -425,11 +422,10 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           {([
             { label: "Renda Mensal Desejada na Aposentadoria (R$)", key: "rendaDesejadaAposentadoria", hint: "Quanto deseja receber por mês na aposentadoria", tooltip: "Renda mensal que o cliente quer ter ao atingir a liberdade financeira. Usada para calcular o patrimônio necessário e o aporte ideal." },
             { label: "Gasto mensal no cartão (familiar)", key: "gastoCartaoMensal", hint: "Some todas as faturas" },
-          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint, tooltip }) => (
+          ] as { label: string; key: keyof DadosCliente; hint?: string; tooltip?: string }[]).map(({ label, key, hint }) => (
             <div key={key} className={fieldCls}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Label className={labelCls}>{label}</Label>
-                {tooltip && <Tooltip texto={tooltip} posicao="right" />}
               </div>
               <CurrencyInput
                 value={dados[key] as number}
@@ -532,7 +528,6 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
             <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
               Perfil de Investidor
             </div>
-            <Tooltip texto="Define como as recomendações de investimento serão calibradas. Conservador prioriza segurança; arrojado aceita volatilidade em busca de maior retorno no longo prazo." posicao="right" />
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
             {PERFIS.map((p) => {
@@ -569,7 +564,6 @@ export function ColetaDadosCompleta({ plan, onChange, onSalvar, salvando, salvo 
           <div style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
             Carteira de Investimentos
           </div>
-          <Tooltip texto="Distribua o patrimônio financeiro entre as classes de ativos. A alocação atual influencia o diagnóstico e as recomendações de realocação." posicao="left" />
         </div>
 
         <AtivoForm

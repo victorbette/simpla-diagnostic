@@ -2,7 +2,6 @@ import { PieChart as PieChartIcon } from "lucide-react";
 import { CardAlocacaoComparativa } from "@/components/shared/CardAlocacaoComparativa";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/format";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 import { formatBRL, formatPct } from "@/lib/carteira/calculos";
 import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
@@ -343,7 +342,6 @@ export function SecaoAssetAllocation({
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>Alocação Atual × Proposta</span>
-            <Tooltip posicao="right" texto="Compara a distribuição atual da carteira com a alocação ideal recomendada. Atualizado após salvar a carteira na Etapa 4." />
           </div>
           <CardAlocacaoComparativa
             macroAtual={rc.macroAtual}
@@ -364,11 +362,9 @@ export function SecaoAssetAllocation({
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", backgroundColor: "#F8FAFF", padding: "8px 12px", borderBottom: "0.5px solid #E5E7EB" }}>
             <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>CLASSE / SUBCLASSE</span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-              <Tooltip posicao="left" texto={`Percentual ideal para cada classe conforme o perfil do cliente.\nDefinido na Etapa 2 da ferramenta de Gestão de Carteira.`} />
               <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>%</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-              <Tooltip posicao="left" texto={`Valor calculado como:\n% Meta × (Patrimônio + Aporte Disponível)\n\n*Os valores são meramente ilustrativos.`} />
               <span style={{ fontSize: 10, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>R$</span>
             </div>
           </div>
@@ -428,7 +424,6 @@ export function SecaoAssetAllocation({
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textTransform: "uppercase" }}>TOTAL</span>
-              <Tooltip posicao="top" texto="Soma dos valores meta de todas as classes. Igual ao patrimônio atual + aporte disponível." />
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>

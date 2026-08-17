@@ -8,7 +8,6 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import { formatBRL, DEDUCAO_DEPENDENTE } from "@/lib/tax";
 import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simularDeclaracao";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 export interface SavedPGBLResult {
@@ -264,7 +263,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 12, borderBottom: "0.5px solid #F3F4F6", marginBottom: 16 }}>
           <i className="ti ti-file-text" style={{ fontSize: 18, color: "#2563EB" }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Tipo de Declaração IR</span>
-          <Tooltip posicao="right" texto={`Simplificada: desconto padrão de 20% (sem PGBL).\nCompleta: deduções reais + PGBL até 12% da renda.\nNão sei: não impacta o score.`} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {TIPOS_DECLARACAO.map((tipo) => {
@@ -320,7 +318,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...labelStyle, marginBottom: 0 }}>Renda Bruta Anual Tributável (R$)</span>
-              <Tooltip posicao="right" texto={`Total de rendimentos tributáveis no ano, incluindo salários, pró-labore e outras rendas tributáveis.\nBase para calcular o teto do PGBL (12%).`} />
             </div>
             <input type="text" value={renda.display} onChange={renda.onChange} onBlur={renda.onBlur} placeholder="0,00" style={inputStyle} />
           </div>
@@ -328,7 +325,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...labelStyle, marginBottom: 0 }}>Despesas Dedutíveis (R$)</span>
-              <Tooltip posicao="right" texto={`Despesas que reduzem a base de cálculo do IR no modelo completo:\n• Médicas (sem limite)\n• Educação (até R$ 3.561,50/ano)\n• Pensão alimentícia`} />
             </div>
             <input type="text" value={despesas.display} onChange={despesas.onChange} onBlur={despesas.onBlur} placeholder="0,00" style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Saúde, educação, pensão alimentícia</p>
@@ -337,7 +333,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...labelStyle, marginBottom: 0 }}>Dependentes</span>
-              <Tooltip posicao="right" texto={`Cada dependente deduz R$ 2.275,08/ano da base de cálculo do IR.\n\nPode incluir cônjuge, filhos até 21 anos (ou 24 se universitários), pais, etc.`} />
             </div>
             <input type="number" min={0} max={10} value={dependentes} onChange={(e) => setDependentes(e.target.value)} style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{formatBRL(DEDUCAO_DEPENDENTE)}/dep/ano deduzidos</p>
@@ -346,7 +341,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...labelStyle, marginBottom: 0 }}>Saldo Atual na Previdência (R$)</span>
-              <Tooltip posicao="right" texto={`Saldo atual acumulado em previdência privada (PGBL/VGBL).\nUsado como referência para análise patrimonial.`} />
             </div>
             <input
               type="text"
@@ -364,7 +358,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={{ gridColumn: "span 2" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...labelStyle, marginBottom: 0 }}>Investimento em Previdência Privada (PGBL) no ano vigente (R$)</span>
-              <Tooltip posicao="left" texto={`Valor total contribuído ao PGBL no ano vigente.\nLimitado a 12% da renda bruta anual.\n\nTeto: ${formatBRL(tetoPGBLLive)}/ano`} />
             </div>
             <input
               type="text"
@@ -381,7 +374,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
-                  <Tooltip posicao="right" texto={`Limite máximo de dedução com PGBL = 12% da renda bruta anual.\n\nContribuições acima desse valor não são dedutíveis e devem ir para VGBL.`} />
                 </div>
                 <span style={{
                   fontWeight: 600,
@@ -569,9 +561,6 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   <div key={d.label} style={{ background: d.bg, borderRadius: 8, padding: "12px 16px", textAlign: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: 10, color: d.fill, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                       <span>{d.label}</span>
-                      {d.label === "Economia" && (
-                        <Tooltip posicao="left" texto={`Redução do IR obtida com as contribuições ao PGBL.\n\nCalculada como: IR sem PGBL - IR com PGBL.\n\nEste valor fica investido na previdência em vez de ir ao fisco.`} />
-                      )}
                     </div>
                     <div style={{ fontSize: 18, fontWeight: 700, color: d.fill }}>
                       {d.valor > 0 ? fmtBRLInt(d.valor) : "—"}

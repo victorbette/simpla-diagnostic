@@ -3,7 +3,6 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { getAliquotaITCMD } from "@/lib/itcmd";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -437,7 +436,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <div style={FIELD_WRAP}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...LABEL, marginBottom: 0 }}>ITCMD (%)</span>
-              <Tooltip posicao="right" texto={`Imposto estadual sobre herança.\nPreenchido automaticamente com a alíquota do estado do cliente.\nEditável pelo consultor.`} />
             </div>
             <input
               type="number"
@@ -473,7 +471,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <div style={FIELD_WRAP}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...LABEL, marginBottom: 0 }}>Custos Advocatícios (%)</span>
-              <Tooltip posicao="right" texto={`Honorários para abertura de inventário.\nPadrão: 10% do patrimônio.\nEditável pelo consultor.`} />
             </div>
             <input
               type="number"
@@ -581,7 +578,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                   Da coleta
                 </span>
               )}
-              <Tooltip posicao="right" texto={`Despesas mensais da família que precisam ser mantidas após o falecimento do segurado.`} />
             </div>
             <CurrencyInput value={data.despesasMensais} onChange={(v) => upd({ despesasMensais: v })} />
           </div>
@@ -592,7 +588,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <div style={FIELD_WRAP}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...LABEL, marginBottom: 0 }}>Período de Suporte (anos)</span>
-              <Tooltip posicao="right" texto={`Por quantos anos a família precisará do suporte financeiro do seguro até se tornar financeiramente independente.`} />
             </div>
             <input
               type="number"
@@ -743,7 +738,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                   ↺ Restaurar automático
                 </button>
               )}
-              <Tooltip posicao="left" texto={`Cobertura para perda permanente da capacidade de trabalho.\nAutomático: despesas × 60 meses.\nEditável pelo consultor.`} />
             </div>
             <CurrencyInput
               value={invalidezEditada ? (Number(data.capitalInvalidez) || 0) : calc.invalidezCalculada}
@@ -775,7 +769,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
                   ↺ Restaurar automático
                 </button>
               )}
-              <Tooltip posicao="left" texto={`Cobertura para diagnóstico de doenças graves (câncer, AVC, infarto, etc.).\nAutomático: despesas × 12 meses.\nEditável pelo consultor.`} />
             </div>
             <CurrencyInput
               value={calc.capitalDoencaGraveEfetivo}
@@ -988,7 +981,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", background: "#F0F7FF", borderRadius: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Capital Total Necessário</span>
-              <Tooltip posicao="left" texto={`Diferença entre o capital necessário e a cobertura atual.\nGap positivo = cliente desprotegido.\nGap negativo = cobertura suficiente.`} />
             </div>
             <span style={{ fontSize: 18, fontWeight: 800, color: "#1E3A8A" }}>{formatCurrency(calc.capitalNecessario)}</span>
           </div>

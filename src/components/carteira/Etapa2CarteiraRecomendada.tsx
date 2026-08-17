@@ -4,7 +4,6 @@ import { CARD_META } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CarteiraCard } from "./CarteiraCard";
 import { PainelRecomendacaoSimpla } from "./PainelRecomendacaoSimpla";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
@@ -257,7 +256,6 @@ export function Etapa2CarteiraRecomendada({
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontSize: 12, color: "#6B7280" }}>Total alocado</span>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <Tooltip posicao="left" texto={`A soma de todos os percentuais deve ser exatamente 100% antes de avançar.\nO sistema avisa quando o total está divergente.`} />
               <span style={{
                 fontSize: 13, fontWeight: 600,
                 color: alocacaoCompleta ? "#15803D" : alocacaoExcede ? "#B91C1C" : "#B45309",
@@ -340,7 +338,6 @@ export function Etapa2CarteiraRecomendada({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#111827" }}>Aporte Disponível</p>
-              <Tooltip posicao="right" texto={`Valor adicional para investir além do patrimônio atual.\nSomado ao patrimônio para calcular as metas em R$.\nPré-preenchido para clientes Começando do Zero.`} />
             </div>
             <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6B7280" }}>
               Valor a ser distribuído na carteira recomendada

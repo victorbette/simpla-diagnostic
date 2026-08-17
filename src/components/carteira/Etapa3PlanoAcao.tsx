@@ -3,7 +3,6 @@ import type { PlanoAcaoItem, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { Tooltip } from "@/components/shared/Tooltip";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
 interface Props {
@@ -442,7 +441,6 @@ export function Etapa3PlanoAcao({
               <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>após execução do plano</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <Tooltip posicao="top" texto={`Redistribui automaticamente os aportes dentro de cada classe para minimizar desvios da meta.\nNão move recursos entre classes.`} />
               <button
                 onClick={() => setSugestoes(calcularSugestoesPorClasse())}
                 style={{
@@ -477,7 +475,6 @@ export function Etapa3PlanoAcao({
             <span style={{ textAlign: "right" }}>% Meta</span>
             <span style={{ textAlign: "right" }}>% Final</span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-              <Tooltip posicao="left" texto={`Diferença em R$ entre o valor final e a meta da classe.\nPositivo: acima da meta.\nNegativo: abaixo da meta.`} />
               <span>Saldo vs Meta</span>
             </div>
           </div>
@@ -719,15 +716,12 @@ export function Etapa3PlanoAcao({
               <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Movimentação</span>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Ação</span>
-                <Tooltip posicao="top" texto={`Manter: sem movimentação.\nResgatar Total: liquidar o ativo.\nResgatar Parcial: resgatar parte.\nAportar: adicionar recursos.\nNovo: criar posição nova.`} />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Observação</span>
-                <Tooltip posicao="top" texto={`Obrigatória apenas para ativos adicionados manualmente.\nOpcional para ativos recomendados, mesmo com valor editado.`} />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Vencimento</span>
-                <Tooltip posicao="top" texto={`Texto livre: "Jan/2026", "15/03/2027".\nTem prioridade sobre o vencimento da Etapa 1.\nAparece no card final da carteira.`} />
               </div>
               <span style={{ color: "white", fontSize: 11, fontWeight: 600 }}>Prioridade</span>
             </div>

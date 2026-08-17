@@ -3,8 +3,6 @@ import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
-import { Tooltip } from "@/components/shared/Tooltip";
-
 
 const SEG_BAR_COLORS: Record<string, string> = {
   "Pós-fixado": "#1E40AF",
@@ -138,9 +136,6 @@ export function CarteiraCard({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{meta.label}</div>
-                {isRFCard && (
-                  <Tooltip posicao="top" texto={`Resgate Rápido: liquidez imediata (reserva, CDB diário).\nResgate Longo: vence no prazo (LCI, CRA, CDB prefixado).`} />
-                )}
               </div>
               <div style={{ fontSize: 11, color: "#9CA3AF" }}>{meta.sub}</div>
             </div>
@@ -158,9 +153,6 @@ export function CarteiraCard({
           ) : (
             <div style={{ textAlign: "right" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 4 }}>
-                {modo === "atual" && (
-                  <Tooltip posicao="left" texto={`Soma de todos os ativos informados.\nBase para calcular os percentuais de alocação atual.`} />
-                )}
                 <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{formatBRL(total)}</div>
               </div>
               <div style={{ fontSize: 11, color: "#6B7280" }}>{formatPct(pctCarteira)}</div>
@@ -199,14 +191,12 @@ export function CarteiraCard({
             <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em" }}>
               Segmento
             </span>
-            <Tooltip posicao="top" texto={`Subsetor do ativo dentro da classe.\nAções: Bancos, Saúde, Energia...\nFIIs: Papel, Galpões, Shopping...\nExterior: ETF RV, Stocks, REITs...`} />
           </div>
           {isRFCard && modo !== "recomendada" && (
             <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
               <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Vencimento
               </span>
-              <Tooltip posicao="top" texto={`Data de vencimento do ativo.\nUse texto livre: "Jan/2026" ou "15/03/2027".\nAparece automaticamente no card final.`} />
             </div>
           )}
           <span style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", textAlign: "right" }}>
