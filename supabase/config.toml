@@ -5,3 +5,8 @@ project_id = "simpla-diagnostic"
 # Gateway exige JWT válido (anon ou usuário). A função ainda valida por conta
 # própria: usuário autenticado OU header x-cron-secret (invocação agendada).
 verify_jwt = true
+
+[functions.extract-portfolio]
+# Leitura de prints da carteira via OpenAI. Exige JWT de usuário autenticado
+# (a função revalida o token antes de gastar chamada de IA).
+verify_jwt = true
