@@ -3,17 +3,17 @@ import { Upload, X, Sparkles, Loader2, AlertTriangle, Trash2, Plus, ImageIcon } 
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import {
-  extrairCarteira, prepararImagem, totaisPorClasse, aplicarNaCarteira,
+  extrairCarteira, prepararImagem, totaisPorClasse, aplicarNaCarteira, itensAplicaveis, reclassificar,
   CLASSES_REVISAO, CLASSE_NAO_IDENTIFICADA, MAX_IMAGENS,
   type ClasseExtraida, type ItemRevisao,
 } from "@/lib/importarCarteira";
-import type { AtivoAtual } from "@/types/financialPlanning";
+import type { Ativo } from "@/lib/carteira/types";
 
 interface Props {
   aberto: boolean;
-  carteiraAtual: AtivoAtual;
+  ativosAtuais: Ativo[];
   onFechar: () => void;
-  onAplicar: (carteira: AtivoAtual, qtdItens: number) => void;
+  onAplicar: (ativos: Ativo[], qtdItens: number) => void;
 }
 
 interface Anexo {
@@ -27,17 +27,18 @@ const novoId = () => `linha-${++seqId}`;
 type Etapa = "upload" | "processando" | "revisao";
 
 /**
- * Modal de importação da carteira atual a partir de prints. A IA (Edge Function
- * extract-portfolio) lê as imagens e propõe uma linha por ativo; o consultor
- * revisa valor e classe antes de qualquer coisa entrar no formulário.
+ * Modal de importação da carteira atual a partir de prints (Etapa 1 de Gestão
+ * de Carteira). A IA (Edge Function extract-portfolio) lê as imagens e propõe
+ * uma linha por ativo; o consultor revisa valor e classe antes de qualquer
+ * coisa virar ativo nos cards.
  */
-export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar }: Props) {
+export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }: Props) {
   const [etapa, setEtapa] = useState<Etapa>("upload");
   const [anexos, setAnexos] = useState<Anexo[]>([]);
   const [itens, setItens] = useState<ItemRevisao[]>([]);
   const [observacoes, setObservacoes] = useState<string[]>([]);
   const [erro, setErro] = useState<string | null>(null);
-  const [somar, setSomar] = useState(false);
+  const [substituir, setSubstituir] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const limpar = useCallback(() => {
@@ -48,7 +49,7 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
     setItens([]);
     setObservacoes([]);
     setErro(null);
-    setSomar(false);
+    setSubstituir(false);
     setEtapa("upload");
   }, []);
 
@@ -152,20 +153,24 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
     setItens((atuais) => atuais.map((it) => (it.id === id ? { ...it, ...campos } : it)));
   }
 
+  function mudarClasse(id: string, classe: ClasseExtraida) {
+    setItens((atuais) => atuais.map((it) => (it.id === id ? reclassificar(it, classe) : it)));
+  }
+
   function removerItem(id: string) {
     setItens((atuais) => atuais.filter((it) => it.id !== id));
   }
 
   function adicionarLinha() {
     setItens((atuais) => [...atuais, {
-      id: novoId(), ativo: "", descricao: "", valor: 0,
-      classe: "rendaFixa", confianca: "alta", imagem: -1, incluir: true,
+      id: novoId(), ativo: "", descricao: "", segmento: "", vencimento: "", valor: 0,
+      classe: "resgate_rapido", confianca: "alta", imagem: -1, incluir: true,
     }]);
   }
 
   function aplicar() {
-    const incluidos = itens.filter((it) => it.incluir && it.classe !== CLASSE_NAO_IDENTIFICADA);
-    onAplicar(aplicarNaCarteira(carteiraAtual, itens, somar), incluidos.length);
+    const incluidos = itensAplicaveis(itens);
+    onAplicar(aplicarNaCarteira(ativosAtuais, itens, substituir), incluidos.length);
     onFechar();
   }
 
@@ -176,7 +181,7 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
     .filter((c) => c.key !== CLASSE_NAO_IDENTIFICADA)
     .reduce((acc, c) => acc + (totais[c.key] ?? 0), 0);
   const totalNaoIdentificado = totais[CLASSE_NAO_IDENTIFICADA] ?? 0;
-  const qtdIncluidos = itens.filter((it) => it.incluir && it.classe !== CLASSE_NAO_IDENTIFICADA).length;
+  const qtdIncluidos = itensAplicaveis(itens).length;
 
   return (
     <div
@@ -347,6 +352,14 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
 
                 {itens.map((it) => {
                   const suspeito = it.classe === CLASSE_NAO_IDENTIFICADA || it.confianca === "baixa" || it.valor === 0;
+                  // Segmento e vencimento acompanham o ativo até os cards da Etapa 1;
+                  // aqui só aparecem como referência para o consultor conferir.
+                  const detalhes = [
+                    it.descricao,
+                    it.segmento,
+                    it.vencimento && `vence ${it.vencimento}`,
+                    it.confianca === "baixa" && "leitura incerta",
+                  ].filter(Boolean).join(" · ");
                   return (
                     <div
                       key={it.id}
@@ -381,14 +394,13 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
                           margin: 0, fontSize: 10.5, color: "#9CA3AF",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
-                          {it.descricao || (it.imagem >= 0 ? `Imagem ${it.imagem + 1}` : "Adicionado manualmente")}
-                          {it.confianca === "baixa" && " · leitura incerta"}
+                          {detalhes || (it.imagem >= 0 ? `Imagem ${it.imagem + 1}` : "Adicionado manualmente")}
                         </p>
                       </div>
 
                       <select
                         value={it.classe}
-                        onChange={(e) => atualizarItem(it.id, { classe: e.target.value as ClasseExtraida })}
+                        onChange={(e) => mudarClasse(it.id, e.target.value as ClasseExtraida)}
                         aria-label="Classe de ativo"
                         style={{
                           width: "100%", fontSize: 12.5, padding: "6px 8px",
@@ -473,18 +485,23 @@ export function ImportarCarteiraIA({ aberto, carteiraAtual, onFechar, onAplicar 
                 </p>
               )}
 
-              <label style={{
-                display: "flex", alignItems: "center", gap: 8, marginTop: 16,
-                fontSize: 12.5, color: "#374151", cursor: "pointer",
-              }}>
-                <input
-                  type="checkbox"
-                  checked={somar}
-                  onChange={(e) => setSomar(e.target.checked)}
-                  style={{ width: 15, height: 15, accentColor: "#2563EB", cursor: "pointer" }}
-                />
-                Somar aos valores já preenchidos (em vez de substituir a carteira inteira)
-              </label>
+              {ativosAtuais.length > 0 && (
+                <label style={{
+                  display: "flex", alignItems: "center", gap: 8, marginTop: 16,
+                  fontSize: 12.5, color: "#374151", cursor: "pointer",
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={substituir}
+                    onChange={(e) => setSubstituir(e.target.checked)}
+                    style={{ width: 15, height: 15, accentColor: "#2563EB", cursor: "pointer" }}
+                  />
+                  {ativosAtuais.length === 1
+                    ? "Substituir o ativo já lançado"
+                    : `Substituir os ${ativosAtuais.length} ativos já lançados`}
+                  {" "}(por padrão os importados são adicionados)
+                </label>
+              )}
             </>
           )}
         </div>

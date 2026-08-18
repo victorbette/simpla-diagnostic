@@ -73,8 +73,9 @@ let total = 0;
 for (const it of data.itens) {
   total += it.valor;
   const origem = arquivos[it.imagem] ? basename(arquivos[it.imagem]) : "?";
+  const extra = [it.segmento, it.vencimento].filter(Boolean).join(" ");
   console.log(
-    `${it.ativo.padEnd(12)} ${it.classe.padEnd(16)} ${it.valor.toFixed(2).padStart(14)}  [${it.confianca}] ${origem}`,
+    `${it.ativo.padEnd(12)} ${it.classe.padEnd(15)} ${(extra || "-").padEnd(18)} ${it.valor.toFixed(2).padStart(14)}  [${it.confianca}] ${origem}`,
   );
 }
-console.log(`${"TOTAL".padEnd(29)} ${total.toFixed(2).padStart(14)}  (${data.itens.length} ativos)\n`);
+console.log(`${"TOTAL".padEnd(47)} ${total.toFixed(2).padStart(14)}  (${data.itens.length} ativos)\n`);

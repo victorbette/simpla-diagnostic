@@ -1,6 +1,5 @@
 export { ColetaDadosForm } from "./ColetaDadosForm";
 export { AtivoForm } from "./AtivoForm";
-export { ImportarCarteiraIA } from "./ImportarCarteiraIA";
 export { PlanejamentoIFForm } from "./PlanejamentoIFForm";
 export { ProtecaoSucessorioForm } from "./ProtecaoSucessorioForm";
 export { ProtecaoForm } from "./ProtecaoForm";

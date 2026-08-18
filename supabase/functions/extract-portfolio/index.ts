@@ -3,7 +3,8 @@
 // ----------------------------------------------------------------------------
 // Recebe prints da carteira do cliente (home broker, app do banco, planilha) e
 // devolve as posições extraídas por IA — uma linha por ativo, com o valor
-// financeiro atual e a classe sugerida (as 8 do AtivoForm).
+// financeiro atual e a classe sugerida (os 8 cards da Etapa 1 de Gestão de
+// Carteira), além de segmento e vencimento quando visíveis.
 //
 // A chave da OpenAI fica só aqui (secret do Supabase); o front nunca a vê.
 //
@@ -26,9 +27,9 @@ const MAX_IMAGENS = 6;
 const MAX_BYTES_IMAGEM = 5 * 1024 * 1024; // 5 MB por imagem (já decodificada)
 const TIMEOUT_MS = 90_000;
 
-// Classes = chaves de AtivoAtual (src/types/financialPlanning.ts).
+// Classes = CardId dos cards da carteira (src/lib/carteira/types.ts).
 const CLASSES = [
-  "rendaFixa", "acoes", "fiis", "rvGlobal", "rfGlobal",
+  "resgate_longo", "resgate_rapido", "acoes", "fiis", "exterior",
   "cripto", "alternativos", "previdencia", "naoIdentificado",
 ] as const;
 
@@ -46,15 +47,42 @@ REGRAS DE VALOR (campo "valor")
 - Se os valores estiverem em outra moeda (US$), NÃO converta: informe a moeda em "moedaDetectada" e mantenha o número como está.
 
 CLASSIFICAÇÃO (campo "classe") — escolha exatamente uma:
-- rendaFixa: CDB, RDB, LCI, LCA, LC, Tesouro Direto/Selic/IPCA/Prefixado, debêntures, CRI, CRA, poupança, fundos DI e de renda fixa Brasil, saldo em conta/caixa/liquidez.
+- resgate_rapido: renda fixa de liquidez imediata (D+0/D+1) ou sem carência — Tesouro Selic, CDB de liquidez diária, poupança, fundos DI, saldo em conta/caixa/disponível.
+- resgate_longo: renda fixa presa até o vencimento ou com carência — CDB prefixado/IPCA, RDB, LCI, LCA, LC, Tesouro IPCA+/Prefixado, debêntures, CRI, CRA, fundos de renda fixa e de crédito privado com prazo de resgate.
+  (a régua entre os dois é LIQUIDEZ, detalhada abaixo — não existe uma classe "renda fixa" única)
 - acoes: ações brasileiras (tickers com final 3, 4, 5, 6 e units), ETFs de ações Brasil (BOVA11, SMAL11), fundos de ações Brasil, opções de ações BR.
 - fiis: fundos imobiliários (tickers de final 11 cujo nome cita FII / Fundo Imobiliário), Fiagros, FI-Infra imobiliário.
-- rvGlobal: BDRs (tickers de final 31, 32, 33, 34, 35 — ex.: AAPL34, AMZO34, PYPL34), ações e ETFs internacionais (AAPL, VOO, SPY, IVVB11), fundos de ações globais, REITs, conta no exterior aplicada em renda variável.
-- rfGlobal: bonds, treasuries, renda fixa internacional, fundos de renda fixa/crédito global, caixa em dólar no exterior.
+- exterior: tudo que é internacional, tanto renda variável quanto renda fixa — BDRs (tickers de final 31 a 35, ex.: AAPL34), ações e ETFs internacionais (AAPL, VOO, SPY, IVVB11), REITs, fundos globais, bonds, treasuries, renda fixa internacional, caixa em dólar no exterior.
 - cripto: Bitcoin, Ethereum, altcoins, stablecoins, ETFs e fundos de cripto (HASH11, QBTC11, BITH11).
-- alternativos: COE, produtos estruturados, fundos cetipados, fundos multimercado, private equity, venture capital, FIDC, precatórios, ouro e commodities.
+- alternativos: COE, produtos estruturados, fundos cetipados, fundos multimercado, hedge funds, private equity, venture capital, FIDC, precatórios, ouro e commodities.
 - previdencia: PGBL, VGBL, planos de previdência privada (qualquer seguradora ou fundo previdenciário).
 - naoIdentificado: quando não der para enquadrar com segurança.
+
+RENDA FIXA — resgate_rapido OU resgate_longo (a separação é por LIQUIDEZ, não por indexador). Decida nesta ordem:
+1. O print diz liquidez diária / D+0 / D+1 / "resgate a qualquer momento"? → resgate_rapido.
+2. Tesouro Direto pelo título:
+   - Tesouro Selic (LFT) → resgate_rapido, mesmo com ano no nome ("Tesouro Selic 2029"): o resgate é diário.
+   - Tesouro IPCA+ / Tesouro IPCA+ com Juros Semestrais / NTN-B / NTN-B Principal / Renda+ / Educa+ → resgate_longo.
+   - Tesouro Prefixado / LTN / NTN-F → resgate_longo.
+3. Poupança, saldo em conta, caixa, disponível, "conta remunerada", fundos DI e fundos de renda fixa de resgate em até 2 dias úteis → resgate_rapido.
+4. CDB, RDB, LCI, LCA, LC, CRI, CRA, debêntures, letras financeiras: com vencimento futuro ou carência → resgate_longo; explicitamente de liquidez diária → resgate_rapido.
+5. Ainda em dúvida: com data de vencimento visível → resgate_longo; sem vencimento nenhum → resgate_rapido.
+
+O indexador NÃO decide a classe, decide o segmento: um CDB 110% do CDI com vencimento em 2028 é resgate_longo com segmento "Pós-fixado".
+
+SEGMENTO (campo "segmento") — subclasse dentro do card. Use EXATAMENTE um dos rótulos permitidos para a classe escolhida; se não der para decidir, devolva "".
+- resgate_longo: "Pós-fixado" (indexado a CDI ou Selic — "110% do CDI", "CDI + 2%", Tesouro Selic), "Inflação" (IPCA+, IGP-M, NTN-B, Renda+, Educa+), "Prefixado" (taxa fixa, sem indexador — LTN, NTN-F, "12,5% a.a."), "Fundos RF" (fundos de renda fixa/crédito), "Fundos MM" (multimercado dentro da renda fixa)
+- resgate_rapido: "Pós-fixado" (é o único aceito — Tesouro Selic, CDB de liquidez diária, poupança, caixa e fundos DI entram todos aqui)
+- acoes: "Bancos", "Seguradora", "Agronegócio", "Commodities", "Educação", "Construção Civil", "Saúde", "Shopping", "Telecomunicação", "Energia", "Diverso"
+- fiis: "Papel", "Galpões Log.", "Híbrido", "Lajes Corp.", "Shopping", "Fiagro", "Recebíveis", "FOF"
+- exterior: "Renda Variável", "Renda Fixa"
+- alternativos: "COE", "Fundo Cetipado", "Produto Estruturado", "Hedge Fund", "Multimercado", "Private Equity"
+- previdencia: "PGBL", "VGBL"
+- cripto e naoIdentificado: devolva "".
+
+VENCIMENTO (campo "vencimento")
+- Só para renda fixa (resgate_longo / resgate_rapido) e só se estiver visível no print. Copie como aparece ("15/03/2027", "Jan/2026", "2028").
+- Nas demais classes, ou quando não houver data, devolva "". Nunca invente nem estime.
 
 CONFIANÇA (campo "confianca")
 - "alta": ticker/produto e valor lidos com clareza e classe óbvia.
@@ -74,10 +102,12 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["ativo", "descricao", "valor", "classe", "confianca"],
+        required: ["ativo", "descricao", "segmento", "vencimento", "valor", "classe", "confianca"],
         properties: {
           ativo: { type: "string", description: "Ticker ou nome curto do produto, como aparece no print." },
           descricao: { type: "string", description: "Nome da empresa/produto ou custódia. Vazio se não houver." },
+          segmento: { type: "string", description: "Rótulo de segmento permitido para a classe. Vazio se não der para decidir." },
+          vencimento: { type: "string", description: "Vencimento da renda fixa, como aparece no print. Vazio nos demais casos." },
           valor: { type: "number", description: "Patrimônio atual no ativo, em número puro." },
           classe: { type: "string", enum: CLASSES },
           confianca: { type: "string", enum: ["alta", "media", "baixa"] },
@@ -92,6 +122,8 @@ const SCHEMA = {
 interface ItemExtraido {
   ativo: string;
   descricao: string;
+  segmento: string;
+  vencimento: string;
   valor: number;
   classe: string;
   confianca: string;
@@ -173,6 +205,9 @@ function limpar(leitura: LeituraImagem, indiceImagem: number) {
     .map((it) => ({
       ativo: String(it?.ativo ?? "").trim().slice(0, 80),
       descricao: String(it?.descricao ?? "").trim().slice(0, 120),
+      // O front encaixa o segmento na lista do card; aqui só limita o tamanho
+      segmento: String(it?.segmento ?? "").trim().slice(0, 40),
+      vencimento: String(it?.vencimento ?? "").trim().slice(0, 20),
       valor: Number.isFinite(Number(it?.valor)) ? Math.max(0, Number(it.valor)) : 0,
       classe: (CLASSES as readonly string[]).includes(String(it?.classe))
         ? String(it.classe)

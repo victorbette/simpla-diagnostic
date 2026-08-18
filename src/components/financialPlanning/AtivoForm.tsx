@@ -1,13 +1,9 @@
-import { useState } from "react";
-import { Sparkles } from "lucide-react";
-import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { ALOCACAO_ALVO, calcularAlocacaoAtual } from "@/types/financialPlanning";
 import type { AtivoAtual, PerfilRisco } from "@/types/financialPlanning";
-import { ImportarCarteiraIA } from "./ImportarCarteiraIA";
 
 const CAMPOS: { key: keyof Omit<AtivoAtual, "total">; label: string; hint: string; color: string }[] = [
   { key: "rendaFixa",     label: "Renda Fixa",           hint: "CDB, Tesouro, LCI, LCA",                          color: "#1E40AF" },
@@ -31,7 +27,6 @@ interface Props {
 
 export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero, onComecandoDoZeroChange, hideComecandoDoZero }: Props) {
   const zerando = comecandoDoZero ?? false;
-  const [importadorAberto, setImportadorAberto] = useState(false);
 
   const total = value.rendaFixa + value.acoes + value.fiis + value.rvGlobal + value.rfGlobal + value.cripto + (value.alternativos ?? 0) + (value.previdencia ?? 0);
 
@@ -59,45 +54,15 @@ export function AtivoForm({ value, suitabilityPerfil, onChange, comecandoDoZero,
         <p style={{ fontSize: 13, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.04em", margin: 0 }}>
           Carteira de Investimentos
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {!zerando && (
-            <button
-              type="button"
-              onClick={() => setImportadorAberto(true)}
-              title="Anexe prints da carteira e a IA preenche os valores"
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 8,
-                padding: "7px 12px", fontSize: 12, fontWeight: 600, color: "#1E40AF",
-                cursor: "pointer", fontFamily: "inherit",
-              }}
-            >
-              <Sparkles size={13} />
-              Importar de print (IA)
-            </button>
-          )}
-          {!hideComecandoDoZero && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Switch id="zerando" checked={zerando} onCheckedChange={handleZerando} />
-              <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B7280]">
-                Começando do zero
-              </Label>
-            </div>
-          )}
-        </div>
+        {!hideComecandoDoZero && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Switch id="zerando" checked={zerando} onCheckedChange={handleZerando} />
+            <Label htmlFor="zerando" className="text-sm cursor-pointer text-[#6B7280]">
+              Começando do zero
+            </Label>
+          </div>
+        )}
       </div>
-
-      <ImportarCarteiraIA
-        aberto={importadorAberto}
-        carteiraAtual={{ ...value, total }}
-        onFechar={() => setImportadorAberto(false)}
-        onAplicar={(carteira, qtdItens) => {
-          onChange(carteira);
-          toast.success(
-            `${qtdItens} ativo${qtdItens === 1 ? "" : "s"} aplicado${qtdItens === 1 ? "" : "s"} na carteira.`,
-          );
-        }}
-      />
 
       {(!hideComecandoDoZero && zerando) ? (
         <div style={{ backgroundColor: "#EAF0F5", border: "1px solid #BFDBFE", borderRadius: 8, padding: "14px 16px", fontSize: 13, color: "#1E40AF" }}>

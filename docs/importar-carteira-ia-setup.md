@@ -1,8 +1,9 @@
 # Setup — Importar carteira de print (IA)
 
-Na seção **Situação Atual → Carteira de Investimentos** do Financial Planning o
-consultor anexa prints da carteira do cliente; a IA lê cada ativo e o patrimônio
-atual, e devolve um resumo editável antes de qualquer valor entrar no formulário.
+Em **Gestão de Carteira → Etapa 1 (Carteira Atual)** o consultor anexa prints da
+carteira do cliente; a IA lê cada posição e devolve uma lista editável — um ativo
+por linha, com classe, segmento, vencimento e valor — antes de qualquer coisa ser
+lançada nos cards.
 
 ## Arquitetura
 
@@ -13,7 +14,7 @@ Prints (upload / drag&drop / Ctrl+V)
 Edge Function extract-portfolio  ──►  OpenAI (visão + structured outputs)
    │  valida JWT do usuário; OPENAI_API_KEY só existe aqui
    ▼
-Tela de revisão (ImportarCarteiraIA)  ──consultor valida/ajusta──►  AtivoForm
+Tela de revisão (ImportarCarteiraIA)  ──consultor valida/ajusta──►  Etapa 1
 ```
 
 A chave da OpenAI **nunca** vai para o bundle do front: o browser só fala com o
@@ -63,7 +64,8 @@ supabase functions deploy extract-portfolio
 
 ## Passo 3 — Testar
 
-Pela interface: Financial Planning → Situação Atual → **Importar de print (IA)**.
+Pela interface: Gestão de Carteira → Etapa 1 (Carteira Atual) → **Importar de
+print (IA)**.
 
 Por linha de comando, com um print qualquer (ex.: o `print.jpeg` da raiz):
 
@@ -79,19 +81,51 @@ Saída esperada: uma linha por ativo com ticker, classe, valor e confiança.
 
 ## Como a IA classifica
 
-Cada linha extraída recebe uma das 8 classes do `AtivoForm` (ou
-`naoIdentificado`, que **não** é aplicado sem o consultor escolher a classe):
+Cada linha extraída recebe um dos 8 cards da Etapa 1 (`CardId` em
+`src/lib/carteira/types.ts`) — ou `naoIdentificado`, que **não** é aplicado sem o
+consultor escolher a classe:
 
 | Classe | Exemplos |
 | --- | --- |
-| `rendaFixa` | CDB, LCI/LCA, Tesouro, debêntures, CRI/CRA, fundos DI, caixa |
+| `resgate_rapido` | Tesouro Selic, CDB de liquidez diária, poupança, fundos DI, caixa |
+| `resgate_longo` | CDB pré/IPCA, LCI/LCA, debêntures, CRI/CRA, Tesouro IPCA+, fundos RF com prazo |
 | `acoes` | Ações BR (final 3/4/5/6), BOVA11, SMAL11, fundos de ações BR |
 | `fiis` | Fundos imobiliários (final 11 com "FII"), Fiagro |
-| `rvGlobal` | BDRs (final 31–35, ex.: AAPL34), ações/ETFs internacionais, IVVB11, REITs |
-| `rfGlobal` | Bonds, treasuries, RF internacional, caixa em dólar |
+| `exterior` | BDRs (final 31–35, ex.: AAPL34), ações/ETFs internacionais, IVVB11, REITs, bonds, treasuries |
 | `cripto` | BTC, ETH, stablecoins, HASH11/QBTC11 |
 | `alternativos` | COE, estruturados, multimercado, FIDC, PE/VC, ouro |
 | `previdencia` | PGBL, VGBL |
+
+Além da classe, a IA sugere **segmento** (restrito aos rótulos que o dropdown do
+card aceita — o front encaixa a sugestão na lista com `normalizarSegmento`) e
+**vencimento** (só para renda fixa, e só quando visível no print).
+
+### Renda fixa: liquidez decide o card, indexador decide o segmento
+
+A separação entre `resgate_rapido` e `resgate_longo` é por **liquidez**, não por
+indexador — e essa é a regra que mais escapa de um modelo de visão. Ela está
+escrita no prompt como árvore de decisão e, para os produtos que o próprio nome
+crava, tem uma rede de segurança determinística no front
+(`refinarRendaFixa` em `src/lib/importarCarteira.ts`):
+
+| Produto | Card | Segmento |
+| --- | --- | --- |
+| Tesouro Selic, LFT | `resgate_rapido` | Pós-fixado |
+| Tesouro IPCA+, NTN-B, Renda+, Educa+ | `resgate_longo` | Inflação |
+| Tesouro Prefixado, LTN, NTN-F | `resgate_longo` | Prefixado |
+| Poupança, saldo em conta, caixa | `resgate_rapido` | Pós-fixado |
+| Qualquer linha com "liquidez diária" / D+0 / D+1 | `resgate_rapido` | Pós-fixado |
+
+`Tesouro Selic 2029` fica em Resgate Rápido mesmo tendo ano no nome (o resgate é
+diário); um `CDB 110% do CDI 2028` fica em Resgate Longo com segmento
+"Pós-fixado". Para o resto — CDB, LCI/LCA, debêntures, CRI/CRA, fundos — vale o
+que a IA leu, e o front só preenche o segmento vazio a partir do indexador no
+nome (IPCA → Inflação, CDI/Selic → Pós-fixado, prefixado → Prefixado).
+
+A rede de segurança **só age em linhas que a IA já colocou em renda fixa** e
+ignora nome de banco emissor — `CDB Caixa 2028` continua Resgate Longo. Trocar a
+classe na revisão roda a mesma régua de novo e descarta segmento que não
+pertença ao card de destino.
 
 Regras de leitura relevantes (todas no prompt da função):
 
@@ -107,8 +141,9 @@ Regras de leitura relevantes (todas no prompt da função):
 
 A tela de revisão permite: editar nome/valor, trocar a classe, desmarcar ou
 excluir linhas, e adicionar linhas manuais. O botão **Aplicar na carteira**
-substitui as 8 classes do formulário — ou **soma** aos valores já preenchidos
-(checkbox), que é o caminho ao importar corretoras em prints separados.
+**adiciona** os ativos importados aos que já estão lançados — o caminho de quem
+importa uma corretora por print. O checkbox **Substituir** troca a carteira
+inteira pelo que foi importado (aparece só quando já há ativos na tela).
 
 ## Limites e custos
 
