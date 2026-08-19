@@ -95,7 +95,31 @@ interface SugestaoClasse {
     delta: number;
   }[];
   podeAjustar: boolean;
+  podeAjustarEntreClasses?: boolean;
+  sugestoesEntreClasses?: {
+    ativoId: string;
+    ativoNome: string;
+    card: string;
+    movimentacaoAtual: number;
+    movimentacaoSugerida: number;
+    delta: number;
+  }[];
   mensagem?: string;
+}
+
+function calcularValorFinalItem(i: PlanoAcaoItem): number {
+  switch (i.acao) {
+    case "aportar": case "novo":
+      return (Number(i.valorAtualBRL) || 0) + (i.movimentacaoEditada ?? Math.abs(i.movimentacaoBRL ?? 0));
+    case "manter":
+      return Number(i.valorAtualBRL) || 0;
+    case "resgatar_parcial":
+      return Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
+    case "resgatar_total":
+      return 0;
+    default:
+      return Number(i.valorAtualBRL) || 0;
+  }
 }
 
 function movEfetivo(item: PlanoAcaoItem): number {
@@ -265,6 +289,22 @@ export function Etapa3PlanoAcao({
     }).filter((c) => c.valorAtual > 0 || c.valorMeta > 0 || c.valorFinal > 0);
   }, [planoAcao, macroMeta, patrimonio, aporteDisponivel]);
 
+  function aplicarRedistribuicaoEntreClasses(
+    sugestoesEC: NonNullable<SugestaoClasse["sugestoesEntreClasses"]>
+  ) {
+    if (!sugestoesEC.length) return;
+    onPlanoAcao(planoAcao.map((item) => {
+      const sug = sugestoesEC.find((s) => s.ativoId === item.id);
+      if (!sug) return item;
+      return { ...item, movimentacaoEditada: sug.movimentacaoSugerida, ajustadoPorRedistribuicao: true };
+    }));
+    setAtivosAjustados((prev) => {
+      const novo = new Set(prev);
+      sugestoesEC.forEach((s) => novo.add(s.ativoId));
+      return novo;
+    });
+  }
+
   function calcularSugestoesPorClasse(): SugestaoClasse[] {
     const patrimonioBase = patrimonio + aporteDisponivel;
     const resultado: SugestaoClasse[] = [];
@@ -275,26 +315,7 @@ export function Etapa3PlanoAcao({
 
       const valorMeta = (pctMeta / 100) * patrimonioBase;
       const itensClasse = planoAcao.filter((i) => i.card === cardId);
-      const valorFinalClasse = itensClasse.reduce((s, i) => {
-        let vf = 0;
-        switch (i.acao) {
-          case "aportar": case "novo":
-            vf = (Number(i.valorAtualBRL) || 0) + (i.movimentacaoEditada ?? Math.abs(i.movimentacaoBRL ?? 0));
-            break;
-          case "manter":
-            vf = Number(i.valorAtualBRL) || 0;
-            break;
-          case "resgatar_parcial":
-            vf = Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
-            break;
-          case "resgatar_total":
-            vf = 0;
-            break;
-          default:
-            vf = Number(i.valorAtualBRL) || 0;
-        }
-        return s + vf;
-      }, 0);
+      const valorFinalClasse = itensClasse.reduce((s, i) => s + calcularValorFinalItem(i), 0);
 
       const desvio = valorFinalClasse - valorMeta;
       if (Math.abs(desvio) < 100) return;
@@ -306,10 +327,13 @@ export function Etapa3PlanoAcao({
       }, 0);
 
       const sugs: SugestaoClasse["sugestoes"] = [];
+      const sugsEntreClasses: NonNullable<SugestaoClasse["sugestoesEntreClasses"]> = [];
       let podeAjustar = false;
+      let podeAjustarEntreClasses = false;
       let mensagem: string | undefined;
 
       if (desvio > 0) {
+        // Excess — class above meta
         if (ativosAjustaveis.length > 0 && totalMovAtual >= desvio) {
           podeAjustar = true;
           ativosAjustaveis.forEach((item) => {
@@ -319,11 +343,28 @@ export function Etapa3PlanoAcao({
             sugs.push({ ativoId: item.id, ativoNome: item.nomeAtivo, movimentacaoAtual: Math.abs(movAtual), movimentacaoSugerida: Math.round(novoMov * 100) / 100, delta: Math.round((novoMov - Math.abs(movAtual)) * 100) / 100 });
           });
         } else {
-          mensagem = ativosAjustaveis.length === 0
-            ? "Nenhum aporte para reduzir. Considere resgatar ativos desta classe."
-            : "Aportes insuficientes para cobrir o excesso. Reduza resgates ou adicione resgate parcial.";
+          // Can't reduce within class — check if other classes need these resources
+          const classesComDeficit = CARD_ORDER.filter((outroCard) => {
+            if (outroCard === cardId) return false;
+            const pctOutro = Number(macroMeta[outroCard]) || 0;
+            if (pctOutro === 0) return false;
+            const metaOutro = (pctOutro / 100) * patrimonioBase;
+            const finalOutro = planoAcao.filter((i) => i.card === outroCard).reduce((s, i) => s + calcularValorFinalItem(i), 0);
+            return finalOutro < metaOutro - 100;
+          });
+
+          if (classesComDeficit.length > 0) {
+            const labelsComDeficit = classesComDeficit.map((c) => CARD_META[c]?.label ?? c).join(", ");
+            mensagem = `Nenhum aporte para reduzir nesta classe. Classes que precisam de recursos: ${labelsComDeficit}. Confirme abaixo para redistribuir entre classes.`;
+            podeAjustarEntreClasses = true;
+          } else {
+            mensagem = ativosAjustaveis.length === 0
+              ? "Nenhum aporte para reduzir. Considere resgatar ativos desta classe."
+              : "Aportes insuficientes para cobrir o excesso. Reduza resgates ou adicione resgate parcial.";
+          }
         }
       } else {
+        // Deficit — class below meta
         const falta = Math.abs(desvio);
         if (ativosAjustaveis.length > 0) {
           podeAjustar = true;
@@ -335,11 +376,63 @@ export function Etapa3PlanoAcao({
             sugs.push({ ativoId: item.id, ativoNome: item.nomeAtivo, movimentacaoAtual: Math.abs(movAtual), movimentacaoSugerida: Math.round(novoMov * 100) / 100, delta: Math.round(acrescimo * 100) / 100 });
           });
         } else {
-          mensagem = "Nenhum ativo disponível para aportar nesta classe.";
+          // No ativos to aport — check if excess exists in other classes
+          const classesComExcesso = CARD_ORDER.filter((outroCard) => {
+            if (outroCard === cardId) return false;
+            const pctOutro = Number(macroMeta[outroCard]) || 0;
+            if (pctOutro === 0) return false;
+            const metaOutro = (pctOutro / 100) * patrimonioBase;
+            const finalOutro = planoAcao.filter((i) => i.card === outroCard).reduce((s, i) => s + calcularValorFinalItem(i), 0);
+            const temExcesso = finalOutro > metaOutro + 100;
+            const temAtivosAjustaveis = planoAcao.some((i) => i.card === outroCard && (i.acao === "aportar" || i.acao === "novo"));
+            return temExcesso && temAtivosAjustaveis;
+          });
+
+          if (classesComExcesso.length > 0) {
+            const labelsComExcesso = classesComExcesso.map((c) => CARD_META[c]?.label ?? c).join(", ");
+            mensagem = `Não há ativos para aportar nesta classe. Há excesso disponível em: ${labelsComExcesso}. Confirme abaixo para redistribuir entre classes.`;
+            podeAjustarEntreClasses = true;
+
+            // Reduce aportes from excess classes proportionally to cover the deficit
+            const ativosNasExcesso = planoAcao.filter(
+              (i) => classesComExcesso.includes(i.card) && (i.acao === "aportar" || i.acao === "novo")
+            );
+            const totalMovExcesso = ativosNasExcesso.reduce((s, i) => {
+              const mov = i.movimentacaoEditada !== undefined ? Number(i.movimentacaoEditada) : Math.abs(Number(i.movimentacaoBRL) || 0);
+              return s + mov;
+            }, 0);
+            ativosNasExcesso.forEach((item) => {
+              const movAtual = item.movimentacaoEditada !== undefined ? Number(item.movimentacaoEditada) : Math.abs(Number(item.movimentacaoBRL) || 0);
+              const proporcao = totalMovExcesso > 0 ? movAtual / totalMovExcesso : 1 / ativosNasExcesso.length;
+              const reducao = Math.min(movAtual, falta * proporcao);
+              const novoMov = Math.max(0, movAtual - reducao);
+              sugsEntreClasses.push({
+                ativoId: item.id,
+                ativoNome: item.nomeAtivo,
+                card: item.card,
+                movimentacaoAtual: Math.round(movAtual * 100) / 100,
+                movimentacaoSugerida: Math.round(novoMov * 100) / 100,
+                delta: Math.round((novoMov - movAtual) * 100) / 100,
+              });
+            });
+          } else {
+            mensagem = "Nenhum ativo disponível para aportar nesta classe e sem excesso em outras classes.";
+          }
         }
       }
 
-      resultado.push({ cardId, label: CARD_META[cardId]?.label ?? cardId, valorAtual: valorFinalClasse, valorMeta, desvio, sugestoes: sugs, podeAjustar, mensagem });
+      resultado.push({
+        cardId,
+        label: CARD_META[cardId]?.label ?? cardId,
+        valorAtual: valorFinalClasse,
+        valorMeta,
+        desvio,
+        sugestoes: sugs,
+        sugestoesEntreClasses: sugsEntreClasses.length > 0 ? sugsEntreClasses : undefined,
+        podeAjustar,
+        podeAjustarEntreClasses,
+        mensagem,
+      });
     });
 
     return resultado;
@@ -611,7 +704,28 @@ export function Etapa3PlanoAcao({
                 )}
               </div>
 
-              {!s.podeAjustar && s.mensagem && (
+              {!s.podeAjustar && s.podeAjustarEntreClasses && s.mensagem && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ fontSize: 11, color: "#B45309", background: "#FEF3C7", padding: "8px 12px", borderRadius: 6 }}>
+                    ⚠ {s.mensagem}
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (s.sugestoesEntreClasses) aplicarRedistribuicaoEntreClasses(s.sugestoesEntreClasses);
+                      setSugestoes((prev) => prev.filter((x) => x.cardId !== s.cardId));
+                    }}
+                    style={{
+                      background: "#2563EB", color: "white", border: "none",
+                      borderRadius: 8, padding: "6px 14px", fontSize: 11,
+                      fontWeight: 600, cursor: "pointer", alignSelf: "flex-start",
+                    }}
+                  >
+                    ✓ Redistribuir entre classes
+                  </button>
+                </div>
+              )}
+
+              {!s.podeAjustar && !s.podeAjustarEntreClasses && s.mensagem && (
                 <div style={{ fontSize: 11, color: "#B45309", background: "#FEF3C7", padding: "8px 12px", borderRadius: 6 }}>
                   ⚠ {s.mensagem}
                 </div>
