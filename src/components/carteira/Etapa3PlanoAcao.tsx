@@ -311,13 +311,13 @@ export function Etapa3PlanoAcao({
 
     CARD_ORDER.forEach((cardId) => {
       const pctMeta = Number(macroMeta[cardId]) || 0;
+      // Skip classes with no allocation target — already visible in "Conferência por Classe"
+      // but not actionable in the suggestions panel (no aportes to adjust)
+      if (pctMeta === 0) return;
+
       const valorMeta = (pctMeta / 100) * patrimonioBase;
       const itensClasse = planoAcao.filter((i) => i.card === cardId);
       const valorFinalClasse = itensClasse.reduce((s, i) => s + calcularValorFinalItem(i), 0);
-
-      // Skip only when there is no target AND no assets — classes like Alternativos
-      // with pctMeta = 0 but actual assets should still appear (excess to redistribute)
-      if (pctMeta === 0 && valorFinalClasse < 100) return;
 
       const desvio = valorFinalClasse - valorMeta;
       if (Math.abs(desvio) < 100) return;
