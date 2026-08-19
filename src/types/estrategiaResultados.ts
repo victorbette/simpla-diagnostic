@@ -1,5 +1,4 @@
-// macroAtual / macroMeta are keyed by CardId (resgate_rapido, resgate_longo, acoes, fiis, exterior, cripto)
-// and store percentages (0–100).
+// macroAtual / macroMeta are keyed by CardId and store percentages (0–100).
 import type { ObjetivoVida } from "@/types/objetivos";
 import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 import type { Ativo } from "@/lib/carteira/types";
