@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Trash2, Plus } from "lucide-react";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
 import { genId, formatBRL, formatPct } from "@/lib/carteira/calculos";
+import { segmentoNoCard, sugerirAtivos } from "@/lib/carteira/catalogo";
 
 const SEG_BAR_COLORS: Record<string, string> = {
   "Pós-fixado": "#1E40AF",
@@ -66,6 +67,16 @@ const RF_CARDS: CardId[] = ["resgate_longo", "resgate_rapido"];
 // Cards with predefined segmento options — cripto uses free text
 const DROPDOWN_SEG_CARDS: CardId[] = ["resgate_longo", "resgate_rapido", "acoes", "fiis", "exterior"];
 
+/**
+ * Opções do dropdown de segmento, com o valor já gravado no ativo à frente
+ * quando ele não está mais na lista — carteiras salvas antes de a lista mudar
+ * ('Seguradora', 'Commodities') seguem exibindo e mantendo o rótulo original.
+ */
+function opcoesSegmento(cardId: CardId, padrao: readonly string[], atual: string): string[] {
+  const opcoes = SEGMENTOS_POR_CLASSE[cardId] ?? [...padrao];
+  return atual && !opcoes.includes(atual) ? [atual, ...opcoes] : opcoes;
+}
+
 interface Props {
   cardId: CardId;
   ativos: Ativo[];
@@ -86,6 +97,30 @@ export function CarteiraCard({
   const isRFCard = RF_CARDS.includes(cardId);
   const hasDropdownSeg = DROPDOWN_SEG_CARDS.includes(cardId);
   const temSegs = meta.segmentos.length > 0;
+
+  // Ativos cujo segmento veio do catálogo e não da mão do consultor: só esses
+  // podem ser reescritos quando o nome muda de novo (digitar PETR4 e depois
+  // VALE3 troca o setor; escolher o setor à mão trava o campo).
+  const segAutomatico = useRef(new Set<string>());
+
+  function editarNome(id: string, nome: string) {
+    const atual = ativos.find((a) => a.id === id);
+    const patch: Partial<Ativo> = { nome };
+    if (!atual?.segmento || segAutomatico.current.has(id)) {
+      const doCatalogo = segmentoNoCard(cardId, nome);
+      if (doCatalogo) {
+        patch.segmento = doCatalogo;
+        segAutomatico.current.add(id);
+      }
+    }
+    onChange(id, patch);
+  }
+
+  function editarSegmento(id: string, segmento: string) {
+    segAutomatico.current.delete(id);
+    onChange(id, { segmento });
+  }
+
   const total = ativos.reduce((s, a) => s + a.valorBRL, 0);
   const pctCarteira = patrimonio > 0 ? (total / patrimonio) * 100 : 0;
 
@@ -233,15 +268,25 @@ export function CarteiraCard({
                 {ativo.nome || "—"}
               </span>
             ) : (
-              <input
-                value={ativo.nome}
-                onChange={(e) => onChange(ativo.id, { nome: e.target.value })}
-                placeholder="Nome do ativo..."
-                style={{
-                  border: "none", background: "transparent", outline: "none",
-                  fontSize: 12, color: "#111827", width: "100%", padding: 0,
-                }}
-              />
+              <>
+                <input
+                  value={ativo.nome}
+                  onChange={(e) => editarNome(ativo.id, e.target.value)}
+                  placeholder="Nome do ativo..."
+                  list={`cat-${ativo.id}`}
+                  autoComplete="off"
+                  style={{
+                    border: "none", background: "transparent", outline: "none",
+                    fontSize: 12, color: "#111827", width: "100%", padding: 0,
+                  }}
+                />
+                {/* Sugestões do catálogo: escolher um ticker já traz o setor */}
+                <datalist id={`cat-${ativo.id}`}>
+                  {sugerirAtivos(ativo.nome, cardId).map((s) => (
+                    <option key={s.ticker} value={s.ticker}>{s.setor || s.segmento}</option>
+                  ))}
+                </datalist>
+              </>
             )}
 
             {/* Segmento — dropdown para cards com opções predefinidas; texto livre para cripto */}
@@ -250,14 +295,20 @@ export function CarteiraCard({
                 <select
                   autoFocus
                   value={ativo.segmento}
-                  onChange={(e) => { onChange(ativo.id, { segmento: e.target.value }); setEditingSegId(null); }}
+                  onChange={(e) => { editarSegmento(ativo.id, e.target.value); setEditingSegId(null); }}
                   onBlur={() => setEditingSegId(null)}
                   style={{
                     fontSize: 11, border: "1px solid #BFDBFE", borderRadius: 4,
                     padding: "2px 4px", backgroundColor: "white", cursor: "pointer", outline: "none",
                   }}
                 >
-                  {(SEGMENTOS_POR_CLASSE[cardId] ?? meta.segmentos).map((s) => (
+                  {/* Sem segmento é um estado real (ativo novo, ou ticker fora
+                      do catálogo): precisa de opção própria, senão o select
+                      exibe a primeira da lista sem que ninguém tenha escolhido. */}
+                  {!ativo.segmento && <option value="">—</option>}
+                  {/* Rótulo gravado que saiu da lista (carteira antiga) continua
+                      selecionável em vez de virar outro valor no próximo clique. */}
+                  {opcoesSegmento(cardId, meta.segmentos, ativo.segmento).map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
@@ -281,7 +332,7 @@ export function CarteiraCard({
               <input
                 type="text"
                 value={ativo.segmento ?? ""}
-                onChange={(e) => onChange(ativo.id, { segmento: e.target.value })}
+                onChange={(e) => editarSegmento(ativo.id, e.target.value)}
                 placeholder="Ex: Bitcoin, Ethereum..."
                 style={{
                   border: "none", background: "transparent", outline: "none",

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, X, Sparkles, Loader2, AlertTriangle, Trash2, Plus, ImageIcon } from "lucide-react";
+import { Upload, X, Sparkles, Loader2, AlertTriangle, Trash2, Plus, Files, FileText, TextCursorInput } from "lucide-react";
 import { CurrencyInput } from "@/components/CurrencyInput";
 import { formatCurrency } from "@/lib/format";
 import {
-  extrairCarteira, prepararImagem, totaisPorClasse, aplicarNaCarteira, itensAplicaveis, reclassificar,
-  CLASSES_REVISAO, CLASSE_NAO_IDENTIFICADA, MAX_IMAGENS,
-  type ClasseExtraida, type ItemRevisao,
+  extrairCarteira, prepararArquivo, prepararTexto, ehPdf, ehImagem,
+  totaisPorClasse, aplicarNaCarteira, itensAplicaveis, reclassificar,
+  CLASSES_REVISAO, CLASSE_NAO_IDENTIFICADA, MAX_FONTES, MAX_CHARS_TEXTO,
+  type ClasseExtraida, type ItemRevisao, type FontePreparada,
 } from "@/lib/importarCarteira";
 import type { Ativo } from "@/lib/carteira/types";
 
@@ -16,10 +17,11 @@ interface Props {
   onAplicar: (ativos: Ativo[], qtdItens: number) => void;
 }
 
-interface Anexo {
-  file: File;
-  previewUrl: string;
-}
+/** Uma fonte anexada na tela: print, PDF ou texto colado. */
+type FonteLocal =
+  | { id: string; tipo: "imagem"; nome: string; file: File; previewUrl: string }
+  | { id: string; tipo: "pdf"; nome: string; file: File }
+  | { id: string; tipo: "texto"; nome: string; texto: string };
 
 let seqId = 0;
 const novoId = () => `linha-${++seqId}`;
@@ -27,14 +29,15 @@ const novoId = () => `linha-${++seqId}`;
 type Etapa = "upload" | "processando" | "revisao";
 
 /**
- * Modal de importação da carteira atual a partir de prints (Etapa 1 de Gestão
- * de Carteira). A IA (Edge Function extract-portfolio) lê as imagens e propõe
- * uma linha por ativo; o consultor revisa valor e classe antes de qualquer
- * coisa virar ativo nos cards.
+ * Modal de importação da carteira atual (Etapa 1 de Gestão de Carteira). A IA
+ * (Edge Function extract-portfolio) lê prints, PDFs de extrato e texto colado, e
+ * propõe uma linha por ativo; o consultor revisa valor e classe antes de
+ * qualquer coisa virar ativo nos cards.
  */
 export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }: Props) {
   const [etapa, setEtapa] = useState<Etapa>("upload");
-  const [anexos, setAnexos] = useState<Anexo[]>([]);
+  const [fontes, setFontes] = useState<FonteLocal[]>([]);
+  const [rascunhoTexto, setRascunhoTexto] = useState("");
   const [itens, setItens] = useState<ItemRevisao[]>([]);
   const [observacoes, setObservacoes] = useState<string[]>([]);
   const [erro, setErro] = useState<string | null>(null);
@@ -42,10 +45,11 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
   const inputRef = useRef<HTMLInputElement>(null);
 
   const limpar = useCallback(() => {
-    setAnexos((atuais) => {
-      atuais.forEach((a) => URL.revokeObjectURL(a.previewUrl));
+    setFontes((atuais) => {
+      atuais.forEach((f) => { if (f.tipo === "imagem") URL.revokeObjectURL(f.previewUrl); });
       return [];
     });
+    setRascunhoTexto("");
     setItens([]);
     setObservacoes([]);
     setErro(null);
@@ -58,34 +62,54 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
 
   // Libera os object URLs pendentes só na desmontagem (o ref evita revogar
   // previews ainda em uso a cada mudança da lista)
-  const anexosRef = useRef<Anexo[]>([]);
-  useEffect(() => { anexosRef.current = anexos; }, [anexos]);
-  useEffect(() => () => { anexosRef.current.forEach((a) => URL.revokeObjectURL(a.previewUrl)); }, []);
+  const fontesRef = useRef<FonteLocal[]>([]);
+  useEffect(() => { fontesRef.current = fontes; }, [fontes]);
+  useEffect(() => () => {
+    fontesRef.current.forEach((f) => { if (f.tipo === "imagem") URL.revokeObjectURL(f.previewUrl); });
+  }, []);
 
   const adicionarArquivos = useCallback((lista: FileList | File[] | null) => {
     if (!lista) return;
-    const imagens = Array.from(lista).filter((f) => f.type.startsWith("image/"));
-    if (imagens.length === 0) {
-      setErro("Envie arquivos de imagem (print da tela, foto ou PNG/JPEG).");
+    const aceitos = Array.from(lista).filter((f) => ehImagem(f) || ehPdf(f));
+    if (aceitos.length === 0) {
+      setErro("Envie prints (PNG, JPEG, WEBP) ou PDF. Para planilha, cole a tabela no campo de texto.");
       return;
     }
     setErro(null);
-    setAnexos((atuais) => {
-      const espaco = MAX_IMAGENS - atuais.length;
+    setFontes((atuais) => {
+      const espaco = MAX_FONTES - atuais.length;
       if (espaco <= 0) {
-        setErro(`Máximo de ${MAX_IMAGENS} imagens por importação.`);
+        setErro(`Máximo de ${MAX_FONTES} arquivos ou textos por importação.`);
         return atuais;
       }
-      if (imagens.length > espaco) {
-        setErro(`Só cabem mais ${espaco} imagem(ns) — o excedente foi ignorado.`);
+      if (aceitos.length > espaco) {
+        setErro(`Só cabem mais ${espaco} — o excedente foi ignorado.`);
       }
-      const novos = imagens.slice(0, espaco).map((file) => ({
-        file,
-        previewUrl: URL.createObjectURL(file),
-      }));
+      const novos: FonteLocal[] = aceitos.slice(0, espaco).map((file) => (
+        ehPdf(file)
+          ? { id: novoId(), tipo: "pdf", nome: file.name, file }
+          : { id: novoId(), tipo: "imagem", nome: file.name, file, previewUrl: URL.createObjectURL(file) }
+      ));
       return [...atuais, ...novos];
     });
   }, []);
+
+  function adicionarTexto() {
+    const limpo = rascunhoTexto.trim();
+    if (!limpo) return;
+    if (fontes.length >= MAX_FONTES) {
+      setErro(`Máximo de ${MAX_FONTES} arquivos ou textos por importação.`);
+      return;
+    }
+    if (limpo.length > MAX_CHARS_TEXTO) {
+      setErro(`O texto tem ${limpo.length.toLocaleString("pt-BR")} caracteres e o limite é ${MAX_CHARS_TEXTO.toLocaleString("pt-BR")}. Cole em partes.`);
+      return;
+    }
+    const n = fontes.filter((f) => f.tipo === "texto").length + 1;
+    setErro(null);
+    setFontes((atuais) => [...atuais, { id: novoId(), tipo: "texto", nome: `Texto colado ${n}`, texto: limpo }]);
+    setRascunhoTexto("");
+  }
 
   // Ctrl+V com print na área de transferência é o caminho mais rápido
   useEffect(() => {
@@ -111,33 +135,51 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
     return () => window.removeEventListener("keydown", handleKey);
   }, [aberto, etapa, onFechar]);
 
-  function removerAnexo(idx: number) {
-    setAnexos((atuais) => {
-      URL.revokeObjectURL(atuais[idx].previewUrl);
-      return atuais.filter((_, i) => i !== idx);
+  function removerFonte(id: string) {
+    setFontes((atuais) => {
+      const alvo = atuais.find((f) => f.id === id);
+      if (alvo?.tipo === "imagem") URL.revokeObjectURL(alvo.previewUrl);
+      return atuais.filter((f) => f.id !== id);
     });
   }
 
   async function processar() {
-    if (anexos.length === 0) return;
+    // Texto digitado e ainda não adicionado entra junto, senão o consultor
+    // clica em "Extrair" e vê o conteúdo ser silenciosamente ignorado
+    const pendente = rascunhoTexto.trim();
+    const locais: FonteLocal[] = pendente && fontes.length < MAX_FONTES
+      ? [...fontes, { id: novoId(), tipo: "texto", nome: `Texto colado ${fontes.filter((f) => f.tipo === "texto").length + 1}`, texto: pendente }]
+      : fontes;
+    if (locais.length === 0) return;
+
+    setFontes(locais);
+    setRascunhoTexto("");
     setEtapa("processando");
     setErro(null);
     try {
-      const imagens = await Promise.all(anexos.map((a) => prepararImagem(a.file)));
-      const resultado = await extrairCarteira(imagens);
+      const preparadas: FontePreparada[] = await Promise.all(
+        locais.map((f) => (
+          f.tipo === "texto"
+            ? Promise.resolve(prepararTexto(f.texto, f.nome))
+            : prepararArquivo(f.file)
+        )),
+      );
+      const resultado = await extrairCarteira(preparadas);
 
       const linhas: ItemRevisao[] = resultado.itens.map((it) => ({
         ...it, id: novoId(), incluir: true,
       }));
       const avisos = [...resultado.observacoes];
-      resultado.erros.forEach((e) => avisos.push(`Imagem ${e.imagem + 1} falhou: ${e.erro}`));
+      resultado.erros.forEach((e) => {
+        avisos.push(`${locais[e.fonte]?.nome ?? `Fonte ${e.fonte + 1}`} falhou: ${e.erro}`);
+      });
       if (resultado.moedas.some((m) => m !== "BRL")) {
         avisos.push("Valores em moeda estrangeira detectados — confira se precisam ser convertidos para reais.");
       }
       setObservacoes(avisos);
 
       if (linhas.length === 0) {
-        setErro("A IA não encontrou posições nas imagens. Tente um print mais nítido, com a coluna de valor visível.");
+        setErro("A IA não encontrou posições. Confira se o arquivo mostra a coluna de valor da posição — em print borrado ou recortado a leitura falha.");
         setEtapa("upload");
         return;
       }
@@ -164,7 +206,7 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
   function adicionarLinha() {
     setItens((atuais) => [...atuais, {
       id: novoId(), ativo: "", descricao: "", segmento: "", vencimento: "", valor: 0,
-      classe: "resgate_rapido", confianca: "alta", imagem: -1, incluir: true,
+      classe: "resgate_rapido", confianca: "alta", fonte: -1, incluir: true,
     }]);
   }
 
@@ -176,6 +218,8 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
 
   if (!aberto) return null;
 
+  // Texto ainda no rascunho conta: processar() o adiciona antes de enviar
+  const semFonte = fontes.length === 0 && !rascunhoTexto.trim();
   const totais = totaisPorClasse(itens);
   const totalImportado = CLASSES_REVISAO
     .filter((c) => c.key !== CLASSE_NAO_IDENTIFICADA)
@@ -211,7 +255,7 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Sparkles size={18} color="#2563EB" />
             <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0C1D42" }}>
-              Importar carteira de print
+              Importar carteira com IA
             </h2>
             <button
               onClick={onFechar}
@@ -229,7 +273,7 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
           <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "#6B7280", lineHeight: 1.6 }}>
             {etapa === "revisao"
               ? "Confira ativo, valor e classe antes de aplicar. Nada é preenchido sem a sua validação."
-              : "Anexe prints da carteira (home broker, app do banco, extrato). A IA lê cada ativo e o patrimônio atual."}
+              : "Print, PDF de extrato ou texto colado — a IA lê cada ativo e o patrimônio atual. Texto e PDF com texto selecionável são mais precisos que print."}
           </p>
         </div>
 
@@ -259,36 +303,56 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
               >
                 <Upload size={22} color="#2563EB" style={{ marginBottom: 8 }} />
                 <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: "#1E40AF" }}>
-                  Clique, arraste ou cole (Ctrl+V) os prints
+                  Clique, arraste ou cole (Ctrl+V) prints e PDFs
                 </p>
                 <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "#9CA3AF" }}>
-                  PNG, JPEG ou WEBP — até {MAX_IMAGENS} imagens
+                  PNG, JPEG, WEBP ou PDF — até {MAX_FONTES} arquivos e textos no total
                 </p>
                 <input
                   ref={inputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,application/pdf,.pdf"
                   multiple
                   onChange={(e) => { adicionarArquivos(e.target.files); e.target.value = ""; }}
                   style={{ display: "none" }}
                 />
               </div>
 
-              {anexos.length > 0 && (
+              {fontes.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14 }}>
-                  {anexos.map((a, i) => (
-                    <div key={a.previewUrl} style={{ position: "relative" }}>
-                      <img
-                        src={a.previewUrl}
-                        alt={a.file.name}
-                        style={{
-                          width: 108, height: 76, objectFit: "cover",
-                          borderRadius: 8, border: "1px solid #E5E7EB", display: "block",
-                        }}
-                      />
+                  {fontes.map((f) => (
+                    <div key={f.id} style={{ position: "relative" }}>
+                      {f.tipo === "imagem" ? (
+                        <img
+                          src={f.previewUrl}
+                          alt={f.nome}
+                          style={{
+                            width: 108, height: 76, objectFit: "cover",
+                            borderRadius: 8, border: "1px solid #E5E7EB", display: "block",
+                          }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 108, height: 76, borderRadius: 8, border: "1px solid #E5E7EB",
+                          background: "#F8FBFF", padding: 8, display: "flex",
+                          flexDirection: "column", justifyContent: "space-between", overflow: "hidden",
+                        }}>
+                          {f.tipo === "pdf"
+                            ? <FileText size={16} color="#B91C1C" />
+                            : <TextCursorInput size={16} color="#2563EB" />}
+                          <p style={{
+                            margin: 0, fontSize: 9.5, color: "#6B7280", lineHeight: 1.35,
+                            display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
+                          }}>
+                            {f.tipo === "pdf"
+                              ? `${f.nome} · ${(f.file.size / 1024 / 1024).toFixed(1)} MB`
+                              : `${f.nome} · ${f.texto.length.toLocaleString("pt-BR")} caracteres`}
+                          </p>
+                        </div>
+                      )}
                       <button
-                        onClick={() => removerAnexo(i)}
-                        aria-label={`Remover ${a.file.name}`}
+                        onClick={() => removerFonte(f.id)}
+                        aria-label={`Remover ${f.nome}`}
                         style={{
                           position: "absolute", top: -6, right: -6,
                           width: 20, height: 20, borderRadius: "50%",
@@ -302,6 +366,46 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
                   ))}
                 </div>
               )}
+
+              {/* Texto colado: cobre planilha (Ctrl+C no Excel cola como tabela),
+                  e-mail da corretora e qualquer coisa que não seja arquivo */}
+              <div style={{ marginTop: 16 }}>
+                <p style={{
+                  margin: "0 0 6px", fontSize: 10.5, fontWeight: 700, color: "#9CA3AF",
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                }}>
+                  Ou cole a carteira em texto
+                </p>
+                <textarea
+                  value={rascunhoTexto}
+                  onChange={(e) => setRascunhoTexto(e.target.value)}
+                  placeholder={"Cole aqui a tabela da planilha, o extrato em texto ou a lista de ativos.\nEx.:  PETR4\t100\t3.850,00"}
+                  rows={4}
+                  style={{
+                    width: "100%", borderRadius: 8, border: "1px solid #E5E7EB",
+                    padding: "9px 11px", fontSize: 12.5, fontFamily: "inherit",
+                    color: "#111827", resize: "vertical", outline: "none",
+                  }}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                  <button
+                    onClick={adicionarTexto}
+                    disabled={!rascunhoTexto.trim()}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      background: "white", border: "1px solid #BFDBFE", borderRadius: 7,
+                      padding: "6px 11px", fontSize: 12, fontWeight: 600,
+                      color: rascunhoTexto.trim() ? "#1E40AF" : "#9CA3AF",
+                      cursor: rascunhoTexto.trim() ? "pointer" : "not-allowed", fontFamily: "inherit",
+                    }}
+                  >
+                    <Plus size={12} /> Adicionar texto
+                  </button>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>
+                    Planilha: selecione as linhas no Excel, Ctrl+C e cole aqui.
+                  </span>
+                </div>
+              </div>
             </>
           )}
 
@@ -309,7 +413,7 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
             <div style={{ padding: "44px 0", textAlign: "center" }}>
               <Loader2 size={26} color="#2563EB" style={{ animation: "spin 1s linear infinite" }} />
               <p style={{ margin: "12px 0 0", fontSize: 13.5, fontWeight: 600, color: "#1E40AF" }}>
-                Lendo {anexos.length} imagem{anexos.length > 1 ? "ns" : ""}…
+                Lendo {fontes.length} {fontes.length > 1 ? "fontes" : "fonte"}…
               </p>
               <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9CA3AF" }}>
                 Costuma levar de 10 a 30 segundos.
@@ -394,7 +498,7 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
                           margin: 0, fontSize: 10.5, color: "#9CA3AF",
                           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>
-                          {detalhes || (it.imagem >= 0 ? `Imagem ${it.imagem + 1}` : "Adicionado manualmente")}
+                          {detalhes || fontes[it.fonte]?.nome || "Adicionado manualmente"}
                         </p>
                       </div>
 
@@ -518,8 +622,8 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
             </p>
           ) : (
             <p style={{ margin: 0, fontSize: 12, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
-              <ImageIcon size={13} />
-              {anexos.length}/{MAX_IMAGENS} imagens
+              <Files size={13} />
+              {fontes.length}/{MAX_FONTES} arquivos e textos
             </p>
           )}
 
@@ -551,13 +655,13 @@ export function ImportarCarteiraIA({ aberto, ativosAtuais, onFechar, onAplicar }
             ) : (
               <button
                 onClick={processar}
-                disabled={anexos.length === 0 || etapa === "processando"}
+                disabled={semFonte || etapa === "processando"}
                 style={{
                   display: "flex", alignItems: "center", gap: 7,
-                  background: anexos.length === 0 || etapa === "processando" ? "#93C5FD" : "#2563EB",
+                  background: semFonte || etapa === "processando" ? "#93C5FD" : "#2563EB",
                   color: "white", border: "none", borderRadius: 8,
                   padding: "9px 18px", fontSize: 13, fontWeight: 600,
-                  cursor: anexos.length === 0 || etapa === "processando" ? "not-allowed" : "pointer",
+                  cursor: semFonte || etapa === "processando" ? "not-allowed" : "pointer",
                   fontFamily: "inherit",
                 }}
               >

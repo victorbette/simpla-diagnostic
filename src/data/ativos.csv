@@ -1,0 +1,316 @@
+TICKER,Classe,Categoria
+A1RE34 | ARE,REITs,Office
+A1VB34 | AVB,REITs,Residential
+AAPL34 | AAPL,Stocks,Technology
+ABBV34 | ABBV,Stocks,Healthcare
+ABCB4,Ações,Bancos
+ABEV3,Ações,Bebidas
+ADBE34 | ADBE,Stocks,Technology
+AERI3,Ações,Máquinas e Equipamentos
+AFHI11,Fundos Imobiliários,Recebíveis
+AGRO3,Ações,Agronegócio
+ALOS3,Ações,Shoppings
+ALUG11 | VNQ,ETFs,EUA Imobiliário
+ALUP11,Ações,Energia
+ALZR11,Fundos Imobiliários,Híbrido
+AMBP3,Ações,Saneamento
+AMH,REITs,Residential
+AMOB3,Ações,Automóveis e Motocicletas
+AMZO34 | AMZN,Stocks,Consumer Services
+ASML,Stocks,Semiconductor
+AUAU3,Ações,Pet Shop
+AURA33,Ações,Materiais Básicos
+AURE3,Ações,Energia
+AVGO34 | AVGO,Stocks,Technology
+AXIA3,Ações,Energia
+AZZA3,Ações,Varejo
+B3SA3,Ações,Bolsa de Valores
+BBAS3,Ações,Bancos
+BBDC4,Ações,Bancos
+BBFO11,Fundos Imobiliários,Fundo de fundos
+BBIG11,Fundos Imobiliários,Shopping Centers
+BBSE3,Ações,Seguros
+BEEF3,Ações,Alimentos
+BHIA3,Ações,Varejo
+BLAU3,Ações,Medicamentos
+BLMG11,Fundos Imobiliários,Galpões Logísticos
+BOAC34 | BAC,Stocks,Financial
+BOVA11,ETFs,Índice Ibovespa
+BOVA11 | BBOV11,ETFs,Índice Ibovespa
+BPAC11,Ações,Bancos
+BRAP4,Ações,Mineração
+BRAV3,Ações,"Petróleo, Gás e Biocombustíveis"
+BRBI11,Ações,Bancos
+BRCO11,Fundos Imobiliários,Galpões Logísticos
+BRCR11,Fundos Imobiliários,Lajes corporativas
+BRKM5,Ações,Químicos
+BRSR6,Ações,Bancos
+BTAL11,Fundos Imobiliários,Agronegócio
+BTLG11,Fundos Imobiliários,Galpões logísticos
+C1CL34 | CCI,REITs,Infrastructure
+C1MG34 | CMG,Stocks,Consumer Cyclical
+CAML3,Ações,Alimentos
+CASH3,Ações,Programas e Serviços
+CHVX34 | CVX,Stocks,Energy
+CMIG4,Ações,Energia
+CMIN3,Ações,Mineração
+COCA34 | KO,Stocks,Consumer Defensive
+COWC34 | COST,Stocks,Consumer Services
+CPFE3,Ações,Energia
+CPLE3,Ações,Energia
+CPSH11,Fundos Imobiliários,Shopping Centers
+CPTR11,Fundos Imobiliários,Fiagro
+CPTS11,Fundos Imobiliários,Hedge Fund
+CSAN3,Ações,"Petróleo, Gás e Biocombustíveis"
+CSMG3,Ações,Saneamento
+CSUD3,Ações,SOFTWARE
+CVCB3,Ações,Consumo Cíclico
+CXSE3,Ações,Seguros
+CYRE3,Ações,Construção
+D1LR34 | DLR,REITs,Data Center
+DEVA11,Fundos Imobiliários,Recebíveis
+DEXP3,Ações,Químico
+DGCO34 | DG,Stocks,Consumer Services
+DISB34 | DIS,Stocks,Entertainment
+DIVO11,ETFs,ETF de empresas pagadoras de dividendos
+DMVF3,Ações,Medicamentos e Outros Produtos
+E1QR34 | EQR,REITs,Residential
+E1XR34 | EXR,REITs,Self-Storage
+E2LS34 | ELS,REITs,Residential
+EGIE3,Ações,Energia
+EQIX34 | EQIX,REITs,Data Center
+EQTL3,Ações,Energia
+ERUS,ETFs,Mercado Russo
+EXXO34 | XOM,Stocks,Energy
+EZTC3,Ações,Construção
+FATN11,Fundos Imobiliários,Lajes corporativas
+FESA4,Ações,Siderurgia
+FIQE3,Ações,Comunicações
+FLMA11,Fundos Imobiliários,Híbrido
+FLRY3,Ações,Serviços Médicos
+GAME11,Fundos Imobiliários,Recebíveis 
+GARE11,Fundos Imobiliários,Híbrido
+GGBR4,Ações,Siderurgia
+GGRC11,Fundos Imobiliários,Híbrido
+GMAT3,Ações,Varejo Alimentício
+GOAU4,Ações,Siderurgia
+GOGL34 | GOOGL,Stocks,Communication Services
+GOLD11 | IAU,ETFs,Metais Preciosos
+GPUS11 | VUAA,ETFs,S&P500 EUA
+GRND3,Ações,Calçados
+HABT11,Fundos Imobiliários,Recebíveis
+HAPV3,Ações,Seguros
+HASH11,ETFs,Criptomoeda
+HCTR11,Fundos Imobiliários,Recebíveis 
+HFOF11,Fundos Imobiliários,Fundo de Fundos
+HGBS11,Fundos Imobiliários,Shopping Centers
+HGCR11,Fundos Imobiliários,Recebíveis
+HGLG11,Fundos Imobiliários,Galpões Logísticos
+HGRE11,Fundos Imobiliários,Lajes corporativas 
+HGRU11,Fundos Imobiliários,Híbrido
+HODL11 | HODL,ETFs,Criptomoedas
+HOFC11,Fundos Imobiliários,Lajes corporativas 
+HOME34 | HD,Stocks,Consumer Services
+HSLG11,Fundos Imobiliários,Galpões logísticos
+HSML11,Fundos Imobiliários,Shopping Centers
+HYPE3,Ações,Medicamentos
+IBIT,ETFs,Criptomoeda
+IJJ,ETFs,EUA Mid-Cap Valor
+IJS,ETFs,EUA Small-Cap Valor
+INBR32,Ações,Bancos
+INTB3,Ações,Produtos Diversos
+IRDM11,Fundos Imobiliários,Recebíveis
+IRIM11,Fundos Imobiliários,Hedge Fund
+ISAE4,Ações,Energia
+ITLC34 | INTC,Stocks,Technology
+ITRI11,Fundos Imobiliários,Hedge Fund
+ITSA4,Ações,Financeiro
+ITUB4,Ações,Bancos
+IVVB11 | VOO,ETFs,S&P500 EUA
+JBSS3,Ações,Alimentos
+JBSS32,Ações,Alimentos
+JHSF3,Ações,Construção
+JNJB34 | JNJ,Stocks,Healthcare
+JPMC34 | JPM,Stocks,Financial
+JSLG3,Ações,Bens Industriais
+JSRE11,Fundos Imobiliários,Híbrido
+JURO11,Fundos Imobiliários,FI-Infra
+KEPL3,Ações,Máquinas e Equipamentos
+KISU11,Fundos Imobiliários,Fundo de fundos
+KLBN4,Ações,Papel e Celulose
+KNCA11,Fundos Imobiliários,Fiagro
+KNCR11,Fundos Imobiliários,Recebíveis
+KNRI11,Fundos Imobiliários,Híbrido
+KNSC11,Fundos Imobiliários,Recebíveis
+KNUQ11,Fundos Imobiliários,Recebíveis 
+KORE11,Fundos Imobiliários,Lajes Corporativas
+LEVE3,Ações,Automotivo
+LILY34 | LLY,Stocks,Health Care
+LOGG3,Ações,Exploração de Imóveis
+LREN3,Ações,Varejo
+LVBI11,Fundos Imobiliários,Galpões Logísticos
+M1NS34 | MNST,Stocks,Consumer Defensive
+M1TA34 | META,Stocks,Communication Services
+MCCI11,Fundos Imobiliários,Recebíveis
+MCDC34 | MCD,Stocks,Consumer Cyclical
+MDIA3,Ações,Alimentos
+MFII11,Fundos Imobiliários,Desenvolvimento
+MGLU3,Ações,Varejo
+MILS3,Ações,Locação - Máquinas e Equip.
+MMMC34 | MMM,Stocks,Industrials
+MOVI3,Ações,Locação de Veículos
+MRFG3,Ações,Alimentos
+MSCD34 | MA,Stocks,Transaction & Payment Processing Services
+MSFT34 | MSFT,Stocks,Technology
+MULT3,Ações,Shopping Center
+MUTC34 | MU,Stocks,Technology
+MXRF11,Fundos Imobiliários,Recebíveis
+MYPK3,Ações,Automotivo
+NASD11 | QQQ,ETFs,EUA Tecnologia
+NATU3,Ações,Produtos de Uso Pessoal
+NEOE3,Ações,Energia
+NFLX34 | NFLX,Stocks,Entertainment
+NGRD3,Ações,Programas e Serviços
+NIKE34 | NKE,Stocks,Consumer Cyclical
+NNN,REITs,Retail
+NTCO3,Ações,Produtos de Uso Pessoal
+NVDC34 | NVDA,Stocks,Technology
+ODPV3,Ações,Saúde
+ORCL34 | ORCL,Stocks,Information Technology
+P1LD34 | PLD,REITs,Industrial
+P1SA34 | PSA,REITs,Self-Storage
+PCAR3,Ações,Varejo
+PCIP11,Fundos Imobiliários,Recebíveis
+PEPB34 | PEP,Stocks,Consumer Defensive
+PETR4,Ações,Petróleo. Gás e Biocombustíveis
+PETZ3,Ações,Pet Shop
+PGCO34 | PG,Stocks,Household & Personal Products
+PMLL11,Fundos Imobiliários,Shopping Centers
+PNVL3,Ações,Produtos Farmacêuticos
+PORD11,Fundos Imobiliários,Recebíveis
+PRIO3,Ações,"Petróleo, Gás e Biocombustíveis"
+PSEC11,Fundos Imobiliários,Fundo de fundos
+PSSA3,Ações,Seguros
+PVBI11,Fundos Imobiliários,Lajes corporativas
+QUAL3,Ações,Seguros
+R1IN34 | O,REITs,Retail
+RADL3,Ações,Produtos Farmacêuticos
+RAIL3,Ações,Logística e Ferroviário
+RAIZ4,Ações,Petróleo. Gás e Biocombustíveis.
+RANI3,Ações,Papel e Celulose
+RBRF11,Fundos Imobiliários,Fundo de fundos
+RBRP11,Fundos Imobiliários,Híbrido
+RBRR11,Fundos Imobiliários,Recebíveis
+RBRX11,Fundos Imobiliários,Hedge Fund
+RBRY11,Fundos Imobiliários,Recebíveis
+RBVA11,Fundos Imobiliários,Híbrido
+RCRB11,Fundos Imobiliários,Lajes Corporativas
+RDOR3,Ações,Hospitais
+RECR11,Fundos Imobiliários,Recebíveis
+RECT11,Fundos Imobiliários,Lajes corporativas
+RECV3,Ações,"Petróleo, Gás e Biocombustíveis"
+RELG11,Fundos Imobiliários,Galpões logísticos
+RENT3,Ações,Locação de Veículos
+ROMI3,Ações,Máquinas e Equipamentos
+ROXO34 | NU,Ações,Bancos
+RSP,ETFs,S&P500 EUA
+RURA11,Fundos Imobiliários,Fiagro
+RVBI11,Fundos Imobiliários,Fundo de fundos
+RZAG11,Fundos Imobiliários,Fiagro
+RZAK11,Fundos Imobiliários,Recebíveis
+RZTR11,Fundos Imobiliários,Agronegócio
+S1LG34 | SLG,REITs,Office
+S2TA34 | STAG,REITs,Industrial
+SANB11,Ações,Bancos
+SAPR11,Ações,Saneamento
+SAPR4,Ações,Saneamento
+SBUB34 | SBUX,Stocks,Consumer Cyclical
+SCHH,ETFs,EUA Imobiliário
+SEER3,Ações,Educação
+SEQR11,Fundos Imobiliários,Híbrido
+SGOV,ETFs,Renda Fixa EUA
+SGOV | TFLO,ETFs,Renda Fixa EUA
+SHUL4,Ações,Automotivo
+SIMH3,Ações,Holding
+SIMN34 | SPG,REITs,Retail
+SLCE3,Ações,Agronegócio
+SMAL11,ETFs,ETF de Small Caps brasileiras
+SMAL11 | SMAC11,ETFs,ETF de Small Caps brasileiras
+SMFT3,Ações,Academias
+SNAG11,Fundos Imobiliários,Fiagro
+SNCI11,Fundos Imobiliários,Recebíveis
+SOJA3,Ações,Agronegócio
+SPXB11 | SPY,ETFs,S&P500 EUA
+SUZB3,Ações,Papel e Celulose
+T1OW34 | AMT,REITs,Infrastructure
+TAEE11,Ações,Energia
+TASA4,Ações,Armas e Munições
+TECK11,ETFs,Maiores empresas TECHs do mundo
+TEPP11,Fundos Imobiliários,Lajes corporativas
+TFLO,ETFs,Renda Fixa EUA
+TGAR11,Fundos Imobiliários,Híbrido
+TGMA3,Ações,Logística e Rodoviário
+TIMS3,Ações,Comunicações
+TORD11,Fundos Imobiliários,Híbrido
+TOTS3,Ações,Software
+TRBL11,Fundos Imobiliários,Galpões logísticos
+TRIS3,Ações,Construção
+TRXF11,Fundos Imobiliários,Híbrido
+TSLA34 | TSLA,Stocks,Consumer Discretionary
+TSMC34 | TSM,Stocks,Technology
+TTEN3,Ações,Agronegócio
+TUPY3,Ações,Automotivo
+TVRI11,Fundos Imobiliários,Híbrido
+ULEV34 | UL,Stocks,Household & Personal Products
+UNIP6,Ações,Químicos
+URPR11,Fundos Imobiliários,Recebíveis
+USDB11 | BND,ETFs,Renda Fixa EUA
+USIM5,Ações,Siderurgia
+VALE3,Ações,Mineração
+VAMO3,Ações,Locação de Veículos
+VBBR3,Ações,"Petróleo, Gás e Biocombustíveis"
+VEA,ETFs,Países Desenvolvidos Excluído EUA
+VGHF11,Fundos Imobiliários,Hedge Fund
+VGIA11,Fundos Imobiliários,Fiagro
+VGIP11,Fundos Imobiliários,Recebíveis
+VGIR11,Fundos Imobiliários,Recebíveis
+VICI,REITs,Casino
+VILG11,Fundos Imobiliários,Galpões logísticos
+VINO11,Fundos Imobiliários,Lajes corporativas
+VISA34 | V,Stocks,Transaction & Payment Processing Services
+VISC11,Fundos Imobiliários,Shopping Centers
+VIUR11,Fundos Imobiliários,Híbrido
+VIVA3,Ações,Varejo
+VIVT3,Ações,Comunicações
+VNQI,ETFs,Imobiliário Global Excluído EUA
+VPPR11,Fundos Imobiliários,Lajes Corporativas 
+VRTA11,Fundos Imobiliários,Recebíveis
+VSLH11,Fundos Imobiliários,Recebíveis
+VULC3,Ações,Calçados
+VWO,ETFs,Mercados Emergentes
+VXUS,ETFs,Mercado Internacional Ex EUA
+W1EL34 | WELL,REITs,Healthcare
+WALM34 | WMT,Stocks,Consumer Services
+WEGE3,Ações,Motores e Compressores
+WIZC3,Ações,Seguros
+WRLD11 | VT,ETFs,Mundo
+XINA11 | MCHI,ETFs,China
+XLRE,ETFs,EUA Imobiliário
+XPBR31 | XP,Ações,Financeiro
+XPIN11,Fundos Imobiliários,Galpões Industriais
+XPLG11,Fundos Imobiliários,Galpões Logísticos
+XPML11,Fundos Imobiliários,Shopping Centers
+XPPR11,Fundos Imobiliários,Lajes Corporativas 
+ALUG11,ETFs,EUA Imobiliário
+KLBN11,Ações,Papel e Celulose
+QQQ | QQQM,ETFs,EUA Tecnologia
+IJJ | VIOV,ETFs,EUA Mid-Cap Valor
+SVAL11 | IJS | IVOV,ETFs,EUA Small-Cap Valor
+SAUD3,Ações,Saúde
+PASS3,Ações,Gás
+PLPL3,Ações,Construção Cívil
+P2LT34 | PLTR,Stocks,Information Technology
+MATD3,Ações,Saúde
+TRXY11,Fundos Imobiliários,Hedge Fund
+ASML34 | ASML,Stocks,Semiconductor
+MBRF3,Ações,Alimentos

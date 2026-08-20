@@ -103,9 +103,41 @@ export const HIERARQUIA_CLASSES: ReadonlyArray<{
   },
 ];
 
+/**
+ * Segmentos aceitos por card (as opções do dropdown da Etapa 1).
+ *
+ * Ações e FIIs espelham os setores da lista curada em src/data/ativos.csv — é
+ * dela que o catálogo (catalogo.ts) preenche o campo automaticamente, e um
+ * rótulo fora desta lista seria descartado pelo `casarSegmento`. Ao mexer aqui,
+ * atualize SEGMENTOS_VALIDOS em scripts/gerarCatalogoAtivos.mjs: o gerador
+ * valida contra essa cópia e falha se as duas divergirem.
+ *
+ * Em Exterior o segmento é o TIPO de instrumento, não o setor — o setor do
+ * ativo ("Technology", "Residential") fica no catálogo como informação de apoio.
+ *
+ * Carteiras salvas antes desta lista podem ter rótulos que saíram daqui
+ * ('Seguradora', 'Commodities', 'Telecomunicação'); o CarteiraCard preserva o
+ * valor gravado como opção extra em vez de trocá-lo em silêncio.
+ */
 export const SEGMENTOS_POR_CLASSE: Partial<Record<CardId, string[]>> = {
-  acoes:   ['Bancos','Seguradora','Agronegócio','Commodities','Educação','Construção Civil','Saúde','Shopping','Telecomunicação','Energia','Diverso'],
-  fiis:    ['Papel','Galpões Log.','Híbrido','Lajes Corp.','Shopping','Fiagro','Recebíveis','FOF'],
+  acoes: [
+    'Academias','Agronegócio','Alimentos','Armas e Munições','Automotivo',
+    'Bancos','Bebidas','Bens Industriais','Bolsa de Valores','Calçados',
+    'Comunicações','Construção Civil','Consumo Cíclico','Educação','Energia',
+    'ETF Brasil','Exploração de Imóveis','Financeiro','Gás','Holding',
+    'Locação - Máquinas e Equip.','Locação de Veículos','Logística',
+    'Materiais Básicos','Máquinas e Equipamentos','Medicamentos','Mineração',
+    'Motores e Compressores','Papel e Celulose','Pet Shop',
+    'Petróleo, Gás e Biocombustíveis','Produtos de Uso Pessoal',
+    'Produtos Diversos','Químicos','Saneamento','Saúde','Seguros',
+    'Shopping','Siderurgia','Software','Varejo','Varejo Alimentício',
+    'Diverso',
+  ],
+  fiis: [
+    'Papel','Recebíveis','Híbrido','Lajes Corp.','Galpões Log.',
+    'Galpões Industriais','Shopping','Fiagro','Agronegócio','FOF',
+    'Hedge Fund','FI-Infra','Desenvolvimento',
+  ],
   exterior: ['ETF RV','ETF RF','Stocks','REITs','Bonds','Mutual Funds'],
 };
 

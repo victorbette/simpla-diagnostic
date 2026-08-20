@@ -1,11 +1,12 @@
 // ============================================================================
 // Teste manual da Edge Function extract-portfolio.
-// Envia uma imagem local e imprime o que a IA extraiu — útil para calibrar o
-// prompt sem precisar clicar na interface.
+// Envia arquivos locais e imprime o que a IA extraiu — útil para calibrar o
+// prompt sem precisar clicar na interface. Aceita imagem (.png/.jpg/.webp/.gif),
+// .pdf e texto (.txt/.csv/.tsv/.md); dá para misturar formatos na mesma chamada.
 //
 //   $env:TEST_EMAIL="voce@simpla.com"      # usuário do app (a função exige JWT)
 //   $env:TEST_PASSWORD="..."
-//   node scripts/testar-extracao.mjs print.jpeg
+//   node scripts/testar-extracao.mjs print.jpeg extrato.pdf carteira.csv
 //
 // URL e publishable key saem do .env do projeto; dá para sobrescrever com
 // SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY no ambiente.
@@ -39,11 +40,20 @@ if (!email || !senha || arquivos.length === 0) {
 }
 
 const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
+const TEXTO = new Set([".txt", ".csv", ".tsv", ".md"]);
 
-const imagens = arquivos.map((caminho) => {
-  const mime = MIME[extname(caminho).toLowerCase()];
+const fontes = arquivos.map((caminho) => {
+  const ext = extname(caminho).toLowerCase();
+  const nome = basename(caminho);
+  if (TEXTO.has(ext)) {
+    return { tipo: "texto", conteudo: readFileSync(caminho, "utf8"), nome };
+  }
+  if (ext === ".pdf") {
+    return { tipo: "pdf", conteudo: `data:application/pdf;base64,${readFileSync(caminho).toString("base64")}`, nome };
+  }
+  const mime = MIME[ext];
   if (!mime) throw new Error(`Extensão não suportada: ${caminho}`);
-  return `data:${mime};base64,${readFileSync(caminho).toString("base64")}`;
+  return { tipo: "imagem", conteudo: `data:${mime};base64,${readFileSync(caminho).toString("base64")}`, nome };
 });
 
 const supabase = createClient(url, anon);
@@ -56,7 +66,7 @@ if (authErr) {
 const inicio = Date.now();
 const { data, error } = await supabase.functions.invoke("extract-portfolio", {
   method: "POST",
-  body: { imagens },
+  body: { fontes },
 });
 
 if (error) {
@@ -72,7 +82,7 @@ if (data.observacoes?.length) console.log("Observações:", data.observacoes);
 let total = 0;
 for (const it of data.itens) {
   total += it.valor;
-  const origem = arquivos[it.imagem] ? basename(arquivos[it.imagem]) : "?";
+  const origem = fontes[it.fonte]?.nome ?? "?";
   const extra = [it.segmento, it.vencimento].filter(Boolean).join(" ");
   console.log(
     `${it.ativo.padEnd(12)} ${it.classe.padEnd(15)} ${(extra || "-").padEnd(18)} ${it.valor.toFixed(2).padStart(14)}  [${it.confianca}] ${origem}`,

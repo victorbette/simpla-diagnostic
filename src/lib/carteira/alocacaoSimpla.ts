@@ -8,6 +8,7 @@
 
 import type { Ativo, CardId } from './types';
 import { genId } from './calculos';
+import { segmentoNoCard } from './catalogo';
 
 // ─── Tipos do modelo (espelho das tabelas allocation_*) ──────────────────────
 export interface AllocationBand { nome: string; min_patrimonio: number; ordem: number }
@@ -56,7 +57,12 @@ export const CLASSE_TO_CARD: Record<Classe, CardId> = {
   'Bitcoin':              'cripto',
 };
 
-// Segmento sugerido para os ativos gerados, por classe (ver CARD_META.segmentos).
+/**
+ * Segmento de fallback por classe, usado quando o produto não está no catálogo
+ * (ver SEGMENTOS_POR_CLASSE). Em Ações, FIIs e Bitcoin a planilha não carrega
+ * setor nenhum — quem preenche é o catálogo, pelo ticker do produto; ficar
+ * vazio aqui é o comportamento correto para um produto desconhecido.
+ */
 const CLASSE_TO_SEGMENTO: Record<Classe, string> = {
   'Renda Fixa pós curta': 'Pós-fixado',
   'Renda fixa pós longa': 'Pós-fixado',
@@ -67,9 +73,22 @@ const CLASSE_TO_SEGMENTO: Record<Classe, string> = {
   'Prefixado':            'Prefixado',
   'Ações':                '',
   'FIIs':                 '',
-  'Exterior':             'Renda Variável',
+  // 'Renda Variável' não existe em SEGMENTOS_POR_CLASSE.exterior — o dropdown
+  // da Etapa 1 mostraria um valor fora da lista. Em Exterior o segmento é o
+  // instrumento, e ETF é o caso comum dos produtos da planilha.
+  'Exterior':             'ETF RV',
   'Bitcoin':              '',
 };
+
+/**
+ * Segmento de quem não está no catálogo. Em Exterior o card distingue ETF de
+ * fundo, e a planilha já marca isso em `is_fundo` — sem essa checagem os
+ * produtos "Mutual fund" entrariam como ETF.
+ */
+function segmentoFallback(classe: Classe, card: CardId, produto: AllocationProduct): string {
+  if (card === 'exterior' && produto.is_fundo) return 'Mutual Funds';
+  return CLASSE_TO_SEGMENTO[classe];
+}
 
 // ─── Fundo Caixa (resgate rápido) ─────────────────────────────────────────────
 // Ativo fixo que sempre aparece na carteira (bloco "Fundo Caixa" da aba
@@ -226,7 +245,12 @@ export function calcularRecomendacao(
       nome: r.produto.nome,
       classe,
       card,
-      segmento: CLASSE_TO_SEGMENTO[classe],
+      // O nome do produto na planilha costuma ser o próprio ticker (HGLG11,
+      // QQQM, ALOS3) — o catálogo resolve o setor. `segmentoNoCard` só devolve
+      // algo quando o ticker pertence a este card, então um produto que a
+      // planilha classificou de forma diferente do catálogo cai no fallback em
+      // vez de receber um segmento inválido para o card.
+      segmento: segmentoNoCard(card, r.produto.nome) ?? segmentoFallback(classe, card, r.produto),
       pctNaClasse: r.pct,
       valorBRL: r.pct * valorBRL,
       recomendacao: r.recomendacao,

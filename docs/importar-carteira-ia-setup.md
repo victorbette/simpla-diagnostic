@@ -1,21 +1,38 @@
-# Setup — Importar carteira de print (IA)
+# Setup — Importar carteira com IA (print, PDF ou texto)
 
-Em **Gestão de Carteira → Etapa 1 (Carteira Atual)** o consultor anexa prints da
-carteira do cliente; a IA lê cada posição e devolve uma lista editável — um ativo
-por linha, com classe, segmento, vencimento e valor — antes de qualquer coisa ser
-lançada nos cards.
+Em **Gestão de Carteira → Etapa 1 (Carteira Atual)** o consultor anexa a carteira
+do cliente em print, PDF de extrato ou texto colado; a IA lê cada posição e
+devolve uma lista editável — um ativo por linha, com classe, segmento,
+vencimento e valor — antes de qualquer coisa ser lançada nos cards.
 
 ## Arquitetura
 
 ```
-Prints (upload / drag&drop / Ctrl+V)
-   │  redimensiona p/ 2000px e comprime em JPEG (browser, canvas)
+Fontes (upload / drag&drop / Ctrl+V / textarea)
+   │  imagem: redimensiona p/ 2000px e comprime em JPEG (browser, canvas)
+   │  PDF:    vai inteiro em base64
+   │  texto:  vai como está
    ▼
-Edge Function extract-portfolio  ──►  OpenAI (visão + structured outputs)
+Edge Function extract-portfolio  ──►  OpenAI (visão / file input + structured outputs)
    │  valida JWT do usuário; OPENAI_API_KEY só existe aqui
    ▼
 Tela de revisão (ImportarCarteiraIA)  ──consultor valida/ajusta──►  Etapa 1
 ```
+
+### Os três formatos
+
+Uma chamada de IA por fonte, todas em paralelo, com o mesmo prompt e o mesmo
+schema de saída — só muda o content part enviado à OpenAI:
+
+| Tipo | Content part | Observações |
+| --- | --- | --- |
+| `imagem` | `image_url` (`detail: high`) | PNG, JPEG, WEBP, GIF; comprimido no browser |
+| `pdf` | `file` com `file_data` base64 | Multipágina; o modelo lê camada de texto **e** páginas rasterizadas |
+| `texto` | `text` | Tabela colada do Excel (TSV), extrato em texto, lista de ativos |
+
+**Texto e PDF com texto selecionável são mais precisos que print** — não há OCR
+errando dígito, e não se paga token de imagem. O caminho de visão é o fallback
+para o que só existe como imagem.
 
 A chave da OpenAI **nunca** vai para o bundle do front: o browser só fala com o
 Supabase, autenticado com o JWT da sessão.
@@ -44,7 +61,8 @@ do runtime, e o `secrets set` é só para segredos de terceiros (a OpenAI, aqui)
 1. [platform.openai.com](https://platform.openai.com) → **API keys** → *Create secret key*.
 2. Garanta saldo/billing ativo no projeto da chave.
 
-Custo por print: alguns centavos de dólar (uma chamada de visão por imagem).
+Custo por fonte: alguns centavos de dólar. Texto é a mais barata (sem token de
+imagem); PDF escala com o número de páginas.
 
 ## Passo 2 — Secrets + deploy
 
@@ -58,21 +76,21 @@ supabase secrets set OPENAI_MODEL="gpt-4o"    # opcional; default já é gpt-4o
 supabase functions deploy extract-portfolio
 ```
 
-> O modelo precisa suportar **visão** e **structured outputs** (`json_schema`).
-> `gpt-4o` atende. Para trocar de modelo depois, basta refazer o
-> `secrets set OPENAI_MODEL` — não precisa novo deploy.
+> O modelo precisa suportar **visão**, **file input** (para o PDF) e
+> **structured outputs** (`json_schema`). `gpt-4o` atende. Para trocar de modelo
+> depois, basta refazer o `secrets set OPENAI_MODEL` — não precisa novo deploy.
 
 ## Passo 3 — Testar
 
-Pela interface: Gestão de Carteira → Etapa 1 (Carteira Atual) → **Importar de
-print (IA)**.
+Pela interface: Gestão de Carteira → Etapa 1 (Carteira Atual) → **Importar com IA**.
 
-Por linha de comando, com um print qualquer (ex.: o `print.jpeg` da raiz):
+Por linha de comando — aceita imagem, `.pdf` e texto (`.txt`/`.csv`/`.tsv`),
+inclusive misturados na mesma chamada:
 
 ```powershell
 $env:TEST_EMAIL="voce@simpla.com"     # usuário do app; a função exige JWT
 $env:TEST_PASSWORD="..."
-node scripts/testar-extracao.mjs print.jpeg
+node scripts/testar-extracao.mjs print.jpeg extrato.pdf carteira.csv
 ```
 
 (URL e publishable key vêm do `.env` do projeto.)
@@ -132,6 +150,10 @@ Regras de leitura relevantes (todas no prompt da função):
 - usa a coluna de **valor total atual** ("Valor Total Atual", "Saldo Bruto",
   "Posição", "Valor de Mercado") — nunca preço unitário, cotação, quantidade,
   % da carteira ou rentabilidade;
+- **PDF**: cobre todas as páginas e conta cada ativo uma vez só — extrato costuma
+  repetir a posição num resumo e num detalhamento;
+- **texto**: aceita colunas separadas por tabulação, `;`, `|` ou espaços, e usa a
+  primeira linha como cabeçalho para achar a coluna de valor (sem devolvê-la como ativo);
 - converte número brasileiro (`4.758,60` → `4758.6`);
 - ignora linhas de total/subtotal ("Total Geral");
 - valor ilegível vira `0` com confiança `baixa` (a linha aparece destacada na revisão);
@@ -147,8 +169,22 @@ inteira pelo que foi importado (aparece só quando já há ativos na tela).
 
 ## Limites e custos
 
-- 6 imagens por importação; cada imagem é comprimida para ≤ ~1,2 MB no browser.
-- Uma chamada de IA por imagem (em paralelo); se uma falhar, as outras seguem e
-  a falha aparece como aviso na revisão.
-- Timeout de 90s por imagem.
+| Limite | Valor | Onde |
+| --- | --- | --- |
+| Fontes por importação | 10 (arquivos + textos) | front e função |
+| Imagem | comprimida para ≤ ~800 KB no browser; teto de 5 MB | `prepararImagem` / `validarFonte` |
+| PDF | 8 MB | `prepararPdf` / `validarFonte` |
+| Texto | 100.000 caracteres | `prepararTexto` / `validarFonte` |
+| Lote inteiro | 15 MB | `extrairCarteira` / `lerFontes` |
+| Timeout | 90s por fonte | `TIMEOUT_MS` |
+
+Os tetos vêm do runtime de Edge Functions: **256 MB de memória** (o worker segura
+a string crua e a parseada, ambas em UTF-16) e **150s de idle timeout** antes de
+504. É por isso que as chamadas saem todas em paralelo — serializar 10 fontes
+estouraria o tempo de resposta.
+
+- Se uma fonte falhar (429 da OpenAI, PDF corrompido), as outras seguem e a falha
+  aparece como aviso na tela de revisão, nomeando o arquivo.
 - A função só responde a usuário autenticado — nenhuma chamada anônima gasta crédito.
+- O contrato antigo `{ imagens: string[] }` ainda é aceito, para não quebrar
+  clientes que não foram atualizados junto.

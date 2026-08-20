@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/update-version.js && tsc && vite build",
+    "catalogo": "node scripts/gerarCatalogoAtivos.mjs",
+    "build": "node scripts/update-version.js && node scripts/gerarCatalogoAtivos.mjs && tsc && vite build",
     "lint": "eslint . --max-warnings 0",
     "preview": "vite preview"
   },

@@ -18,7 +18,7 @@ const AJUDA_ETAPA1 = [
   },
   {
     titulo: "Segmento",
-    conteudo: `O segmento identifica o subsetor de cada ativo dentro da classe.\n\nAções:\nBancos, Seguradora, Agronegócio, Commodities, Educação, Construção Civil, Saúde, Shopping, Telecomunicação, Energia, Diverso\n\nFIIs:\nPapel, Galpões Log., Híbrido, Lajes Corp., Shopping, Fiagro, Recebíveis, FOF\n\nExterior:\nETF RV, ETF RF, Stocks, REITs, Bonds, Mutual Funds\n\nPara outras classes, o campo de segmento é texto livre.`,
+    conteudo: `O segmento identifica o subsetor de cada ativo dentro da classe.\n\nNa maioria dos casos você não precisa preencher: o sistema tem um catálogo com mais de 380 tickers de ações, FIIs, ETFs, BDRs, stocks e REITs, e reconhece o segmento pelo ticker — tanto no lançamento manual quanto na importação por IA.\n\nComo funciona no lançamento manual:\nComece a digitar o ticker no campo Nome (ex: PETR4, HGLG11) e escolha a sugestão. O segmento é preenchido sozinho. Se você escolher o segmento à mão, o campo passa a ser seu — trocar o nome depois não sobrescreve.\n\nQuando o ticker não está no catálogo, o segmento fica em branco e é só clicar nele para escolher na lista.\n\nAções e FIIs:\nSetor do ativo (Bancos, Energia, Recebíveis, Galpões Log., ...). A lista completa está no dropdown.\n\nExterior:\nTipo de instrumento, não setor: ETF RV, ETF RF, Stocks, REITs, Bonds, Mutual Funds.\n\nRenda fixa:\nIndexador (Pós-fixado, Inflação, Prefixado, Fundos RF, Fundos MM, COE).\n\nEm Cripto o campo é texto livre.`,
   },
   {
     titulo: "Vencimento",
@@ -33,8 +33,8 @@ const AJUDA_ETAPA1 = [
     conteudo: `Para adicionar um ativo:\nClique no botão "+ Adicionar" dentro da classe correspondente. Um novo campo aparecerá para preenchimento.\n\nPara remover um ativo:\nClique no ícone de lixeira ao lado do ativo. A remoção é imediata dentro da sessão.\n\nOs dados são salvos automaticamente ao avançar para a próxima etapa — não é necessário salvar manualmente.`,
   },
   {
-    titulo: "Importar de print (IA)",
-    conteudo: `O botão "Importar de print (IA)" no topo desta etapa lê prints da carteira do cliente (home broker, app do banco, extrato, planilha) e propõe uma linha por ativo.\n\nComo usar:\n1. Clique em "Importar de print (IA)".\n2. Anexe até 6 imagens — clique, arraste ou cole com Ctrl+V.\n3. Clique em "Extrair com IA" e aguarde (10 a 30 segundos).\n4. Revise cada linha: nome, classe e valor são editáveis, e dá para desmarcar, excluir ou adicionar linhas manualmente.\n5. Clique em "Aplicar na carteira".\n\nNada é lançado sem a sua validação. Por padrão os ativos importados são ADICIONADOS aos que já estão na tela — marque "Substituir" para trocar a carteira inteira.\n\nLinhas que a IA não conseguiu classificar aparecem como "Não identificado" e só entram depois que você escolher a classe.\n\nSegmento e vencimento são preenchidos quando visíveis no print; confira nos cards depois de aplicar.\n\nRenda fixa: a IA separa Resgate Rápido de Resgate Longo pela liquidez, e os títulos públicos são posicionados pelo nome (Tesouro Selic e poupança em Resgate Rápido; Tesouro IPCA+, Prefixado, Renda+ e Educa+ em Resgate Longo). Se ela errar, é só trocar a classe na própria revisão.\n\nValores em moeda estrangeira NÃO são convertidos — a revisão avisa quando detecta US$.`,
+    titulo: "Importar com IA",
+    conteudo: `O botão "Importar com IA" no topo desta etapa lê a carteira do cliente e propõe uma linha por ativo. Aceita três formatos: print de tela (home broker, app do banco), PDF de extrato ou posição consolidada, e texto colado.\n\nTexto e PDF com texto selecionável saem mais precisos que print — não há leitura de imagem para errar dígito. Para planilha, selecione as linhas no Excel, Ctrl+C e cole no campo de texto.\n\nComo usar:\n1. Clique em "Importar com IA".\n2. Anexe até 10 arquivos e textos — clique, arraste, cole com Ctrl+V, ou use o campo "Ou cole a carteira em texto".\n3. Clique em "Extrair com IA" e aguarde (10 a 30 segundos).\n4. Revise cada linha: nome, classe e valor são editáveis, e dá para desmarcar, excluir ou adicionar linhas manualmente.\n5. Clique em "Aplicar na carteira".\n\nNada é lançado sem a sua validação. Por padrão os ativos importados são ADICIONADOS aos que já estão na tela — marque "Substituir" para trocar a carteira inteira.\n\nLinhas que a IA não conseguiu classificar aparecem como "Não identificado" e só entram depois que você escolher a classe.\n\nSegmento e vencimento são preenchidos quando aparecem no documento; confira nos cards depois de aplicar.\n\nRenda fixa: a IA separa Resgate Rápido de Resgate Longo pela liquidez, e os títulos públicos são posicionados pelo nome (Tesouro Selic e poupança em Resgate Rápido; Tesouro IPCA+, Prefixado, Renda+ e Educa+ em Resgate Longo). Se ela errar, é só trocar a classe na própria revisão.\n\nValores em moeda estrangeira NÃO são convertidos — a revisão avisa quando detecta US$.`,
   },
   {
     titulo: "Dicas para o consultor",
@@ -89,11 +89,11 @@ export function Etapa1CarteiraAtual({ ativos, onAtivos, patrimonio }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => setImportadorAberto(true)}
-              title="Anexe prints da carteira e a IA lança os ativos"
+              title="Anexe print, PDF ou texto da carteira e a IA lança os ativos"
               style={{ display: "flex", alignItems: "center", gap: 4, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#2563EB" }}
             >
               <Sparkles size={12} />
-              Importar de print (IA)
+              Importar com IA
             </button>
             <button
               onClick={() => setPainelAjudaAberto(true)}

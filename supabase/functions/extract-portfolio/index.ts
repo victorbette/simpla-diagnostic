@@ -1,30 +1,38 @@
 // ============================================================================
 // Edge Function: extract-portfolio
 // ----------------------------------------------------------------------------
-// Recebe prints da carteira do cliente (home broker, app do banco, planilha) e
-// devolve as posições extraídas por IA — uma linha por ativo, com o valor
-// financeiro atual e a classe sugerida (os 8 cards da Etapa 1 de Gestão de
-// Carteira), além de segmento e vencimento quando visíveis.
+// Recebe a carteira do cliente em qualquer um dos três formatos — print de tela,
+// PDF de extrato/posição, ou texto/tabela colado — e devolve as posições
+// extraídas por IA: uma linha por ativo, com o valor financeiro atual e a classe
+// sugerida (os 8 cards da Etapa 1 de Gestão de Carteira), além de segmento e
+// vencimento quando visíveis.
 //
 // A chave da OpenAI fica só aqui (secret do Supabase); o front nunca a vê.
 //
 // Secrets necessários (supabase secrets set ...):
 //   OPENAI_API_KEY   chave da OpenAI (sk-...)
-//   OPENAI_MODEL     (opcional) modelo com visão + structured outputs.
-//                    Default: gpt-4o
+//   OPENAI_MODEL     (opcional) modelo com visão, file input e structured
+//                    outputs. Default: gpt-4o
 //
 // SUPABASE_URL e as chaves de API são injetados pelo runtime — esta função só
 // valida o JWT de quem chamou (não toca no banco), então basta a publishable.
 //
-// Invocação: POST { imagens: string[] } com data URLs (data:image/jpeg;base64,…)
-// e Authorization de usuário autenticado.
+// Invocação: POST { fontes: [{ tipo, conteudo, nome }] } com Authorization de
+// usuário autenticado. `tipo` é "imagem" (data:image/…;base64), "pdf"
+// (data:application/pdf;base64) ou "texto" (texto puro).
+// Aceita também o formato antigo { imagens: string[] }.
 // ============================================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const MODELO_PADRAO = "gpt-4o";
-const MAX_IMAGENS = 6;
-const MAX_BYTES_IMAGEM = 5 * 1024 * 1024; // 5 MB por imagem (já decodificada)
+const MAX_FONTES = 10;
+const MAX_BYTES_IMAGEM = 5 * 1024 * 1024;
+const MAX_BYTES_PDF = 8 * 1024 * 1024;
+const MAX_CHARS_TEXTO = 100_000;
+// Teto do lote: o worker tem 256MB e segura a string crua e a parseada, ambas
+// em UTF-16. 15MB decodificados é a folga confortável.
+const MAX_BYTES_TOTAL = 15 * 1024 * 1024;
 const TIMEOUT_MS = 90_000;
 
 // Classes = CardId dos cards da carteira (src/lib/carteira/types.ts).
@@ -33,13 +41,18 @@ const CLASSES = [
   "cripto", "alternativos", "previdencia", "naoIdentificado",
 ] as const;
 
-const PROMPT_SISTEMA = `Você é um assistente de planejamento financeiro que lê PRINTS de carteiras de investimento (home broker, app de banco, corretora, planilha, extrato) e extrai as posições.
+const PROMPT_SISTEMA = `Você é um assistente de planejamento financeiro que lê carteiras de investimento — em print de tela (home broker, app de banco, corretora), PDF de extrato/posição consolidada, ou texto/tabela colado — e extrai as posições.
 
-Devolva UMA LINHA POR ATIVO visível na imagem, com o patrimônio atual naquele ativo.
+Devolva UMA LINHA POR ATIVO presente no documento, com o patrimônio atual naquele ativo.
+
+FORMATO DA ENTRADA
+- Print/imagem: leia a tabela como aparece na tela.
+- PDF: pode ter várias páginas — cubra todas. Extratos costumam repetir a mesma posição num resumo e num detalhamento: conte cada ativo UMA vez só, pela seção mais detalhada.
+- Texto/tabela colado: as colunas podem vir separadas por tabulação, ponto e vírgula, barra vertical ou espaços. A primeira linha costuma ser o cabeçalho — use-a para identificar a coluna de valor, mas nunca a devolva como ativo.
 
 REGRAS DE VALOR (campo "valor")
 - Use sempre a coluna de valor TOTAL ATUAL da posição: "Valor Total Atual", "Valor Atual", "Saldo Bruto", "Valor Bruto", "Valor de Mercado", "Posição", "Patrimônio", "Saldo", "Total".
-- NUNCA use: preço unitário, cotação, preço de fechamento, quantidade, "% da carteira", ganho/perda, rentabilidade, valor aplicado/custo (quando o valor atual também estiver visível).
+- NUNCA use: preço unitário, cotação, preço de fechamento, quantidade, "% da carteira", ganho/perda, rentabilidade, valor aplicado/custo (quando o valor atual também estiver disponível).
 - Se só houver quantidade e preço unitário, multiplique os dois e use confianca "media".
 - Números estão em formato brasileiro: "1.512,75" = 1512.75 e "R$ 4.758,60" = 4758.6. Converta para número puro.
 - IGNORE linhas de total, subtotal e consolidado ("Total Geral", "Total da carteira", "Saldo total", "Patrimônio total", somatórios por grupo).
@@ -59,7 +72,7 @@ CLASSIFICAÇÃO (campo "classe") — escolha exatamente uma:
 - naoIdentificado: quando não der para enquadrar com segurança.
 
 RENDA FIXA — resgate_rapido OU resgate_longo (a separação é por LIQUIDEZ, não por indexador). Decida nesta ordem:
-1. O print diz liquidez diária / D+0 / D+1 / "resgate a qualquer momento"? → resgate_rapido.
+1. O documento diz liquidez diária / D+0 / D+1 / "resgate a qualquer momento"? → resgate_rapido.
 2. Tesouro Direto pelo título:
    - Tesouro Selic (LFT) → resgate_rapido, mesmo com ano no nome ("Tesouro Selic 2029"): o resgate é diário.
    - Tesouro IPCA+ / Tesouro IPCA+ com Juros Semestrais / NTN-B / NTN-B Principal / Renda+ / Educa+ → resgate_longo.
@@ -71,17 +84,18 @@ RENDA FIXA — resgate_rapido OU resgate_longo (a separação é por LIQUIDEZ, n
 O indexador NÃO decide a classe, decide o segmento: um CDB 110% do CDI com vencimento em 2028 é resgate_longo com segmento "Pós-fixado".
 
 SEGMENTO (campo "segmento") — subclasse dentro do card. Use EXATAMENTE um dos rótulos permitidos para a classe escolhida; se não der para decidir, devolva "".
+Para ações, FIIs e ETFs o app tem um catálogo próprio de tickers e sobrescreve o que vier aqui — não gaste esforço adivinhando setor de ticker conhecido; o que importa nesses casos é o ticker vir correto no campo "ativo". O segmento só é aproveitado quando o ticker está fora do catálogo.
 - resgate_longo: "Pós-fixado" (indexado a CDI ou Selic — "110% do CDI", "CDI + 2%", Tesouro Selic), "Inflação" (IPCA+, IGP-M, NTN-B, Renda+, Educa+), "Prefixado" (taxa fixa, sem indexador — LTN, NTN-F, "12,5% a.a."), "Fundos RF" (fundos de renda fixa/crédito), "Fundos MM" (multimercado dentro da renda fixa)
 - resgate_rapido: "Pós-fixado" (é o único aceito — Tesouro Selic, CDB de liquidez diária, poupança, caixa e fundos DI entram todos aqui)
-- acoes: "Bancos", "Seguradora", "Agronegócio", "Commodities", "Educação", "Construção Civil", "Saúde", "Shopping", "Telecomunicação", "Energia", "Diverso"
-- fiis: "Papel", "Galpões Log.", "Híbrido", "Lajes Corp.", "Shopping", "Fiagro", "Recebíveis", "FOF"
-- exterior: "Renda Variável", "Renda Fixa"
+- acoes: "Academias", "Agronegócio", "Alimentos", "Armas e Munições", "Automotivo", "Bancos", "Bebidas", "Bens Industriais", "Bolsa de Valores", "Calçados", "Comunicações", "Construção Civil", "Consumo Cíclico", "Educação", "Energia", "ETF Brasil" (BOVA11, SMAL11 e afins), "Exploração de Imóveis", "Financeiro", "Gás", "Holding", "Locação - Máquinas e Equip.", "Locação de Veículos", "Logística", "Materiais Básicos", "Máquinas e Equipamentos", "Medicamentos", "Mineração", "Motores e Compressores", "Papel e Celulose", "Pet Shop", "Petróleo, Gás e Biocombustíveis", "Produtos de Uso Pessoal", "Produtos Diversos", "Químicos", "Saneamento", "Saúde", "Seguros", "Shopping", "Siderurgia", "Software", "Varejo", "Varejo Alimentício", "Diverso"
+- fiis: "Papel", "Recebíveis", "Híbrido", "Lajes Corp.", "Galpões Log.", "Galpões Industriais", "Shopping", "Fiagro", "Agronegócio", "FOF", "Hedge Fund", "FI-Infra", "Desenvolvimento"
+- exterior: o segmento é o TIPO de instrumento, não o setor — "ETF RV", "ETF RF", "Stocks" (ações e BDRs de empresas estrangeiras), "REITs", "Bonds", "Mutual Funds"
 - alternativos: "COE", "Fundo Cetipado", "Produto Estruturado", "Hedge Fund", "Multimercado", "Private Equity"
 - previdencia: "PGBL", "VGBL"
 - cripto e naoIdentificado: devolva "".
 
 VENCIMENTO (campo "vencimento")
-- Só para renda fixa (resgate_longo / resgate_rapido) e só se estiver visível no print. Copie como aparece ("15/03/2027", "Jan/2026", "2028").
+- Só para renda fixa (resgate_longo / resgate_rapido) e só se estiver no documento. Copie como aparece ("15/03/2027", "Jan/2026", "2028").
 - Nas demais classes, ou quando não houver data, devolva "". Nunca invente nem estime.
 
 CONFIANÇA (campo "confianca")
@@ -89,7 +103,7 @@ CONFIANÇA (campo "confianca")
 - "media": leitura ok mas classe ambígua, ou valor calculado por quantidade × preço.
 - "baixa": texto borrado, valor parcialmente visível ou produto desconhecido.
 
-Não invente linhas, não agrupe e não some posições. Se a imagem não contiver uma carteira de investimentos, devolva "itens" vazio e explique em "observacoes".`;
+Não invente linhas, não agrupe e não some posições. Se o documento não contiver uma carteira de investimentos, devolva "itens" vazio e explique em "observacoes".`;
 
 const SCHEMA = {
   type: "object",
@@ -98,16 +112,16 @@ const SCHEMA = {
   properties: {
     itens: {
       type: "array",
-      description: "Uma entrada por ativo/posição visível no print.",
+      description: "Uma entrada por ativo/posição presente no documento.",
       items: {
         type: "object",
         additionalProperties: false,
         required: ["ativo", "descricao", "segmento", "vencimento", "valor", "classe", "confianca"],
         properties: {
-          ativo: { type: "string", description: "Ticker ou nome curto do produto, como aparece no print." },
+          ativo: { type: "string", description: "Ticker ou nome curto do produto, como aparece no documento." },
           descricao: { type: "string", description: "Nome da empresa/produto ou custódia. Vazio se não houver." },
           segmento: { type: "string", description: "Rótulo de segmento permitido para a classe. Vazio se não der para decidir." },
-          vencimento: { type: "string", description: "Vencimento da renda fixa, como aparece no print. Vazio nos demais casos." },
+          vencimento: { type: "string", description: "Vencimento da renda fixa, como aparece no documento. Vazio nos demais casos." },
           valor: { type: "number", description: "Patrimônio atual no ativo, em número puro." },
           classe: { type: "string", enum: CLASSES },
           confianca: { type: "string", enum: ["alta", "media", "baixa"] },
@@ -119,6 +133,15 @@ const SCHEMA = {
   },
 } as const;
 
+type TipoFonte = "imagem" | "pdf" | "texto";
+
+interface Fonte {
+  tipo: TipoFonte;
+  conteudo: string;
+  nome: string;
+  bytes: number;
+}
+
 interface ItemExtraido {
   ativo: string;
   descricao: string;
@@ -129,31 +152,40 @@ interface ItemExtraido {
   confianca: string;
 }
 
-interface LeituraImagem {
+interface Leitura {
   itens: ItemExtraido[];
   moedaDetectada: string;
   observacoes: string;
 }
 
 // ─── OpenAI ───────────────────────────────────────────────────────────────────
+
+/** A instrução é a mesma nos três formatos; só o content part muda. */
+// deno-lint-ignore no-explicit-any
+function partesDaFonte(fonte: Fonte): any[] {
+  const instrucao = {
+    type: "text",
+    text: "Extraia todas as posições desta carteira. Uma linha por ativo, com o patrimônio atual de cada um.",
+  };
+
+  if (fonte.tipo === "imagem") {
+    return [instrucao, { type: "image_url", image_url: { url: fonte.conteudo, detail: "high" } }];
+  }
+  if (fonte.tipo === "pdf") {
+    return [instrucao, { type: "file", file: { filename: fonte.nome, file_data: fonte.conteudo } }];
+  }
+  return [instrucao, { type: "text", text: `Conteúdo da carteira:\n\n${fonte.conteudo}` }];
+}
+
 async function chamarOpenAI(
-  apiKey: string, modelo: string, dataUrl: string, semTemperatura = false,
-): Promise<LeituraImagem> {
+  apiKey: string, modelo: string, fonte: Fonte, semTemperatura = false,
+): Promise<Leitura> {
   // deno-lint-ignore no-explicit-any
   const body: Record<string, any> = {
     model: modelo,
     messages: [
       { role: "system", content: PROMPT_SISTEMA },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Extraia todas as posições desta carteira. Uma linha por ativo, com o patrimônio atual de cada um.",
-          },
-          { type: "image_url", image_url: { url: dataUrl, detail: "high" } },
-        ],
-      },
+      { role: "user", content: partesDaFonte(fonte) },
     ],
     response_format: {
       type: "json_schema",
@@ -180,7 +212,7 @@ async function chamarOpenAI(
     const texto = await res.text();
     // Modelos de raciocínio recusam temperature != 1 — repete sem o parâmetro
     if (res.status === 400 && !semTemperatura && /temperature/i.test(texto)) {
-      return chamarOpenAI(apiKey, modelo, dataUrl, true);
+      return chamarOpenAI(apiKey, modelo, fonte, true);
     }
     let detalhe = texto.slice(0, 300);
     try {
@@ -196,11 +228,11 @@ async function chamarOpenAI(
   if (typeof conteudo !== "string" || !conteudo.trim()) {
     throw new Error("Resposta vazia da OpenAI.");
   }
-  return JSON.parse(conteudo) as LeituraImagem;
+  return JSON.parse(conteudo) as Leitura;
 }
 
 // ─── Saneamento do retorno do modelo ──────────────────────────────────────────
-function limpar(leitura: LeituraImagem, indiceImagem: number) {
+function limpar(leitura: Leitura, indiceFonte: number) {
   const itens = (Array.isArray(leitura?.itens) ? leitura.itens : [])
     .map((it) => ({
       ativo: String(it?.ativo ?? "").trim().slice(0, 80),
@@ -215,7 +247,7 @@ function limpar(leitura: LeituraImagem, indiceImagem: number) {
       confianca: ["alta", "media", "baixa"].includes(String(it?.confianca))
         ? String(it.confianca)
         : "media",
-      imagem: indiceImagem,
+      fonte: indiceFonte,
     }))
     // Linha sem identificação e sem valor não ajuda ninguém
     .filter((it) => it.ativo || it.descricao || it.valor > 0);
@@ -247,15 +279,75 @@ function chaveDeValidacao(): string {
   return Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 }
 
-function validarImagem(dataUrl: unknown, i: number): string {
-  if (typeof dataUrl !== "string") throw new Error(`Imagem ${i + 1}: formato inválido.`);
-  const m = /^data:image\/(png|jpeg|jpg|webp|gif);base64,([A-Za-z0-9+/=\s]+)$/.exec(dataUrl);
-  if (!m) throw new Error(`Imagem ${i + 1}: envie PNG, JPEG, WEBP ou GIF em base64.`);
-  const bytes = Math.floor((m[2].replace(/\s/g, "").length * 3) / 4);
-  if (bytes > MAX_BYTES_IMAGEM) {
-    throw new Error(`Imagem ${i + 1}: ${(bytes / 1024 / 1024).toFixed(1)} MB excede o limite de 5 MB.`);
+// ─── Validação das fontes ─────────────────────────────────────────────────────
+
+function bytesDeBase64(b64: string): number {
+  return Math.floor((b64.replace(/\s/g, "").length * 3) / 4);
+}
+
+function validarFonte(bruta: unknown, i: number): Fonte {
+  const ref = `Fonte ${i + 1}`;
+  if (!bruta || typeof bruta !== "object") throw new Error(`${ref}: formato inválido.`);
+
+  const { tipo, conteudo, nome } = bruta as Record<string, unknown>;
+  if (typeof conteudo !== "string" || !conteudo) throw new Error(`${ref}: conteúdo vazio.`);
+  const rotulo = typeof nome === "string" && nome.trim() ? nome.trim().slice(0, 120) : ref;
+
+  if (tipo === "texto") {
+    const texto = conteudo.trim();
+    if (!texto) throw new Error(`${rotulo}: texto vazio.`);
+    if (texto.length > MAX_CHARS_TEXTO) {
+      throw new Error(`${rotulo}: ${texto.length} caracteres excedem o limite de ${MAX_CHARS_TEXTO}. Divida em partes.`);
+    }
+    return { tipo, conteudo: texto, nome: rotulo, bytes: texto.length };
   }
-  return dataUrl;
+
+  if (tipo === "imagem") {
+    const m = /^data:image\/(png|jpeg|jpg|webp|gif);base64,([A-Za-z0-9+/=\s]+)$/.exec(conteudo);
+    if (!m) throw new Error(`${rotulo}: envie PNG, JPEG, WEBP ou GIF em base64.`);
+    const bytes = bytesDeBase64(m[2]);
+    if (bytes > MAX_BYTES_IMAGEM) {
+      throw new Error(`${rotulo}: ${(bytes / 1024 / 1024).toFixed(1)} MB excedem o limite de 5 MB.`);
+    }
+    return { tipo, conteudo, nome: rotulo, bytes };
+  }
+
+  if (tipo === "pdf") {
+    const m = /^data:application\/pdf;base64,([A-Za-z0-9+/=\s]+)$/.exec(conteudo);
+    if (!m) throw new Error(`${rotulo}: PDF precisa vir como data:application/pdf;base64.`);
+    const bytes = bytesDeBase64(m[1]);
+    if (bytes > MAX_BYTES_PDF) {
+      throw new Error(`${rotulo}: ${(bytes / 1024 / 1024).toFixed(1)} MB excedem o limite de 8 MB.`);
+    }
+    return { tipo, conteudo, nome: rotulo, bytes };
+  }
+
+  throw new Error(`${ref}: tipo "${String(tipo)}" não suportado (use imagem, pdf ou texto).`);
+}
+
+/** Aceita { fontes } e, por compatibilidade, o { imagens: string[] } antigo. */
+function lerFontes(corpo: Record<string, unknown> | null): Fonte[] {
+  const brutas = Array.isArray(corpo?.fontes)
+    ? corpo.fontes
+    : Array.isArray(corpo?.imagens)
+      ? (corpo.imagens as unknown[]).map((conteudo) => ({ tipo: "imagem", conteudo }))
+      : null;
+
+  if (!brutas || brutas.length === 0) {
+    throw new Error("Envie ao menos um print, PDF ou texto da carteira.");
+  }
+  if (brutas.length > MAX_FONTES) {
+    throw new Error(`Máximo de ${MAX_FONTES} arquivos ou textos por vez.`);
+  }
+
+  const fontes = brutas.map(validarFonte);
+  const total = fontes.reduce((acc, f) => acc + f.bytes, 0);
+  if (total > MAX_BYTES_TOTAL) {
+    throw new Error(
+      `Lote de ${(total / 1024 / 1024).toFixed(1)} MB excede o limite de ${MAX_BYTES_TOTAL / 1024 / 1024} MB. Envie em duas levas.`,
+    );
+  }
+  return fontes;
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -291,49 +383,40 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Não autorizado." }), { status: 401, headers });
   }
 
+  let fontes: Fonte[];
   try {
     const corpo = await req.json().catch(() => null);
-    const imagens = corpo?.imagens;
-    if (!Array.isArray(imagens) || imagens.length === 0) {
-      return new Response(JSON.stringify({ error: "Envie ao menos uma imagem." }), { status: 400, headers });
-    }
-    if (imagens.length > MAX_IMAGENS) {
-      return new Response(JSON.stringify({
-        error: `Máximo de ${MAX_IMAGENS} imagens por vez.`,
-      }), { status: 400, headers });
-    }
+    fontes = lerFontes(corpo);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return new Response(JSON.stringify({ error: msg }), { status: 400, headers });
+  }
 
-    let validas: string[];
-    try {
-      validas = imagens.map(validarImagem);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return new Response(JSON.stringify({ error: msg }), { status: 400, headers });
-    }
-
-    // Uma chamada por imagem: prompt mais simples e cada linha sabe de onde veio
+  try {
+    // Uma chamada por fonte, todas em paralelo: o teto de resposta do gateway é
+    // 150s, então serializar não é opção. Cada linha guarda de onde veio.
     const resultados = await Promise.allSettled(
-      validas.map((img) => chamarOpenAI(apiKey, modelo, img)),
+      fontes.map((f) => chamarOpenAI(apiKey, modelo, f)),
     );
 
     const itens: ReturnType<typeof limpar>["itens"] = [];
     const observacoes: string[] = [];
-    const erros: { imagem: number; erro: string }[] = [];
+    const erros: { fonte: number; erro: string }[] = [];
     const moedas = new Set<string>();
 
     resultados.forEach((r, i) => {
       if (r.status === "rejected") {
         const e = r.reason;
-        erros.push({ imagem: i, erro: e instanceof Error ? e.message : String(e) });
+        erros.push({ fonte: i, erro: e instanceof Error ? e.message : String(e) });
         return;
       }
       const lida = limpar(r.value, i);
       itens.push(...lida.itens);
-      if (lida.observacoes) observacoes.push(`Imagem ${i + 1}: ${lida.observacoes}`);
+      if (lida.observacoes) observacoes.push(`${fontes[i].nome}: ${lida.observacoes}`);
       if (lida.moedaDetectada !== "indefinida") moedas.add(lida.moedaDetectada);
     });
 
-    if (itens.length === 0 && erros.length === validas.length) {
+    if (itens.length === 0 && erros.length === fontes.length) {
       return new Response(JSON.stringify({ error: erros[0].erro, erros }), { status: 502, headers });
     }
 

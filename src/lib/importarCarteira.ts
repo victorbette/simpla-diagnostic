@@ -1,10 +1,10 @@
 // ============================================================================
-// Importação da carteira atual por print + IA
+// Importação da carteira atual por print, PDF ou texto + IA
 // ----------------------------------------------------------------------------
-// O front prepara as imagens (redimensiona/comprime) e chama a Edge Function
-// extract-portfolio, que fala com a OpenAI. A chave da IA nunca vem para cá.
-// O resultado é sempre revisado pelo consultor antes de virar ativo na Etapa 1
-// de Gestão de Carteira.
+// O front prepara as fontes (redimensiona/comprime imagens, converte PDF para
+// base64, limpa texto colado) e chama a Edge Function extract-portfolio, que
+// fala com a OpenAI. A chave da IA nunca vem para cá. O resultado é sempre
+// revisado pelo consultor antes de virar ativo na Etapa 1 de Gestão de Carteira.
 // ============================================================================
 
 import { FunctionsHttpError } from "@supabase/supabase-js";
@@ -12,9 +12,19 @@ import { supabase } from "@/integrations/supabase";
 import type { Ativo, CardId } from "@/lib/carteira/types";
 import { CARD_META, CARD_ORDER, SEGMENTOS_POR_CLASSE } from "@/lib/carteira/types";
 import { genId } from "@/lib/carteira/calculos";
+import { resolverAtivo, segmentoNoCard } from "@/lib/carteira/catalogo";
 
 export type ClasseExtraida = CardId | "naoIdentificado";
 export type Confianca = "alta" | "media" | "baixa";
+export type TipoFonte = "imagem" | "pdf" | "texto";
+
+/** O que vai no corpo da requisição: uma entrada por print, PDF ou texto. */
+export interface FontePreparada {
+  tipo: TipoFonte;
+  /** Data URL (imagem/PDF) ou o texto puro. */
+  conteudo: string;
+  nome: string;
+}
 
 export interface ItemExtraido {
   ativo: string;
@@ -24,7 +34,8 @@ export interface ItemExtraido {
   valor: number;
   classe: ClasseExtraida;
   confianca: Confianca;
-  imagem: number;
+  /** Índice da fonte que originou a linha; -1 quando adicionada na mão. */
+  fonte: number;
 }
 
 /** Item na tela de revisão: o consultor pode editar, excluir ou desmarcar. */
@@ -36,14 +47,21 @@ export interface ItemRevisao extends ItemExtraido {
 export interface ResultadoExtracao {
   itens: ItemExtraido[];
   observacoes: string[];
-  erros: { imagem: number; erro: string }[];
+  erros: { fonte: number; erro: string }[];
   moedas: string[];
   modelo: string;
 }
 
-export const MAX_IMAGENS = 6;
+/** Limites espelhados na Edge Function — barrar aqui evita round-trip inútil. */
+export const MAX_FONTES = 10;
+export const MAX_BYTES_PDF = 8 * 1024 * 1024;
+export const MAX_CHARS_TEXTO = 100_000;
+export const MAX_BYTES_TOTAL = 15 * 1024 * 1024;
+
 const LADO_MAXIMO = 2000; // acima disso a OpenAI reescala mesmo — só pesa o upload
-const ALVO_BYTES = 1.2 * 1024 * 1024; // por imagem, já decodificada (o base64 infla ~33%)
+// Por imagem, já decodificada (o base64 infla ~33%). Com até 10 fontes no lote,
+// 800KB mantém o pior caso dentro do teto de memória do worker.
+const ALVO_BYTES = 800 * 1024;
 
 export const CLASSE_NAO_IDENTIFICADA: ClasseExtraida = "naoIdentificado";
 
@@ -145,19 +163,59 @@ export function refinarRendaFixa(item: ItemExtraido): ItemExtraido {
   };
 }
 
+// ─── Catálogo: ticker crava classe e segmento ────────────────────────────────
+
+/**
+ * Corrige a linha pelo catálogo de ativos (src/data/ativos.csv). Ler "PETR4"
+ * num print é evidência determinística de classe e setor — mais forte que o
+ * palpite do modelo de visão, que precisa deduzir o setor de uma tabela sem
+ * contexto. Por isso o catálogo sobrescreve `classe` e `segmento` quando o
+ * ticker casa; quando não casa, a linha segue exatamente como estava.
+ *
+ * Só o valor financeiro continua sendo leitura pura da IA — o catálogo não sabe
+ * nada sobre quanto o cliente tem.
+ */
+export function aplicarCatalogo(item: ItemExtraido): ItemExtraido {
+  const achado = resolverAtivo(item.ativo, item.descricao);
+  if (!achado) return item;
+  return {
+    ...item,
+    classe: achado.card,
+    segmento: achado.segmento,
+    // Ações, FIIs, exterior e cripto não têm vencimento: se a IA leu uma data
+    // de outra coluna, ela morre aqui em vez de virar campo do ativo.
+    vencimento: CARD_META[achado.card].temVencimento ? item.vencimento : "",
+  };
+}
+
 /**
  * Troca a classe de uma linha na revisão. O segmento só sobrevive se existir no
- * card de destino, e a régua de renda fixa roda de novo (mandar uma linha para
- * "Renda Fixa" já reposiciona Tesouro Selic em Resgate Rápido, por exemplo).
+ * card de destino — se não sobreviver, o catálogo tenta preencher pelo ticker
+ * antes de deixar vazio. A régua de renda fixa roda de novo (mandar uma linha
+ * para "Renda Fixa" já reposiciona Tesouro Selic em Resgate Rápido).
+ *
+ * Aqui o catálogo NÃO reclassifica: a troca de classe é decisão explícita do
+ * consultor e ganha do palpite automático.
  */
 export function reclassificar(item: ItemRevisao, classe: ClasseExtraida): ItemRevisao {
   if (classe === CLASSE_NAO_IDENTIFICADA) return { ...item, classe };
-  const segmento = casarSegmento(classe as CardId, item.segmento) ?? "";
-  const vencimento = CARD_META[classe as CardId].temVencimento ? item.vencimento : "";
+  const card = classe as CardId;
+  const segmento = casarSegmento(card, item.segmento)
+    ?? segmentoNoCard(card, item.ativo, item.descricao)
+    ?? "";
+  const vencimento = CARD_META[card].temVencimento ? item.vencimento : "";
   return { ...refinarRendaFixa({ ...item, classe, segmento, vencimento }), id: item.id, incluir: item.incluir };
 }
 
-// ─── Preparo das imagens ──────────────────────────────────────────────────────
+// ─── Preparo das fontes ───────────────────────────────────────────────────────
+
+export function ehPdf(file: File): boolean {
+  return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
+export function ehImagem(file: File): boolean {
+  return file.type.startsWith("image/");
+}
 
 function carregarImagem(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -196,6 +254,48 @@ export async function prepararImagem(file: File): Promise<string> {
   throw new Error(`"${file.name}" é grande demais mesmo comprimido. Recorte o print e tente de novo.`);
 }
 
+/**
+ * PDF vai inteiro para a OpenAI — não dá para reduzir no browser sem uma lib de
+ * renderização, e o modelo lê tanto a camada de texto quanto as páginas
+ * rasterizadas (extrato escaneado também funciona, com menos precisão).
+ */
+export function prepararPdf(file: File): Promise<string> {
+  if (file.size > MAX_BYTES_PDF) {
+    throw new Error(
+      `"${file.name}" tem ${(file.size / 1024 / 1024).toFixed(1)} MB e o limite é ${MAX_BYTES_PDF / 1024 / 1024} MB. Envie só as páginas de posição.`,
+    );
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error(`Não foi possível ler "${file.name}".`));
+    reader.readAsDataURL(file);
+  });
+}
+
+export function prepararTexto(texto: string, nome: string): FontePreparada {
+  const limpo = texto.trim();
+  if (!limpo) throw new Error("O texto colado está vazio.");
+  if (limpo.length > MAX_CHARS_TEXTO) {
+    throw new Error(
+      `O texto tem ${limpo.length.toLocaleString("pt-BR")} caracteres e o limite é ${MAX_CHARS_TEXTO.toLocaleString("pt-BR")}. Cole em partes.`,
+    );
+  }
+  return { tipo: "texto", conteudo: limpo, nome };
+}
+
+export async function prepararArquivo(file: File): Promise<FontePreparada> {
+  if (ehPdf(file)) return { tipo: "pdf", conteudo: await prepararPdf(file), nome: file.name };
+  return { tipo: "imagem", conteudo: await prepararImagem(file), nome: file.name };
+}
+
+/** Bytes que a fonte vai ocupar no corpo — mesma conta que a função faz. */
+export function bytesDaFonte(fonte: FontePreparada): number {
+  if (fonte.tipo === "texto") return fonte.conteudo.length;
+  const b64 = fonte.conteudo.slice(fonte.conteudo.indexOf(",") + 1);
+  return Math.floor((b64.length * 3) / 4);
+}
+
 // ─── Chamada da Edge Function ─────────────────────────────────────────────────
 
 const CLASSES_VALIDAS: ClasseExtraida[] = [...CARD_ORDER, CLASSE_NAO_IDENTIFICADA];
@@ -203,7 +303,10 @@ const CLASSES_VALIDAS: ClasseExtraida[] = [...CARD_ORDER, CLASSE_NAO_IDENTIFICAD
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizarItem(bruto: any): ItemExtraido {
   const classe = CLASSES_VALIDAS.includes(bruto?.classe) ? (bruto.classe as ClasseExtraida) : CLASSE_NAO_IDENTIFICADA;
-  return refinarRendaFixa({
+  // Ordem: régua de renda fixa primeiro (posiciona Tesouro Selic e afins), e o
+  // catálogo por último, porque o casamento por ticker é o sinal mais forte —
+  // inclusive para tirar de "Não identificado" uma linha que a IA não soube ler.
+  return aplicarCatalogo(refinarRendaFixa({
     ativo: String(bruto?.ativo ?? ""),
     descricao: String(bruto?.descricao ?? ""),
     segmento: String(bruto?.segmento ?? ""),
@@ -211,14 +314,21 @@ function normalizarItem(bruto: any): ItemExtraido {
     valor: Number(bruto?.valor) || 0,
     classe,
     confianca: ["alta", "media", "baixa"].includes(bruto?.confianca) ? bruto.confianca : "media",
-    imagem: Number.isFinite(Number(bruto?.imagem)) ? Number(bruto.imagem) : -1,
-  });
+    fonte: Number.isFinite(Number(bruto?.fonte)) ? Number(bruto.fonte) : -1,
+  }));
 }
 
-export async function extrairCarteira(imagens: string[]): Promise<ResultadoExtracao> {
+export async function extrairCarteira(fontes: FontePreparada[]): Promise<ResultadoExtracao> {
+  const total = fontes.reduce((acc, f) => acc + bytesDaFonte(f), 0);
+  if (total > MAX_BYTES_TOTAL) {
+    throw new Error(
+      `Os arquivos somam ${(total / 1024 / 1024).toFixed(1)} MB e o limite por importação é ${MAX_BYTES_TOTAL / 1024 / 1024} MB. Envie em duas levas.`,
+    );
+  }
+
   const { data, error } = await supabase.functions.invoke("extract-portfolio", {
     method: "POST",
-    body: { imagens },
+    body: { fontes },
   });
 
   if (error) {
@@ -234,7 +344,7 @@ export async function extrairCarteira(imagens: string[]): Promise<ResultadoExtra
   return {
     itens: (Array.isArray(data?.itens) ? data.itens : []).map(normalizarItem),
     observacoes: (data?.observacoes ?? []) as string[],
-    erros: (data?.erros ?? []) as { imagem: number; erro: string }[],
+    erros: (data?.erros ?? []) as { fonte: number; erro: string }[],
     moedas: (data?.moedas ?? []) as string[],
     modelo: (data?.modelo ?? "") as string,
   };
