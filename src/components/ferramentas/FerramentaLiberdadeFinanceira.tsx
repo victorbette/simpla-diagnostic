@@ -109,10 +109,15 @@ export function FerramentaLiberdadeFinanceira({
   const patrimonioColeta    = Number(dadosCliente?.patrimonioFinanceiroEstimado) || 0;
   const aporteColeta        = Number(dadosCliente?.aportesMensalMedio)           || 0;
   const rendaDesejadaColeta = Number(dadosCliente?.rendaDesejadaAposentadoria) || Number(planejamentoIF.rendaMensalDesejada) || 0;
+  // dadosCliente.idadeMeta is always more up-to-date than planejamentoIF.idadeMeta
+  // (the sync to planejamentoIF only happens on explicit save)
+  const idadeMetaColeta = Number(dadosCliente?.idadeMeta) > 0
+    ? Number(dadosCliente?.idadeMeta)
+    : (Number(planejamentoIF.idadeMeta) > 0 ? Number(planejamentoIF.idadeMeta) : 65);
 
   const initialParams: UIParams = {
     idadeAtual:         idadeAtualCalculada,
-    idadeAposentadoria: planejamentoIF.idadeMeta,
+    idadeAposentadoria: idadeMetaColeta,
     patrimonioInicial:  patrimonioColeta || planejamentoIF.patrimonioAtual,
     aporteMensal:       aporteColeta     || planejamentoIF.aporteMensal,
     rendaDesejada:      rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
@@ -121,6 +126,7 @@ export function FerramentaLiberdadeFinanceira({
   const [params, setParams] = useState<UIParams>(initialParams);
   const [patrimonioEditado, setPatrimonioEditado] = useState(false);
   const [rendaEditada,      setRendaEditada]       = useState(false);
+  const [idadeAposentadoriaEditada, setIdadeAposentadoriaEditada] = useState(false);
   const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
   const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
   const [salvando, setSalvando] = useState(false);
@@ -154,12 +160,13 @@ export function FerramentaLiberdadeFinanceira({
   useEffect(() => {
     setParams((prev) => ({
       ...prev,
-      idadeAtual:        idadeAtualCalculada,
-      patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
-      rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
+      idadeAtual:         idadeAtualCalculada,
+      idadeAposentadoria: !idadeAposentadoriaEditada && idadeMetaColeta > 0 ? idadeMetaColeta : prev.idadeAposentadoria,
+      patrimonioInicial:  !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
+      rendaDesejada:      !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta]);
+  }, [idadeAtualCalculada, patrimonioColeta, rendaDesejadaColeta, idadeMetaColeta]);
 
   // ── Initialize from Supabase data when it first arrives ───────────────────
   const initializedFromSupabaseRef = useRef(false);
@@ -175,6 +182,7 @@ export function FerramentaLiberdadeFinanceira({
       }));
       setPatrimonioEditado(resultadoIF.patrimonioAtual !== patrimonioColeta);
       setRendaEditada(resultadoIF.rendaMensalDesejada !== rendaDesejadaColeta);
+      setIdadeAposentadoriaEditada(resultadoIF.idadeMeta !== idadeMetaColeta);
       if (resultadoIF.objetivos) setObjetivos(resultadoIF.objetivos);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -633,14 +641,14 @@ export function FerramentaLiberdadeFinanceira({
               type="range"
               min={40} max={90} step={1}
               value={params.idadeAposentadoria ?? 60}
-              onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+              onChange={(e) => { setP({ idadeAposentadoria: Number(e.target.value) }); setIdadeAposentadoriaEditada(true); }}
               style={{ width: "100%", accentColor: "#2563EB" }}
             />
             <input
               type="number"
               min={40} max={90} step={1}
               value={params.idadeAposentadoria ?? 60}
-              onChange={(e) => setP({ idadeAposentadoria: e.target.value === "" ? 60 : Number(e.target.value) })}
+              onChange={(e) => { setP({ idadeAposentadoria: e.target.value === "" ? 60 : Number(e.target.value) }); setIdadeAposentadoriaEditada(true); }}
               style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit" }}
             />
           </div>
