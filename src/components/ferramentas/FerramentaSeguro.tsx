@@ -211,6 +211,10 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
   const [salvo, setSalvo] = useState(false);
   const [invalidezEditada, setInvalidezEditada] = useState<boolean>(() => df.invalidezEditada === true);
   const [doencaGraveEditada, setDoencaGraveEditada] = useState<boolean>(() => df.doencaGraveEditada === true);
+  const [fatorInvalidez, setFatorInvalidez] = useState<12 | 24 | 36>(() => {
+    const f = Number(df.fatorInvalidez);
+    return (f === 12 || f === 36) ? f : 24;
+  });
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
   // Atualiza pctITCMD quando o UF do cliente muda (ex: navegação entre clientes),
@@ -253,7 +257,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
     const saldoPrevidencia = Number(data.saldoPrevidencia) || 0;
     const subtotalContinuo = Math.max(0, totalContinuo + totalFilhos - saldoPrevidencia);
 
-    const invalidezCalculada = (Number(data.despesasMensais) || 0) * 60;
+    const invalidezCalculada = (Number(data.despesasMensais) || 0) * fatorInvalidez;
     const capitalInvalidezEfetivo = invalidezEditada
       ? (Number(data.capitalInvalidez) || 0)
       : invalidezCalculada;
@@ -282,7 +286,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       doencaGraveCalculada, capitalDoencaGraveEfetivo,
       totalCoberturasVida, capitalNecessario, capitalAtual, gap, coberturaPct,
     };
-  }, [data, invalidezEditada, doencaGraveEditada]);
+  }, [data, invalidezEditada, doencaGraveEditada, fatorInvalidez]);
 
   // ── Filhos ────────────────────────────────────────────────────────────────
 
@@ -311,7 +315,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           totalImediato:        calc.totalImediato,
           subtotalContinuo:     calc.subtotalContinuo,
           totalCoberturasVida:  calc.totalCoberturasVida,
-          dadosFormulario:      { ...data, capitalInvalidez: calc.capitalInvalidezEfetivo, invalidezEditada, capitalDoencaGrave: calc.capitalDoencaGraveEfetivo, doencaGraveEditada },
+          dadosFormulario:      { ...data, capitalInvalidez: calc.capitalInvalidezEfetivo, invalidezEditada, capitalDoencaGrave: calc.capitalDoencaGraveEfetivo, doencaGraveEditada, fatorInvalidez },
           dataUltimoSalvamento: new Date().toISOString(),
           totalNeed:     calc.capitalNecessario,
           totalCoverage: calc.capitalAtual,
@@ -352,7 +356,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
   const seguroVidaNecessario = calc.totalImediato + calc.subtotalContinuo;
   const adequado = calc.capitalAtual >= calc.capitalNecessario && calc.capitalNecessario > 0;
-  const custoDeVidaColeta = Number(dc.custoDeVidaMensal) || 0;
   const patrimonioFinanceiroColeta = Number(dcAny.patrimonioFinanceiroEstimado) || 0;
 
   const AJUDA_PROTECAO = {
@@ -372,7 +375,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       },
       {
         titulo: 'Coberturas em Vida',
-        conteudo: `Proteções para situações onde o cliente continua vivo mas com capacidade de geração de renda comprometida:\n\nInvalidez Permanente:\nCalculado automaticamente como Despesas mensais × 60 (5 anos de cobertura).\nO consultor pode ajustar manualmente.\n\nDoenças Graves:\nCalculado automaticamente como Despesas mensais × 12 (1 ano de cobertura).\nCobre custos de tratamento e recuperação.\n\nAmbas as coberturas podem ser editadas e restauradas ao valor automático.`,
+        conteudo: `Proteções para situações onde o cliente continua vivo mas com capacidade de geração de renda comprometida:\n\nInvalidez Permanente:\nCalculado automaticamente como Despesas mensais × fator de meses (12×, 24× ou 36×, padrão 24×).\nO consultor seleciona o fator e pode ajustar manualmente.\n\nDoenças Graves:\nCalculado automaticamente como Despesas mensais × 12 (1 ano de cobertura).\nCobre custos de tratamento e recuperação.\n\nAmbas as coberturas podem ser editadas e restauradas ao valor automático.`,
       },
       {
         titulo: 'Capital Total Necessário',
@@ -388,7 +391,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
       },
       {
         titulo: 'Dicas para o consultor',
-        conteudo: `• O ITCMD é preenchido automaticamente com a alíquota do estado do cliente — verifique se está correto para patrimônios com alíquotas progressivas.\n\n- Os custos advocatícios de 10% são uma estimativa conservadora — em inventários complexos podem ser maiores.\n\n- A invalidez × 60 meses e doenças graves × 12 meses são referências. Ajuste conforme o perfil e necessidades específicas do cliente.\n\n- Para clientes com filhos pequenos, o componente de filhos nas Necessidades Contínuas tende a ser o maior.\n\n- Sempre considere o saldo de previdência como um ativo que reduz a necessidade de seguro de vida.`,
+        conteudo: `• O ITCMD é preenchido automaticamente com a alíquota do estado do cliente — verifique se está correto para patrimônios com alíquotas progressivas.\n\n- Os custos advocatícios de 10% são uma estimativa conservadora — em inventários complexos podem ser maiores.\n\n- O fator de invalidez (12×, 24× ou 36×) e doenças graves × 12 meses são referências. Ajuste conforme o perfil e necessidades específicas do cliente.\n\n- Para clientes com filhos pequenos, o componente de filhos nas Necessidades Contínuas tende a ser o maior.\n\n- Sempre considere o saldo de previdência como um ativo que reduz a necessidade de seguro de vida.`,
       },
     ],
   };
@@ -522,14 +525,7 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <label style={{ ...LABEL, display: "flex", alignItems: "center" }}>
-              Patrimônio Financeiro (R$)
-              {patrimonioFinanceiroColeta > 0 && (
-                <span style={{ marginLeft: 6, fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
-                  Da coleta
-                </span>
-              )}
-            </label>
+            <label style={LABEL}>Patrimônio Financeiro (R$)</label>
             <CurrencyInput value={data.patrimonioFinanceiro} onChange={(v) => upd({ patrimonioFinanceiro: v })} />
             {patrimonioFinanceiroColeta > 0 && <span style={{ ...HINT, color: "#2563EB" }}>Carregado da Situação Atual — editável</span>}
           </div>
@@ -573,11 +569,6 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
           <div style={FIELD_WRAP}>
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ ...LABEL, marginBottom: 0 }}>Despesas Mensais da Família</span>
-              {custoDeVidaColeta > 0 && (
-                <span style={{ fontSize: 10, color: "#1E40AF", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
-                  Da coleta
-                </span>
-              )}
             </div>
             <CurrencyInput value={data.despesasMensais} onChange={(v) => upd({ despesasMensais: v })} />
           </div>
@@ -721,18 +712,52 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div style={FIELD_WRAP}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...LABEL, marginBottom: 0 }}>Capital para Invalidez Permanente (R$)</span>
-              {!invalidezEditada ? (
-                <span style={{ fontSize: 10, color: "#2563EB", backgroundColor: "#DBEAFE", padding: "1px 6px", borderRadius: 99, fontWeight: 600, flexShrink: 0 }}>
-                  CALCULADO
-                </span>
-              ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Invalidez Permanente</label>
+              {invalidezEditada ? (
                 <button
-                  onClick={() => {
-                    setInvalidezEditada(false);
-                    upd({ capitalInvalidez: calc.invalidezCalculada });
-                  }}
+                  onClick={() => { setInvalidezEditada(false); upd({ capitalInvalidez: calc.invalidezCalculada }); }}
+                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                >
+                  ↺ Restaurar automático
+                </button>
+              ) : (
+                <div style={{ display: "flex", background: "#F3F4F6", borderRadius: 6, padding: 2, gap: 2 }}>
+                  {([12, 24, 36] as const).map(meses => (
+                    <button
+                      key={meses}
+                      onClick={() => setFatorInvalidez(meses)}
+                      style={{
+                        padding: "3px 10px", borderRadius: 5, border: "none",
+                        fontSize: 10, cursor: "pointer",
+                        fontWeight: fatorInvalidez === meses ? 700 : 400,
+                        background: fatorInvalidez === meses ? "white" : "transparent",
+                        color: fatorInvalidez === meses ? "#111827" : "#9CA3AF",
+                        boxShadow: fatorInvalidez === meses ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
+                        transition: "all 150ms",
+                        whiteSpace: "nowrap" as const,
+                      }}
+                    >
+                      {meses}×
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <CurrencyInput
+              value={invalidezEditada ? (Number(data.capitalInvalidez) || 0) : calc.invalidezCalculada}
+              onChange={(val) => { setInvalidezEditada(true); upd({ capitalInvalidez: val }); }}
+            />
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>
+              Custo de vida × {fatorInvalidez} meses
+            </span>
+          </div>
+          <div style={FIELD_WRAP}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Doenças Graves</label>
+              {doencaGraveEditada && (
+                <button
+                  onClick={() => { setDoencaGraveEditada(false); upd({ capitalDoencaGrave: calc.doencaGraveCalculada }); }}
                   style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                 >
                   ↺ Restaurar automático
@@ -740,47 +765,12 @@ export function FerramentaSeguro({ plan, resultados, onResultadosChange }: Props
               )}
             </div>
             <CurrencyInput
-              value={invalidezEditada ? (Number(data.capitalInvalidez) || 0) : calc.invalidezCalculada}
-              onChange={(val) => {
-                setInvalidezEditada(true);
-                upd({ capitalInvalidez: val });
-              }}
-            />
-            <span style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
-              Sugestão: {formatCurrency(calc.invalidezCalculada)} (despesas mensais × 60 meses) — editável conforme avaliação do consultor
-            </span>
-          </div>
-          <div style={FIELD_WRAP}>
-            <div style={{ display: "flex", alignItems: "center", marginBottom: 6, gap: 6 }}>
-              <label style={{ fontSize: 11, color: "#6B7280" }}>Capital para Doenças Graves (R$)</label>
-              {!doencaGraveEditada && (
-                <span style={{ fontSize: 10, color: "#2563EB", background: "#DBEAFE", padding: "1px 6px", borderRadius: 99 }}>
-                  CALCULADO (custo mensal × 12)
-                </span>
-              )}
-              {doencaGraveEditada && (
-                <button
-                  onClick={() => {
-                    setDoencaGraveEditada(false);
-                    upd({ capitalDoencaGrave: calc.doencaGraveCalculada });
-                  }}
-                  style={{ fontSize: 10, color: "#6B7280", background: "none", border: "none", cursor: "pointer" }}
-                >
-                  ↺ Restaurar automático
-                </button>
-              )}
-            </div>
-            <CurrencyInput
               value={calc.capitalDoencaGraveEfetivo}
-              onChange={(val: number) => {
-                setDoencaGraveEditada(true);
-                upd({ capitalDoencaGrave: val });
-              }}
+              onChange={(val: number) => { setDoencaGraveEditada(true); upd({ capitalDoencaGrave: val }); }}
             />
-            <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>
-              Sugestão: {calc.doencaGraveCalculada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}
-              {" "}(despesas mensais × 12 meses) — editável conforme avaliação do consultor
-            </div>
+            <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 3 }}>
+              Despesas mensais × 12 meses
+            </span>
           </div>
         </div>
 
