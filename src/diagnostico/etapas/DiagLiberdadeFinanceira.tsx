@@ -3,15 +3,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 import {
-  calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
-  type ProjecaoIFParams,
   type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
-const TAXA_PADRAO_DIAG = 6.0; // IPCA+6% padrão da seção LF
+import { TAXA_LF_RETIRO, taxaMensalDe } from "@/lib/taxasDiag";
+
+const TAXA_PADRAO_DIAG = 6.0; // IPCA+6% padrão da seção LF — acumulação
+const TAXA_MENSAL_RETIRO = taxaMensalDe(TAXA_LF_RETIRO); // IPCA+4% — fase de retirada
 
 interface Ajustes {
   usarTaxaCustom: boolean;
@@ -92,7 +93,6 @@ function fmtBRL(v: number) {
 
 export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalvar }: Props) {
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
-  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
   const mesNascimento = parsed?.mes ?? 1;
 
   const idadeAtualCalculada = parsed
@@ -178,8 +178,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     : TAXA_PADRAO_DIAG / 100;
 
   const taxaLabel = ajustes.usarTaxaCustom
-    ? `IPCA + ${ajustes.taxaCustomAnual.toFixed(2).replace(".", ",")}%`
-    : "IPCA + 6,00%";
+    ? `Acumulação: IPCA + ${ajustes.taxaCustomAnual.toFixed(2).replace(".", ",")}% · Retirada: IPCA + 4%`
+    : "Acumulação: IPCA + 6% · Retirada: IPCA + 4%";
 
   const taxaMensal = useMemo(
     () => Math.pow(1 + taxaAnualEfetiva, 1 / 12) - 1,
@@ -207,28 +207,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return (patrimonioProjetado * 0.04) / 12;
   }, [patrimonioProjetado]);
 
-  // ── Gráfico — usa calcularProjecaoIF para obter curva e mesIF ────────────
-  const projecaoParams: ProjecaoIFParams = useMemo(() => ({
-    idadeAtual:          params.idadeAtual,
-    idadeMeta:           params.idadeAposentadoria,
-    idadeMaxima:         100,
-    patrimonioInicial:   params.patrimonioInicial,
-    aporteMensal:        params.aporteMensal,
-    rendaMensalDesejada: params.rendaDesejada,
-    taxaRetornoAnual:    taxaAnualEfetiva,
-    anoNascimento,
-    mesNascimento,
-    objetivos:           [],
-  }), [params, anoNascimento, mesNascimento, taxaAnualEfetiva]);
-
-  const result = useMemo(() => {
-    try { return calcularProjecaoIF(projecaoParams); }
-    catch { return null; }
-  }, [projecaoParams]);
-
-  const mesIF = result
-    ? result.mesInicioRetirada
-    : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+  // projecaoSimples é anual (índice = anos desde a idade atual), não mensal
+  const mesIF = Math.max(0, Math.round(params.idadeAposentadoria - params.idadeAtual));
 
   // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
   const projecaoSimples: PontoProjecao[] = useMemo(() => {
@@ -254,9 +234,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           : params.patrimonioInicial;
       } else {
         const mesesRetira = meses - mesesIF;
-        const f = Math.pow(1 + taxaMensal, mesesRetira);
+        const f = Math.pow(1 + TAXA_MENSAL_RETIRO, mesesRetira);
         patrimonio = isFinite(f)
-          ? Math.round(patrimonioIF * f - retiradaMensal * (f - 1) / taxaMensal)
+          ? Math.round(patrimonioIF * f - retiradaMensal * (f - 1) / TAXA_MENSAL_RETIRO)
           : patrimonioIF;
       }
       return {
