@@ -2,7 +2,7 @@ import { useState } from "react";
 import { User, DollarSign, PieChart } from "lucide-react";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
+import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO, NIVEIS_ATRATIVIDADE } from "../ativosInvestimento";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -486,6 +486,7 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
                   const marcado = !!(dados.ativosInvestimento?.[ativo.id]);
+                  const nivel = NIVEIS_ATRATIVIDADE[ativo.qualidade];
                   return (
                     <div
                       key={ativo.id}
@@ -494,13 +495,9 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                         alignItems: "center",
                         justifyContent: "space-between",
                         padding: "8px 12px",
-                        border: marcado
-                          ? `1px solid ${ativo.qualidade === "bom" ? "#BBF7D0" : ativo.qualidade === "atencao" ? "#FCD34D" : "#FCA5A5"}`
-                          : "1px solid #F3F4F6",
+                        border: marcado ? `1px solid ${nivel.border}` : "1px solid #F3F4F6",
                         borderRadius: 8,
-                        background: marcado
-                          ? ativo.qualidade === "bom" ? "#F0FDF4" : ativo.qualidade === "atencao" ? "#FEF3C7" : "#FFF5F5"
-                          : "white",
+                        background: marcado ? nivel.bg : "white",
                         transition: "all 150ms",
                       }}
                     >
@@ -511,8 +508,8 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                             {ativo.label}
                           </div>
                           {marcado && (
-                            <div style={{ fontSize: 9, fontWeight: 600, color: ativo.qualidade === "bom" ? "#15803D" : ativo.qualidade === "atencao" ? "#B45309" : "#B91C1C", marginTop: 1 }}>
-                              {ativo.qualidade === "bom" ? "✓ Recomendado" : ativo.qualidade === "atencao" ? "⚠ Atenção" : "⚠ Não recomendado"}
+                            <div style={{ fontSize: 9, fontWeight: 600, color: nivel.cor, marginTop: 1 }}>
+                              {nivel.label}
                             </div>
                           )}
                         </div>
@@ -533,21 +530,18 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                           position: "absolute",
                           top: 0, right: 0, bottom: 0, left: 0,
                           borderRadius: 20,
-                          background: marcado
-                            ? ativo.qualidade === "bom" ? "#15803D" : ativo.qualidade === "atencao" ? "#B45309" : "#B91C1C"
-                            : "#D1D5DB",
+                          background: marcado ? nivel.cor : "#D1D5DB",
                           transition: "background 200ms",
-                        }}>
-                          <span style={{
-                            position: "absolute",
-                            width: 14, height: 14,
-                            borderRadius: "50%",
-                            background: "white",
-                            top: 3,
-                            left: marcado ? 19 : 3,
-                            transition: "left 200ms",
-                          }} />
-                        </span>
+                        }} />
+                        <span style={{
+                          position: "absolute",
+                          top: 2,
+                          left: marcado ? 18 : 2,
+                          width: 16, height: 16,
+                          borderRadius: "50%",
+                          background: "white",
+                          transition: "left 200ms",
+                        }} />
                       </label>
                     </div>
                   );

@@ -1,5 +1,5 @@
 import type { Lead } from "../types";
-import { ATIVOS_INVESTIMENTO } from "../ativosInvestimento";
+import { ATIVOS_INVESTIMENTO, NIVEIS_ATRATIVIDADE } from "../ativosInvestimento";
 import { ATIVOS_TEXTOS } from "../ativosTextos";
 import { DOC } from "@/lib/documentoStyles";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
@@ -24,9 +24,9 @@ export function DocGestaoAtivos({ lead }: Props) {
   const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
 
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
-  const ativosBons    = ativosDoLead.filter(a => a.qualidade === "bom");
-  const ativosAtencao = ativosDoLead.filter(a => a.qualidade === "atencao");
-  const ativosRuins   = ativosDoLead.filter(a => a.qualidade === "ruim");
+  const ativosBons    = ativosDoLead.filter(a => a.qualidade === "muito_atrativo" || a.qualidade === "atrativo");
+  const ativosAtencao = ativosDoLead.filter(a => a.qualidade === "moderado");
+  const ativosRuins   = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo" || a.qualidade === "nada_atrativo");
 
   if (comecandoDoZero) {
     const valorStr = valorParaInvestir > 0
@@ -180,14 +180,14 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           marginTop: 28, fontSize: 12, fontWeight: 700, color: "#15803D",
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
-          <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
-          Recomendado
+          <i className="ti ti-star" style={{ fontSize: 14 }} />
+          Bem Avaliado
         </div>
       ),
     });
     ativosBons.forEach((ativo) => {
       const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!textoAtivo?.positivo) return;
+      if (!(textoAtivo?.opiniao ?? textoAtivo?.positivo)) return;
       blocos.push({
         chave: `bom_${ativo.id}`,
         node: (
@@ -195,8 +195,11 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
               {ativo.label}
             </div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
+              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
+            </div>
             <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {textoAtivo.positivo.replace(/\n\s+/g, " ").trim()}
+              {(textoAtivo?.opiniao ?? textoAtivo?.positivo)!.replace(/\n\s+/g, " ").trim()}
             </p>
           </div>
         ),
@@ -214,13 +217,13 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
           <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
-          Atenção
+          Atratividade Moderada
         </div>
       ),
     });
     ativosAtencao.forEach((ativo) => {
       const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!textoAtivo?.atencao) return;
+      if (!(textoAtivo?.opiniao ?? textoAtivo?.atencao)) return;
       blocos.push({
         chave: `atencao_${ativo.id}`,
         node: (
@@ -228,8 +231,11 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
               {ativo.label}
             </div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
+              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
+            </div>
             <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {textoAtivo.atencao.replace(/\n\s+/g, " ").trim()}
+              {(textoAtivo?.opiniao ?? textoAtivo?.atencao)!.replace(/\n\s+/g, " ").trim()}
             </p>
           </div>
         ),
@@ -247,13 +253,13 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
           <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
-          Não Recomendado
+          Pouco ou Nada Atrativo
         </div>
       ),
     });
     ativosRuins.forEach((ativo) => {
       const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!textoAtivo?.negativo) return;
+      if (!(textoAtivo?.opiniao ?? textoAtivo?.negativo)) return;
       blocos.push({
         chave: `ruim_${ativo.id}`,
         node: (
@@ -261,8 +267,11 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
               {ativo.label}
             </div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
+              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
+            </div>
             <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {textoAtivo.negativo.replace(/\n\s+/g, " ").trim()}
+              {(textoAtivo?.opiniao ?? textoAtivo?.negativo)!.replace(/\n\s+/g, " ").trim()}
             </p>
           </div>
         ),

@@ -66,8 +66,8 @@ export function calcularScoresDiag(
   const ativosMap    = dadosColeta.ativosInvestimento ?? {};
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
   const aaTemDados   = comecandoDoZero || ativosDoLead.length > 0;
-  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "bom");
-  const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "ruim");
+  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "muito_atrativo" || a.qualidade === "atrativo");
+  const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo" || a.qualidade === "nada_atrativo");
   const temRF  = ativosBons.some(a => a.classe === "renda_fixa");
   const temRV  = ativosBons.some(a => a.classe === "renda_variavel");
   const temExt = ativosBons.some(a => a.classe === "exterior");
