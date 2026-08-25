@@ -230,24 +230,43 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
   // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
   const projecaoSimples: PontoProjecao[] = useMemo(() => {
-    const anosTotal = Math.max(0, Math.round(params.idadeAposentadoria - params.idadeAtual));
-    const anoAtual  = new Date().getFullYear();
+    const IDADE_MAXIMA = 90;
+    const anosTotal    = Math.max(0, IDADE_MAXIMA - params.idadeAtual);
+    const anoAtual     = new Date().getFullYear();
+    const mesesIF      = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    // Patrimônio no momento da aposentadoria (início da fase de retirada)
+    const fIF = mesesIF > 0 ? Math.pow(1 + taxaMensal, mesesIF) : 1;
+    const patrimonioIF = isFinite(fIF)
+      ? Math.round(params.patrimonioInicial * fIF + (mesesIF > 0 ? params.aporteMensal * (fIF - 1) / taxaMensal : 0))
+      : params.patrimonioInicial;
+    const retiradaMensal = params.rendaDesejada || 0;
+
     return Array.from({ length: anosTotal + 1 }, (_, i) => {
-      const meses = i * 12;
-      const f     = meses > 0 ? Math.pow(1 + taxaMensal, meses) : 1;
-      const patrimonio = isFinite(f)
-        ? Math.round(params.patrimonioInicial * f + (meses > 0 ? params.aporteMensal * (f - 1) / taxaMensal : 0))
-        : params.patrimonioInicial;
+      const meses       = i * 12;
+      const naAcumulacao = meses <= mesesIF;
+      let patrimonio: number;
+      if (naAcumulacao) {
+        const f = meses > 0 ? Math.pow(1 + taxaMensal, meses) : 1;
+        patrimonio = isFinite(f)
+          ? Math.round(params.patrimonioInicial * f + (meses > 0 ? params.aporteMensal * (f - 1) / taxaMensal : 0))
+          : params.patrimonioInicial;
+      } else {
+        const mesesRetira = meses - mesesIF;
+        const f = Math.pow(1 + taxaMensal, mesesRetira);
+        patrimonio = isFinite(f)
+          ? Math.round(patrimonioIF * f - retiradaMensal * (f - 1) / taxaMensal)
+          : patrimonioIF;
+      }
       return {
         mes:       meses,
         ano:       anoAtual + i,
         mesDoAno:  mesNascimento,
         idade:     params.idadeAtual + i,
         patrimonio: Math.max(0, patrimonio),
-        fase:      "acumulacao" as const,
+        fase:      naAcumulacao ? ("acumulacao" as const) : ("decumulacao" as const),
       };
     });
-  }, [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, taxaMensal, mesNascimento]);
+  }, [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaMensal, mesNascimento]);
 
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
