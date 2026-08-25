@@ -135,7 +135,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   });
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
-  const isFirstRender = useRef(true);
+  const isFirstRender       = useRef(true);
+  const isAjustesFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
   useEffect(() => { onChangeRef.current = onChange; }, [onChange]);
 
@@ -151,6 +152,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }, [params]);
 
   useEffect(() => {
+    if (isAjustesFirstRender.current) { isAjustesFirstRender.current = false; return; }
     onChangeRef.current({ ajustes });
   }, [ajustes]);
 

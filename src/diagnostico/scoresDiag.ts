@@ -1,7 +1,9 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
 import type { DadosColetaDiag } from "./types";
+import { calcularIdade } from "@/lib/parseDate";
+import { TAXA_DIAGNOSTICO_INICIAL, taxaMensalDe } from "@/lib/taxasDiag";
 
-const TAXA_MENSAL = Math.pow(1.05, 1 / 12) - 1; // IPCA+5% — taxa do Diagnóstico Inicial
+const TAXA_MENSAL = taxaMensalDe(TAXA_DIAGNOSTICO_INICIAL); // IPCA+5%
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -44,22 +46,18 @@ export function calcularScoresDiag(
   dadosColeta: DadosColetaDiag,
 ): ScoresDiag {
   // ── Score Liberdade Financeira ──
-  const dataNasc = dadosColeta.dataNascimento ?? "";
-  const birthDate = dataNasc ? new Date(dataNasc) : null;
-  const idadeAtual = birthDate && isFinite(birthDate.getTime())
-    ? Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 0;
+  const idadeAtual    = calcularIdade(dadosColeta.dataNascimento);
   const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
   const aporteMensal    = Number(dadosColeta.aporteMensal)           || 0;
   const rendaDesejada   = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta       = Number(dadosColeta.idadeMeta) || 60;
+  const idadeMeta       = Number(dadosColeta.idadeMeta) || 0; // sem fallback — ausente = sem dado
   const patrimonioNec   = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
   const nMeses          = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
   const f               = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
   const projecao        = nMeses > 0 && isFinite(f)
     ? patrimonioAtual * f + aporteMensal * (f - 1) / TAXA_MENSAL
     : patrimonioAtual;
-  const lfTemDados = rendaDesejada > 0 && patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
+  const lfTemDados = rendaDesejada > 0 && patrimonioNec > 0 && idadeAtual > 0 && idadeMeta > 0 && idadeMeta > idadeAtual;
   const pctIF      = lfTemDados ? Math.min(100, Math.round(projecao / patrimonioNec * 100)) : 0;
   const scoreLF    = !lfTemDados ? -1 : pctIF;
 

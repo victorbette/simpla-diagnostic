@@ -6,6 +6,8 @@ import {
 } from "@/lib/financialFreedomCalc";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
+import { calcularIdade } from "@/lib/parseDate";
+import { TAXA_DIAGNOSTICO_INICIAL, TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
 
 function corMeta(pct: number): string {
   return pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
@@ -34,14 +36,12 @@ export function DocLFDiag({ lead }: Props) {
   const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
   const mesNascimento = parsed?.mes ?? 1;
 
-  const idadeAtual = parsed
-    ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 30;
+  const idadeAtual = calcularIdade(dadosColeta.dataNascimento) || 30;
 
   const patrimonioInicial  = Number(dadosLF.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro)       || 0;
   const aporteMensal       = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)               || 0;
   const rendaDesejada      = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta          = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 60;
+  const idadeMeta          = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 0;
   const patrimonioNecessario = rendaDesejada > 0 ? calcularPatrimonioPerpetuidade(rendaDesejada) : 0;
 
   // ── Ajustes: mesma lógica da aba LF ──
@@ -49,8 +49,8 @@ export function DocLFDiag({ lead }: Props) {
   const usarTaxaCustom  = dadosAjustes?.usarTaxaCustom ?? false;
   const taxaCustomAnual = dadosAjustes?.taxaCustomAnual ?? 6.0;
 
-  const TAXA_ANUAL  = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : 0.06;
-  const TAXA_MENSAL = Math.pow(1 + TAXA_ANUAL, 1 / 12) - 1;
+  const TAXA_ANUAL  = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : TAXA_LF_PADRAO;
+  const TAXA_MENSAL = taxaMensalDe(TAXA_ANUAL);
   const taxaLabel = usarTaxaCustom
     ? `IPCA + ${taxaCustomAnual.toFixed(2).replace(".", ",")}%`
     : "IPCA + 6,00%";
@@ -87,26 +87,34 @@ export function DocLFDiag({ lead }: Props) {
 
   const projecaoGrafico = result?.projecao ?? [];
 
-  const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > idadeAtual;
+  const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > 0 && idadeMeta > idadeAtual;
 
-  // ── Variáveis para o texto comparativo (situação atual vs ideal) ──
-  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteAtual = Number(dadosColeta.aporteMensal) || 0;
+  // ── Variáveis para o texto comparativo (situação atual com IPCA+5%) ──
+  const patrimonioAtual  = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteAtual      = Number(dadosColeta.aporteMensal) || 0;
   const rendaAtualColeta = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMetaColeta = Number(dadosColeta.idadeMeta) || 60;
-  const idadeAtualColeta = dadosColeta.dataNascimento
-    ? Math.floor((Date.now() - new Date(dadosColeta.dataNascimento).getTime()) / (365.25 * 24 * 3600 * 1000))
-    : 0;
-  const TAXA_MENSAL_TEXTO = Math.pow(1.05, 1 / 12) - 1;
-  const nMesesTexto = Math.max(0, Math.round((idadeMetaColeta - idadeAtualColeta) * 12));
-  const fTexto = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
-  const projecaoAtual = nMesesTexto > 0 && isFinite(fTexto)
+  // Reutiliza idadeAtual e idadeMeta já calculados com calcularIdade + fallbacks dadosLF
+  const TAXA_MENSAL_TEXTO = taxaMensalDe(TAXA_DIAGNOSTICO_INICIAL); // IPCA+5% para texto
+  const nMesesTexto       = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
+  const fTexto            = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
+  const projecaoAtual     = nMesesTexto > 0 && isFinite(fTexto)
     ? patrimonioAtual * fTexto + aporteAtual * (fTexto - 1) / TAXA_MENSAL_TEXTO
     : patrimonioAtual;
   const patrimonioNecTexto = rendaAtualColeta > 0 ? (rendaAtualColeta * 12) / 0.04 : 0;
-  const aporteIdeal = Number(dadosLF.aporteMensal) || 0;
+
+  // Aporte necessário calculado por fórmula (não o valor manual do usuário)
+  const aporteIdeal = (() => {
+    if (nMesesTexto <= 0 || patrimonioNecTexto <= 0) return 0;
+    const fA = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
+    if (!isFinite(fA)) return 0;
+    if (patrimonioAtual * fA >= patrimonioNecTexto) return 0;
+    const faltante = patrimonioNecTexto - patrimonioAtual * fA;
+    return Math.ceil(faltante * TAXA_MENSAL_TEXTO / (fA - 1));
+  })();
+
   const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
-  const lfTemDadosTexto = patrimonioNecTexto > 0 && idadeAtualColeta > 0 && idadeMetaColeta > idadeAtualColeta;
+  // Flag unificada — mesma fonte para gráfico e texto
+  const lfTemDadosTexto = lfTemDados;
 
   function gerarTextoLF(): string {
     if (!lfTemDadosTexto) {
@@ -114,7 +122,7 @@ export function DocLFDiag({ lead }: Props) {
     }
 
     const pctAtual = Math.round(projecaoAtual / patrimonioNecTexto * 100);
-    const anosRestantes = idadeMetaColeta - idadeAtualColeta;
+    const anosRestantes = idadeMeta - idadeAtual;
     const diferencaAporte = aporteIdeal - aporteAtual;
 
     if (projecaoAtual >= patrimonioNecTexto) {
