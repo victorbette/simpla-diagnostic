@@ -2,7 +2,7 @@ import { useState } from "react";
 import { User, DollarSign, PieChart } from "lucide-react";
 import type { DadosColetaDiag } from "../types";
 import { CurrencyInput } from "@/components/CurrencyInput";
-import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO, NIVEIS_ATRATIVIDADE } from "../ativosInvestimento";
+import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO } from "../ativosInvestimento";
 
 const INP: React.CSSProperties = {
   width: "100%",
@@ -486,7 +486,6 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {ATIVOS_INVESTIMENTO.filter(a => a.classe === classe).map(ativo => {
                   const marcado = !!(dados.ativosInvestimento?.[ativo.id]);
-                  const nivel = NIVEIS_ATRATIVIDADE[ativo.qualidade];
                   return (
                     <div
                       key={ativo.id}
@@ -495,23 +494,16 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                         alignItems: "center",
                         justifyContent: "space-between",
                         padding: "8px 12px",
-                        border: marcado ? `1px solid ${nivel.border}` : "1px solid #F3F4F6",
+                        border: marcado ? "1px solid #93C5FD" : "1px solid #F3F4F6",
                         borderRadius: 8,
-                        background: marcado ? nivel.bg : "white",
+                        background: marcado ? "#EFF6FF" : "white",
                         transition: "all 150ms",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8, flex: 1, minWidth: 0 }}>
-                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? ativo.cor : "#9CA3AF", marginTop: 2, flexShrink: 0 }} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: marcado ? 600 : 400, color: marcado ? "#111827" : "#6B7280" }}>
-                            {ativo.label}
-                          </div>
-                          {marcado && (
-                            <div style={{ fontSize: 9, fontWeight: 600, color: nivel.cor, marginTop: 1 }}>
-                              {nivel.label}
-                            </div>
-                          )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? "#2563EB" : "#9CA3AF", flexShrink: 0 }} />
+                        <div style={{ fontSize: 12, fontWeight: marcado ? 600 : 400, color: marcado ? "#111827" : "#6B7280", minWidth: 0 }}>
+                          {ativo.label}
                         </div>
                       </div>
                       <label style={{ position: "relative", display: "inline-block", width: 36, height: 20, cursor: "pointer", flexShrink: 0 }}>
@@ -530,7 +522,7 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                           position: "absolute",
                           top: 0, right: 0, bottom: 0, left: 0,
                           borderRadius: 20,
-                          background: marcado ? nivel.cor : "#D1D5DB",
+                          background: marcado ? "#2563EB" : "#D1D5DB",
                           transition: "background 200ms",
                         }} />
                         <span style={{

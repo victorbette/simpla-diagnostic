@@ -74,7 +74,7 @@ export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
   // ── RENDA VARIÁVEL ──────────────────────────────────────────────────────────
 
   acoes: {
-    opiniao: `As blue chips, empresas de maior capitalização, também sofrem com a piora do cenário macroeconômico. Entretanto, sua maior solidez financeira, menor alavancagem e maior capacidade de geração de resultados ajudam a reduzir os impactos desse ambiente.\n\nAlém disso, esse tipo de empresa costuma ser a escolha preferida dos investidores estrangeiros, o que tende a favorecer uma recuperação mais rápida em caso de melhora das expectativas.`,
+    opiniao: `Acreditávamos que as ações estariam entre as classes de investimento mais atrativas de 2026, e essa expectativa se confirmou no primeiro semestre. Nos primeiros meses do ano, a Bolsa brasileira apresentou forte valorização, impulsionada principalmente pela entrada de capital estrangeiro.\n\nEntretanto, o cenário para os próximos meses se tornou mais desafiador. O início da guerra entre Estados Unidos e Irã aumentou a aversão ao risco e provocou a saída de parte desses recursos do mercado brasileiro.\n\nAlém disso, o enfraquecimento da oposição nas eleições de 2026 aumentou a preocupação com a continuidade da atual política econômica. A percepção de menor austeridade fiscal pode manter os juros elevados por mais tempo, reduzindo a atratividade das ações.`,
   },
 
   small_caps: {
@@ -82,7 +82,7 @@ export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
   },
 
   fiis: {
-    opiniao: `Os fundos de papel voltaram a ganhar atratividade com a manutenção da Selic em patamar elevado e o aumento das expectativas de inflação. Embora o último resultado do IPCA tenha ficado abaixo das projeções, as estimativas atuais permanecem superiores às observadas no início do ano.\n\nAlém disso, a continuidade do conflito entre Estados Unidos e Irã mantém o petróleo em níveis desconfortáveis, aumentando os riscos de novas pressões inflacionárias. Nesse cenário, os fundos de papel podem ser priorizados por investidores que buscam rendimentos atrativos no curto prazo e maior proteção contra a inflação.`,
+    opiniao: `O mercado de fundos imobiliários é composto majoritariamente por investidores pessoa física, o que tende a resultar em movimentos mais lentos do que os observados no mercado de ações. Além disso, a ausência de um fluxo estrangeiro relevante fez com que o IFIX não acompanhasse o desempenho positivo da renda variável no primeiro trimestre de 2026.\n\nEm contrapartida, nos últimos seis meses, os fundos imobiliários apresentaram desempenho superior ao das ações, com uma queda mais moderada. A distribuição recorrente de rendimentos também ajuda a compensar parte da volatilidade no curto prazo.\n\nPor essa razão, nossa preferência atual é levemente maior pelos FIIs do que pelas ações, especialmente para investidores que buscam geração de renda e menor oscilação da carteira.`,
   },
 
   fii_tijolo: {

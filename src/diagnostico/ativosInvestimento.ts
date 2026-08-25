@@ -28,41 +28,34 @@ export const NIVEIS_ATRATIVIDADE: Record<QualidadeAtivo, NivelAtratividade> = {
 
 export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   // ─── RENDA FIXA ────────────────────────────────────────────────────
-  { id: "tesouro_selic",  label: "Tesouro Selic",            classe: "renda_fixa",    qualidade: "muito_atrativo", icone: "ti-building-bank", cor: "#15803D" },
-  { id: "ipca_curto",     label: "IPCA Curto (até 5 anos)",  classe: "renda_fixa",    qualidade: "atrativo",       icone: "ti-building-bank", cor: "#16A34A" },
-  { id: "ipca_longo",     label: "IPCA Longo (+ de 5 anos)", classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-building-bank", cor: "#C2410C" },
-  { id: "prefixado",      label: "Prefixado",                 classe: "renda_fixa",    qualidade: "nada_atrativo",  icone: "ti-building-bank", cor: "#B91C1C" },
-  { id: "fundo_rf",       label: "Fundos de Investimento",    classe: "renda_fixa",    qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
-  { id: "cdb",            label: "CDB",                       classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
-  { id: "lci_lca",        label: "LCI / LCA",                 classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
-  { id: "cri_cra",        label: "CRI / CRA",                 classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
-  { id: "debentures",     label: "Debêntures",                classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
-  { id: "poupanca",       label: "Poupança",                  classe: "renda_fixa",    qualidade: "nada_atrativo",  icone: "ti-piggy-bank",    cor: "#B91C1C" },
+  { id: "tesouro_selic",  label: "Tesouro Selic",                    classe: "renda_fixa",    qualidade: "muito_atrativo", icone: "ti-building-bank", cor: "#15803D" },
+  { id: "fundo_rf",       label: "Fundo de Investimento Renda Fixa", classe: "renda_fixa",    qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
+  { id: "poupanca",       label: "Poupança",                          classe: "renda_fixa",    qualidade: "nada_atrativo",  icone: "ti-piggy-bank",    cor: "#B91C1C" },
+  { id: "cri_cra",        label: "CRI / CRA",                         classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
+  { id: "debentures",     label: "Debêntures",                        classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
+  { id: "lci_lca",        label: "LCI / LCA",                         classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
 
   // ─── RENDA VARIÁVEL ─────────────────────────────────────────────────
-  { id: "acoes",          label: "Ações (Blue Chips)",         classe: "renda_variavel", qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309", grupoTexto: "acoes_rv" },
-  { id: "small_caps",     label: "Small Caps",                 classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-trending-up",   cor: "#C2410C", grupoTexto: "acoes_rv" },
-  { id: "fiis",           label: "FIIs (Papel)",               classe: "renda_variavel", qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "fiis_geral" },
-  { id: "fii_tijolo",     label: "FIIs (Tijolo)",              classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-building",      cor: "#C2410C", grupoTexto: "fiis_geral" },
-  { id: "etfs",           label: "ETFs",                       classe: "renda_variavel", qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
-  { id: "fundo_acoes",    label: "Fundos de Ações",            classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "fiagro",         label: "Fiagro",                     classe: "renda_variavel", qualidade: "moderado",       icone: "ti-plant",         cor: "#B45309" },
+  { id: "acoes",          label: "Ações",                             classe: "renda_variavel", qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309" },
+  { id: "fiis",           label: "FIIs",                              classe: "renda_variavel", qualidade: "moderado",       icone: "ti-building",      cor: "#B45309" },
+  { id: "etfs",           label: "ETFs",                              classe: "renda_variavel", qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
+  { id: "fundo_acoes",    label: "Fundos de Ações",                   classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
 
   // ─── EXTERIOR ──────────────────────────────────────────────────────
-  { id: "renda_fixa_eua", label: "Renda Fixa EUA",            classe: "exterior",       qualidade: "atrativo",       icone: "ti-world",         cor: "#16A34A" },
-  { id: "stocks",         label: "Stocks",                     classe: "exterior",       qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309" },
-  { id: "reits",          label: "REITs",                      classe: "exterior",       qualidade: "pouco_atrativo", icone: "ti-building",      cor: "#C2410C" },
-  { id: "outros_paises",  label: "Outros Países",              classe: "exterior",       qualidade: "nada_atrativo",  icone: "ti-world-off",     cor: "#B91C1C" },
+  { id: "renda_fixa_eua", label: "Renda Fixa EUA",                   classe: "exterior",       qualidade: "atrativo",       icone: "ti-world",         cor: "#16A34A" },
+  { id: "stocks",         label: "Stocks",                            classe: "exterior",       qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309" },
+  { id: "reits",          label: "REITs",                             classe: "exterior",       qualidade: "pouco_atrativo", icone: "ti-building",      cor: "#C2410C" },
+  { id: "etfs_exterior",  label: "ETFs",                              classe: "exterior",       qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
 
   // ─── CRIPTO ────────────────────────────────────────────────────────
-  { id: "cripto",         label: "Bitcoin / Criptomoedas",    classe: "cripto",         qualidade: "moderado",       icone: "ti-currency-bitcoin", cor: "#B45309" },
+  { id: "cripto",         label: "Bitcoin / Criptomoedas / ETFs",    classe: "cripto",         qualidade: "moderado",       icone: "ti-currency-bitcoin", cor: "#B45309" },
 
   // ─── ALTERNATIVOS ───────────────────────────────────────────────────
-  { id: "fundo_multimercado",  label: "Fundos Multimercado",    classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "fundo_cetipado",      label: "Fundos Cetipados",       classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "fundo_alternativo",   label: "Fundos Alternativos",    classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "produto_estruturado", label: "Produtos Estruturados",  classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "coe",                 label: "COE",                    classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
+  { id: "fundo_multimercado",  label: "Fundos Multimercado",          classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "fundo_alternativo",   label: "Fundos Alternativos",          classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "coe",                 label: "COE",                          classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
+  { id: "fundo_cetipado",      label: "Fundos Cetipados",             classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "produto_estruturado", label: "Produtos Estruturados",        classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
 ];
 
 export const CLASSES_INVESTIMENTO: {
