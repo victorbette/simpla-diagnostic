@@ -140,6 +140,6 @@ export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
   },
 
   produto_estruturado: {
-    negativo: `Produtos estruturados geralmente possuem estruturas de remuneração complexas e pouco transparentes, com liquidez reduzida e custos embutidos que nem sempre são evidentes. Exigem análise criteriosa e devem representar apenas uma parcela pequena do portfólio.`,
+    opiniao: `Produtos Estruturados são, em essência, uma versão empacotada dos COEs — e compartilham dos mesmos problemas. São construídos com estruturas de remuneração complexas e pouco transparentes, que na maioria dos casos favorecem muito mais a instituição financeira do que o investidor.\n\nO retorno potencial costuma ser limitado, as condições de resgate antecipado são desfavoráveis, e os custos embutidos raramente aparecem de forma clara na apresentação do produto. Quem os vende tem incentivos financeiros significativos para fazê-lo — o que, por si só, já deveria acender um sinal de alerta.\n\nNossa recomendação é evitar essa classe. Com o mesmo capital, é possível construir estratégias mais transparentes, mais líquidas e com melhor relação risco-retorno.`,
   },
 };
