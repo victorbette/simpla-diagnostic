@@ -215,10 +215,10 @@ export function DiagResultado({ lead }: Props) {
               {blocos.map(b => (
                 <div key={b.chave} style={{
                   borderLeft: `3px solid ${b.nivel.border}`,
-                  paddingLeft: 12,
-                  background: b.nivel.bg,
+                  padding: "10px 14px",
                   borderRadius: "0 8px 8px 0",
-                  padding: "10px 14px 10px 14px",
+                  background: "white",
+                  border: "0.5px solid #F3F4F6",
                   borderLeftWidth: 3,
                   borderLeftStyle: "solid",
                   borderLeftColor: b.nivel.border,
