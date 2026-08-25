@@ -1,5 +1,7 @@
 import type { Lead } from "../types";
 import { nivelScore, calcularScoresDiag } from "../scoresDiag";
+import { ATIVOS_INVESTIMENTO, NIVEIS_ATRATIVIDADE } from "../ativosInvestimento";
+import { ATIVOS_TEXTOS } from "../ativosTextos";
 
 interface Props {
   lead: Lead;
@@ -93,15 +95,14 @@ export function DiagResultado({ lead }: Props) {
   const {
     scoreLF, scoreInvestimentos, scoreBlindagem, scoreGeral,
     lfTemDados, pctIF,
-    aaTemDados, ativosBonsLabels, nBonsCount, nRuinsCount,
-    temRV, temExt,
+    aaTemDados, nRuinsCount,
     blindagemTemDados, possuiSeguro,
     comecandoDoZero,
   } = calcularScoresDiag(dadosColeta);
 
   const nome = lead.nome.split(" ")[0];
 
-  function gerarTextoInvestimentos(): string {
+  function introInvestimentos(): string {
     if (comecandoDoZero) {
       const valor = Number(dadosColeta.valorParaInvestir) || 0;
       const valorStr = valor > 0
@@ -109,74 +110,163 @@ export function DiagResultado({ lead }: Props) {
         : "";
       return `Você está no ponto de partida — e esse é, na verdade, um momento de enorme vantagem.\n\nComeçar a investir do zero com estratégia é infinitamente melhor do que ter investido por anos sem ela. Quem começa certo não precisa depois desfazer decisões ruins, resgatar produtos inadequados ou conviver com taxas que corroem o patrimônio silenciosamente.\n\nO capital que você tem disponível${valorStr} é o ponto de partida para construir uma carteira que trabalha para você todos os dias. Os juros compostos são mais poderosos quanto mais cedo começam a agir — e cada mês de atraso tem um custo real que não aparece em nenhum extrato, mas que se acumula de forma surpreendente ao longo dos anos.\n\nEsse é o momento de começar do jeito certo.`;
     }
-
     if (!aaTemDados) {
       return "Não identificamos nenhum investimento mapeado em sua carteira. Se você ainda não começou a investir, cada mês de atraso tem um custo real e crescente — o custo dos juros compostos que poderiam estar trabalhando para você, mas não estão.\n\nSe você já investe mas não tem clareza de onde e em quê, isso é igualmente preocupante. Dinheiro sem estratégia raramente cresce como deveria — e muitas vezes está gerando retorno para outros em vez de para você.";
     }
+    if (nRuinsCount > 0) {
+      return `Identificamos pontos de atenção na composição atual da sua carteira. Abaixo, a análise detalhada de cada posição — e o que recomendamos para o seu cenário.`;
+    }
+    return `Sua carteira conta com boas posições para o cenário atual. Abaixo, a análise detalhada de cada ativo — e o que observamos em relação ao momento de mercado.`;
+  }
 
+  function gerarTextoDiversificacao(): string {
     const am = dadosColeta.ativosInvestimento ?? {};
     const tem = (id: string) => am[id] === true;
-    const partes: string[] = [];
+    const temRFPilar  = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem);
+    const temAcoesPilar = tem("acoes");
+    const temFIIsPilar  = tem("fiis");
+    const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
+    const faltam = [
+      !temRFPilar && "Renda Fixa",
+      !temAcoesPilar && "Ações",
+      !temFIIsPilar && "Fundos Imobiliários",
+      !temGlobalPilar && "Investimentos Globais",
+    ].filter(Boolean) as string[];
 
-    // Ativos bons
-    if (nBonsCount > 0) {
-      partes.push(`Sua carteira já conta com ativos de qualidade — ${ativosBonsLabels.join(", ")}. Isso demonstra que você já tomou boas decisões de investimento e tem uma base sólida para continuar construindo.`);
+    if (faltam.length === 0) {
+      return `Sua carteira está distribuída pelos quatro pilares recomendados pela Simpla — Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais. Essa diversificação é fundamental para equilibrar proteção e crescimento em diferentes cenários econômicos.`;
+    }
+    if (!temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
+      return `Nenhum ativo foi mapeado. Para analisar a diversificação da sua carteira, preencha os investimentos na etapa de coleta.`;
+    }
+    if (temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
+      return `Sua carteira está concentrada em Renda Fixa, sem exposição a Ações, Fundos Imobiliários ou Investimentos Globais. Embora a renda fixa ofereça segurança e previsibilidade, uma carteira sem ativos de crescimento tem um custo de oportunidade relevante no longo prazo. A Simpla recomenda distribuir o patrimônio pelos quatro pilares para equilibrar proteção, geração de renda e crescimento real.`;
+    }
+    if (!temGlobalPilar) {
+      const temOutros = temRFPilar || temAcoesPilar || temFIIsPilar;
+      const base = temOutros
+        ? `Sua carteira ainda não tem exposição internacional.`
+        : `Não identificamos exposição internacional na sua carteira.`;
+      return `${base} O investimento global é fundamental para reduzir o risco-Brasil e capturar oportunidades em economias mais desenvolvidas — especialmente nos EUA, que concentra as maiores empresas do mundo e oferece um ambiente regulatório mais sólido. Renda Fixa americana, Stocks, REITs e ETFs globais são as principais formas de acessar essa diversificação.`;
+    }
+    if (!temAcoesPilar && !temFIIsPilar) {
+      return `Você tem renda fixa e investimentos globais, mas sua carteira não conta com Ações nem Fundos Imobiliários. Esses dois pilares são essenciais para o crescimento real do patrimônio no longo prazo e para a geração de renda passiva — e estão ausentes da sua estratégia atual.`;
+    }
+    const lista = faltam.length === 1
+      ? faltam[0]
+      : faltam.slice(0, -1).join(", ") + " e " + faltam[faltam.length - 1];
+    return `${faltam.length === 1 ? "Um pilar ainda está ausente" : "Alguns pilares ainda estão ausentes"} da sua carteira: ${lista}. A Simpla recomenda distribuição entre Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais para equilibrar segurança, crescimento e diversificação geográfica.`;
+  }
+
+  function renderConteudoInvestimentos() {
+    const intro = introInvestimentos();
+
+    if (comecandoDoZero || !aaTemDados) {
+      return (
+        <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line", textAlign: "justify" as const }}>
+          {intro}
+        </p>
+      );
     }
 
-    // Poupança
-    if (tem("poupanca")) {
-      partes.push(`A poupança é um dos pontos que mais chama atenção. Embora seja segura e familiar, sua rentabilidade é limitada por lei e, na prática, costuma perder para a inflação no longo prazo. Existem alternativas igualmente seguras — com proteção do FGC — que rendem significativamente mais, como o Tesouro Selic e CDBs de liquidez diária. Essa troca é uma das mudanças mais simples e impactantes que você pode fazer agora.`);
+    const am = dadosColeta.ativosInvestimento ?? {};
+    const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => am[a.id] === true);
+    const grupos = new Set<string>();
+
+    // Collect asset blocks in order: bons → atencao → ruins
+    const blocos: { chave: string; label: string; nivel: typeof NIVEIS_ATRATIVIDADE[keyof typeof NIVEIS_ATRATIVIDADE]; texto: string }[] = [];
+    for (const ativo of ativosDoLead) {
+      const chave = ativo.grupoTexto ?? ativo.id;
+      if (grupos.has(chave)) continue;
+      grupos.add(chave);
+      const textoAtivo = ATIVOS_TEXTOS[chave];
+      const texto = textoAtivo?.opiniao ?? textoAtivo?.positivo ?? textoAtivo?.atencao ?? textoAtivo?.negativo;
+      if (!texto) continue;
+      const ativosGrupo = ativosDoLead.filter(a => (a.grupoTexto ?? a.id) === chave);
+      blocos.push({
+        chave,
+        label: ativosGrupo.map(a => a.label).join(" / "),
+        nivel: NIVEIS_ATRATIVIDADE[ativo.qualidade],
+        texto,
+      });
     }
 
-    // Produtos complexos/opacos
-    const prodComplexos: Record<string, string> = {
-      coe: "COE",
-      produto_estruturado: "Produtos Estruturados",
-      fundo_cetipado: "Fundos Cetipados",
-    };
-    const complexosPresentes = Object.keys(prodComplexos).filter(id => tem(id));
-    if (complexosPresentes.length > 0) {
-      const nomes = complexosPresentes.map(id => prodComplexos[id]).join(", ");
-      partes.push(`Alguns produtos da sua carteira — ${nomes} — possuem estruturas complexas que, na maioria dos casos, favorecem mais a instituição financeira do que o investidor. Baixa transparência, liquidez reduzida e custos embutidos são características que merecem atenção.`);
-    }
+    // Diversification pillars
+    const tem = (id: string) => am[id] === true;
+    const pilares = [
+      { label: "Renda Fixa",            icone: "ti-building-bank", ok: ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem) },
+      { label: "Ações",                  icone: "ti-trending-up",   ok: tem("acoes") },
+      { label: "Fundos Imobiliários",    icone: "ti-building",      ok: tem("fiis") },
+      { label: "Investimentos Globais",  icone: "ti-world",         ok: ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem) },
+    ];
 
-    // Fundos alternativos
-    if (tem("fundo_alternativo")) {
-      partes.push(`Fundos alternativos sem histórico robusto ou de gestoras pouco conhecidas representam risco sem a devida contrapartida de retorno. Vale avaliar com cuidado o que justifica essa alocação.`);
-    }
+    return (
+      <>
+        <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, marginBottom: 20, textAlign: "justify" as const }}>
+          {intro}
+        </p>
 
-    // Fundos de ações
-    if (tem("fundo_acoes")) {
-      partes.push(`Fundos de ações com taxas elevadas ou desempenho abaixo do Ibovespa de forma consistente destroem valor. Em muitos casos, ETFs de índice com taxas menores entregam resultados superiores no longo prazo.`);
-    }
+        {blocos.length > 0 && (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 10 }}>
+              Avaliação por ativo
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginBottom: 20 }}>
+              {blocos.map(b => (
+                <div key={b.chave} style={{
+                  borderLeft: `3px solid ${b.nivel.border}`,
+                  paddingLeft: 12,
+                  background: b.nivel.bg,
+                  borderRadius: "0 8px 8px 0",
+                  padding: "10px 14px 10px 14px",
+                  borderLeftWidth: 3,
+                  borderLeftStyle: "solid",
+                  borderLeftColor: b.nivel.border,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{b.label}</span>
+                    <span style={{
+                      fontSize: 9, fontWeight: 700, color: b.nivel.cor,
+                      background: "white", border: `1px solid ${b.nivel.border}`,
+                      padding: "1px 7px", borderRadius: 99,
+                    }}>
+                      {b.nivel.label}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: 0, textAlign: "justify" as const }}>
+                    {b.texto}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
-    // Fundos multimercado
-    if (tem("fundo_multimercado")) {
-      partes.push(`Fundos multimercado com taxas elevadas ou sem histórico consistente de retorno podem consumir boa parte do rendimento. A escolha do gestor é fundamental nessa categoria.`);
-    }
-
-    // Fiagro
-    if (tem("fiagro")) {
-      partes.push(`Fiagros ainda são uma classe relativamente nova, com histórico curto e riscos ligados ao setor agrícola que a maioria dos investidores tem dificuldade de avaliar. Avalie com cuidado a qualidade da carteira e a gestora antes de alocar recursos.`);
-    }
-
-    // CRI/CRA e Debêntures
-    const creditLabels: Record<string, string> = { cri_cra: "CRI/CRA", debentures: "Debêntures" };
-    const creditPresentes = Object.keys(creditLabels).filter(id => tem(id));
-    if (creditPresentes.length > 0) {
-      const nomes = creditPresentes.map(id => creditLabels[id]).join(" e ");
-      partes.push(`${nomes} não contam com proteção do FGC e têm liquidez reduzida no mercado secundário. É essencial avaliar a qualidade de crédito do emissor e manter a exposição dentro de um percentual adequado ao seu perfil.`);
-    }
-
-    // Apenas renda fixa, sem RV nem exterior
-    if (nRuinsCount === 0 && !temRV && !temExt) {
-      partes.push(`Uma carteira concentrada apenas em renda fixa tem um custo de oportunidade real no longo prazo. Sem ativos de crescimento — como ações e fundos imobiliários — e sem diversificação internacional, o patrimônio tende a crescer significativamente abaixo do seu potencial. Você já tem a base — agora é hora de construir sobre ela.`);
-    }
-
-    // Encerramento
-    partes.push(`Uma carteira bem estruturada não é apenas sobre escolher bons produtos — é sobre ter cada ativo cumprindo um papel específico, com diversificação adequada e custos sob controle. Pequenos ajustes na composição atual podem representar uma diferença significativa no resultado de longo prazo.`);
-
-    return partes.join("\n\n");
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 10 }}>
+          Diversificação da carteira
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 14 }}>
+          {pilares.map(p => (
+            <div key={p.label} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 12px", borderRadius: 8,
+              background: p.ok ? "#F0FDF4" : "#FFF5F5",
+              border: `1px solid ${p.ok ? "#BBF7D0" : "#FCA5A5"}`,
+            }}>
+              <i className={`ti ${p.ok ? "ti-circle-check" : "ti-circle-x"}`}
+                style={{ fontSize: 14, color: p.ok ? "#15803D" : "#B91C1C", flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: p.ok ? "#14532D" : "#7F1D1D" }}>{p.label}</div>
+                <div style={{ fontSize: 9, color: p.ok ? "#15803D" : "#B91C1C" }}>{p.ok ? "Presente" : "Ausente"}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: 0, textAlign: "justify" as const }}>
+          {gerarTextoDiversificacao()}
+        </p>
+      </>
+    );
   }
 
   function gerarTexto(area: string): string {
@@ -196,7 +286,7 @@ export function DiagResultado({ lead }: Props) {
       return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja — para sempre.\n\nIsso significa liberdade de verdade: acordar de manhã e escolher como usar o seu tempo, não por obrigação, mas por vontade. Significa poder estar presente nos momentos que importam para a sua família, apoiar os projetos dos seus filhos, viver as experiências que sempre planejou — sem a pressão financeira que acompanha a maioria das pessoas ao longo da vida.\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro da sua família está resguardado, independente do que aconteça.`;
     }
 
-    if (area === "inv") return gerarTextoInvestimentos();
+    if (area === "inv") return "";
 
     if (area === "blind") {
       if (!blindagemTemDados) {
@@ -306,9 +396,11 @@ export function DiagResultado({ lead }: Props) {
                 {nivelScore(score).label}
               </span>
             </div>
-            <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line", textAlign: "justify" as const }}>
-              {gerarTexto(area)}
-            </p>
+            {area === "inv" ? renderConteudoInvestimentos() : (
+              <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, whiteSpace: "pre-line", textAlign: "justify" as const }}>
+                {gerarTexto(area)}
+              </p>
+            )}
           </div>
         ))}
 
