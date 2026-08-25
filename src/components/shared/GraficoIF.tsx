@@ -62,9 +62,11 @@ interface Props {
   patrimonioNecessario?: number;
   /** false = versão estática para o documento impresso (sem pills de zoom nem legenda clicável) */
   interativo?: boolean;
+  /** false = oculta só os pills de zoom (mantém legenda e tooltip) */
+  mostrarZoom?: boolean;
 }
 
-export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF, patrimonioNecessario, interativo = true }: Props) {
+export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, mesIF, patrimonioNecessario, interativo = true, mostrarZoom = true }: Props) {
   // ── Hooks (must be before any early return) ──────────────────────────────────
   const [mostrarProjetado, setMostrarProjetado] = useState(true);
   const [mostrarIdeal, setMostrarIdeal] = useState(true);
@@ -297,7 +299,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     `}</style>
     <div>
       {/* Pills de zoom (canto direito, acima do gráfico) */}
-      {interativo && (
+      {interativo && mostrarZoom && (
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 4, marginBottom: 8 }}>
         {(["2a", "5a", "10a", "max"] as const).map(r => (
           <button

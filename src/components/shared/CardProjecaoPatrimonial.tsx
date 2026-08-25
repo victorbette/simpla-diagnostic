@@ -11,6 +11,7 @@ interface Props {
   mesNascimento?: number;
   height?: number;
   interativo?: boolean;
+  mostrarZoom?: boolean;
   taxaLabel?: string;
 }
 
@@ -22,6 +23,7 @@ export function CardProjecaoPatrimonial({
   mesNascimento,
   height = 420,
   interativo = true,
+  mostrarZoom = true,
   taxaLabel,
 }: Props) {
   return (
@@ -38,6 +40,7 @@ export function CardProjecaoPatrimonial({
           mesNascimento={mesNascimento}
           patrimonioNecessario={patrimonioNecessario}
           interativo={interativo}
+          mostrarZoom={mostrarZoom}
         />
         {taxaLabel && (
           <div style={{

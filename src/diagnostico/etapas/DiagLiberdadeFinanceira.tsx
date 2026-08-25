@@ -510,6 +510,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             mesNascimento={mesNascimento}
             patrimonioNecessario={patrimonioPerpetuidade}
             taxaLabel={taxaLabel}
+            mostrarZoom={false}
           />
         </div>
       </div>
