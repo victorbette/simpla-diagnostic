@@ -366,9 +366,17 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             {/* Aposentadoria */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Aposentadoria</label>
+                  {idadeAposentadoriaEditada && (
+                    <button
+                      onClick={() => { setP({ idadeAposentadoria: idadeMetaColeta || 65 }); setIdadeAposentadoriaEditada(false); }}
+                      style={{ fontSize: 10, color: "#2563EB", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >↺</button>
+                  )}
+                </div>
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>
-                  {params.idadeAposentadoria ?? 60} anos
+                  {params.idadeAposentadoria ?? 65} anos
                 </span>
               </div>
               <input
