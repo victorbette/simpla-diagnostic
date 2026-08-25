@@ -26,7 +26,25 @@ export const ATIVOS_TEXTOS: Partial<Record<string, TextoAtivo>> = {
   },
 
   fundo_rf: {
-    opiniao: `Entendemos que os fundos de investimento são, no cenário atual, a melhor forma de exposição ao crédito privado, pois oferecem carteiras diversificadas e contam com análise profissional contínua.\n\nIsso não os torna imunes a problemas, como os observados entre fevereiro e maio de 2026. Ainda assim, consideramos essa a alternativa mais adequada para reduzir os riscos enquanto buscamos retornos acima do CDI. A depender do fundo e da estratégia escolhida, podemos esperar rentabilidades entre 103% e 115% do CDI.`,
+    opiniao: `Entendemos que os fundos de investimento são, no cenário atual, a melhor forma de exposição ao crédito privado, pois oferecem carteiras diversificadas e contam com análise profissional contínua.\n\nIsso não os torna imunes a problemas, como os observados entre fevereiro e maio de 2026. Ainda assim, consideramos essa a alternativa mais adequada para reduzir os riscos enquanto buscamos retornos acima do CDI.\n\nA depender do fundo e da estratégia escolhida, podemos esperar rentabilidades entre 103% e 115% do CDI.`,
+  },
+
+  // ── GRUPOS (textos compartilhados entre ativos da mesma classe) ────────────
+
+  bancarios: {
+    opiniao: `Atualmente, tem sido difícil encontrar taxas muito atrativas em ativos bancários. Por isso, mantemos uma recomendação neutra para a classe.\n\nEm termos de segurança, desde que seja escolhida uma instituição financeira sólida, não vemos motivos relevantes para preocupação. O principal ponto negativo, neste momento, é a baixa atratividade dos retornos oferecidos.`,
+  },
+
+  credito_privado: {
+    opiniao: `Em crédito privado, é fundamental separar muito bem o joio do trigo. De maneira geral, o período prolongado de Selic elevada aumenta o risco de inadimplência das empresas, e não é coincidência o crescimento do número de recuperações judiciais anunciadas nos últimos dois anos.\n\nPor isso, recomendamos muita cautela no investimento direto em debêntures, CRIs e CRAs. O investidor deve ser bastante criterioso ao avaliar a qualidade do emissor, sua capacidade de pagamento e as garantias oferecidas.\n\nEm termos gerais, a recomendação é evitar a alocação direta nesses ativos, exceto em casos bastante específicos, envolvendo papéis emitidos por grandes empresas, com boa qualidade de crédito e riscos devidamente compreendidos.`,
+  },
+
+  acoes_rv: {
+    opiniao: `Acreditávamos que as ações estariam entre as classes de investimento mais atrativas de 2026, e essa expectativa se confirmou no primeiro semestre. Nos primeiros meses do ano, a Bolsa brasileira apresentou forte valorização, impulsionada principalmente pela entrada de capital estrangeiro.\n\nEntretanto, o cenário para os próximos meses se tornou mais desafiador. O início da guerra entre Estados Unidos e Irã aumentou a aversão ao risco e provocou a saída de parte desses recursos do mercado brasileiro.\n\nAlém disso, o enfraquecimento da oposição nas eleições de 2026 aumentou a preocupação com a continuidade da atual política econômica. A percepção de menor austeridade fiscal pode manter os juros elevados por mais tempo, reduzindo a atratividade das ações.`,
+  },
+
+  fiis_geral: {
+    opiniao: `O mercado de fundos imobiliários é composto majoritariamente por investidores pessoa física, o que tende a resultar em movimentos mais lentos do que os observados no mercado de ações. Além disso, a ausência de um fluxo estrangeiro relevante fez com que o IFIX não acompanhasse o desempenho positivo da renda variável no primeiro trimestre de 2026.\n\nEm contrapartida, nos últimos seis meses, os fundos imobiliários apresentaram desempenho superior ao das ações, com uma queda mais moderada. A distribuição recorrente de rendimentos também ajuda a compensar parte da volatilidade no curto prazo.\n\nPor essa razão, nossa preferência atual é levemente maior pelos FIIs do que pelas ações, especialmente para investidores que buscam geração de renda e menor oscilação da carteira.`,
   },
 
   cdb: {

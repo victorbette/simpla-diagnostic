@@ -1,5 +1,5 @@
 import type { Lead } from "../types";
-import { ATIVOS_INVESTIMENTO, NIVEIS_ATRATIVIDADE } from "../ativosInvestimento";
+import { ATIVOS_INVESTIMENTO, NIVEIS_ATRATIVIDADE, type AtivoInvestimento } from "../ativosInvestimento";
 import { ATIVOS_TEXTOS } from "../ativosTextos";
 import { DOC } from "@/lib/documentoStyles";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
@@ -171,6 +171,46 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
     ),
   });
 
+  // Set compartilhado entre seções para deduplicar grupos
+  const gruposProcessados = new Set<string>();
+
+  function renderBlocoAtivo(
+    ativo: AtivoInvestimento,
+    borderColor: string,
+    fallbackField: "positivo" | "atencao" | "negativo",
+    chavePrefix: string,
+  ): BlocoDoc | null {
+    const chaveGrupo = ativo.grupoTexto ?? ativo.id;
+    if (gruposProcessados.has(chaveGrupo)) return null;
+    gruposProcessados.add(chaveGrupo);
+
+    const textoAtivo = ATIVOS_TEXTOS[chaveGrupo];
+    const texto = textoAtivo?.opiniao ?? textoAtivo?.[fallbackField];
+    if (!texto) return null;
+
+    // Todos os ativos selecionados que pertencem a este grupo
+    const ativosGrupo = ativosDoLead.filter(a => (a.grupoTexto ?? a.id) === chaveGrupo);
+    const labelGrupo = ativosGrupo.map(a => a.label).join(" / ");
+    const nivel = NIVEIS_ATRATIVIDADE[ativo.qualidade];
+
+    return {
+      chave: `${chavePrefix}_${chaveGrupo}`,
+      node: (
+        <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: `2px solid ${borderColor}` }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
+            {labelGrupo}
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: nivel.cor, marginBottom: 3 }}>
+            {nivel.label}
+          </div>
+          <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
+            {texto.trim()}
+          </p>
+        </div>
+      ),
+    };
+  }
+
   if (ativosBons.length > 0) {
     blocos.push({
       chave: "bons_label",
@@ -186,24 +226,8 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       ),
     });
     ativosBons.forEach((ativo) => {
-      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!(textoAtivo?.opiniao ?? textoAtivo?.positivo)) return;
-      blocos.push({
-        chave: `bom_${ativo.id}`,
-        node: (
-          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #BBF7D0" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-              {ativo.label}
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
-              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
-            </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {(textoAtivo?.opiniao ?? textoAtivo?.positivo)!.replace(/\n\s+/g, " ").trim()}
-            </p>
-          </div>
-        ),
-      });
+      const bloco = renderBlocoAtivo(ativo, "#BBF7D0", "positivo", "bom");
+      if (bloco) blocos.push(bloco);
     });
   }
 
@@ -222,24 +246,8 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       ),
     });
     ativosAtencao.forEach((ativo) => {
-      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!(textoAtivo?.opiniao ?? textoAtivo?.atencao)) return;
-      blocos.push({
-        chave: `atencao_${ativo.id}`,
-        node: (
-          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCD34D" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-              {ativo.label}
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
-              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
-            </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {(textoAtivo?.opiniao ?? textoAtivo?.atencao)!.replace(/\n\s+/g, " ").trim()}
-            </p>
-          </div>
-        ),
-      });
+      const bloco = renderBlocoAtivo(ativo, "#FCD34D", "atencao", "atencao");
+      if (bloco) blocos.push(bloco);
     });
   }
 
@@ -258,24 +266,8 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
       ),
     });
     ativosRuins.forEach((ativo) => {
-      const textoAtivo = ATIVOS_TEXTOS[ativo.id];
-      if (!(textoAtivo?.opiniao ?? textoAtivo?.negativo)) return;
-      blocos.push({
-        chave: `ruim_${ativo.id}`,
-        node: (
-          <div style={{ marginBottom: 12, paddingLeft: 12, borderLeft: "2px solid #FCA5A5" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "#111827", marginBottom: 3 }}>
-              {ativo.label}
-            </div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: NIVEIS_ATRATIVIDADE[ativo.qualidade].cor, marginBottom: 3 }}>
-              {NIVEIS_ATRATIVIDADE[ativo.qualidade].label}
-            </div>
-            <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.7, margin: 0, textAlign: "justify" as const }}>
-              {(textoAtivo?.opiniao ?? textoAtivo?.negativo)!.replace(/\n\s+/g, " ").trim()}
-            </p>
-          </div>
-        ),
-      });
+      const bloco = renderBlocoAtivo(ativo, "#FCA5A5", "negativo", "ruim");
+      if (bloco) blocos.push(bloco);
     });
   }
 

@@ -7,6 +7,7 @@ export interface AtivoInvestimento {
   qualidade: QualidadeAtivo;
   icone: string;
   cor: string;
+  grupoTexto?: string;
 }
 
 export interface NivelAtratividade {
@@ -32,17 +33,17 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "ipca_longo",     label: "IPCA Longo (+ de 5 anos)", classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-building-bank", cor: "#C2410C" },
   { id: "prefixado",      label: "Prefixado",                 classe: "renda_fixa",    qualidade: "nada_atrativo",  icone: "ti-building-bank", cor: "#B91C1C" },
   { id: "fundo_rf",       label: "Fundos de Investimento",    classe: "renda_fixa",    qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
-  { id: "cdb",            label: "CDB",                       classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309" },
-  { id: "lci_lca",        label: "LCI / LCA",                 classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309" },
-  { id: "cri_cra",        label: "CRI / CRA",                 classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "debentures",     label: "Debêntures",                classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "cdb",            label: "CDB",                       classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
+  { id: "lci_lca",        label: "LCI / LCA",                 classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
+  { id: "cri_cra",        label: "CRI / CRA",                 classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
+  { id: "debentures",     label: "Debêntures",                classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
   { id: "poupanca",       label: "Poupança",                  classe: "renda_fixa",    qualidade: "nada_atrativo",  icone: "ti-piggy-bank",    cor: "#B91C1C" },
 
   // ─── RENDA VARIÁVEL ─────────────────────────────────────────────────
-  { id: "acoes",          label: "Ações (Blue Chips)",         classe: "renda_variavel", qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309" },
-  { id: "small_caps",     label: "Small Caps",                 classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-trending-up",   cor: "#C2410C" },
-  { id: "fiis",           label: "FIIs (Papel)",               classe: "renda_variavel", qualidade: "moderado",       icone: "ti-building",      cor: "#B45309" },
-  { id: "fii_tijolo",     label: "FIIs (Tijolo)",              classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-building",      cor: "#C2410C" },
+  { id: "acoes",          label: "Ações (Blue Chips)",         classe: "renda_variavel", qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309", grupoTexto: "acoes_rv" },
+  { id: "small_caps",     label: "Small Caps",                 classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-trending-up",   cor: "#C2410C", grupoTexto: "acoes_rv" },
+  { id: "fiis",           label: "FIIs (Papel)",               classe: "renda_variavel", qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "fiis_geral" },
+  { id: "fii_tijolo",     label: "FIIs (Tijolo)",              classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-building",      cor: "#C2410C", grupoTexto: "fiis_geral" },
   { id: "etfs",           label: "ETFs",                       classe: "renda_variavel", qualidade: "atrativo",       icone: "ti-chart-bar",     cor: "#16A34A" },
   { id: "fundo_acoes",    label: "Fundos de Ações",            classe: "renda_variavel", qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
   { id: "fiagro",         label: "Fiagro",                     classe: "renda_variavel", qualidade: "moderado",       icone: "ti-plant",         cor: "#B45309" },
