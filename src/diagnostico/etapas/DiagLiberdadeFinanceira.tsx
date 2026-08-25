@@ -6,6 +6,7 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   type ProjecaoIFParams,
+  type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
@@ -101,10 +102,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   const patrimonioColeta    = Number(dadosColeta.patrimonioFinanceiro) || 0;
   const aporteColeta        = Number(dadosColeta.aporteMensal) || 0;
   const rendaDesejadaColeta = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMetaColeta     = Number(dadosColeta.idadeMeta) || 0;
 
   const initialParams: UIParams = {
     idadeAtual:         idadeAtualCalculada,
-    idadeAposentadoria: Number(dadosLF.idadeAlvo) || Number(dadosColeta.idadeMeta) || 60,
+    idadeAposentadoria: Number(dadosLF.idadeAlvo) || idadeMetaColeta || 65,
     patrimonioInicial:  Number(dadosLF.patrimonioInicial) || patrimonioColeta,
     aporteMensal:       Number(dadosLF.aporteMensal) || aporteColeta,
     rendaDesejada:      Number(dadosLF.rendaDesejada) || rendaDesejadaColeta,
@@ -119,6 +121,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   );
   const [rendaEditada, setRendaEditada] = useState(
     Number(dadosLF.rendaDesejada) > 0 && Number(dadosLF.rendaDesejada) !== rendaDesejadaColeta
+  );
+  const [idadeAposentadoriaEditada, setIdadeAposentadoriaEditada] = useState(
+    Number(dadosLF.idadeAlvo) > 0 && Number(dadosLF.idadeAlvo) !== idadeMetaColeta
   );
 
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
@@ -152,13 +157,16 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   useEffect(() => {
     setParams((prev) => ({
       ...prev,
-      idadeAtual: idadeAtualCalculada,
-      patrimonioInicial: !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
-      aporteMensal:      !aporteEditado     ? aporteColeta     : prev.aporteMensal,
-      rendaDesejada:     !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
+      idadeAtual:         idadeAtualCalculada,
+      idadeAposentadoria: !idadeAposentadoriaEditada && idadeMetaColeta > 0
+        ? idadeMetaColeta
+        : prev.idadeAposentadoria,
+      patrimonioInicial:  !patrimonioEditado ? patrimonioColeta : prev.patrimonioInicial,
+      aporteMensal:       !aporteEditado     ? aporteColeta     : prev.aporteMensal,
+      rendaDesejada:      !rendaEditada      ? rendaDesejadaColeta : prev.rendaDesejada,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta]);
+  }, [idadeAtualCalculada, patrimonioColeta, aporteColeta, rendaDesejadaColeta, idadeMetaColeta]);
 
   const setP = (patch: Partial<UIParams>) => setParams((p) => ({ ...p, ...patch }));
 
@@ -220,7 +228,26 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ? result.mesInicioRetirada
     : Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
 
-  const projecaoGrafico = result?.projecao ?? [];
+  // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
+  const projecaoSimples: PontoProjecao[] = useMemo(() => {
+    const anosTotal = Math.max(0, Math.round(params.idadeAposentadoria - params.idadeAtual));
+    const anoAtual  = new Date().getFullYear();
+    return Array.from({ length: anosTotal + 1 }, (_, i) => {
+      const meses = i * 12;
+      const f     = meses > 0 ? Math.pow(1 + taxaMensal, meses) : 1;
+      const patrimonio = isFinite(f)
+        ? Math.round(params.patrimonioInicial * f + (meses > 0 ? params.aporteMensal * (f - 1) / taxaMensal : 0))
+        : params.patrimonioInicial;
+      return {
+        mes:       meses,
+        ano:       anoAtual + i,
+        mesDoAno:  mesNascimento,
+        idade:     params.idadeAtual + i,
+        patrimonio: Math.max(0, patrimonio),
+        fase:      "acumulacao" as const,
+      };
+    });
+  }, [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, taxaMensal, mesNascimento]);
 
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
@@ -242,14 +269,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
       ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
     return { delta, idadeC, pctMeta };
   }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, taxaMensal]);
-
-  if (!result) {
-    return (
-      <div style={{ padding: 32, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
-        Preencha os parâmetros para ver a simulação.
-      </div>
-    );
-  }
 
   const corMeta = (pct: number) =>
     pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
@@ -355,15 +374,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
               <input
                 type="range"
                 min={40} max={90} step={1}
-                value={params.idadeAposentadoria ?? 60}
-                onChange={(e) => setP({ idadeAposentadoria: Number(e.target.value) })}
+                value={params.idadeAposentadoria ?? 65}
+                onChange={(e) => { setP({ idadeAposentadoria: Number(e.target.value) }); setIdadeAposentadoriaEditada(true); }}
                 style={{ width: "100%", accentColor: "#2563EB" }}
               />
               <input
                 type="number"
                 min={40} max={90} step={1}
-                value={params.idadeAposentadoria ?? 60}
-                onChange={(e) => setP({ idadeAposentadoria: e.target.value === "" ? 60 : Number(e.target.value) })}
+                value={params.idadeAposentadoria ?? 65}
+                onChange={(e) => { setP({ idadeAposentadoria: e.target.value === "" ? 65 : Number(e.target.value) }); setIdadeAposentadoriaEditada(true); }}
                 style={{ width: "100%", textAlign: "center", fontSize: 12, fontWeight: 700, color: "#111827", border: "1px solid #E5E7EB", borderRadius: 6, padding: "3px 6px", marginTop: 4, background: "white", fontFamily: "inherit", boxSizing: "border-box" }}
               />
             </div>
@@ -475,7 +494,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         {/* Card largo — Gráfico */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <CardProjecaoPatrimonial
-            projecao={projecaoGrafico}
+            projecao={projecaoSimples}
             objetivos={[]}
             height={420}
             mesIF={mesIF}
