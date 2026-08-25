@@ -51,11 +51,11 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "cripto",         label: "Bitcoin / Criptomoedas / ETFs",    classe: "cripto",         qualidade: "moderado",       icone: "ti-currency-bitcoin", cor: "#B45309" },
 
   // ─── ALTERNATIVOS ───────────────────────────────────────────────────
-  { id: "fundo_multimercado",  label: "Fundos Multimercado",          classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "fundo_alternativo",   label: "Fundos Alternativos",          classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "fundo_multimercado",  label: "Fundos Multimercado",          classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
+  { id: "fundo_alternativo",   label: "Fundos Alternativos",          classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
   { id: "coe",                 label: "COE",                          classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
-  { id: "fundo_cetipado",      label: "Fundos Cetipados",             classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
-  { id: "produto_estruturado", label: "Produtos Estruturados",        classe: "alternativos",  qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C" },
+  { id: "fundo_cetipado",      label: "Fundos Cetipados",             classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
+  { id: "produto_estruturado", label: "Produtos Estruturados",        classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
 ];
 
 export const CLASSES_INVESTIMENTO: {
