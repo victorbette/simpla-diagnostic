@@ -7,7 +7,7 @@ import {
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 import { calcularIdade } from "@/lib/parseDate";
-import { TAXA_DIAGNOSTICO_INICIAL, TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
+import { TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
 
 function corMeta(pct: number): string {
   return pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
@@ -89,65 +89,42 @@ export function DocLFDiag({ lead }: Props) {
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > 0 && idadeMeta > idadeAtual;
 
-  // ── Variáveis para o texto comparativo (situação atual com IPCA+5%) ──
-  const patrimonioAtual  = Number(dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteAtual      = Number(dadosColeta.aporteMensal) || 0;
-  const rendaAtualColeta = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
-  // Reutiliza idadeAtual e idadeMeta já calculados com calcularIdade + fallbacks dadosLF
-  const TAXA_MENSAL_TEXTO = taxaMensalDe(TAXA_DIAGNOSTICO_INICIAL); // IPCA+5% para texto
-  const nMesesTexto       = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
-  const fTexto            = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
-  const projecaoAtual     = nMesesTexto > 0 && isFinite(fTexto)
-    ? patrimonioAtual * fTexto + aporteAtual * (fTexto - 1) / TAXA_MENSAL_TEXTO
-    : patrimonioAtual;
-  const patrimonioNecTexto = rendaAtualColeta > 0 ? (rendaAtualColeta * 12) / 0.04 : 0;
+  const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
 
-  // Aporte necessário calculado por fórmula (não o valor manual do usuário)
-  const aporteIdeal = (() => {
-    if (nMesesTexto <= 0 || patrimonioNecTexto <= 0) return 0;
-    const fA = Math.pow(1 + TAXA_MENSAL_TEXTO, nMesesTexto);
-    if (!isFinite(fA)) return 0;
-    if (patrimonioAtual * fA >= patrimonioNecTexto) return 0;
-    const faltante = patrimonioNecTexto - patrimonioAtual * fA;
-    return Math.ceil(faltante * TAXA_MENSAL_TEXTO / (fA - 1));
+  // Aporte necessário calculado com a mesma taxa e parâmetros do gráfico (TAXA_MENSAL / nMesesBase)
+  const aporteIdealCalc = (() => {
+    if (nMesesBase <= 0 || patrimonioNecessario <= 0) return 0;
+    const fA = Math.pow(1 + TAXA_MENSAL, nMesesBase);
+    if (!isFinite(fA) || fA <= 1) return 0;
+    if (patrimonioInicial * fA >= patrimonioNecessario) return 0;
+    return Math.ceil((patrimonioNecessario - patrimonioInicial * fA) * TAXA_MENSAL / (fA - 1));
   })();
 
-  const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
-  // Flag unificada — mesma fonte para gráfico e texto
-  const lfTemDadosTexto = lfTemDados;
-
   function gerarTextoLF(): string {
-    if (!lfTemDadosTexto) {
-      return `Para comparar a situação atual com o cenário ideal de aposentadoria, precisamos dos dados completos na Situação Atual: patrimônio, aporte mensal, renda desejada e idade de aposentadoria.`;
+    if (!lfTemDados) {
+      return `Para uma análise completa de Liberdade Financeira, precisamos dos dados na Situação Atual: patrimônio financeiro, aporte mensal, renda desejada na aposentadoria e idade planejada para se aposentar.`;
     }
 
-    const pctAtual = Math.round(projecaoAtual / patrimonioNecTexto * 100);
+    const pct = patrimonioNecessario > 0 ? Math.round(projecaoNaIF / patrimonioNecessario * 100) : 0;
     const anosRestantes = idadeMeta - idadeAtual;
-    const diferencaAporte = aporteIdeal - aporteAtual;
+    const atingeMeta = projecaoNaIF >= patrimonioNecessario;
 
-    if (projecaoAtual >= patrimonioNecTexto) {
-      return `${nome}, a análise do cenário atual mostra uma situação muito positiva: com o ritmo atual de investimentos, a projeção indica que você chegará à aposentadoria com patrimônio suficiente para gerar a renda desejada para sempre.\n\nIsso não significa que não há nada a fazer — significa que você tem uma base sólida para otimizar. A diferença entre uma carteira bem estruturada e uma carteira apenas suficiente pode representar anos a mais de liberdade,${temFilhos ? " uma herança significativa para os seus filhos," : ""} e muito mais tranquilidade diante das oscilações da vida.\n\nNa aba de Liberdade Financeira, calculamos o cenário ideal com ajustes estratégicos que podem acelerar essa jornada e aumentar a margem de segurança. O objetivo não é apenas chegar — é chegar com folga.`;
+    if (atingeMeta) {
+      return `${nome}, com base nos seus dados atuais — ${formatBRL(patrimonioInicial)} de patrimônio financeiro e ${formatBRL(aporteMensal)}/mês de aporte — a projeção indica que você chegará aos ${idadeMeta} anos com ${formatBRL(projecaoNaIF)}, patrimônio suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável e sem consumir o principal. Sua meta de ${formatBRL(rendaDesejada)}/mês está dentro do alcance com a trajetória atual.\n\nEsse resultado coloca você em uma posição que a maioria das pessoas nunca alcança — mas chegar é só metade do trabalho. Uma carteira mal posicionada, uma rentabilidade abaixo do potencial por alguns anos, ou uma decisão errada num momento de volatilidade podem comprometer o que levou décadas para construir. Quem chegou longe tem muito a proteger.${temFilhos ? `\n\nAlém disso, a estratégia que você constrói hoje define o legado que vai deixar para os seus filhos. Cada ponto percentual a mais de rentabilidade, cada ano a mais de acumulação, tem um impacto exponencial nesse legado — e é exatamente esse nível de detalhe que faz a diferença entre um patrimônio suficiente e um patrimônio que trabalha para as próximas gerações.` : ""}\n\nA análise de sensibilidade abaixo mostra como pequenas variações no aporte ou no prazo impactam o resultado final. O objetivo não é apenas chegar à meta — é chegar com folga e com a estrutura certa para se manter lá.`;
     }
 
-    let texto = `Com o ritmo atual — patrimônio acumulado e aporte mensal de hoje — a projeção indica que você chegará à aposentadoria com ${pctAtual}% do patrimônio necessário para gerar a renda que deseja. Isso significa que, sem mudanças, a aposentadoria virá com restrições que você não planejou.`;
+    const diferencaRenda = rendaDesejada > rendaSustentavel ? rendaDesejada - rendaSustentavel : 0;
+    const rendaSustStr = rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "abaixo do necessário";
 
-    if (aporteIdeal > 0 && diferencaAporte > 0) {
-      texto += `\n\nNa análise da Liberdade Financeira, calculamos o que seria necessário para fechar essa lacuna: um aporte mensal de ${aporteIdeal.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })} — uma diferença de ${diferencaAporte.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })} em relação ao que é investido hoje. Esse ajuste, feito agora, tem um impacto completamente diferente do que o mesmo ajuste feito daqui a 5 ou 10 anos.`;
-    } else if (aporteIdeal > 0 && diferencaAporte <= 0) {
-      texto += `\n\nA análise da Liberdade Financeira confirmou que o aporte atual está adequado. O foco agora é a eficiência: garantir que cada real investido está na melhor alocação possível para maximizar o retorno ao longo do tempo.`;
-    } else {
-      texto += `\n\nNa aba de Liberdade Financeira, simulamos diferentes cenários e identificamos os ajustes necessários para fechar essa lacuna. O caminho existe — o que faz a diferença é quando a decisão de seguir esse caminho é tomada.`;
+    let texto = `${nome}, com base nos seus dados atuais — ${formatBRL(patrimonioInicial)} de patrimônio financeiro e ${formatBRL(aporteMensal)}/mês de aporte — a projeção indica que você chegará aos ${idadeMeta} anos com ${formatBRL(projecaoNaIF)}: ${pct}% do patrimônio necessário para sustentar a renda que deseja na aposentadoria.\n\nEm termos práticos: seu patrimônio projetado geraria ${rendaSustStr} de forma sustentável — ${diferencaRenda > 0 ? `${formatBRL(diferencaRenda)}/mês abaixo da meta de ${formatBRL(rendaDesejada)}` : `próximo da meta de ${formatBRL(rendaDesejada)}`}. Para chegar ao patrimônio necessário de ${formatBRL(patrimonioNecessario)}, seria preciso um aporte mensal de ${formatBRL(aporteIdealCalc)} com a taxa de retorno atual${aporteIdealCalc > aporteMensal ? ` — uma diferença de ${formatBRL(aporteIdealCalc - aporteMensal)}/mês em relação ao ritmo atual` : ""}.`;
+
+    texto += `\n\nMas aporte não é o único caminho. Uma carteira mais eficiente — com ativos melhor posicionados para o longo prazo e menor custo — pode aumentar significativamente a rentabilidade real e reduzir essa diferença sem necessariamente aumentar o valor investido. É exatamente esse trabalho que a Simpla faz: encontrar os pontos de alavancagem na sua estratégia que geram o maior impacto com o menor esforço adicional.`;
+
+    texto += `\n\nA análise de sensibilidade abaixo quantifica o impacto de diferentes ajustes no aporte e no prazo. O que ela mostra com clareza é que cada ano de atraso aumenta o esforço necessário de forma desproporcional. ${anosRestantes <= 15 ? `Com ${anosRestantes} anos até a aposentadoria planejada, a janela de ajuste ainda existe — mas ela se fecha mais rápido do que parece.` : `Você ainda tem ${anosRestantes} anos — tempo real para mudar o cenário de forma significativa, mas não tempo infinito.`}`;
+
+    if (temFilhos) {
+      texto += `\n\nOs seus filhos são parte do futuro que está sendo construído aqui. Cada ajuste feito hoje não é apenas sobre a sua aposentadoria — é sobre a estabilidade e o legado que você vai deixar para eles. Esse é o nível de planejamento que faz a diferença entre uma família financeiramente vulnerável e uma família financeiramente protegida para as próximas gerações.`;
     }
-
-    texto += `\n\nO tempo é o ativo mais valioso nos investimentos — e ele trabalha de forma desproporcional: cada ano de atraso exige um esforço muito maior para compensar.${
-      anosRestantes <= 15
-        ? ` Com ${anosRestantes} anos até a aposentadoria planejada, o momento de agir é agora.`
-        : ` Você ainda tem ${anosRestantes} anos — tempo suficiente para mudar o cenário de forma significativa, mas não tempo infinito.`
-    }${
-      temFilhos
-        ? `\n\nOs seus filhos são parte do futuro que você está construindo. Cada decisão financeira tomada hoje molda o legado que você vai deixar para eles.`
-        : ""
-    }`;
 
     return texto;
   }
