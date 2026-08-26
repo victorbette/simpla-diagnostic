@@ -244,66 +244,6 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
     };
   }
 
-  if (ativosBons.length > 0) {
-    blocos.push({
-      chave: "bons_label",
-      grudaNoProximo: true,
-      node: (
-        <div style={{
-          marginTop: 28, fontSize: 12, fontWeight: 700, color: "#15803D",
-          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
-        }}>
-          <i className="ti ti-star" style={{ fontSize: 14 }} />
-          Bem Avaliado
-        </div>
-      ),
-    });
-    ativosBons.forEach((ativo) => {
-      const bloco = renderBlocoAtivo(ativo, "#BBF7D0", "positivo", "bom");
-      if (bloco) blocos.push(bloco);
-    });
-  }
-
-  if (ativosAtencao.length > 0) {
-    blocos.push({
-      chave: "atencao_label",
-      grudaNoProximo: true,
-      node: (
-        <div style={{
-          marginTop: ativosBons.length > 0 ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B45309",
-          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
-        }}>
-          <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
-          Atratividade Moderada
-        </div>
-      ),
-    });
-    ativosAtencao.forEach((ativo) => {
-      const bloco = renderBlocoAtivo(ativo, "#FCD34D", "atencao", "atencao");
-      if (bloco) blocos.push(bloco);
-    });
-  }
-
-  if (ativosRuins.length > 0) {
-    blocos.push({
-      chave: "ruins_label",
-      grudaNoProximo: true,
-      node: (
-        <div style={{
-          marginTop: (ativosBons.length > 0 || ativosAtencao.length > 0) ? 20 : 28, fontSize: 12, fontWeight: 700, color: "#B91C1C",
-          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
-        }}>
-          <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
-          Pouco ou Nada Atrativo
-        </div>
-      ),
-    });
-    ativosRuins.forEach((ativo) => {
-      const bloco = renderBlocoAtivo(ativo, "#FCA5A5", "negativo", "ruim");
-      if (bloco) blocos.push(bloco);
-    });
-  }
-
   // ── Diversificação ──
   const tem = (id: string) => ativosMap[id] === true;
   const temRFPilar     = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem);
@@ -351,13 +291,12 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
   ];
 
   if (ativosDoLead.length > 0) {
-    const hasAnySection = ativosBons.length > 0 || ativosAtencao.length > 0 || ativosRuins.length > 0;
     blocos.push({
       chave: "div_label",
       grudaNoProximo: true,
       node: (
         <div style={{
-          marginTop: hasAnySection ? 28 : 0, fontSize: 12, fontWeight: 700, color: "#374151",
+          marginTop: 28, fontSize: 12, fontWeight: 700, color: "#374151",
           marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
         }}>
           <i className="ti ti-layout-grid" style={{ fontSize: 14 }} />
@@ -395,6 +334,66 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
           {gerarTextoDiversificacao()}
         </p>
       ),
+    });
+  }
+
+  if (ativosBons.length > 0) {
+    blocos.push({
+      chave: "bons_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: 28, fontSize: 12, fontWeight: 700, color: "#15803D",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-star" style={{ fontSize: 14 }} />
+          Atrativo ou Muito Atrativo
+        </div>
+      ),
+    });
+    ativosBons.forEach((ativo) => {
+      const bloco = renderBlocoAtivo(ativo, "#BBF7D0", "positivo", "bom");
+      if (bloco) blocos.push(bloco);
+    });
+  }
+
+  if (ativosAtencao.length > 0) {
+    blocos.push({
+      chave: "atencao_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: 20, fontSize: 12, fontWeight: 700, color: "#B45309",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} />
+          Atratividade Moderada
+        </div>
+      ),
+    });
+    ativosAtencao.forEach((ativo) => {
+      const bloco = renderBlocoAtivo(ativo, "#FCD34D", "atencao", "atencao");
+      if (bloco) blocos.push(bloco);
+    });
+  }
+
+  if (ativosRuins.length > 0) {
+    blocos.push({
+      chave: "ruins_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: 20, fontSize: 12, fontWeight: 700, color: "#B91C1C",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />
+          Pouco ou Nada Atrativo
+        </div>
+      ),
+    });
+    ativosRuins.forEach((ativo) => {
+      const bloco = renderBlocoAtivo(ativo, "#FCA5A5", "negativo", "ruim");
+      if (bloco) blocos.push(bloco);
     });
   }
 
