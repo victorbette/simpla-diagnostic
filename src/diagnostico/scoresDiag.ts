@@ -1,7 +1,7 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
-import type { DadosColetaDiag, DadosLFDiag } from "./types";
+import type { DadosColetaDiag } from "./types";
 import { calcularIdade } from "@/lib/parseDate";
-import { TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
+import { TAXA_DIAGNOSTICO_INICIAL, taxaMensalDe } from "@/lib/taxasDiag";
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -43,21 +43,16 @@ export interface ScoresDiag {
 
 export function calcularScoresDiag(
   dadosColeta: DadosColetaDiag,
-  dadosLF?: DadosLFDiag,
 ): ScoresDiag {
   // ── Score Liberdade Financeira ──
-  // Usa a mesma lógica e mesma ordem de prioridade de dados que DocLFDiag.tsx
-  const idadeAtual    = calcularIdade(dadosColeta.dataNascimento);
-  const patrimonioAtual = Number(dadosLF?.patrimonioInicial  ?? dadosColeta.patrimonioFinanceiro) || 0;
-  const aporteMensal    = Number(dadosLF?.aporteMensal       ?? dadosColeta.aporteMensal)          || 0;
-  const rendaDesejada   = Number(dadosLF?.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
-  const idadeMeta       = Number(dadosLF?.idadeAlvo          ?? dadosColeta.idadeMeta)             || 0;
+  // Reflete a situação atual do lead com os dados da coleta (sem ajustes do plano LF)
+  const idadeAtual      = calcularIdade(dadosColeta.dataNascimento);
+  const patrimonioAtual = Number(dadosColeta.patrimonioFinanceiro) || 0;
+  const aporteMensal    = Number(dadosColeta.aporteMensal)          || 0;
+  const rendaDesejada   = Number(dadosColeta.rendaDesejadaAposentadoria) || 0;
+  const idadeMeta       = Number(dadosColeta.idadeMeta)             || 0;
 
-  // Mesma taxa que o relatório LF: IPCA+6% padrão, ou customizada via dadosLF.ajustes
-  const usarTaxaCustom  = dadosLF?.ajustes?.usarTaxaCustom ?? false;
-  const taxaCustomAnual = dadosLF?.ajustes?.taxaCustomAnual ?? 6.0;
-  const TAXA_ANUAL  = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : TAXA_LF_PADRAO;
-  const TAXA_MENSAL = taxaMensalDe(TAXA_ANUAL);
+  const TAXA_MENSAL = taxaMensalDe(TAXA_DIAGNOSTICO_INICIAL);
 
   const patrimonioNec = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
   const nMeses        = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));

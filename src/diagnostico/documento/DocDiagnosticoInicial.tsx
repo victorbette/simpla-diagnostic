@@ -70,7 +70,7 @@ export function DocDiagnosticoInicial({ lead }: Props) {
 
   const {
     scoreLF, scoreInvestimentos: scoreInv, scoreBlindagem: scoreBlind, scoreGeral,
-  } = calcularScoresDiag(dadosColeta, lead.dadosLF);
+  } = calcularScoresDiag(dadosColeta);
 
   const nv = nivelScore(scoreGeral);
 
