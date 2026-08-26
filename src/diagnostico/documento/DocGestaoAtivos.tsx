@@ -90,15 +90,11 @@ O momento de estruturar essa base é agora — porque os juros compostos trabalh
     );
   }
 
-  const texto = `A forma como você investe define muito mais do que o retorno do seu dinheiro. Ela define o ritmo com que você se aproxima — ou se afasta — da vida que você quer construir.
+  const texto = `A forma como você investe define o ritmo com que você se aproxima — ou se afasta — da vida que quer construir. A maioria das pessoas investe de forma reativa: aplica onde ouviu falar, coloca onde o gerente indicou, sem estratégia nem clareza sobre o papel de cada ativo. É essa falta de direção que faz carteiras ficarem estagnadas por anos, rendendo abaixo do potencial e carregando produtos inadequados.
 
-A maioria das pessoas investe de forma reativa: aplica onde ouviu falar, coloca onde o gerente indicou, concentra onde sempre colocou. Sem estratégia, sem clareza sobre o papel de cada ativo, sem saber o que fazer quando o mercado cai ou quando surge uma oportunidade. E é exatamente essa falta de direção que faz com que carteiras fiquem estagnadas por anos — rendendo abaixo do potencial, carregando produtos inadequados, pagando taxas que não deveriam existir.
+A tabela abaixo mostra a composição atual da sua carteira — o retrato fiel de onde seu patrimônio está alocado hoje e o ponto de partida para uma estratégia que faça cada real trabalhar de forma mais inteligente.
 
-A tabela abaixo mostra a composição atual da sua carteira. Ela é o retrato fiel de onde o seu patrimônio está alocado hoje — e o ponto de partida para uma estratégia que faça cada real trabalhar de forma mais inteligente.
-
-Uma alocação bem definida não é apenas sobre maximizar retorno. É sobre ter clareza em qualquer cenário: quando o mercado sobe, você sabe o que fazer. Quando o mercado cai, você sabe o que fazer. Quando sobra dinheiro para investir, você sabe exatamente onde alocar. Essa clareza tem um valor que vai muito além dos números — ela elimina as decisões por impulso, o medo de errar e a paralisia que faz as pessoas ficarem paradas enquanto o tempo passa.
-
-Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. Ela combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, o efeito dos juros compostos amplifique cada decisão certa que foi tomada hoje.
+Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em qualquer cenário e elimina decisões por impulso. Uma carteira bem estruturada combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, os juros compostos amplifiquem cada decisão certa tomada hoje.
 `;
 
   const classeIcone: Record<string, string> = {
