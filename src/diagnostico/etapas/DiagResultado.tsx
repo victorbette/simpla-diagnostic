@@ -96,6 +96,7 @@ export function DiagResultado({ lead }: Props) {
     scoreLF, scoreInvestimentos, scoreBlindagem, scoreGeral,
     lfTemDados, pctIF,
     aaTemDados, nRuinsCount,
+    pontoDiversificacao, pontoQualidade,
     blindagemTemDados, possuiSeguro,
     comecandoDoZero,
   } = calcularScoresDiag(dadosColeta);
@@ -205,6 +206,33 @@ export function DiagResultado({ lead }: Props) {
         <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.9, margin: 0, marginBottom: 20, textAlign: "justify" as const }}>
           {intro}
         </p>
+
+        {/* Detalhamento do Score */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+          {[
+            { label: "Diversificação", valor: pontoDiversificacao, maximo: 40, hint: "4 pilares × 10 pts" },
+            { label: "Qualidade dos Ativos", valor: pontoQualidade, maximo: 60, hint: "Base 60 − penalidades" },
+          ].map(c => {
+            const pct = Math.round((c.valor / c.maximo) * 100);
+            const cor = pct >= 75 ? "#15803D" : pct >= 40 ? "#B45309" : "#B91C1C";
+            const bg  = pct >= 75 ? "#F0FDF4" : pct >= 40 ? "#FEF3C7" : "#FFF5F5";
+            const barCor = pct >= 75 ? "#16A34A" : pct >= 40 ? "#D97706" : "#DC2626";
+            return (
+              <div key={c.label} style={{ background: bg, border: `0.5px solid ${cor}30`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 2 }}>{c.hint}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 8 }}>{c.label}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, height: 6, background: "#E5E7EB", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: barCor, borderRadius: 99, transition: "width 0.4s" }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: cor, minWidth: 44, textAlign: "right" as const }}>
+                    {c.valor}<span style={{ fontSize: 10, fontWeight: 400, color: "#9CA3AF" }}>/{c.maximo}</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {blocos.length > 0 && (
           <>

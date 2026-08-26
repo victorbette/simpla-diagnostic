@@ -30,13 +30,13 @@ export interface ScoresDiag {
   lfTemDados: boolean;
   pctIF: number;
   aaTemDados: boolean;
-  ativosBonsLabels: string[];
-  ativosRuinsLabels: string[];
-  nBonsCount: number;
   nRuinsCount: number;
-  temRF: boolean;
-  temRV: boolean;
-  temExt: boolean;
+  pontoDiversificacao: number;
+  pontoQualidade: number;
+  pilarRF: boolean;
+  pilarAcoes: boolean;
+  pilarFIIs: boolean;
+  pilarGlobal: boolean;
   blindagemTemDados: boolean;
   possuiSeguro: boolean;
   comecandoDoZero: boolean;
@@ -66,17 +66,22 @@ export function calcularScoresDiag(
   const ativosMap    = dadosColeta.ativosInvestimento ?? {};
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
   const aaTemDados   = comecandoDoZero || ativosDoLead.length > 0;
-  const ativosBons   = ativosDoLead.filter(a => a.qualidade === "muito_atrativo" || a.qualidade === "atrativo");
-  const ativosRuins  = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo" || a.qualidade === "nada_atrativo");
-  const temRF  = ativosBons.some(a => a.classe === "renda_fixa");
-  const temRV  = ativosBons.some(a => a.classe === "renda_variavel");
-  const temExt = ativosBons.some(a => a.classe === "exterior");
-  let pontos = 0;
-  if (temRF)  pontos += 30;
-  if (temRV)  pontos += 40;
-  if (temExt) pontos += 30;
-  pontos -= ativosRuins.length * 10;
-  pontos = Math.max(0, Math.min(100, pontos));
+  const tem = (id: string) => ativosMap[id] === true;
+
+  // Componente 1 — Diversificação (0-40 pts): 4 pilares Simpla, 10 pts cada
+  const pilarRF     = tem("tesouro_selic") || tem("fundo_rf") || tem("lci_lca");
+  const pilarAcoes  = tem("acoes");
+  const pilarFIIs   = tem("fiis");
+  const pilarGlobal = tem("renda_fixa_eua") || tem("stocks") || tem("reits") || tem("etfs_exterior") || tem("cripto");
+  const pontoDiversificacao = (pilarRF ? 10 : 0) + (pilarAcoes ? 10 : 0) + (pilarFIIs ? 10 : 0) + (pilarGlobal ? 10 : 0);
+
+  // Componente 2 — Qualidade dos Ativos (0-60 pts): começa em 60, desconta por ativos ruins
+  const ativosPouco = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo");
+  const ativosNada  = ativosDoLead.filter(a => a.qualidade === "nada_atrativo");
+  const pontoQualidade = Math.max(0, 60 - ativosPouco.length * 8 - ativosNada.length * 15);
+  const nRuinsCount = ativosPouco.length + ativosNada.length;
+
+  const pontos = Math.min(100, pontoDiversificacao + pontoQualidade);
   const scoreInvestimentos = comecandoDoZero ? 0 : (!aaTemDados ? -1 : pontos);
 
   // ── Score Blindagem ──
@@ -102,13 +107,13 @@ export function calcularScoresDiag(
     lfTemDados,
     pctIF,
     aaTemDados,
-    ativosBonsLabels: ativosBons.map(a => a.label),
-    ativosRuinsLabels: ativosRuins.map(a => a.label),
-    nBonsCount: ativosBons.length,
-    nRuinsCount: ativosRuins.length,
-    temRF,
-    temRV,
-    temExt,
+    nRuinsCount,
+    pontoDiversificacao,
+    pontoQualidade,
+    pilarRF,
+    pilarAcoes,
+    pilarFIIs,
+    pilarGlobal,
     blindagemTemDados,
     possuiSeguro,
     comecandoDoZero,
