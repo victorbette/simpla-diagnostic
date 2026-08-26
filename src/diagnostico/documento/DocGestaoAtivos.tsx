@@ -304,6 +304,100 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
     });
   }
 
+  // ── Diversificação ──
+  const tem = (id: string) => ativosMap[id] === true;
+  const temRFPilar     = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem);
+  const temAcoesPilar  = tem("acoes");
+  const temFIIsPilar   = tem("fiis");
+  const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
+
+  function gerarTextoDiversificacao(): string {
+    const faltam = [
+      !temRFPilar     && "Renda Fixa",
+      !temAcoesPilar  && "Ações",
+      !temFIIsPilar   && "Fundos Imobiliários",
+      !temGlobalPilar && "Investimentos Globais",
+    ].filter(Boolean) as string[];
+
+    if (faltam.length === 0) {
+      return `Sua carteira está distribuída pelos quatro pilares recomendados pela Simpla — Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais. Essa diversificação é fundamental para equilibrar proteção e crescimento em diferentes cenários econômicos.`;
+    }
+    if (!temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
+      return `Nenhum ativo foi mapeado. Para analisar a diversificação da sua carteira, preencha os investimentos na etapa de coleta.`;
+    }
+    if (temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
+      return `Sua carteira está concentrada em Renda Fixa, sem exposição a Ações, Fundos Imobiliários ou Investimentos Globais. Embora a renda fixa ofereça segurança e previsibilidade, uma carteira sem ativos de crescimento tem um custo de oportunidade relevante no longo prazo. A Simpla recomenda distribuir o patrimônio pelos quatro pilares para equilibrar proteção, geração de renda e crescimento real.`;
+    }
+    if (!temGlobalPilar) {
+      const base = (temRFPilar || temAcoesPilar || temFIIsPilar)
+        ? `Sua carteira ainda não tem exposição internacional.`
+        : `Não identificamos exposição internacional na sua carteira.`;
+      return `${base} O investimento global é fundamental para reduzir o risco-Brasil e capturar oportunidades em economias mais desenvolvidas — especialmente nos EUA, que concentra as maiores empresas do mundo e oferece um ambiente regulatório mais sólido. Renda Fixa americana, Stocks, REITs e ETFs globais são as principais formas de acessar essa diversificação.`;
+    }
+    if (!temAcoesPilar && !temFIIsPilar) {
+      return `Você tem renda fixa e investimentos globais, mas sua carteira não conta com Ações nem Fundos Imobiliários. Esses dois pilares são essenciais para o crescimento real do patrimônio no longo prazo e para a geração de renda passiva — e estão ausentes da sua estratégia atual.`;
+    }
+    const lista = faltam.length === 1
+      ? faltam[0]
+      : faltam.slice(0, -1).join(", ") + " e " + faltam[faltam.length - 1];
+    return `${faltam.length === 1 ? "Um pilar ainda está ausente" : "Alguns pilares ainda estão ausentes"} da sua carteira: ${lista}. A Simpla recomenda distribuição entre Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais para equilibrar segurança, crescimento e diversificação geográfica.`;
+  }
+
+  const pilares = [
+    { label: "Renda Fixa",            icone: "ti-building-bank", ok: temRFPilar },
+    { label: "Ações",                  icone: "ti-trending-up",   ok: temAcoesPilar },
+    { label: "Fundos Imobiliários",    icone: "ti-building",      ok: temFIIsPilar },
+    { label: "Investimentos Globais",  icone: "ti-world",         ok: temGlobalPilar },
+  ];
+
+  if (ativosDoLead.length > 0) {
+    const hasAnySection = ativosBons.length > 0 || ativosAtencao.length > 0 || ativosRuins.length > 0;
+    blocos.push({
+      chave: "div_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: hasAnySection ? 28 : 0, fontSize: 12, fontWeight: 700, color: "#374151",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-layout-grid" style={{ fontSize: 14 }} />
+          Diversificação da Carteira
+        </div>
+      ),
+    });
+    blocos.push({
+      chave: "div_pilares",
+      grudaNoProximo: true,
+      node: (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 12 }}>
+          {pilares.map(p => (
+            <div key={p.label} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "8px 12px", borderRadius: 8,
+              background: p.ok ? "#F0FDF4" : "#FFF5F5",
+              border: `0.5px solid ${p.ok ? "#BBF7D0" : "#FCA5A5"}`,
+            }}>
+              <i className={`ti ${p.ok ? "ti-circle-check" : "ti-circle-x"}`}
+                style={{ fontSize: 14, color: p.ok ? "#15803D" : "#B91C1C", flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: p.ok ? "#14532D" : "#7F1D1D" }}>{p.label}</div>
+                <div style={{ fontSize: 9, color: p.ok ? "#15803D" : "#B91C1C" }}>{p.ok ? "Presente" : "Ausente"}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ),
+    });
+    blocos.push({
+      chave: "div_texto",
+      node: (
+        <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.8, margin: 0, textAlign: "justify" as const }}>
+          {gerarTextoDiversificacao()}
+        </p>
+      ),
+    });
+  }
+
   if (ativosDoLead.length === 0) {
     blocos.push({
       chave: "aviso",
