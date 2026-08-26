@@ -1,5 +1,5 @@
 import type { Lead } from "../types";
-import { ATIVOS_INVESTIMENTO, NIVEIS_ATRATIVIDADE, type AtivoInvestimento } from "../ativosInvestimento";
+import { ATIVOS_INVESTIMENTO, CLASSES_INVESTIMENTO, NIVEIS_ATRATIVIDADE, type AtivoInvestimento } from "../ativosInvestimento";
 import { ATIVOS_TEXTOS } from "../ativosTextos";
 import { DOC } from "@/lib/documentoStyles";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
@@ -83,7 +83,7 @@ O momento de estruturar essa base é agora — porque os juros compostos trabalh
 
     return (
       <PaginaDocFluidaDiag
-        titulo="Gestão de Ativos"
+        titulo="Investimentos"
         nomeCliente={lead.nome}
         blocos={blocosZero}
       />
@@ -101,14 +101,21 @@ Uma alocação bem definida não é apenas sobre maximizar retorno. É sobre ter
 Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. Ela combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, o efeito dos juros compostos amplifique cada decisão certa que foi tomada hoje.
 `;
 
-  const allClasses: { label: string; valor: number }[] = [
-    { label: "Renda Fixa",     valor: valorRF     },
-    { label: "Renda Variável", valor: valorRV     },
-    { label: "Exterior",       valor: valorExt    },
-    { label: "Cripto",         valor: valorCripto },
-    { label: "Alternativos",   valor: valorAlt    },
-  ];
-  const classes = allClasses.filter(c => c.valor > 0);
+  const classeIcone: Record<string, string> = {
+    renda_fixa:    "ti-building-bank",
+    renda_variavel: "ti-trending-up",
+    exterior:      "ti-world",
+    cripto:        "ti-currency-bitcoin",
+    alternativos:  "ti-chart-bar",
+  };
+
+  const classeValorMap: Record<string, number> = {
+    renda_fixa:    valorRF,
+    renda_variavel: valorRV,
+    exterior:      valorExt,
+    cripto:        valorCripto,
+    alternativos:  valorAlt,
+  };
 
   const blocos: BlocoDoc[] = [];
 
@@ -132,37 +139,72 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#F8FAFF" }}>
-              <th style={{ textAlign: "left",  padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Classe de Ativo</th>
-              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Valor (R$)</th>
+              <th style={{ textAlign: "left",  padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Classe / Ativo</th>
               <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Alocação</th>
+              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Valor</th>
             </tr>
           </thead>
           <tbody>
-            {classes.length === 0 ? (
+            {CLASSES_INVESTIMENTO.flatMap(cls => {
+              const valor = classeValorMap[cls.classe] ?? 0;
+              const assetsInClass = ativosDoLead.filter(a => a.classe === cls.classe);
+              if (valor === 0 && assetsInClass.length === 0) return [];
+              const pct = totalPatrimonio > 0 && valor > 0
+                ? ((valor / totalPatrimonio) * 100).toFixed(1) + "%"
+                : "—";
+              return [
+                <tr key={cls.classe} style={{ background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB" }}>
+                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <i className={`ti ${classeIcone[cls.classe]}`} style={{ fontSize: 13, color: cls.cor }} />
+                      {cls.label}
+                    </div>
+                  </td>
+                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>{pct}</td>
+                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 600, color: "#374151", textAlign: "right" as const }}>
+                    {valor > 0 ? formatBRL(valor) : "—"}
+                  </td>
+                </tr>,
+                ...assetsInClass.map(ativo => {
+                  const nivel = NIVEIS_ATRATIVIDADE[ativo.qualidade];
+                  return (
+                    <tr key={ativo.id} style={{ borderTop: "0.5px solid #F3F4F6" }}>
+                      <td style={{ padding: "6px 12px 6px 28px", fontSize: 11, color: "#374151" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <span style={{ color: "#9CA3AF", fontSize: 10 }}>↳</span>
+                          <span>{ativo.label}</span>
+                          <span style={{
+                            fontSize: 9, fontWeight: 600,
+                            color: nivel.cor, background: nivel.bg,
+                            border: `0.5px solid ${nivel.border}`,
+                            borderRadius: 4, padding: "1px 5px",
+                            whiteSpace: "nowrap" as const,
+                          }}>
+                            {nivel.label}
+                          </span>
+                        </div>
+                      </td>
+                      <td />
+                      <td />
+                    </tr>
+                  );
+                }),
+              ];
+            })}
+            {ativosDoLead.length === 0 && totalPatrimonio === 0 && (
               <tr>
                 <td colSpan={3} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
-                  Nenhum valor de investimento informado
+                  Nenhum investimento foi mapeado na coleta de dados.
                 </td>
               </tr>
-            ) : classes.map((c, i) => {
-              const pct = totalPatrimonio > 0
-                ? ((c.valor / totalPatrimonio) * 100).toFixed(1)
-                : "0.0";
-              return (
-                <tr key={i} style={{ borderBottom: "0.5px solid #F3F4F6" }}>
-                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827" }}>{c.label}</td>
-                  <td style={{ padding: "8px 12px", fontSize: 12, color: "#111827", textAlign: "right" as const }}>{formatBRL(c.valor)}</td>
-                  <td style={{ padding: "8px 12px", fontSize: 12, textAlign: "right" as const, fontWeight: 600, color: "#2563EB" }}>{pct}%</td>
-                </tr>
-              );
-            })}
+            )}
           </tbody>
-          {classes.length > 0 && (
+          {totalPatrimonio > 0 && (
             <tfoot>
-              <tr style={{ background: "#F0F7FF" }}>
+              <tr style={{ background: "#F0F7FF", borderTop: "0.5px solid #E5E7EB" }}>
                 <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</td>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(totalPatrimonio)}</td>
                 <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>100%</td>
+                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(totalPatrimonio)}</td>
               </tr>
             </tfoot>
           )}
@@ -288,7 +330,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
 
   return (
     <PaginaDocFluidaDiag
-      titulo="Gestão de Ativos"
+      titulo="Investimentos"
       nomeCliente={lead.nome}
       blocos={blocos}
     />
