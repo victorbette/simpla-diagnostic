@@ -99,7 +99,7 @@ export function DiagResultado({ lead }: Props) {
     pontoDiversificacao, pontoQualidade,
     blindagemTemDados, possuiSeguro, possuiPrevidencia,
     comecandoDoZero,
-  } = calcularScoresDiag(dadosColeta);
+  } = calcularScoresDiag(dadosColeta, lead.dadosLF);
 
   const casado    = dadosColeta.estadoCivil === "casado" || dadosColeta.estadoCivil === "uniao_estavel";
   const conjuge   = dadosColeta.nomeConjuge ?? "";
