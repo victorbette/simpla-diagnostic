@@ -140,8 +140,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           <thead>
             <tr style={{ background: "#F8FAFF" }}>
               <th style={{ textAlign: "left",  padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Classe / Ativo</th>
-              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Alocação</th>
-              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600 }}>Valor</th>
+              <th style={{ textAlign: "right", padding: "8px 12px", fontSize: 11, color: "#6B7280", fontWeight: 600, width: 130 }}>Valor / Avaliação</th>
             </tr>
           </thead>
           <tbody>
@@ -149,9 +148,6 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
               const valor = classeValorMap[cls.classe] ?? 0;
               const assetsInClass = ativosDoLead.filter(a => a.classe === cls.classe);
               if (valor === 0 && assetsInClass.length === 0) return [];
-              const pct = totalPatrimonio > 0 && valor > 0
-                ? ((valor / totalPatrimonio) * 100).toFixed(1) + "%"
-                : "—";
               return [
                 <tr key={cls.classe} style={{ background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB" }}>
                   <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>
@@ -160,8 +156,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
                       {cls.label}
                     </div>
                   </td>
-                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>{pct}</td>
-                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 600, color: "#374151", textAlign: "right" as const }}>
+                  <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>
                     {valor > 0 ? formatBRL(valor) : "—"}
                   </td>
                 </tr>,
@@ -169,23 +164,24 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
                   const nivel = NIVEIS_ATRATIVIDADE[ativo.qualidade];
                   return (
                     <tr key={ativo.id} style={{ borderTop: "0.5px solid #F3F4F6" }}>
-                      <td style={{ padding: "6px 12px 6px 28px", fontSize: 11, color: "#374151" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ color: "#9CA3AF", fontSize: 10 }}>↳</span>
-                          <span>{ativo.label}</span>
-                          <span style={{
-                            fontSize: 9, fontWeight: 600,
-                            color: nivel.cor, background: nivel.bg,
-                            border: `0.5px solid ${nivel.border}`,
-                            borderRadius: 4, padding: "1px 5px",
-                            whiteSpace: "nowrap" as const,
-                          }}>
-                            {nivel.label}
-                          </span>
+                      <td style={{ padding: "6px 12px 6px 28px", fontSize: 11, color: "#4B5563" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ color: "#CBD5E1", fontSize: 10 }}>↳</span>
+                          {ativo.label}
                         </div>
                       </td>
-                      <td />
-                      <td />
+                      <td style={{ padding: "6px 12px", textAlign: "right" as const }}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 600,
+                          color: nivel.cor, background: nivel.bg,
+                          border: `0.5px solid ${nivel.border}`,
+                          borderRadius: 4, padding: "2px 6px",
+                          whiteSpace: "nowrap" as const,
+                          display: "inline-block",
+                        }}>
+                          {nivel.label}
+                        </span>
+                      </td>
                     </tr>
                   );
                 }),
@@ -193,7 +189,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
             })}
             {ativosDoLead.length === 0 && totalPatrimonio === 0 && (
               <tr>
-                <td colSpan={3} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
+                <td colSpan={2} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
                   Nenhum investimento foi mapeado na coleta de dados.
                 </td>
               </tr>
@@ -202,8 +198,7 @@ Mais do que isso: uma carteira bem estruturada trabalha enquanto você dorme. El
           {totalPatrimonio > 0 && (
             <tfoot>
               <tr style={{ background: "#F0F7FF", borderTop: "0.5px solid #E5E7EB" }}>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</td>
-                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#2563EB", textAlign: "right" as const }}>100%</td>
+                <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>Total investido</td>
                 <td style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(totalPatrimonio)}</td>
               </tr>
             </tfoot>
