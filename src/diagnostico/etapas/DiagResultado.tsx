@@ -97,9 +97,14 @@ export function DiagResultado({ lead }: Props) {
     lfTemDados, pctIF,
     aaTemDados, nRuinsCount,
     pontoDiversificacao, pontoQualidade,
-    blindagemTemDados, possuiSeguro,
+    blindagemTemDados, possuiSeguro, possuiPrevidencia,
     comecandoDoZero,
   } = calcularScoresDiag(dadosColeta);
+
+  const casado    = dadosColeta.estadoCivil === "casado" || dadosColeta.estadoCivil === "uniao_estavel";
+  const conjuge   = dadosColeta.nomeConjuge ?? "";
+  const filhos    = dadosColeta.filhos ?? [];
+  const temFilhos = filhos.length > 0;
 
   const nome = lead.nome.split(" ")[0];
 
@@ -296,6 +301,44 @@ export function DiagResultado({ lead }: Props) {
     );
   }
 
+  function gerarTextoBlindagem(): string {
+    const familiaRef = casado && conjuge
+      ? conjuge
+      : casado
+        ? "sua família"
+        : temFilhos
+          ? filhos.length === 1 ? (filhos[0].nome || "seu filho") : "seus filhos"
+          : "quem você ama";
+
+    const nFilhosStr = filhos.length === 1
+      ? (filhos[0].nome || "seu filho")
+      : `seus ${filhos.length} filhos`;
+
+    if (!possuiSeguro && !possuiPrevidencia) {
+      if (casado && temFilhos) {
+        return `${nome}, imagine o que aconteceria com ${conjuge || "sua família"} e ${nFilhosStr} se amanhã você não pudesse mais trabalhar. Quem pagaria as contas? Quem garantiria o futuro deles?\n\nHoje, sem seguro de vida e sem previdência, sua família estaria completamente exposta a esse risco. Esse é o ponto que precisa de atenção imediata.`;
+      }
+      if (casado) {
+        return `${nome}, você e ${conjuge || "sua família"} construíram muito juntos — mas sem uma proteção estruturada, tudo isso pode estar em risco diante de um imprevisto. Sem seguro e sem previdência, a vulnerabilidade é real e imediata.`;
+      }
+      if (temFilhos) {
+        return `${nome}, ser responsável por ${nFilhosStr} é uma das maiores responsabilidades da vida. Mas sem um seguro de vida ou previdência, quem garantiria o sustento ${filhos.length === 1 ? "dele" : "deles"} se algo acontecesse com você hoje?`;
+      }
+      return `${nome}, mesmo sem dependentes diretos, a ausência de proteção financeira expõe você a riscos que podem comprometer décadas de trabalho em um único evento. Sem seguro de vida e sem previdência, qualquer imprevisto — invalidez, doença grave ou falecimento precoce — deixaria um vazio que é impossível de preencher sem planejamento prévio.`;
+    }
+
+    if (possuiSeguro && !possuiPrevidencia) {
+      return `${nome}, você já deu um passo importante ao ter um seguro de vida — isso protege ${familiaRef} em caso de falecimento ou invalidez. Mas a proteção está incompleta: sem previdência privada, a aposentadoria pode ser muito diferente do que você planeja. Uma previdência bem estruturada complementa o seguro e garante que o futuro de longo prazo também esteja coberto.`;
+    }
+
+    if (!possuiSeguro && possuiPrevidencia) {
+      return `${nome}, você já pensa no futuro ao investir em previdência — isso é fundamental para o longo prazo. Mas e o presente? Sem um seguro de vida, ${familiaRef} ficaria sem proteção imediata em caso de invalidez ou falecimento. Um evento inesperado hoje poderia comprometer tudo que você está construindo para o futuro.`;
+    }
+
+    // Tem ambos
+    return `${nome}, você está no caminho certo: seguro de vida e previdência privada formam a base de uma blindagem patrimonial sólida. O próximo passo é revisar os valores e garantir que as coberturas são suficientes para as necessidades reais ${casado || temFilhos ? "da sua família" : "suas"}. Na reunião inicial, vamos mapear se há lacunas a preencher.`;
+  }
+
   function gerarTexto(area: string): string {
     if (area === "lf") {
       if (!lfTemDados) {
@@ -317,12 +360,9 @@ export function DiagResultado({ lead }: Props) {
 
     if (area === "blind") {
       if (!blindagemTemDados) {
-        return "Não conseguimos avaliar sua proteção patrimonial sem saber suas despesas mensais. Complete esse dado para descobrir se sua família estaria protegida em caso de imprevistos.";
+        return "Não conseguimos avaliar sua proteção patrimonial. Complete os dados de seguro e previdência para descobrir se sua família estaria protegida em caso de imprevistos.";
       }
-      if (!possuiSeguro) {
-        return "Você não possui nenhuma apólice de seguro de vida ou invalidez — o que significa que, se algo inesperado acontecer com você amanhã, sua família enfrentaria a dor emocional e, simultaneamente, uma crise financeira devastadora.\n\nPense nisso de forma concreta: em caso de falecimento, quem pagaria o aluguel, a escola dos filhos, as contas do dia a dia? Em caso de invalidez — que é estatisticamente mais provável do que o falecimento precoce — como sua família manteria o padrão de vida por meses ou anos sem a sua renda?\n\nUm seguro de vida adequado é uma das decisões mais importantes e mais acessíveis que você pode tomar hoje. O custo de não ter é infinitamente maior do que o custo de ter.";
-      }
-      return "Você já deu um passo importante ao contratar um seguro de vida ou invalidez. Isso demonstra consciência sobre a proteção da sua família.\n\nPara uma análise mais precisa do quanto essa cobertura representa frente às necessidades reais, recomendamos levantar o valor exato das apólices. Na reunião inicial, vamos mapear se a cobertura atual é suficiente ou se há lacunas a preencher.";
+      return gerarTextoBlindagem();
     }
 
     return "";

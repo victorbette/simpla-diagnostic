@@ -39,6 +39,7 @@ export interface ScoresDiag {
   pilarGlobal: boolean;
   blindagemTemDados: boolean;
   possuiSeguro: boolean;
+  possuiPrevidencia: boolean;
   comecandoDoZero: boolean;
 }
 
@@ -85,15 +86,22 @@ export function calcularScoresDiag(
   const scoreInvestimentos = comecandoDoZero ? 0 : (!aaTemDados ? -1 : pontos);
 
   // ── Score Blindagem ──
-  // valorApolice não é coletado no UI; usa possuiSeguro como proxy qualitativo
-  const despesas = Number(dadosColeta.custoVidaMensal) || 0;
-  const possuiSeguro = dadosColeta.possuiSeguro === true;
-  const blindagemTemDados = despesas > 0;
-  const scoreBlindagem = !blindagemTemDados
-    ? -1
-    : possuiSeguro
-      ? 40  // tem seguro mas sem valor exato → parcialmente protegido
-      : 0;  // sem seguro → descoberto
+  const possuiSeguro      = dadosColeta.possuiSeguro === true;
+  const possuiPrevidencia = dadosColeta.temPrevidencia === true;
+  const blindagemTemDados = dadosColeta.possuiSeguro !== undefined || dadosColeta.temPrevidencia !== undefined;
+
+  let scoreBlindagem: number;
+  if (!blindagemTemDados) {
+    scoreBlindagem = -1;                       // não avaliado
+  } else if (possuiSeguro && possuiPrevidencia) {
+    scoreBlindagem = 80;                       // ambos → Precisa Desenvolver (tamanho das coberturas a revisar)
+  } else if (possuiSeguro && !possuiPrevidencia) {
+    scoreBlindagem = 40;                       // só seguro → Atenção Urgente
+  } else if (!possuiSeguro && possuiPrevidencia) {
+    scoreBlindagem = 30;                       // só previdência → Crítico
+  } else {
+    scoreBlindagem = 0;                        // nenhum → Crítico
+  }
 
   // ── Score Geral ──
   const lista = [scoreLF, scoreInvestimentos, scoreBlindagem].filter(s => s >= 0);
@@ -116,6 +124,7 @@ export function calcularScoresDiag(
     pilarGlobal,
     blindagemTemDados,
     possuiSeguro,
+    possuiPrevidencia,
     comecandoDoZero,
   };
 }

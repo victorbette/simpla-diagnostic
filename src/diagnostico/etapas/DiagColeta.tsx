@@ -372,6 +372,39 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                 value={dados.saldoPrevidencia ?? 0}
                 onChange={(v: number) => onChange({ saldoPrevidencia: v })}
               />
+              <div style={{ marginTop: 10 }}>
+                <label style={{ fontSize: 11, color: "#15803D", fontWeight: 500, display: "block", marginBottom: 6 }}>
+                  Tipo de Previdência
+                </label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {(["PGBL", "VGBL"] as const).map(tipo => {
+                    const ativo = dados.tipoPrevidencia === tipo;
+                    return (
+                      <button
+                        key={tipo}
+                        onClick={() => onChange({ tipoPrevidencia: ativo ? undefined : tipo })}
+                        style={{
+                          flex: 1, padding: "7px 0", borderRadius: 8,
+                          border: ativo ? "2px solid #15803D" : "1px solid #BBF7D0",
+                          background: ativo ? "#15803D" : "white",
+                          color: ativo ? "white" : "#15803D",
+                          fontSize: 13, fontWeight: ativo ? 700 : 500,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}
+                      >
+                        {tipo}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ fontSize: 10, color: "#6B7280", marginTop: 5 }}>
+                  {dados.tipoPrevidencia === "PGBL"
+                    ? "PGBL: dedutível no IR — indicado para quem faz declaração completa"
+                    : dados.tipoPrevidencia === "VGBL"
+                    ? "VGBL: não dedutível — IR incide só sobre rendimento"
+                    : "Selecione o tipo de previdência"}
+                </div>
+              </div>
             </div>
           )}
         </div>

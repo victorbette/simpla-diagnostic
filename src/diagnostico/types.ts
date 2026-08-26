@@ -27,6 +27,7 @@ export interface DadosColetaDiag {
   possuiSeguro?: boolean;
   temPrevidencia?: boolean;
   saldoPrevidencia?: number;
+  tipoPrevidencia?: "PGBL" | "VGBL";
   comecandoDoZero?: boolean;
   valorParaInvestir?: number;
 }
