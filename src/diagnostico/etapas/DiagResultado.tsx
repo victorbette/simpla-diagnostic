@@ -219,7 +219,6 @@ export function DiagResultado({ lead }: Props) {
             const barCor = pct >= 75 ? "#16A34A" : pct >= 40 ? "#D97706" : "#DC2626";
             return (
               <div key={c.label} style={{ background: bg, border: `0.5px solid ${cor}30`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ fontSize: 10, color: "#6B7280", marginBottom: 2 }}>{c.hint}</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", marginBottom: 8 }}>{c.label}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ flex: 1, height: 6, background: "#E5E7EB", borderRadius: 99, overflow: "hidden" }}>
