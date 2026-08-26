@@ -92,8 +92,6 @@ O momento de estruturar essa base é agora — porque os juros compostos trabalh
 
   const texto = `A forma como você investe define o ritmo com que você se aproxima — ou se afasta — da vida que quer construir. A maioria das pessoas investe de forma reativa: aplica onde ouviu falar, coloca onde o gerente indicou, sem estratégia nem clareza sobre o papel de cada ativo. É essa falta de direção que faz carteiras ficarem estagnadas por anos, rendendo abaixo do potencial e carregando produtos inadequados.
 
-A tabela abaixo mostra a composição atual da sua carteira — o retrato fiel de onde seu patrimônio está alocado hoje e o ponto de partida para uma estratégia que faça cada real trabalhar de forma mais inteligente.
-
 Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em qualquer cenário e elimina decisões por impulso. Uma carteira bem estruturada combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, os juros compostos amplifiquem cada decisão certa tomada hoje.
 `;
 
