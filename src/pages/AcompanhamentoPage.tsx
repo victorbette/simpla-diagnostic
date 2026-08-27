@@ -5,6 +5,7 @@ import { defaultResultados } from "@/types/estrategiaResultados";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { GestaoInvestimentos } from "@/components/acompanhamento/GestaoInvestimentos";
 import { AcompLF } from "@/components/acompanhamento/AcompLF";
+import { EvolucaoPatrimonio } from "@/components/acompanhamento/EvolucaoPatrimonio";
 
 interface Props {
   clienteId: string;
@@ -12,11 +13,12 @@ interface Props {
   onVoltar: () => void;
 }
 
-type Tab = "investimentos" | "lf";
+type Tab = "investimentos" | "lf" | "evolucao";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "investimentos", label: "Gestão de Investimentos", icon: "ti-chart-pie" },
-  { id: "lf",            label: "Liberdade Financeira",   icon: "ti-trending-up" },
+  { id: "evolucao",      label: "Evolução do Patrimônio", icon: "ti-trending-up"  },
+  { id: "investimentos", label: "Gestão de Investimentos", icon: "ti-chart-pie"   },
+  { id: "lf",            label: "Liberdade Financeira",   icon: "ti-beach"        },
 ];
 
 interface AcompData {
@@ -47,7 +49,7 @@ function saveAcompData(clienteId: string, patch: Partial<AcompData>) {
 }
 
 export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) {
-  const [tab, setTab] = useState<Tab>("investimentos");
+  const [tab, setTab] = useState<Tab>("evolucao");
   const { plan, loading, carregarPlano } = useFinancialPlanStore();
 
   const [data, setData] = useState<AcompData>(() => loadAcompData(clienteId));
@@ -154,6 +156,13 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
 
       {/* Content */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+        {tab === "evolucao" && (
+          <EvolucaoPatrimonio
+            clienteId={clienteId}
+            resultadoIF={resultados.if}
+          />
+        )}
+
         {tab === "investimentos" && (
           <GestaoInvestimentos carteira={resultados.carteira} />
         )}
@@ -173,8 +182,6 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
             <PlanLoading loading={loading} />
           )
         )}
-
-
       </main>
     </div>
   );
