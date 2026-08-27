@@ -373,18 +373,35 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
           backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
           height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
         }}>
-          <button
-            onClick={() => { setMostrarFP(false); setMostrarResultado(true); }}
-            style={{
-              background: "none", border: "1px solid rgba(255,255,255,0.25)",
-              color: "#93C5FD", cursor: "pointer", padding: "4px 10px",
-              borderRadius: 6, fontSize: 12, fontWeight: 500,
-            }}
-          >
-            ← Voltar
-          </button>
-          <span style={{ color: "white", fontWeight: 600, fontSize: 14 }}>Financial Planning</span>
-          <span style={{ color: "#93C5FD", fontSize: 13 }}>· {clientName}</span>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
+            </div>
+            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
+              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
+            </div>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: GOLD, color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none" }}>
+              {userInitials}
+            </div>
+            <button
+              onClick={() => setMostrarFP(false)}
+              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+            >
+              <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
+              Dashboard
+            </button>
+            <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
+              <LogOut size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Tab bar FP */}
@@ -466,18 +483,35 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
           backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
           height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
         }}>
-          <button
-            onClick={() => setMostrarResultado(false)}
-            style={{
-              background: "none", border: "1px solid rgba(255,255,255,0.25)",
-              color: "#93C5FD", cursor: "pointer", padding: "4px 10px",
-              borderRadius: 6, fontSize: 12, fontWeight: 500,
-            }}
-          >
-            ← Voltar
-          </button>
-          <span style={{ color: "white", fontWeight: 700, fontSize: 15 }}>{clientName}</span>
-          <span style={{ color: "#93C5FD", fontSize: 13 }}>· Diagnóstico</span>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
+            </div>
+            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
+              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
+            </div>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: GOLD, color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none" }}>
+              {userInitials}
+            </div>
+            <button
+              onClick={() => setMostrarResultado(false)}
+              style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+            >
+              <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
+              Dashboard
+            </button>
+            <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
+              <LogOut size={18} />
+            </button>
+          </div>
         </header>
 
         {/* Conteúdo scrollável */}
@@ -538,23 +572,11 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
         backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
         height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
       }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
-          <button
-            onClick={handleBackToClients}
-            style={{
-              background: "none", border: "1px solid rgba(255,255,255,0.25)",
-              color: "#93C5FD", cursor: "pointer", padding: "4px 10px",
-              borderRadius: 6, fontSize: 12, fontWeight: 500, whiteSpace: "nowrap",
-            }}
-          >
-            ← Clientes
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <img src="/logo-si.svg" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
-              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
-            </div>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+            <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+            <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
           </div>
           <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
         </div>
@@ -572,6 +594,15 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
           }}>
             {userInitials}
           </div>
+          <button
+            onClick={handleBackToClients}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          >
+            <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
+            Dashboard
+          </button>
           <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
             <LogOut size={18} />
           </button>

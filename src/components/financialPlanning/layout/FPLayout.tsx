@@ -116,25 +116,24 @@ export function FPLayout({
         }}
       >
         {/* Logo */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <img
-              src="/diamond-icon-small.png"
-              alt="Simpla Invest"
-              style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
-            />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
-                Simpla Invest
-              </span>
-              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
-                Financial Planning
-              </span>
-            </div>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+          <img
+            src="/diamond-icon-small.png"
+            alt="Simpla Invest"
+            style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+            <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>
+              Simpla Invest
+            </span>
+            <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>
+              Financial Planning
+            </span>
           </div>
+          <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
         </div>
 
-        {/* User info */}
+        {/* User info + Dashboard button */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
           <div style={{ textAlign: "right" }}>
             <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>
@@ -162,6 +161,15 @@ export function FPLayout({
           >
             {userInitials}
           </div>
+          <button
+            onClick={onBackToClients}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          >
+            <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
+            Dashboard
+          </button>
           <button
             onClick={signOut}
             title="Sair"
