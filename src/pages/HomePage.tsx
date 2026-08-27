@@ -643,7 +643,7 @@ export function HomePage() {
                     >
                       FP
                     </button>
-                    {userEmail === "victor.bette@simplawealth.com" && (
+                    {["victor.bette@simplawealth.com", "bruno.ayres@simplawealth.com"].includes(userEmail ?? "") && (
                       <button
                         onClick={() => setClienteAcompanhamento(c)}
                         title="Acompanhamento Consultivo"
