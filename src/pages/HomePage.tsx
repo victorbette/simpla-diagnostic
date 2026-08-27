@@ -643,6 +643,15 @@ export function HomePage() {
                     >
                       FP
                     </button>
+                    {userEmail === "victor.bette@simplawealth.com" && (
+                      <button
+                        onClick={() => setClienteAcompanhamento(c)}
+                        title="Acompanhamento Consultivo"
+                        style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                      >
+                        Acomp.
+                      </button>
+                    )}
                   </div>
 
                   {/* ⋮ MENU */}
