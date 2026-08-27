@@ -215,7 +215,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
   return (
     <>
       <PaginaDoc rodape={<RodapePagina nomeCliente={nomeCliente} />}>
-        <HeaderSecao titulo="Alocação Atual x Proposta" />
+        <HeaderSecao titulo={temCarteiraAtual ? "Alocação Atual x Proposta" : "Alocação Proposta"} />
 
         {temCarteiraAtual ? (
           <div className="doc-card" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
@@ -241,7 +241,7 @@ export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
 
       {blocos.slice(1).map((bloco, i) => (
         <PaginaDoc key={`cont-${i}`} rodape={<RodapePagina nomeCliente={nomeCliente} />}>
-          <HeaderSecao titulo="Alocação Atual x Proposta" subtitulo="continuação" />
+          <HeaderSecao titulo={temCarteiraAtual ? "Alocação Atual x Proposta" : "Alocação Proposta"} subtitulo="continuação" />
           <TabelaCarteiraFinal
             linhas={bloco}
             rodapeTotal={i === blocos.length - 2}
