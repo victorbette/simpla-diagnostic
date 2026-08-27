@@ -122,16 +122,24 @@ function buildChartData(
   if (registros.length === 0) return [];
 
   const primeiro = registros[0];
+  const ultimo  = registros[registros.length - 1];
 
-  // Month range: from first registro to today
+  // O gráfico vai do primeiro registro até o maior entre "hoje" e o último registro
+  // (permite lançamentos futuros planejados)
+  const fimAno = ultimo.ano > anoAtual || (ultimo.ano === anoAtual && ultimo.mes > mesAtual)
+    ? ultimo.ano : anoAtual;
+  const fimMes = fimAno === anoAtual && ultimo.ano === anoAtual
+    ? Math.max(mesAtual, ultimo.mes)
+    : (fimAno > anoAtual ? ultimo.mes : mesAtual);
+
   const meses: { ano: number; mes: number }[] = [];
   let a = primeiro.ano, m = primeiro.mes;
   for (;;) {
     meses.push({ ano: a, mes: m });
-    if (a === anoAtual && m === mesAtual) break;
+    if (a === fimAno && m === fimMes) break;
     m++;
     if (m > 12) { m = 1; a++; }
-    if (a > anoAtual + 2) break; // safety cap
+    if (a > anoAtual + 10) break; // safety cap
   }
 
   const realizadoMap = new Map<string, number>();
@@ -371,7 +379,7 @@ function AddForm({
         <label style={{ fontSize: 11, color: "#6B7280", display: "block", marginBottom: 4 }}>Ano</label>
         <select value={formAno} onChange={e => setFormAno(e.target.value)}
           style={{ fontSize: 13, border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "6px 10px", color: "#111827", background: "white" }}>
-          {Array.from({ length: 6 }, (_, i) => anoAtual - 4 + i).map(y => (
+          {Array.from({ length: 14 }, (_, i) => anoAtual - 4 + i).map(y => (
             <option key={y} value={String(y)}>{y}</option>
           ))}
         </select>
