@@ -91,8 +91,8 @@ function buildPlanedMap(
   const map = new Map<string, number>();
   if (!resultadoIF.projecao?.length) return map;
 
-  const taxaMensal = Math.pow(1 + resultadoIF.taxaRetorno, 1 / 12) - 1;
-  const aporte = resultadoIF.aporteAtual;
+  const taxaMensal = Math.pow(1 + Math.max(0, resultadoIF.taxaRetorno), 1 / 12) - 1;
+  const aporte = resultadoIF.aporteAtual ?? 0;
 
   // Preenche todos os meses presentes na projeção
   const projecaoMap = new Map<string, number>();
@@ -100,7 +100,7 @@ function buildPlanedMap(
     projecaoMap.set(`${p.ano}-${p.mesDoAno}`, p.patrimonio),
   );
 
-  // Encontra o mês mais antigo da projeção
+  // Encontra o ponto mais antigo da projeção (início da curva = hoje)
   const sorted = [...resultadoIF.projecao].sort(
     (a, b) => a.ano !== b.ano ? a.ano - b.ano : a.mesDoAno - b.mesDoAno,
   );
@@ -112,11 +112,14 @@ function buildPlanedMap(
       map.set(key, projecaoMap.get(key)!);
     } else {
       // Mês anterior ao início da projeção: extrapolamos para trás
+      // P(t) = P(t+1) * (1+r) + aporte  →  P(t-1) = (P(t) - aporte) / (1+r)
       const mesesAntes = (startPt.ano - ano) * 12 + (startPt.mesDoAno - mes);
-      if (mesesAntes > 0 && taxaMensal > 0) {
+      if (mesesAntes > 0) {
         let p = startPt.patrimonio;
         for (let i = 0; i < mesesAntes; i++) {
-          p = (p - aporte) / (1 + taxaMensal);
+          p = taxaMensal > 0
+            ? (p - aporte) / (1 + taxaMensal)
+            : p - aporte; // taxa zero: só subtrai aporte
         }
         map.set(key, Math.max(0, p));
       }
@@ -568,6 +571,25 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
             accent={desvio != null && desvio > 0}
           />
         </div>
+
+        {/* Aviso quando não há dados LF */}
+        {!resultadoIF && (
+          <div style={{ background: "#FFFBEB", border: "0.5px solid #FDE68A", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <i className="ti ti-info-circle" style={{ fontSize: 16, color: "#D97706", flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#92400E", margin: 0 }}>
+              A linha <strong>PL planejado</strong> usa a projeção da aba <strong>Liberdade Financeira</strong>.
+              Abra essa aba, ajuste os parâmetros e clique em <strong>Salvar simulação</strong> para ativar a comparação.
+            </p>
+          </div>
+        )}
+        {resultadoIF && !resultadoIF.projecao?.length && (
+          <div style={{ background: "#FFF7ED", border: "0.5px solid #FED7AA", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <i className="ti ti-alert-triangle" style={{ fontSize: 16, color: "#EA580C", flexShrink: 0 }} />
+            <p style={{ fontSize: 12, color: "#7C2D12", margin: 0 }}>
+              A projeção salva não contém dados. Verifique os parâmetros de Liberdade Financeira (idade meta, renda desejada, taxa de retorno) e salve novamente.
+            </p>
+          </div>
+        )}
 
         {/* Chart */}
         <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "24px 16px 16px" }}>
