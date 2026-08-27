@@ -141,13 +141,36 @@ function buildChartData(
   const primeiro = registros[0];
   const ultimo  = registros[registros.length - 1];
 
-  // O gráfico vai do primeiro registro até o maior entre "hoje" e o último registro
-  // (permite lançamentos futuros planejados)
-  const fimAno = ultimo.ano > anoAtual || (ultimo.ano === anoAtual && ultimo.mes > mesAtual)
+  // Determine end of chart: last registro, today, LF retirement date, or 5 years ahead — whichever is latest
+  let fimAno = ultimo.ano > anoAtual || (ultimo.ano === anoAtual && ultimo.mes > mesAtual)
     ? ultimo.ano : anoAtual;
-  const fimMes = fimAno === anoAtual && ultimo.ano === anoAtual
+  let fimMes = fimAno === anoAtual && ultimo.ano === anoAtual
     ? Math.max(mesAtual, ultimo.mes)
     : (fimAno > anoAtual ? ultimo.mes : mesAtual);
+
+  // Extend to LF retirement date if available
+  if (resultadoIF?.projecao?.length) {
+    const sorted = [...resultadoIF.projecao].sort(
+      (a, b) => a.ano !== b.ano ? a.ano - b.ano : a.mesDoAno - b.mesDoAno,
+    );
+    const idxRetirada = resultadoIF.mesInicioRetirada ?? null;
+    const pontoRetirada = idxRetirada != null ? resultadoIF.projecao[idxRetirada] : null;
+    // Use retirement point, or at least 5 years into the projecao, or full projecao end
+    const horizonte = pontoRetirada ?? sorted[Math.min(60, sorted.length - 1)];
+    const hAno = horizonte.ano;
+    const hMes = horizonte.mesDoAno;
+    if (hAno > fimAno || (hAno === fimAno && hMes > fimMes)) {
+      fimAno = hAno;
+      fimMes = hMes;
+    }
+  }
+
+  // Fallback: at least 5 years ahead of today
+  const minFimAno = anoAtual + 5;
+  if (minFimAno > fimAno || (minFimAno === fimAno && mesAtual > fimMes)) {
+    fimAno = minFimAno;
+    fimMes = mesAtual;
+  }
 
   const meses: { ano: number; mes: number }[] = [];
   let a = primeiro.ano, m = primeiro.mes;
@@ -156,7 +179,7 @@ function buildChartData(
     if (a === fimAno && m === fimMes) break;
     m++;
     if (m > 12) { m = 1; a++; }
-    if (a > anoAtual + 10) break; // safety cap
+    if (a > anoAtual + 50) break; // safety cap
   }
 
   const realizadoMap = new Map<string, number>();
