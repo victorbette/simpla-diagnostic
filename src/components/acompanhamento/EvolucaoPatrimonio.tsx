@@ -237,7 +237,7 @@ function calcularImpacto(
 function SectionTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ width: 32, height: 3, background: "#1E3A8A", borderRadius: 2, marginBottom: 10 }} />
+      <div style={{ width: 32, height: 3, background: "#3B82F6", borderRadius: 2, marginBottom: 10 }} />
       <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: "0.07em", margin: 0 }}>{title}</p>
         {subtitle && <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>{subtitle}</p>}
@@ -275,7 +275,7 @@ function ChartLegend() {
       {[
         { label: "PL planejado", color: "#94A3B8", dashed: true },
         { label: "Banda esperada", color: "rgba(148,163,184,0.4)", box: true },
-        { label: "PL realizado", color: "#1E3A8A", dashed: false },
+        { label: "PL realizado", color: "#3B82F6", dashed: false },
       ].map(({ label, color, dashed, box }) => (
         <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {box ? (
@@ -291,7 +291,7 @@ function ChartLegend() {
       ))}
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <svg width={12} height={12}>
-          <circle cx={6} cy={6} r={5} fill="#1E3A8A" stroke="white" strokeWidth={1.5} />
+          <circle cx={6} cy={6} r={5} fill="#3B82F6" stroke="white" strokeWidth={1.5} />
         </svg>
         <span style={{ fontSize: 11, color: "#6B7280" }}>Hoje</span>
       </div>
@@ -362,7 +362,7 @@ function CustomTooltip({ active, payload, label }: {
   return (
     <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "10px 14px", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
       <p style={{ fontWeight: 600, color: "#374151", margin: "0 0 6px" }}>{label}</p>
-      {realizado != null && <p style={{ color: "#1E3A8A", margin: "2px 0", fontWeight: 600 }}>Realizado: {formatM(realizado)}</p>}
+      {realizado != null && <p style={{ color: "#3B82F6", margin: "2px 0", fontWeight: 600 }}>Realizado: {formatM(realizado)}</p>}
       {planed != null && <p style={{ color: "#94A3B8", margin: "2px 0" }}>Planejado: {formatM(planed)}</p>}
     </div>
   );
@@ -414,7 +414,7 @@ function AddForm({
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={onSave}
-          style={{ fontSize: 12, fontWeight: 600, background: "#1E3A8A", color: "white", border: "none", borderRadius: 6, padding: "7px 16px", cursor: "pointer" }}>
+          style={{ fontSize: 12, fontWeight: 600, background: "#3B82F6", color: "white", border: "none", borderRadius: 6, padding: "7px 16px", cursor: "pointer" }}>
           Salvar
         </button>
         <button onClick={onCancel}
@@ -513,7 +513,7 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <SectionTitle title="Evolução do Patrimônio" />
           <button onClick={() => setShowAdd(true)}
-            style={{ fontSize: 12, fontWeight: 600, background: "#1E3A8A", color: "white", border: "none", borderRadius: 6, padding: "7px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            style={{ fontSize: 12, fontWeight: 600, background: "#3B82F6", color: "white", border: "none", borderRadius: 6, padding: "7px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <i className="ti ti-plus" style={{ fontSize: 13 }} />
             Adicionar registro
           </button>
@@ -549,7 +549,7 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
             subtitle={`Banda cinza = oscilação esperada (±${(BAND_PCT * 100).toFixed(1).replace(".", ",")}%)`}
           />
           <button onClick={() => setShowAdd(v => !v)}
-            style={{ fontSize: 12, fontWeight: 600, background: showAdd ? "#F3F4F6" : "#1E3A8A", color: showAdd ? "#6B7280" : "white", border: showAdd ? "0.5px solid #E5E7EB" : "none", borderRadius: 6, padding: "7px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            style={{ fontSize: 12, fontWeight: 600, background: showAdd ? "#F3F4F6" : "#3B82F6", color: showAdd ? "#6B7280" : "white", border: showAdd ? "0.5px solid #E5E7EB" : "none", borderRadius: 6, padding: "7px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <i className={`ti ${showAdd ? "ti-x" : "ti-plus"}`} style={{ fontSize: 13 }} />
             {showAdd ? "Cancelar" : "Adicionar"}
           </button>
@@ -674,8 +674,8 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
               <Line
                 type="monotone"
                 dataKey="realizado"
-                stroke="#1E3A8A"
-                strokeWidth={2}
+                stroke="#3B82F6"
+                strokeWidth={3}
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
@@ -688,13 +688,13 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
                   x={ultimoChartPt.label}
                   y={ultimoChartPt.realizado}
                   r={7}
-                  fill="#1E3A8A"
+                  fill="#3B82F6"
                   stroke="white"
                   strokeWidth={2.5}
                   label={{
                     value: formatM(ultimoChartPt.realizado),
                     position: "right",
-                    style: { fontSize: 11, fontWeight: 700, fill: "#1E3A8A" },
+                    style: { fontSize: 11, fontWeight: 700, fill: "#3B82F6" },
                   }}
                 />
               )}
