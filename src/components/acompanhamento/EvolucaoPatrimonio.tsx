@@ -4,7 +4,6 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot,
 } from "recharts";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
-import type { PontoProjecao } from "@/lib/financialFreedomCalc";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -78,11 +77,60 @@ function parseValorInput(raw: string): number {
   return isNaN(num) ? NaN : num * multiplier;
 }
 
+// ── Planned-line builder (integrado com projeção LF) ──────────────────────────
+//
+// A projeção do IF começa na data do cálculo do plano.
+// Para meses históricos anteriores à projeção, extrapolamos para trás:
+//   P(t-1) = (P(t) − aporte) / (1 + taxaMensal)
+// Assim a linha planejada é contínua do primeiro registro até hoje.
+
+function buildPlanedMap(
+  resultadoIF: ResultadoIF,
+  meses: { ano: number; mes: number }[],
+): Map<string, number> {
+  const map = new Map<string, number>();
+  if (!resultadoIF.projecao?.length) return map;
+
+  const taxaMensal = Math.pow(1 + resultadoIF.taxaRetorno, 1 / 12) - 1;
+  const aporte = resultadoIF.aporteAtual;
+
+  // Preenche todos os meses presentes na projeção
+  const projecaoMap = new Map<string, number>();
+  resultadoIF.projecao.forEach(p =>
+    projecaoMap.set(`${p.ano}-${p.mesDoAno}`, p.patrimonio),
+  );
+
+  // Encontra o mês mais antigo da projeção
+  const sorted = [...resultadoIF.projecao].sort(
+    (a, b) => a.ano !== b.ano ? a.ano - b.ano : a.mesDoAno - b.mesDoAno,
+  );
+  const startPt = sorted[0];
+
+  for (const { ano, mes } of meses) {
+    const key = `${ano}-${mes}`;
+    if (projecaoMap.has(key)) {
+      map.set(key, projecaoMap.get(key)!);
+    } else {
+      // Mês anterior ao início da projeção: extrapolamos para trás
+      const mesesAntes = (startPt.ano - ano) * 12 + (startPt.mesDoAno - mes);
+      if (mesesAntes > 0 && taxaMensal > 0) {
+        let p = startPt.patrimonio;
+        for (let i = 0; i < mesesAntes; i++) {
+          p = (p - aporte) / (1 + taxaMensal);
+        }
+        map.set(key, Math.max(0, p));
+      }
+    }
+  }
+
+  return map;
+}
+
 // ── Chart data builder ─────────────────────────────────────────────────────────
 
 function buildChartData(
   registros: RegistroPatrimonio[],
-  projecao: PontoProjecao[] | undefined,
+  resultadoIF: ResultadoIF | null,
   anoAtual: number,
   mesAtual: number,
 ): ChartPoint[] {
@@ -104,8 +152,7 @@ function buildChartData(
   const realizadoMap = new Map<string, number>();
   registros.forEach(r => realizadoMap.set(`${r.ano}-${r.mes}`, r.valor));
 
-  const planedMap = new Map<string, number>();
-  projecao?.forEach(p => planedMap.set(`${p.ano}-${p.mesDoAno}`, p.patrimonio));
+  const planedMap = resultadoIF ? buildPlanedMap(resultadoIF, meses) : new Map<string, number>();
 
   return meses.map(({ ano, mes }) => {
     const planed = planedMap.get(`${ano}-${mes}`) ?? null;
@@ -382,7 +429,7 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
   );
 
   const chartData = useMemo(
-    () => buildChartData(registrosOrdenados, resultadoIF?.projecao, anoAtual, mesAtual),
+    () => buildChartData(registrosOrdenados, resultadoIF, anoAtual, mesAtual),
     [registrosOrdenados, resultadoIF, anoAtual, mesAtual],
   );
 
@@ -390,8 +437,9 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
   const ultimo = registrosOrdenados[registrosOrdenados.length - 1];
 
   const planedHoje = useMemo(() => {
-    const p = resultadoIF?.projecao?.find(pt => pt.ano === anoAtual && pt.mesDoAno === mesAtual);
-    return p?.patrimonio ?? null;
+    if (!resultadoIF) return null;
+    const m = buildPlanedMap(resultadoIF, [{ ano: anoAtual, mes: mesAtual }]);
+    return m.get(`${anoAtual}-${mesAtual}`) ?? null;
   }, [resultadoIF, anoAtual, mesAtual]);
 
   const desvio = (ultimo && planedHoje != null) ? ultimo.valor - planedHoje : null;
@@ -686,7 +734,7 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
             <span />
           </div>
           {registrosOrdenados.map((r) => {
-            const planed = resultadoIF?.projecao?.find(p => p.ano === r.ano && p.mesDoAno === r.mes)?.patrimonio ?? null;
+            const planed = resultadoIF ? buildPlanedMap(resultadoIF, [{ ano: r.ano, mes: r.mes }]).get(`${r.ano}-${r.mes}`) ?? null : null;
             const diff = planed != null ? r.valor - planed : null;
             return (
               <div
