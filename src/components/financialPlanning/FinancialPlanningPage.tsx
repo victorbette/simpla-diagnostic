@@ -390,7 +390,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               {userInitials}
             </div>
             <button
-              onClick={() => setMostrarFP(false)}
+              onClick={handleBackToClients}
               style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
@@ -500,7 +500,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               {userInitials}
             </div>
             <button
-              onClick={() => setMostrarResultado(false)}
+              onClick={handleBackToClients}
               style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
