@@ -699,14 +699,14 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
                 />
               )}
 
-              {/* "Planejado hoje" label on right edge */}
-              {planedHoje != null && ultimoChartPt && (
+              {/* "Planejado" label on right edge — reflects last registro's planned value */}
+              {ultimoChartPt?.planed != null && (
                 <ReferenceDot
                   x={ultimoChartPt.label}
-                  y={planedHoje}
+                  y={ultimoChartPt.planed}
                   r={0}
                   label={{
-                    value: `${formatM(planedHoje)} plan.`,
+                    value: `${formatM(ultimoChartPt.planed)} plan.`,
                     position: "right",
                     style: { fontSize: 10, fill: "#94A3B8" },
                   }}
