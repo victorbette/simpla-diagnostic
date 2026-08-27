@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
-import type { ResultadosEstrategia, ResultadoIF, ResultadoSeguro, ResultadoFiscal } from "@/types/estrategiaResultados";
+import type { ResultadosEstrategia, ResultadoIF } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
 import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { GestaoInvestimentos } from "@/components/acompanhamento/GestaoInvestimentos";
 import { AcompLF } from "@/components/acompanhamento/AcompLF";
-import { AcompProtecao } from "@/components/acompanhamento/AcompProtecao";
-import { AcompFiscal } from "@/components/acompanhamento/AcompFiscal";
 
 interface Props {
   clienteId: string;
@@ -14,13 +12,11 @@ interface Props {
   onVoltar: () => void;
 }
 
-type Tab = "investimentos" | "lf" | "protecao" | "fiscal";
+type Tab = "investimentos" | "lf";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "investimentos", label: "Gestão de Investimentos", icon: "ti-chart-pie" },
   { id: "lf",            label: "Liberdade Financeira",   icon: "ti-trending-up" },
-  { id: "protecao",      label: "Proteção",               icon: "ti-shield-check" },
-  { id: "fiscal",        label: "Fiscal",                 icon: "ti-receipt" },
 ];
 
 interface AcompData {
@@ -94,7 +90,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
   }
 
   const savedAt = (() => {
-    const r = resultados?.carteira ?? resultados?.if ?? resultados?.seguro ?? resultados?.fiscal;
+    const r = resultados?.carteira ?? resultados?.if;
     if (!r?.savedAt) return null;
     return new Date(r.savedAt).toLocaleDateString("pt-BR");
   })();
@@ -178,37 +174,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
           )
         )}
 
-        {tab === "protecao" && (
-          plan ? (
-            <AcompProtecao
-              plan={plan}
-              comentario={data.comentarios["protecaoSucessorio"] ?? ""}
-              onComentarioChange={(v) => handleComentario("protecaoSucessorio", v)}
-              tags={data.tags["protecaoSucessorio"] ?? []}
-              onTagsChange={(v) => handleTags("protecaoSucessorio", v)}
-              resultadoSeguro={resultados.seguro}
-              onResultadoSeguro={(r: ResultadoSeguro) => handleResultados({ seguro: r })}
-            />
-          ) : (
-            <PlanLoading loading={loading} />
-          )
-        )}
 
-        {tab === "fiscal" && (
-          plan ? (
-            <AcompFiscal
-              plan={plan}
-              comentario={data.comentarios["fiscal"] ?? ""}
-              onComentarioChange={(v) => handleComentario("fiscal", v)}
-              tags={data.tags["fiscal"] ?? []}
-              onTagsChange={(v) => handleTags("fiscal", v)}
-              resultadoFiscal={resultados.fiscal}
-              onResultadoFiscal={(r: ResultadoFiscal) => handleResultados({ fiscal: r })}
-            />
-          ) : (
-            <PlanLoading loading={loading} />
-          )
-        )}
       </main>
     </div>
   );
