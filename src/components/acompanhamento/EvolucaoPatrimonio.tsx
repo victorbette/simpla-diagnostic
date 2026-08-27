@@ -165,10 +165,18 @@ function calcularImpacto(
   anoHoje: number,
   mesHoje: number,
 ): Impacto | null {
-  if (!r.anoNascimento || !r.mesNascimento || !r.idadeMeta) return null;
+  if (!r.idadeMeta) return null;
 
-  const anoMeta = r.anoNascimento + Math.floor(r.idadeMeta);
-  const mesMeta = r.mesNascimento;
+  // Usa o ponto exato da projeção LF (mesInicioRetirada) para garantir que
+  // a data meta coincide com o que é exibido na aba de Liberdade Financeira.
+  const idxRetirada = r.mesInicioRetirada ?? null;
+  const pontoRetirada = idxRetirada != null ? r.projecao?.[idxRetirada] : null;
+
+  const anoMeta = pontoRetirada?.ano
+    ?? (r.anoNascimento ? r.anoNascimento + Math.floor(r.idadeMeta) : anoHoje + Math.floor(r.anosRestantes ?? 0));
+  const mesMeta = pontoRetirada?.mesDoAno
+    ?? (r.mesNascimento ?? mesHoje);
+
   const mesesParaMeta = Math.max(1, (anoMeta - anoHoje) * 12 + (mesMeta - mesHoje));
 
   const taxaMensal = Math.pow(1 + r.taxaRetorno, 1 / 12) - 1;
