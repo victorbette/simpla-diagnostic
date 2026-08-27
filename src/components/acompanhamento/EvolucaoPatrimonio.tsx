@@ -77,53 +77,35 @@ function parseValorInput(raw: string): number {
   return isNaN(num) ? NaN : num * multiplier;
 }
 
-// ── Planned-line builder (integrado com projeção LF) ──────────────────────────
+// ── Planned-line builder ───────────────────────────────────────────────────────
 //
-// A projeção do IF começa na data do cálculo do plano.
-// Para meses históricos anteriores à projeção, extrapolamos para trás:
-//   P(t-1) = (P(t) − aporte) / (1 + taxaMensal)
-// Assim a linha planejada é contínua do primeiro registro até hoje.
+// Projeta PARA FRENTE a partir do primeiro valor do histórico (patrimonioInicial),
+// usando a taxa de retorno e o aporte do LF — assim ambas as linhas partem do
+// mesmo ponto e a comparação faz sentido.
+//
+//   P(0) = patrimonioInicial
+//   P(n) = P(0) * (1+r)^n  +  aporte * ((1+r)^n − 1) / r
 
 function buildPlanedMap(
   resultadoIF: ResultadoIF,
   meses: { ano: number; mes: number }[],
+  patrimonioInicial: number,
 ): Map<string, number> {
   const map = new Map<string, number>();
-  if (!resultadoIF.projecao?.length) return map;
+  if (!meses.length) return map;
+  if (!resultadoIF.taxaRetorno && !resultadoIF.aporteAtual) return map;
 
   const taxaMensal = Math.pow(1 + Math.max(0, resultadoIF.taxaRetorno), 1 / 12) - 1;
   const aporte = resultadoIF.aporteAtual ?? 0;
 
-  // Preenche todos os meses presentes na projeção
-  const projecaoMap = new Map<string, number>();
-  resultadoIF.projecao.forEach(p =>
-    projecaoMap.set(`${p.ano}-${p.mesDoAno}`, p.patrimonio),
-  );
-
-  // Encontra o ponto mais antigo da projeção (início da curva = hoje)
-  const sorted = [...resultadoIF.projecao].sort(
-    (a, b) => a.ano !== b.ano ? a.ano - b.ano : a.mesDoAno - b.mesDoAno,
-  );
-  const startPt = sorted[0];
-
-  for (const { ano, mes } of meses) {
-    const key = `${ano}-${mes}`;
-    if (projecaoMap.has(key)) {
-      map.set(key, projecaoMap.get(key)!);
-    } else {
-      // Mês anterior ao início da projeção: extrapolamos para trás
-      // P(t) = P(t+1) * (1+r) + aporte  →  P(t-1) = (P(t) - aporte) / (1+r)
-      const mesesAntes = (startPt.ano - ano) * 12 + (startPt.mesDoAno - mes);
-      if (mesesAntes > 0) {
-        let p = startPt.patrimonio;
-        for (let i = 0; i < mesesAntes; i++) {
-          p = taxaMensal > 0
-            ? (p - aporte) / (1 + taxaMensal)
-            : p - aporte; // taxa zero: só subtrai aporte
-        }
-        map.set(key, Math.max(0, p));
-      }
-    }
+  let p = patrimonioInicial;
+  for (let i = 0; i < meses.length; i++) {
+    const { ano, mes } = meses[i];
+    map.set(`${ano}-${mes}`, Math.round(p));
+    // Avança um mês
+    p = taxaMensal > 0
+      ? p * (1 + taxaMensal) + aporte
+      : p + aporte;
   }
 
   return map;
@@ -155,7 +137,10 @@ function buildChartData(
   const realizadoMap = new Map<string, number>();
   registros.forEach(r => realizadoMap.set(`${r.ano}-${r.mes}`, r.valor));
 
-  const planedMap = resultadoIF ? buildPlanedMap(resultadoIF, meses) : new Map<string, number>();
+  // Projeta a partir do primeiro valor histórico usando taxa/aporte do LF
+  const planedMap = resultadoIF
+    ? buildPlanedMap(resultadoIF, meses, primeiro.valor)
+    : new Map<string, number>();
 
   return meses.map(({ ano, mes }) => {
     const planed = planedMap.get(`${ano}-${mes}`) ?? null;
@@ -440,10 +425,20 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
   const ultimo = registrosOrdenados[registrosOrdenados.length - 1];
 
   const planedHoje = useMemo(() => {
-    if (!resultadoIF) return null;
-    const m = buildPlanedMap(resultadoIF, [{ ano: anoAtual, mes: mesAtual }]);
-    return m.get(`${anoAtual}-${mesAtual}`) ?? null;
-  }, [resultadoIF, anoAtual, mesAtual]);
+    if (!resultadoIF || !primeiro) return null;
+    // Número de meses do primeiro registro até hoje
+    const n = (anoAtual - primeiro.ano) * 12 + (mesAtual - primeiro.mes);
+    if (n < 0) return null;
+    const taxaMensal = Math.pow(1 + Math.max(0, resultadoIF.taxaRetorno), 1 / 12) - 1;
+    const aporte = resultadoIF.aporteAtual ?? 0;
+    if (taxaMensal > 0) {
+      return Math.round(
+        primeiro.valor * Math.pow(1 + taxaMensal, n) +
+        aporte * (Math.pow(1 + taxaMensal, n) - 1) / taxaMensal,
+      );
+    }
+    return Math.round(primeiro.valor + aporte * n);
+  }, [resultadoIF, primeiro, anoAtual, mesAtual]);
 
   const desvio = (ultimo && planedHoje != null) ? ultimo.valor - planedHoje : null;
 
@@ -756,7 +751,20 @@ export function EvolucaoPatrimonio({ clienteId, resultadoIF }: Props) {
             <span />
           </div>
           {registrosOrdenados.map((r) => {
-            const planed = resultadoIF ? buildPlanedMap(resultadoIF, [{ ano: r.ano, mes: r.mes }]).get(`${r.ano}-${r.mes}`) ?? null : null;
+            const planed = (() => {
+              if (!resultadoIF || !primeiro) return null;
+              const n = (r.ano - primeiro.ano) * 12 + (r.mes - primeiro.mes);
+              if (n < 0) return null;
+              const taxaMensal = Math.pow(1 + Math.max(0, resultadoIF.taxaRetorno), 1 / 12) - 1;
+              const aporte = resultadoIF.aporteAtual ?? 0;
+              if (taxaMensal > 0) {
+                return Math.round(
+                  primeiro.valor * Math.pow(1 + taxaMensal, n) +
+                  aporte * (Math.pow(1 + taxaMensal, n) - 1) / taxaMensal,
+                );
+              }
+              return Math.round(primeiro.valor + aporte * n);
+            })();
             const diff = planed != null ? r.valor - planed : null;
             return (
               <div
