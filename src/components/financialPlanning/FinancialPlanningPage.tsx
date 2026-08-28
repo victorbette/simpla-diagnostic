@@ -26,9 +26,10 @@ const GOLD = "#3B82F6";
 
 const ABAS = [
   { id: "coleta",                  label: "Situação Atual",          icone: "ti-clipboard-list" },
-  { id: "protecao_sucessorio",     label: "Proteção e Sucessão",   icone: "ti-shield"          },
-  { id: "planejamento_tributario", label: "Planejamento Tributário", icone: "ti-receipt"         },
-  { id: "liberdade_financeira",    label: "Liberdade Financeira",    icone: "ti-beach"           },
+  { id: "protecao_sucessorio",     label: "Proteção e Sucessão",     icone: "ti-shield"          },
+  { id: "planejamento_tributario", label: "Planejamento Tributário",  icone: "ti-receipt"         },
+  { id: "liberdade_financeira",    label: "Liberdade Financeira",     icone: "ti-beach"           },
+  { id: "resultado",               label: "Resultado",                icone: "ti-chart-bar"       },
 ];
 
 // ── Abas da tela Financial Planning ──────────────────────────────────────────
@@ -52,7 +53,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
   const { user, signOut } = useAuth();
   const [plan, setPlan] = useState<FinancialPlan>(() => initialFinancialPlan(clientId));
   const [abaAtiva, setAbaAtiva] = useState("coleta");
-  const [mostrarResultado, setMostrarResultado] = useState(false);
   const [mostrarFP, setMostrarFP] = useState(false);
   const [abaFP, setAbaFP] = useState("asset_allocation");
   const [dirty, setDirty] = useState(false);
@@ -346,8 +346,24 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
     [abaAtiva]
   );
 
-  // ── Tab bar style helper ──────────────────────────────────────────────────
+  // ── Tab bar style helpers ─────────────────────────────────────────────────
 
+  // Used for main tabs inside the blue header (Acompanhamento style)
+  function headerTabStyle(active: boolean): React.CSSProperties {
+    return {
+      padding: "10px 22px",
+      fontSize: 13, fontWeight: 500,
+      border: "none", cursor: "pointer",
+      borderRadius: "8px 8px 0 0",
+      background: active ? "#F0F7FF" : "transparent",
+      color: active ? "#1E3A8A" : "#93C5FD",
+      display: "flex", alignItems: "center", gap: 7,
+      transition: "background 150ms ease, color 150ms ease",
+      whiteSpace: "nowrap", flexShrink: 0, fontFamily: "inherit",
+    };
+  }
+
+  // Used for sub-tabs on white bar (FP screen)
   function tabStyle(active: boolean): React.CSSProperties {
     return {
       background: "none", border: "none",
@@ -471,18 +487,16 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ── TELA: Resultado (diagnóstico + scores) ────────────────────────────────
+  // ── TELA PRINCIPAL: abas (inclui Resultado) ───────────────────────────────
   // ─────────────────────────────────────────────────────────────────────────
 
-  if (mostrarResultado) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
-        {/* Header resultado */}
-        <header style={{
-          backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
-          height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
-        }}>
+      {/* Header principal */}
+      <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0, zIndex: 40 }}>
+        {/* Linha superior: logo + título + usuário */}
+        <div style={{ padding: "0 24px", height: 56, display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
             <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
             <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
@@ -491,12 +505,18 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
             </div>
             <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
           </div>
+          <AutoSaveIndicator status={saveStatus} />
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
             <div style={{ textAlign: "right" }}>
               <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
               <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
             </div>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: GOLD, color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none" }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              backgroundColor: GOLD, color: DARK,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none",
+            }}>
               {userInitials}
             </div>
             <button
@@ -512,119 +532,18 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               <LogOut size={18} />
             </button>
           </div>
-        </header>
-
-        {/* Conteúdo scrollável */}
-        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#F8F9FA" }}>
-          <FinancialPlanDashboard
-            plan={plan}
-            clientName={clientName}
-            resultados={resultados}
-            onEdit={() => {}}
-            onSave={async () => {}}
-            onPrint={() => {}}
-            onAvancarEstrategia={() => {}}
-          />
         </div>
 
-        {/* Rodapé resultado */}
-        <div style={{
-          position: "sticky", bottom: 0, background: "white",
-          borderTop: "0.5px solid #E5E7EB", padding: "12px 32px",
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-        }}>
-          <button
-            onClick={() => setMostrarResultado(false)}
-            style={{
-              fontSize: 13, color: "#6B7280", background: "white",
-              border: "0.5px solid #E5E7EB", borderRadius: 8,
-              padding: "8px 16px", cursor: "pointer",
-            }}
-          >
-            ← Voltar
-          </button>
-          <button
-            onClick={() => { setMostrarResultado(false); setMostrarFP(true); }}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              background: "#1E3A8A", color: "white", border: "none",
-              borderRadius: 8, padding: "10px 24px", fontSize: 14,
-              fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            Financial Planning
-            <i className="ti ti-arrow-right" style={{ fontSize: 16 }} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ── TELA PRINCIPAL: 4 abas ────────────────────────────────────────────────
-  // ─────────────────────────────────────────────────────────────────────────
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
-
-      {/* Header principal */}
-      <header style={{
-        backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
-        height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
-      }}>
-        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
-          <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-            <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
-            <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
-          </div>
-          <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-          <div style={{ textAlign: "right" }}>
-            <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
-            <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
-          </div>
-          <div style={{
-            width: 36, height: 36, borderRadius: "50%",
-            backgroundColor: GOLD, color: DARK,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none",
-          }}>
-            {userInitials}
-          </div>
-          <button
-            onClick={handleBackToClients}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
-          >
-            <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
-            Dashboard
-          </button>
-          <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
-            <LogOut size={18} />
-          </button>
-        </div>
-      </header>
-
-      {/* Tab bar principal */}
-      <div style={{
-        backgroundColor: "white", borderBottom: "1px solid #E5E7EB",
-        padding: "0 24px", display: "flex", alignItems: "center",
-        flexShrink: 0,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", overflowX: "auto", flex: 1 }}>
+        {/* Linha das abas (dentro do header azul) */}
+        <div style={{ padding: "0 24px", display: "flex", gap: 2 }}>
           {ABAS.map((aba) => (
-            <button key={aba.id} onClick={() => handleTrocarAba(aba.id)} style={tabStyle(abaAtiva === aba.id)}>
+            <button key={aba.id} onClick={() => handleTrocarAba(aba.id)} style={headerTabStyle(abaAtiva === aba.id)}>
               <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
               {aba.label}
             </button>
           ))}
         </div>
-        <AutoSaveIndicator status={saveStatus} />
-      </div>
+      </header>
 
       {/* Conteúdo das 4 abas */}
       <main style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
@@ -703,18 +622,30 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
             </div>
           )}
 
+          {abaAtiva === "resultado" && (
+            <FinancialPlanDashboard
+              plan={plan}
+              clientName={clientName}
+              resultados={resultados}
+              onEdit={() => {}}
+              onSave={async () => {}}
+              onPrint={() => {}}
+              onAvancarEstrategia={() => {}}
+            />
+          )}
+
         </div>
       </main>
 
-      {/* Rodapé — Ver Resultado (apenas na aba Liberdade Financeira) */}
-      {abaAtiva === "liberdade_financeira" && (
+      {/* Rodapé — Financial Planning (apenas na aba Resultado) */}
+      {abaAtiva === "resultado" && (
         <div style={{
           position: "sticky", bottom: 0, background: "white",
           borderTop: "0.5px solid #E5E7EB", padding: "12px 32px",
           display: "flex", justifyContent: "flex-end",
         }}>
           <button
-            onClick={() => setMostrarResultado(true)}
+            onClick={() => setMostrarFP(true)}
             style={{
               display: "flex", alignItems: "center", gap: 8,
               background: "#1E3A8A", color: "white", border: "none",
@@ -722,7 +653,7 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
               fontWeight: 600, cursor: "pointer",
             }}
           >
-            Ver Resultado
+            Financial Planning
             <i className="ti ti-arrow-right" style={{ fontSize: 16 }} />
           </button>
         </div>
