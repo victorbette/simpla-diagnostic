@@ -43,51 +43,51 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
   return (
     <div className="diag-flow-root" style={{ minHeight: "100vh", backgroundColor: "#F8F9FA" }}>
 
-      {/* Header */}
+      {/* Header com abas integradas */}
       <header
         className="diag-no-print"
-        style={{ backgroundColor: "#1E3A8A", padding: "14px 32px", display: "flex", alignItems: "center", gap: 16 }}
+        style={{ backgroundColor: "#1E3A8A" }}
       >
-        <button
-          onClick={onVoltar}
-          style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
-        >
-          ← Voltar
-        </button>
-        <span style={{ color: "white", fontWeight: 700, fontSize: 16, flex: 1 }}>
-          {lead.nome}
-        </span>
-        <span style={{ background: "rgba(255,255,255,0.2)", color: "white", borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>
-          Diagnóstico
-        </span>
-      </header>
-
-      {/* Abas */}
-      <div
-        className="diag-no-print"
-        style={{ backgroundColor: "white", borderBottom: "0.5px solid #E5E7EB", padding: "0 32px", display: "flex" }}
-      >
-        {ABAS.map(({ id, label }) => (
+        {/* Linha superior */}
+        <div style={{ padding: "14px 32px", display: "flex", alignItems: "center", gap: 16 }}>
           <button
-            key={id}
-            onClick={() => handleTrocarAba(id)}
-            style={{
-              padding: "14px 20px",
-              fontSize: 13,
-              fontWeight: etapaAtiva === id ? 600 : 400,
-              color: etapaAtiva === id ? "#1E3A8A" : "#6B7280",
-              background: "none",
-              border: "none",
-              borderBottom: etapaAtiva === id ? "2px solid #1E3A8A" : "2px solid transparent",
-              cursor: "pointer",
-              fontFamily: "inherit",
-              marginBottom: -1,
-            }}
+            onClick={onVoltar}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
           >
-            {label}
+            ← Voltar
           </button>
-        ))}
-      </div>
+          <span style={{ color: "white", fontWeight: 700, fontSize: 16, flex: 1 }}>
+            {lead.nome}
+          </span>
+          <span style={{ background: "rgba(255,255,255,0.2)", color: "white", borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>
+            Diagnóstico
+          </span>
+        </div>
+
+        {/* Abas dentro do header azul */}
+        <div style={{ padding: "0 32px", display: "flex", gap: 2 }}>
+          {ABAS.map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => handleTrocarAba(id)}
+              style={{
+                padding: "10px 22px",
+                fontSize: 13,
+                fontWeight: 500,
+                border: "none",
+                borderRadius: "8px 8px 0 0",
+                cursor: "pointer",
+                background: etapaAtiva === id ? "#F0F7FF" : "transparent",
+                color: etapaAtiva === id ? "#1E3A8A" : "#93C5FD",
+                fontFamily: "inherit",
+                transition: "background 150ms ease, color 150ms ease",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </header>
 
       {/* Content */}
       <main style={{ width: "100%", boxSizing: "border-box", padding: etapaAtiva === "relatorio" ? 0 : "24px 32px" }}>
