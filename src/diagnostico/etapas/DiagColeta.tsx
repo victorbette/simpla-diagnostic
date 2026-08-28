@@ -534,7 +534,6 @@ export function DiagColeta({ dados, onChange, onSalvar }: Props) {
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-                        <i className={`ti ${ativo.icone}`} style={{ fontSize: 14, color: marcado ? "#2563EB" : "#9CA3AF", flexShrink: 0 }} />
                         <div style={{ fontSize: 12, fontWeight: marcado ? 600 : 400, color: marcado ? "#111827" : "#6B7280", minWidth: 0 }}>
                           {ativo.label}
                         </div>
