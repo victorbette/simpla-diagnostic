@@ -141,7 +141,7 @@ export function DocLFDiag({ lead }: Props) {
     const fv = calcularFV(nMesesBase, aporteC);
     const pctMeta = patrimonioNecessario > 0
       ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
-    return { pctVariacao, aporteC, pctMeta };
+    return { pctVariacao, aporteC, fv, pctMeta };
   });
 
   const cenariosIdade = [-5, -2, 0, 2, 5].map(delta => {
@@ -150,7 +150,7 @@ export function DocLFDiag({ lead }: Props) {
     const fv = calcularFV(n, aporteMensal);
     const pctMeta = patrimonioNecessario > 0
       ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
-    return { delta, idadeC, pctMeta };
+    return { delta, idadeC, fv, pctMeta };
   });
 
   const blocos: BlocoDoc[] = [];
@@ -248,7 +248,7 @@ export function DocLFDiag({ lead }: Props) {
                     {" "}<span style={{ color: "#9CA3AF", fontSize: 9 }}>({formatBRL(c.aporteC)}/mês)</span>
                   </span>
                   <span style={{ fontSize: 10, fontWeight: 600, color: corMeta(c.pctMeta) }}>
-                    {c.pctMeta}% da meta
+                    {formatBRL(c.fv)}
                   </span>
                 </div>
               ))}
@@ -270,7 +270,7 @@ export function DocLFDiag({ lead }: Props) {
                     {" "}<span style={{ color: "#9CA3AF", fontSize: 9 }}>({c.idadeC} anos)</span>
                   </span>
                   <span style={{ fontSize: 10, fontWeight: 600, color: corMeta(c.pctMeta) }}>
-                    {c.pctMeta}% da meta
+                    {formatBRL(c.fv)}
                   </span>
                 </div>
               ))}
