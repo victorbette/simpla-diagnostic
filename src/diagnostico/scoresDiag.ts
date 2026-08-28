@@ -71,18 +71,27 @@ export function calcularScoresDiag(
   const aaTemDados   = comecandoDoZero || ativosDoLead.length > 0;
   const tem = (id: string) => ativosMap[id] === true;
 
-  // Componente 1 — Diversificação (0-40 pts): 4 pilares Simpla, 10 pts cada
-  const pilarRF     = tem("tesouro_selic") || tem("fundo_rf") || tem("lci_lca");
+  // Componente 1 — Diversificação (0-60 pts): 4 pilares Simpla, 15 pts cada
+  const pilarRF     = tem("tesouro_selic") || tem("fundo_rf") || tem("lci_lca") || tem("cdb");
   const pilarAcoes  = tem("acoes");
   const pilarFIIs   = tem("fiis");
   const pilarGlobal = tem("renda_fixa_eua") || tem("stocks") || tem("reits") || tem("etfs_exterior") || tem("cripto");
-  const pontoDiversificacao = (pilarRF ? 10 : 0) + (pilarAcoes ? 10 : 0) + (pilarFIIs ? 10 : 0) + (pilarGlobal ? 10 : 0);
+  const pontoDiversificacao = (pilarRF ? 15 : 0) + (pilarAcoes ? 15 : 0) + (pilarFIIs ? 15 : 0) + (pilarGlobal ? 15 : 0);
 
-  // Componente 2 — Qualidade dos Ativos (0-60 pts): começa em 60, desconta por ativos ruins
-  const ativosPouco = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo");
-  const ativosNada  = ativosDoLead.filter(a => a.qualidade === "nada_atrativo");
-  const pontoQualidade = Math.max(0, 60 - ativosPouco.length * 8 - ativosNada.length * 15);
-  const nRuinsCount = ativosPouco.length + ativosNada.length;
+  // Componente 2 — Qualidade dos Ativos (0-40 pts): média da qualidade dos ativos selecionados
+  // muito_atrativo=4, atrativo=3, moderado=2, pouco_atrativo=1, nada_atrativo=0
+  // 100% somente com todos os ativos "muito_atrativo"
+  const QUALIDADE_SCORE: Record<string, number> = {
+    muito_atrativo: 4, atrativo: 3, moderado: 2, pouco_atrativo: 1, nada_atrativo: 0,
+  };
+  const pontoQualidade = ativosDoLead.length === 0
+    ? 0
+    : Math.floor(
+        (ativosDoLead.reduce((sum, a) => sum + (QUALIDADE_SCORE[a.qualidade] ?? 0), 0)
+          / ativosDoLead.length / 4)
+        * 40
+      );
+  const nRuinsCount = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo" || a.qualidade === "nada_atrativo").length;
 
   const pontos = Math.min(100, pontoDiversificacao + pontoQualidade);
   const scoreInvestimentos = comecandoDoZero ? 0 : (!aaTemDados ? -1 : pontos);

@@ -215,8 +215,8 @@ export function DiagResultado({ lead }: Props) {
         {/* Detalhamento do Score */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
           {[
-            { label: "Diversificação", valor: pontoDiversificacao, maximo: 40, hint: "4 pilares × 10 pts" },
-            { label: "Qualidade dos Ativos", valor: pontoQualidade, maximo: 60, hint: "Base 60 − penalidades" },
+            { label: "Diversificação", valor: pontoDiversificacao, maximo: 60, hint: "4 pilares × 15 pts" },
+            { label: "Qualidade dos Ativos", valor: pontoQualidade, maximo: 40, hint: "Média da qualidade dos ativos" },
           ].map(c => {
             const pct = Math.round((c.valor / c.maximo) * 100);
             const cor = pct >= 75 ? "#15803D" : pct >= 40 ? "#B45309" : "#B91C1C";
