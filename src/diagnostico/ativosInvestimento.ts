@@ -34,6 +34,7 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "cri_cra",        label: "CRI / CRA",                         classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
   { id: "debentures",     label: "Debêntures",                        classe: "renda_fixa",    qualidade: "pouco_atrativo", icone: "ti-alert-circle",  cor: "#C2410C", grupoTexto: "credito_privado" },
   { id: "lci_lca",        label: "LCI / LCA",                         classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-building",      cor: "#B45309", grupoTexto: "bancarios" },
+  { id: "cdb",            label: "CDB",                               classe: "renda_fixa",    qualidade: "moderado",       icone: "ti-coin",          cor: "#B45309" },
 
   // ─── RENDA VARIÁVEL ─────────────────────────────────────────────────
   { id: "acoes",          label: "Ações",                             classe: "renda_variavel", qualidade: "moderado",       icone: "ti-trending-up",   cor: "#B45309" },
