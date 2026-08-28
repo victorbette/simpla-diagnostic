@@ -258,7 +258,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     const fv = isFinite(f) ? params.patrimonioInicial * f + aporteC * (f - 1) / taxaMensal : params.patrimonioInicial;
     const pctMeta = patrimonioPerpetuidade > 0
       ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
-    return { pctVariacao: pct, aporteC, pctMeta };
+    return { pctVariacao: pct, aporteC, fv, pctMeta };
   }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, patrimonioPerpetuidade, taxaMensal]);
 
   const cenariosIdade = useMemo(() => [-5, -2, 0, 2, 5].map(delta => {
@@ -268,7 +268,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     const fv = isFinite(f) ? params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal : params.patrimonioInicial;
     const pctMeta = patrimonioPerpetuidade > 0
       ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
-    return { delta, idadeC, pctMeta };
+    return { delta, idadeC, fv, pctMeta };
   }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, taxaMensal]);
 
   const corMeta = (pct: number) =>
@@ -576,7 +576,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
                   <span style={{ color: "#9CA3AF", fontSize: 10 }}>({fmtBRL(c.aporteC)}/mês)</span>
                 </span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: corMeta(c.pctMeta) }}>
-                  {c.pctMeta}% da meta
+                  {fmtBRL(c.fv)}
                 </span>
               </div>
             ))}
@@ -600,7 +600,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
                   <span style={{ color: "#9CA3AF", fontSize: 10 }}>({c.idadeC} anos)</span>
                 </span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: corMeta(c.pctMeta) }}>
-                  {c.pctMeta}% da meta
+                  {fmtBRL(c.fv)}
                 </span>
               </div>
             ))}
