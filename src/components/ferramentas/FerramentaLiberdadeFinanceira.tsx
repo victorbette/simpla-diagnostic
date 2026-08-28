@@ -126,25 +126,81 @@ export function FerramentaLiberdadeFinanceira({
     rendaDesejada:      rendaDesejadaColeta || planejamentoIF.rendaMensalDesejada,
   };
 
-  const [params, setParams] = useState<UIParams>(initialParams);
-  const [patrimonioEditado, setPatrimonioEditado] = useState(false);
-  const [rendaEditada,      setRendaEditada]       = useState(false);
-  const [idadeAposentadoriaEditada, setIdadeAposentadoriaEditada] = useState(false);
-  const [objetivos, setObjetivos] = useState<ObjetivoVida[]>([]);
+  // CHAVE computed before useState so the lazy initializers can use it
+  const CHAVE = storageChave ?? `ferramenta_if_${clientId}`;
+
+  // Load draft synchronously in lazy initializers — this guarantees the correct
+  // values are in state before any effect runs, avoiding the stale-closure bug
+  // where the "sync coleta" effect would see the *Editado flags as false and
+  // overwrite user-edited fields with FP values.
+  const [params, setParams] = useState<UIParams>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) {
+        const d = JSON.parse(s) as Record<string, unknown>;
+        if (d.params) return { ...initialParams, ...(d.params as Partial<UIParams>), idadeAtual: idadeAtualCalculada };
+      }
+    } catch { /**/ }
+    return initialParams;
+  });
+  const [patrimonioEditado, setPatrimonioEditado] = useState<boolean>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) return !!((JSON.parse(s) as Record<string, unknown>)?.editadoFlags as Record<string, boolean> | undefined)?.patrimonioEditado;
+    } catch { /**/ }
+    return false;
+  });
+  const [rendaEditada, setRendaEditada] = useState<boolean>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) return !!((JSON.parse(s) as Record<string, unknown>)?.editadoFlags as Record<string, boolean> | undefined)?.rendaEditada;
+    } catch { /**/ }
+    return false;
+  });
+  const [idadeAposentadoriaEditada, setIdadeAposentadoriaEditada] = useState<boolean>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) return !!((JSON.parse(s) as Record<string, unknown>)?.editadoFlags as Record<string, boolean> | undefined)?.idadeAposentadoriaEditada;
+    } catch { /**/ }
+    return false;
+  });
+  const [objetivos, setObjetivos] = useState<ObjetivoVida[]>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) {
+        const d = JSON.parse(s) as Record<string, unknown>;
+        if (d.objetivos) {
+          return (d.objetivos as Record<string, unknown>[])
+            .map((o) => migrateObjetivo(o, anoNascimento, mesNascimento))
+            .filter((o) => VALID_TIPOS.has(o.tipo));
+        }
+      }
+    } catch { /**/ }
+    return [];
+  });
   const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
-  const [ajustes, setAjustes] = useState<Ajustes>(initialAjustes);
+  const [ajustes, setAjustes] = useState<Ajustes>(() => {
+    try {
+      const s = localStorage.getItem(CHAVE);
+      if (s) {
+        const d = JSON.parse(s) as Record<string, unknown>;
+        if (d.ajustes) return { ...initialAjustes, ...(d.ajustes as Partial<Ajustes>) };
+      }
+    } catch { /**/ }
+    return initialAjustes;
+  });
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
-
-  const CHAVE = storageChave ?? `ferramenta_if_${clientId}`;
 
   useFerramentaStorage(
     CHAVE,
     { params, objetivos, ajustes, editadoFlags: { patrimonioEditado, rendaEditada, idadeAposentadoriaEditada } },
     (v) => {
+      // This callback fires when the storage key changes (e.g. different clientId).
+      // On initial mount the lazy useState initializers above already handled the load.
       if (v.params) setParams({ ...initialParams, ...v.params, idadeAtual: idadeAtualCalculada });
       if (v.objetivos) {
         const migrados = (v.objetivos as unknown as Record<string, unknown>[])
