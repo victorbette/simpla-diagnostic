@@ -22,6 +22,7 @@ interface Props {
   onResultadoIF: (r: ResultadoIF) => void;
   onSaveCloud?: (r: ResultadoIF) => Promise<void>;
   triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  storageChave?: string;
 }
 
 export function SecaoAposentadoria({
@@ -34,6 +35,7 @@ export function SecaoAposentadoria({
   onResultadoIF,
   onSaveCloud,
   triggerSaveRef,
+  storageChave,
 }: Props) {
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
@@ -49,6 +51,7 @@ export function SecaoAposentadoria({
         dadosCliente={plan.dadosCliente}
         resultadoIF={resultadoIF}
         triggerSaveRef={triggerSaveRef}
+        storageChave={storageChave}
         onSave={async (params, objetivos, result, taxaTravadaInfo, display) => {
           const rendaSustentavelDisplay = (display.projecaoComAporteAtual * 0.04) / 12;
           const r: ResultadoIF = {

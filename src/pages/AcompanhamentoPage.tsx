@@ -211,6 +211,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
               resultadoIF={resultados.if}
               onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
               triggerSaveRef={lfSaveRef}
+              storageChave={`acomp_lf_${clienteId}`}
             />
           ) : (
             <PlanLoading loading={loading} />

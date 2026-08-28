@@ -45,6 +45,8 @@ interface Props {
   dadosCliente?: DadosCliente;
   resultadoIF?: ResultadoIF | null;
   triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  /** Chave de storage customizada — usada pelo Acompanhamento para isolar o draft dos dados do FP */
+  storageChave?: string;
   onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult, taxaTravadaInfo: { taxaTravada: boolean; taxaTravadaValor: number | null }, display: { aporteNecessario: number; projecaoComAporteAtual: number; dadosGrafico: PontoProjecao[]; ajustes: Ajustes }) => Promise<void>;
 }
 
@@ -95,7 +97,7 @@ function migrateObjetivo(
 }
 
 export function FerramentaLiberdadeFinanceira({
-  clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, triggerSaveRef, onSave,
+  clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, triggerSaveRef, storageChave, onSave,
 }: Props) {
   // ── Birth date → age + anoNascimento/mesNascimento ─────────────────────────
   const parsed = parseDateNasc(dataNascimento ?? "");
@@ -137,7 +139,7 @@ export function FerramentaLiberdadeFinanceira({
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
-  const CHAVE = `ferramenta_if_${clientId}`;
+  const CHAVE = storageChave ?? `ferramenta_if_${clientId}`;
 
   useFerramentaStorage(
     CHAVE,

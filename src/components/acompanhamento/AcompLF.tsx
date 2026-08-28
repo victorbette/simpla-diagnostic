@@ -13,9 +13,10 @@ interface Props {
   resultadoIF: ResultadoIF | null;
   onResultadoIF: (r: ResultadoIF) => void;
   triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  storageChave?: string;
 }
 
-export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF, triggerSaveRef }: Props) {
+export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF, triggerSaveRef, storageChave }: Props) {
   return (
     <SecaoAposentadoria
       plan={plan}
@@ -26,6 +27,7 @@ export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChan
       resultadoIF={resultadoIF}
       onResultadoIF={onResultadoIF}
       triggerSaveRef={triggerSaveRef}
+      storageChave={storageChave}
     />
   );
 }
