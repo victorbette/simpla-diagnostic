@@ -31,7 +31,7 @@ interface Props {
 }
 
 function getStatusBadge(lead: Lead): { label: string; color: string; bg: string } {
-  if (lead.convertido) return { label: "Convertido", color: "#7C3AED", bg: "#F5F3FF" };
+  if (lead.convertido) return { label: "Convertido", color: "#2563EB", bg: "#DBEAFE" };
   if (lead.relatorioSalvo) return { label: "Realizado", color: "#15803D", bg: "#DCFCE7" };
   return { label: "Pendente", color: "#9CA3AF", bg: "#F3F4F6" };
 }
@@ -186,8 +186,8 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
           {[
             { label: "Total de Leads",           value: totalLeads,    color: "#1E3A8A", bg: "white",   border: "#BFDBFE", icon: "ti-users" },
             { label: "Diagnósticos Realizados",  value: qtdRealizados, color: "#15803D", bg: "#F0FDF4", border: "#BBF7D0", icon: "ti-circle-check" },
-            { label: "Leads Convertidos",        value: qtdConvertidos,color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE", icon: "ti-user-check" },
-            { label: "Diagnósticos Pendentes",   value: qtdPendentes,  color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", icon: "ti-clock" },
+            { label: "Leads Convertidos",        value: qtdConvertidos,color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", icon: "ti-user-check" },
+            { label: "Diagnósticos Pendentes",   value: qtdPendentes,  color: "#6B7280", bg: "#F9FAFB", border: "#E5E7EB", icon: "ti-clock" },
           ].map(({ label, value, color, bg, border, icon }) => (
             <div key={label} style={{ background: bg, border: `0.5px solid ${border}`, borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{ width: 38, height: 38, borderRadius: 8, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -298,7 +298,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
               >
                 {/* Lead */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: lead.convertido ? "#7C3AED" : "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                     {getInitials(lead.nome)}
                   </div>
                   <div>
@@ -329,7 +329,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
                   </button>
 
                   {lead.convertido ? (
-                    <span style={{ fontSize: 11, color: "#7C3AED", background: "#F5F3FF", border: "0.5px solid #DDD6FE", borderRadius: 6, padding: "4px 10px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
+                    <span style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "4px 10px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
                       ✓ Cliente
                     </span>
                   ) : (
