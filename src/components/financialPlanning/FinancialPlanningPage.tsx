@@ -363,19 +363,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
     };
   }
 
-  // Used for sub-tabs on white bar (FP screen)
-  function tabStyle(active: boolean): React.CSSProperties {
-    return {
-      background: "none", border: "none",
-      borderBottom: active ? "2px solid #1E3A8A" : "2px solid transparent",
-      color: active ? "#1E3A8A" : "#6B7280",
-      fontWeight: active ? 700 : 500,
-      fontSize: 13, padding: "0 14px", height: 44, cursor: "pointer",
-      whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6,
-      fontFamily: "inherit", transition: "color 0.15s", flexShrink: 0,
-    };
-  }
-
   // ─────────────────────────────────────────────────────────────────────────
   // ── TELA: Financial Planning (Gestão de Ativos + Relatório) ──────────────
   // ─────────────────────────────────────────────────────────────────────────
@@ -385,53 +372,59 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
       <div className="fp-print-root" style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
 
         {/* Header FP */}
-        <header style={{
-          backgroundColor: "#1E3A8A", flexShrink: 0, padding: "0 24px",
-          height: 56, display: "flex", alignItems: "center", gap: 16, zIndex: 40,
-        }}>
-          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
-            <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
-              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
-              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
-            </div>
-            <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-            <div style={{ textAlign: "right" }}>
-              <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
-              <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
-            </div>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: GOLD, color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none" }}>
-              {userInitials}
-            </div>
+        <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0, zIndex: 40 }}>
+          {/* Linha superior */}
+          <div style={{ padding: "0 24px", height: 56, display: "flex", alignItems: "center", gap: 16 }}>
             <button
-              onClick={handleBackToClients}
+              onClick={() => setMostrarFP(false)}
               style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
             >
-              <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
-              Dashboard
+              <i className="ti ti-arrow-left" style={{ fontSize: 14 }} />
+              Voltar
             </button>
-            <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
-              <LogOut size={18} />
-            </button>
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
+              <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+                <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+                <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
+              </div>
+              <span style={{ color: "#93C5FD", fontSize: 13, fontWeight: 500, marginLeft: 4 }}>— {clientName}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "white", fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.2 }}>{userLabel}</p>
+                <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0, lineHeight: 1.2 }}>Consultor financeiro</p>
+              </div>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: GOLD, color: DARK, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0, userSelect: "none" }}>
+                {userInitials}
+              </div>
+              <button
+                onClick={handleBackToClients}
+                style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", cursor: "pointer", padding: "6px 12px", borderRadius: 6, display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+              >
+                <i className="ti ti-layout-dashboard" style={{ fontSize: 16 }} />
+                Dashboard
+              </button>
+              <button onClick={signOut} title="Sair" style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: 4 }}>
+                <LogOut size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Abas dentro do header azul */}
+          <div className="no-print" style={{ padding: "0 24px", display: "flex", gap: 2 }}>
+            {ABAS_FP.map((aba) => (
+              <button key={aba.id} onClick={() => setAbaFP(aba.id)} style={headerTabStyle(abaFP === aba.id)}>
+                <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
+                {aba.label}
+              </button>
+            ))}
           </div>
         </header>
-
-        {/* Tab bar FP */}
-        <div className="no-print" style={{
-          backgroundColor: "white", borderBottom: "1px solid #E5E7EB",
-          padding: "0 24px", display: "flex", alignItems: "center", flexShrink: 0,
-        }}>
-          {ABAS_FP.map((aba) => (
-            <button key={aba.id} onClick={() => setAbaFP(aba.id)} style={tabStyle(abaFP === aba.id)}>
-              <i className={`ti ${aba.icone}`} style={{ fontSize: 14 }} />
-              {aba.label}
-            </button>
-          ))}
-        </div>
 
         {/* Content FP */}
         {/* EstrategiaFinal manages its own overflow — needs overflow:hidden parent */}
