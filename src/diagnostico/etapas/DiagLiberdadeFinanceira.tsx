@@ -272,7 +272,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, taxaMensal]);
 
   const corMeta = (pct: number) =>
-    pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
+    pct >= 100 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
 
   const ifAlcancada = patrimonioProjetado >= patrimonioPerpetuidade && patrimonioPerpetuidade > 0;
 

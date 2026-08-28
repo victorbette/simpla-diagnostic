@@ -10,7 +10,7 @@ import { calcularIdade } from "@/lib/parseDate";
 import { TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
 
 function corMeta(pct: number): string {
-  return pct >= 91 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
+  return pct >= 100 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
 }
 
 function parseDateNasc(s: string): { ano: number; mes: number } | null {
