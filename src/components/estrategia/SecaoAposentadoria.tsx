@@ -1,3 +1,4 @@
+import React from "react";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
@@ -20,6 +21,7 @@ interface Props {
   resultadoIF: ResultadoIF | null;
   onResultadoIF: (r: ResultadoIF) => void;
   onSaveCloud?: (r: ResultadoIF) => Promise<void>;
+  triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 export function SecaoAposentadoria({
@@ -31,6 +33,7 @@ export function SecaoAposentadoria({
   resultadoIF,
   onResultadoIF,
   onSaveCloud,
+  triggerSaveRef,
 }: Props) {
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
@@ -45,6 +48,7 @@ export function SecaoAposentadoria({
         dataNascimento={plan.dadosCliente.dataNascimento}
         dadosCliente={plan.dadosCliente}
         resultadoIF={resultadoIF}
+        triggerSaveRef={triggerSaveRef}
         onSave={async (params, objetivos, result, taxaTravadaInfo, display) => {
           const rendaSustentavelDisplay = (display.projecaoComAporteAtual * 0.04) / 12;
           const r: ResultadoIF = {

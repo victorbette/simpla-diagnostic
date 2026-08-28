@@ -2,6 +2,8 @@ import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadoIF } from "@/types/estrategiaResultados";
 import { SecaoAposentadoria } from "@/components/estrategia/SecaoAposentadoria";
 
+import React from "react";
+
 interface Props {
   plan: FinancialPlan;
   comentario: string;
@@ -10,9 +12,10 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoIF: ResultadoIF | null;
   onResultadoIF: (r: ResultadoIF) => void;
+  triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
-export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF }: Props) {
+export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF, triggerSaveRef }: Props) {
   return (
     <SecaoAposentadoria
       plan={plan}
@@ -22,6 +25,7 @@ export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChan
       onTagsChange={onTagsChange}
       resultadoIF={resultadoIF}
       onResultadoIF={onResultadoIF}
+      triggerSaveRef={triggerSaveRef}
     />
   );
 }

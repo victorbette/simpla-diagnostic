@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft } from "lucide-react";
 import type { ResultadosEstrategia, ResultadoIF } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
@@ -52,6 +52,11 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
   const [tab, setTab] = useState<Tab>("evolucao");
   const { plan, loading, carregarPlano } = useFinancialPlanStore();
 
+  // Ref para disparar o save da aba LF a partir de fora
+  const lfSaveRef = useRef<(() => Promise<void>) | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [data, setData] = useState<AcompData>(() => loadAcompData(clienteId));
 
   const resultadosKey = `resultados_estrategia_${clienteId}`;
@@ -89,6 +94,34 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
       try { localStorage.setItem(resultadosKey, JSON.stringify(next)); } catch { /**/ }
       return next;
     });
+  }
+
+  function showSaved() {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setSaveStatus("saved");
+    saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 3000);
+  }
+
+  async function handleSwitchTab(newTab: Tab) {
+    if (newTab === tab) return;
+    // Auto-save LF antes de sair da aba
+    if (tab === "lf" && lfSaveRef.current) {
+      setSaveStatus("saving");
+      await lfSaveRef.current();
+      showSaved();
+    }
+    setTab(newTab);
+  }
+
+  async function handleManualSave() {
+    if (tab === "lf" && lfSaveRef.current) {
+      setSaveStatus("saving");
+      await lfSaveRef.current();
+      showSaved();
+    } else {
+      // evolucao e investimentos já persistem automaticamente
+      showSaved();
+    }
   }
 
   const savedAt = (() => {
@@ -131,7 +164,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
           {TABS.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTab(t.id)}
+              onClick={() => handleSwitchTab(t.id)}
               style={{
                 padding: "10px 22px",
                 fontSize: 13,
@@ -177,11 +210,59 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
               onTagsChange={(v) => handleTags("aposentadoria", v)}
               resultadoIF={resultados.if}
               onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
+              triggerSaveRef={lfSaveRef}
             />
           ) : (
             <PlanLoading loading={loading} />
           )
         )}
+
+        {/* ── Barra de salvar ─────────────────────────────────────── */}
+        <div style={{
+          marginTop: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: 12,
+          padding: "12px 0",
+          borderTop: "0.5px solid #E5E7EB",
+        }}>
+          {saveStatus === "saving" && (
+            <span style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-loader-2" style={{ fontSize: 14, animation: "spin 1s linear infinite" }} />
+              Salvando...
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span style={{ fontSize: 12, color: "#15803D", display: "flex", alignItems: "center", gap: 5 }}>
+              <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+              Salvo com sucesso
+            </span>
+          )}
+          {saveStatus === "idle" && tab === "evolucao" && (
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>Registros salvos automaticamente</span>
+          )}
+          {saveStatus === "idle" && tab === "investimentos" && (
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>Dados sincronizados do Financial Planning</span>
+          )}
+          <button
+            onClick={handleManualSave}
+            disabled={saveStatus === "saving"}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "8px 20px",
+              fontSize: 13, fontWeight: 600,
+              backgroundColor: saveStatus === "saving" ? "#BFDBFE" : "#1E3A8A",
+              color: "white",
+              border: "none", borderRadius: 8,
+              cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
+            }}
+          >
+            <i className="ti ti-device-floppy" style={{ fontSize: 15 }} />
+            Salvar
+          </button>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </main>
     </div>
   );

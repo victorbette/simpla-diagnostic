@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,7 @@ interface Props {
   dataNascimento?: string;
   dadosCliente?: DadosCliente;
   resultadoIF?: ResultadoIF | null;
+  triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   onSave: (params: ProjecaoIFParams, objetivos: ObjetivoVida[], result: ProjecaoIFResult, taxaTravadaInfo: { taxaTravada: boolean; taxaTravadaValor: number | null }, display: { aporteNecessario: number; projecaoComAporteAtual: number; dadosGrafico: PontoProjecao[]; ajustes: Ajustes }) => Promise<void>;
 }
 
@@ -94,7 +95,7 @@ function migrateObjetivo(
 }
 
 export function FerramentaLiberdadeFinanceira({
-  clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, onSave,
+  clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, triggerSaveRef, onSave,
 }: Props) {
   // ── Birth date → age + anoNascimento/mesNascimento ─────────────────────────
   const parsed = parseDateNasc(dataNascimento ?? "");
@@ -473,6 +474,13 @@ export function FerramentaLiberdadeFinanceira({
       setSalvando(false);
     }
   };
+
+  // Expõe handleSalvar via ref para que o pai possa disparar o save ao trocar de aba
+  const _handleSalvarRef = useRef(handleSalvar);
+  _handleSalvarRef.current = handleSalvar;
+  useEffect(() => {
+    if (triggerSaveRef) triggerSaveRef.current = () => _handleSalvarRef.current();
+  }, [triggerSaveRef]);
 
 
   const formatBRL = (v: number) =>
