@@ -7,6 +7,8 @@ export interface Lead {
   dadosColeta: DadosColetaDiag;
   dadosLF: DadosLFDiag;
   resultado?: ResultadoDiag;
+  convertido?: boolean;
+  clienteId?: string;
 }
 
 export interface DadosColetaDiag {

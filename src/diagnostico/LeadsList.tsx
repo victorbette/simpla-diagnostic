@@ -24,9 +24,10 @@ interface Props {
   onAtualizar: (lead: Lead) => void;
   onExcluir: (id: string) => void;
   onVoltar: () => void;
+  onConverterCliente: (lead: Lead) => Promise<void>;
 }
 
-export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExcluir, onVoltar }: Props) {
+export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExcluir, onVoltar, onConverterCliente }: Props) {
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -36,6 +37,12 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
   const [editNome, setEditNome] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editTelefone, setEditTelefone] = useState("");
+  const [convertendoId, setConvertendoId] = useState<string | null>(null);
+  const [erroConversao, setErroConversao] = useState<string | null>(null);
+
+  const realizados = leads.filter(l => !!l.resultado).length;
+  const convertidos = leads.filter(l => !!l.convertido).length;
+  const pendentes = leads.filter(l => !l.resultado).length;
 
   function abrirEdicao(lead: Lead) {
     setEditando(lead);
@@ -66,6 +73,19 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
     setNome(""); setEmail(""); setTelefone("");
   }
 
+  async function handleConverter(lead: Lead) {
+    if (lead.convertido || convertendoId) return;
+    setConvertendoId(lead.id);
+    setErroConversao(null);
+    try {
+      await onConverterCliente(lead);
+    } catch {
+      setErroConversao("Erro ao converter lead. Tente novamente.");
+    } finally {
+      setConvertendoId(null);
+    }
+  }
+
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#F8F9FA" }}>
 
@@ -90,10 +110,33 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
       </header>
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px" }}>
+
+        {/* Stats cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: "#1E3A8A", lineHeight: 1 }}>{realizados}</span>
+            <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>Diagnósticos Realizados</span>
+          </div>
+          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: "#059669", lineHeight: 1 }}>{convertidos}</span>
+            <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>Leads Convertidos</span>
+          </div>
+          <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: "#D97706", lineHeight: 1 }}>{pendentes}</span>
+            <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>Diagnósticos Pendentes</span>
+          </div>
+        </div>
+
+        {erroConversao && (
+          <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "10px 16px", marginBottom: 16, fontSize: 13, color: "#B91C1C" }}>
+            {erroConversao}
+          </div>
+        )}
+
         <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
           {/* Table header */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.2fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.8fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
             <span>Lead</span><span>Contato</span><span>Cadastro</span><span>Ações</span>
           </div>
 
@@ -108,25 +151,44 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
           {[...leads].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((lead) => (
             <div
               key={lead.id}
-              style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.2fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+              style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.8fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
               onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
               onMouseLeave={e => (e.currentTarget.style.background = "white")}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                <div style={{ width: 34, height: 34, borderRadius: "50%", background: lead.convertido ? "#059669" : "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
                   {getInitials(lead.nome)}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{lead.nome}</span>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{lead.nome}</span>
+                  {lead.convertido && (
+                    <span style={{ display: "block", fontSize: 10, color: "#059669", fontWeight: 600 }}>Convertido</span>
+                  )}
+                </div>
               </div>
               <div>
                 <div style={{ fontSize: 12, color: "#374151" }}>{lead.email || "—"}</div>
                 <div style={{ fontSize: 11, color: "#9CA3AF" }}>{lead.telefone || "—"}</div>
               </div>
               <div style={{ fontSize: 12, color: "#6B7280" }}>{formatDate(lead.dataCriacao)}</div>
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" as const }}>
+                {lead.convertido ? (
+                  <span style={{ fontSize: 11, color: "#059669", background: "#ECFDF5", border: "0.5px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
+                    ✓ Cliente
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => void handleConverter(lead)}
+                    disabled={!!convertendoId}
+                    title="Converter em cliente do Financial Planning"
+                    style={{ fontSize: 12, color: convertendoId === lead.id ? "#6B7280" : "#059669", background: convertendoId === lead.id ? "#F9FAFB" : "#ECFDF5", border: `0.5px solid ${convertendoId === lead.id ? "#E5E7EB" : "#A7F3D0"}`, borderRadius: 6, padding: "5px 10px", cursor: convertendoId ? "not-allowed" : "pointer", whiteSpace: "nowrap" as const, opacity: convertendoId && convertendoId !== lead.id ? 0.5 : 1 }}
+                  >
+                    {convertendoId === lead.id ? "Convertendo..." : "Cliente"}
+                  </button>
+                )}
                 <button
                   onClick={() => onSelecionar(lead)}
-                  style={{ fontSize: 12, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
+                  style={{ fontSize: 12, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 10px", cursor: "pointer", whiteSpace: "nowrap" as const }}
                 >
                   Diagnóstico →
                 </button>
