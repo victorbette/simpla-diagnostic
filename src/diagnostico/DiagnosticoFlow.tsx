@@ -122,7 +122,10 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         )}
 
         {etapaAtiva === "relatorio" && (
-          <DiagRelatorio lead={lead} />
+          <DiagRelatorio
+            lead={lead}
+            onSalvarRelatorio={() => onAtualizar({ ...lead, relatorioSalvo: true })}
+          />
         )}
       </main>
     </div>

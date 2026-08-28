@@ -40,9 +40,9 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
   const [convertendoId, setConvertendoId] = useState<string | null>(null);
   const [erroConversao, setErroConversao] = useState<string | null>(null);
 
-  const realizados = leads.filter(l => !!l.resultado).length;
+  const realizados = leads.filter(l => !!l.relatorioSalvo).length;
   const convertidos = leads.filter(l => !!l.convertido).length;
-  const pendentes = leads.filter(l => !l.resultado).length;
+  const pendentes = leads.filter(l => !l.relatorioSalvo).length;
 
   function abrirEdicao(lead: Lead) {
     setEditando(lead);
@@ -136,7 +136,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
         <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
 
           {/* Table header */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.8fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 2.4fr", padding: "10px 20px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB", fontSize: 10, color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
             <span>Lead</span><span>Contato</span><span>Cadastro</span><span>Ações</span>
           </div>
 
@@ -151,7 +151,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
           {[...leads].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")).map((lead) => (
             <div
               key={lead.id}
-              style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1.8fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
+              style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 2.4fr", padding: "14px 20px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center", gap: 8, background: "white" }}
               onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
               onMouseLeave={e => (e.currentTarget.style.background = "white")}
             >
@@ -171,7 +171,7 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
                 <div style={{ fontSize: 11, color: "#9CA3AF" }}>{lead.telefone || "—"}</div>
               </div>
               <div style={{ fontSize: 12, color: "#6B7280" }}>{formatDate(lead.dataCriacao)}</div>
-              <div style={{ display: "flex", gap: 5, alignItems: "center", flexWrap: "wrap" as const }}>
+              <div style={{ display: "flex", gap: 5, alignItems: "center", flexWrap: "nowrap" as const }}>
                 {lead.convertido ? (
                   <span style={{ fontSize: 11, color: "#059669", background: "#ECFDF5", border: "0.5px solid #A7F3D0", borderRadius: 6, padding: "4px 10px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
                     ✓ Cliente

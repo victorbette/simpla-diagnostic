@@ -21,9 +21,10 @@ const MESES_PT = [
 
 interface Props {
   lead: Lead;
+  onSalvarRelatorio?: () => void;
 }
 
-export function DiagRelatorio({ lead }: Props) {
+export function DiagRelatorio({ lead, onSalvarRelatorio }: Props) {
   const config: ConfigConsultor = useMemo(() => {
     try {
       const salvo = localStorage.getItem("config_consultor");
@@ -80,7 +81,7 @@ export function DiagRelatorio({ lead }: Props) {
           <span style={{ fontSize: 12, color: "#9CA3AF" }}>· {lead.nome}</span>
         </div>
         <button
-          onClick={() => gerarPDF(lead.nome, "Diagnostico_Financeiro")}
+          onClick={() => { gerarPDF(lead.nome, "Diagnostico_Financeiro"); onSalvarRelatorio?.(); }}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "#1E3A8A", color: "white", border: "none",

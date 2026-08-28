@@ -9,6 +9,7 @@ export interface Lead {
   resultado?: ResultadoDiag;
   convertido?: boolean;
   clienteId?: string;
+  relatorioSalvo?: boolean;
 }
 
 export interface DadosColetaDiag {
