@@ -50,7 +50,7 @@ function saveAcompData(clienteId: string, patch: Partial<AcompData>) {
 
 export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) {
   const [tab, setTab] = useState<Tab>("evolucao");
-  const { plan, loading, carregarPlano } = useFinancialPlanStore();
+  const { plan, loading, carregarPlano, loadEstrategia, saveEstrategia } = useFinancialPlanStore();
 
   // Ref para disparar o save da aba LF a partir de fora
   const lfSaveRef = useRef<(() => Promise<void>) | null>(null);
@@ -68,9 +68,32 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
     return defaultResultados;
   });
 
+  // Ref to access latest resultados in callbacks without stale closure
+  const resultadosRef = useRef(resultados);
+  resultadosRef.current = resultados;
+
+  // Flag to avoid re-loading from Supabase after we've already done it
+  const supabaseCarregadoRef = useRef(false);
+
   useEffect(() => {
     carregarPlano(clienteId);
   }, [clienteId, carregarPlano]);
+
+  // Load resultados from Supabase once plan.id is available — takes priority over localStorage
+  useEffect(() => {
+    if (plan?.id && !supabaseCarregadoRef.current) {
+      supabaseCarregadoRef.current = true;
+      loadEstrategia(plan.id)
+        .then((estrategia) => {
+          if (estrategia && Object.keys(estrategia).length > 0) {
+            const loaded = estrategia as unknown as ResultadosEstrategia;
+            setResultados(loaded);
+            try { localStorage.setItem(resultadosKey, JSON.stringify(loaded)); } catch { /**/ }
+          }
+        })
+        .catch(console.error);
+    }
+  }, [plan?.id, loadEstrategia, resultadosKey]);
 
   function handleComentario(secao: string, v: string) {
     setData((prev) => {
@@ -94,6 +117,13 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
       try { localStorage.setItem(resultadosKey, JSON.stringify(next)); } catch { /**/ }
       return next;
     });
+  }
+
+  async function handleSaveToSupabase(r: ResultadoIF) {
+    if (!plan?.id) return;
+    const next = { ...resultadosRef.current, if: r };
+    try { localStorage.setItem(resultadosKey, JSON.stringify(next)); } catch { /**/ }
+    await saveEstrategia(plan.id, next as unknown as Record<string, unknown>);
   }
 
   function showSaved() {
@@ -210,6 +240,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
               onTagsChange={(v) => handleTags("aposentadoria", v)}
               resultadoIF={resultados.if}
               onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
+              onSaveCloud={handleSaveToSupabase}
               triggerSaveRef={lfSaveRef}
               storageChave={`acomp_lf_${clienteId}`}
             />

@@ -143,7 +143,7 @@ export function FerramentaLiberdadeFinanceira({
 
   useFerramentaStorage(
     CHAVE,
-    { params, objetivos, ajustes },
+    { params, objetivos, ajustes, editadoFlags: { patrimonioEditado, rendaEditada, idadeAposentadoriaEditada } },
     (v) => {
       if (v.params) setParams({ ...initialParams, ...v.params, idadeAtual: idadeAtualCalculada });
       if (v.objetivos) {
@@ -153,6 +153,12 @@ export function FerramentaLiberdadeFinanceira({
         setObjetivos(migrados);
       }
       if (v.ajustes) setAjustes({ ...initialAjustes, ...(v.ajustes as Partial<Ajustes>) });
+      if (v.editadoFlags) {
+        const f = v.editadoFlags as { patrimonioEditado?: boolean; rendaEditada?: boolean; idadeAposentadoriaEditada?: boolean };
+        if (f.patrimonioEditado)          setPatrimonioEditado(true);
+        if (f.rendaEditada)               setRendaEditada(true);
+        if (f.idadeAposentadoriaEditada)  setIdadeAposentadoriaEditada(true);
+      }
     },
     { params: initialParams, objetivos: [], ajustes: initialAjustes },
   );
@@ -176,6 +182,14 @@ export function FerramentaLiberdadeFinanceira({
   useEffect(() => {
     if (resultadoIF && !initializedFromSupabaseRef.current) {
       initializedFromSupabaseRef.current = true;
+      // When a custom storage key is set (Acompanhamento context), the user's
+      // saved draft in that key takes priority over the FP resultadoIF.
+      if (storageChave) {
+        try {
+          const draft = localStorage.getItem(storageChave);
+          if (draft && (JSON.parse(draft) as Record<string, unknown>)?.params) return;
+        } catch { /**/ }
+      }
       setParams((prev) => ({
         ...prev,
         idadeAposentadoria: resultadoIF.idadeMeta,

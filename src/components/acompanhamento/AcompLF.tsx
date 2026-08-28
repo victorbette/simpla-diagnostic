@@ -12,11 +12,12 @@ interface Props {
   onTagsChange: (v: string[]) => void;
   resultadoIF: ResultadoIF | null;
   onResultadoIF: (r: ResultadoIF) => void;
+  onSaveCloud?: (r: ResultadoIF) => Promise<void>;
   triggerSaveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   storageChave?: string;
 }
 
-export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF, triggerSaveRef, storageChave }: Props) {
+export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChange, resultadoIF, onResultadoIF, onSaveCloud, triggerSaveRef, storageChave }: Props) {
   return (
     <SecaoAposentadoria
       plan={plan}
@@ -26,6 +27,7 @@ export function AcompLF({ plan, comentario, onComentarioChange, tags, onTagsChan
       onTagsChange={onTagsChange}
       resultadoIF={resultadoIF}
       onResultadoIF={onResultadoIF}
+      onSaveCloud={onSaveCloud}
       triggerSaveRef={triggerSaveRef}
       storageChave={storageChave}
     />
