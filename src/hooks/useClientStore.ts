@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import type React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -33,10 +34,20 @@ export interface Simulation {
   dataSimulacao: string;
 }
 
-// ── Module-level cache (persists across remounts) ─────────────────────────────
+// ── Module-level cache and cross-instance sync ────────────────────────────────
 
 const cache = new Map<string, { data: Client[]; ts: number }>();
 const CACHE_TTL = 30_000; // 30 seconds
+
+// All active useClientStore instances register their setClients here so that
+// any mutation (create / update / delete) from one instance is immediately
+// reflected in all others (e.g. DiagnosticoPage → HomePage).
+type ClientsSetAction = React.Dispatch<React.SetStateAction<Client[]>>;
+const setClientsSubscribers = new Set<ClientsSetAction>();
+
+function broadcastClientsUpdate(updater: (prev: Client[]) => Client[]) {
+  setClientsSubscribers.forEach((sub) => sub(updater));
+}
 
 function mapRow(row: Record<string, unknown>): Client {
   const plans = (row.financial_plans as Array<Record<string, unknown>> | null) ?? [];
@@ -76,6 +87,12 @@ export function useClientStore() {
   const [simulations, setSimulations] = useState<Simulation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Register this instance so mutations from any sibling instance propagate here
+  useEffect(() => {
+    setClientsSubscribers.add(setClients);
+    return () => { setClientsSubscribers.delete(setClients); };
+  }, []); // setClients is stable
 
   const carregarClientes = useCallback(
     async (forceRefresh = false) => {
@@ -187,7 +204,7 @@ export function useClientStore() {
       };
 
       invalidateCache();
-      setClients((prev) => [novo, ...prev]);
+      broadcastClientsUpdate((prev) => [novo, ...prev]);
       return novo;
     },
     [user, invalidateCache]
@@ -232,7 +249,7 @@ export function useClientStore() {
       }
 
       invalidateCache();
-      setClients((prev) =>
+      broadcastClientsUpdate((prev) =>
         prev.map((c) => (c.id === id ? { ...c, ...dados } : c))
       );
     },
@@ -251,7 +268,7 @@ export function useClientStore() {
       }
 
       invalidateCache();
-      setClients((prev) => prev.filter((c) => c.id !== id));
+      broadcastClientsUpdate((prev) => prev.filter((c) => c.id !== id));
       setSimulations((prev) => prev.filter((s) => s.clientId !== id));
     },
     [invalidateCache]
@@ -264,7 +281,7 @@ export function useClientStore() {
   const updateClientPlanStatus = useCallback(
     (clientId: string, planId: string, status: Client["planStatus"]) => {
       invalidateCache();
-      setClients((prev) =>
+      broadcastClientsUpdate((prev) =>
         prev.map((c) =>
           c.id === clientId
             ? { ...c, planId, planStatus: status, planUpdatedAt: new Date().toISOString() }
