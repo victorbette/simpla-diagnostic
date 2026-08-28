@@ -310,105 +310,97 @@ export function FerramentaCarteira({ clientId, clientName, clientProfile, patrim
     <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", flexDirection: "column", backgroundColor: "#F8F9FA" }}>
 
       {/* ── HEADER ── */}
-      <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0, padding: "12px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-        <button
-          onClick={onClose}
-          aria-label="Fechar"
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            width: 28, height: 28, borderRadius: "50%",
-            border: "none", cursor: "pointer", flexShrink: 0,
-            backgroundColor: "rgba(255,255,255,0.1)",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)")}
-        >
-          <X style={{ width: 16, height: 16, color: "#93C5FD" }} />
-        </button>
+      <header style={{ backgroundColor: "#1E3A8A", flexShrink: 0 }}>
 
-        <span style={{ color: "white", fontSize: 15, fontWeight: 500, flexShrink: 0 }}>Gestão de Carteira</span>
-        <span style={{ color: "#93C5FD", fontSize: 13, flexShrink: 0 }}>{clientName}</span>
-        {clientProfile && (
-          <span style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#93C5FD", borderRadius: 999, fontSize: 11, padding: "2px 8px", flexShrink: 0 }}>
-            {PERFIL_LABELS[clientProfile] ?? clientProfile}
-          </span>
-        )}
+        {/* Linha superior */}
+        <div style={{ padding: "0 20px", height: 52, display: "flex", alignItems: "center", gap: 10 }}>
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 28, height: 28, borderRadius: "50%",
+              border: "none", cursor: "pointer", flexShrink: 0,
+              backgroundColor: "rgba(255,255,255,0.1)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.2)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.1)")}
+          >
+            <X style={{ width: 16, height: 16, color: "#93C5FD" }} />
+          </button>
 
-        <div style={{ flex: 1 }} />
+          <span style={{ color: "white", fontSize: 15, fontWeight: 500, flexShrink: 0 }}>Gestão de Carteira</span>
+          <span style={{ color: "#93C5FD", fontSize: 13, flexShrink: 0 }}>{clientName}</span>
+          {clientProfile && (
+            <span style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#93C5FD", borderRadius: 999, fontSize: 11, padding: "2px 8px", flexShrink: 0 }}>
+              {PERFIL_LABELS[clientProfile] ?? clientProfile}
+            </span>
+          )}
 
-        {temMudancas && !salvo && (
-          <span style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", padding: "2px 8px", borderRadius: 99, flexShrink: 0 }}>
-            Não salvo
-          </span>
-        )}
+          <div style={{ flex: 1 }} />
 
-        {autoSalvo && (
-          <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#86EFAC", flexShrink: 0 }}>
-            <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
-            Salvo automaticamente
-          </div>
-        )}
+          {temMudancas && !salvo && (
+            <span style={{ fontSize: 10, color: "#B45309", background: "#FEF3C7", padding: "2px 8px", borderRadius: 99, flexShrink: 0 }}>
+              Não salvo
+            </span>
+          )}
 
-        <button
-          onClick={handleLimpar}
-          style={{
-            border: "1px solid rgba(255,255,255,0.2)", color: "white",
-            backgroundColor: "rgba(255,255,255,0.08)", fontSize: 11,
-            padding: "4px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.15)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
-        >
-          Limpar dados
-        </button>
+          {autoSalvo && (
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#86EFAC", flexShrink: 0 }}>
+              <i className="ti ti-circle-check" style={{ fontSize: 13 }} />
+              Salvo automaticamente
+            </div>
+          )}
 
-        {patrimonio > 0 && (
-          <div style={{ backgroundColor: "#2563EB", color: "white", padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500, flexShrink: 0 }}>
-            Patrimônio {formatBRL(patrimonio)}
-          </div>
-        )}
-      </header>
+          <button
+            onClick={handleLimpar}
+            style={{
+              border: "1px solid rgba(255,255,255,0.2)", color: "white",
+              backgroundColor: "rgba(255,255,255,0.08)", fontSize: 11,
+              padding: "4px 10px", borderRadius: 6, cursor: "pointer", flexShrink: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.15)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)")}
+          >
+            Limpar dados
+          </button>
 
-      {/* ── STEPPER ── */}
-      <div style={{ flexShrink: 0, padding: "10px 20px", backgroundColor: "white", borderBottom: "1px solid #BFDBFE", overflowX: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", minWidth: "max-content", gap: 0 }}>
-          {ETAPAS.map((e, i) => {
+          {patrimonio > 0 && (
+            <div style={{ backgroundColor: "#2563EB", color: "white", padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500, flexShrink: 0 }}>
+              Patrimônio {formatBRL(patrimonio)}
+            </div>
+          )}
+        </div>
+
+        {/* Abas dentro do header azul */}
+        <div style={{ padding: "0 20px", display: "flex", gap: 2, overflowX: "auto" }}>
+          {ETAPAS.map((e) => {
             const isCurrent = e.n === etapa;
-            const isDone = e.n < etapa;
             const isPending = e.n > etapa;
             return (
-              <div key={e.n} style={{ display: "flex", alignItems: "center" }}>
-                <button
-                  onClick={() => !isPending && goToEtapa(e.n)}
-                  disabled={isPending}
-                  style={{ display: "flex", alignItems: "center", gap: 6, cursor: isPending ? "default" : "pointer", background: "none", border: "none", padding: "2px 6px" }}
-                >
-                  <span style={{
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0, fontSize: 12,
-                    ...(isDone
-                      ? { backgroundColor: "#15803D", color: "white" }
-                      : isCurrent
-                      ? { backgroundColor: "#2563EB", color: "white", fontWeight: 500 }
-                      : { border: "1.5px solid #BFDBFE", color: "#9CA3AF" }),
-                  }}>
-                    {isDone ? "✓" : e.n}
-                  </span>
-                  <span style={{
-                    fontSize: 12, whiteSpace: "nowrap",
-                    ...(isDone ? { color: "#15803D" } : isCurrent ? { color: "#2563EB", fontWeight: 500 } : { color: "#9CA3AF" }),
-                  }}>
-                    {e.label}
-                  </span>
-                </button>
-                {i < ETAPAS.length - 1 && (
-                  <div style={{ width: 28, height: 0, margin: "0 4px", flexShrink: 0, borderTop: `1.5px ${isPending ? "dashed" : "solid"} ${isDone ? "#15803D" : "#BFDBFE"}` }} />
-                )}
-              </div>
+              <button
+                key={e.n}
+                onClick={() => !isPending && goToEtapa(e.n)}
+                disabled={isPending}
+                style={{
+                  padding: "10px 20px",
+                  fontSize: 13, fontWeight: 500,
+                  border: "none", borderRadius: "8px 8px 0 0",
+                  cursor: isPending ? "default" : "pointer",
+                  background: isCurrent ? "#F0F7FF" : "transparent",
+                  color: isCurrent ? "#1E3A8A" : isPending ? "rgba(147,197,253,0.45)" : "#93C5FD",
+                  fontFamily: "inherit",
+                  whiteSpace: "nowrap", flexShrink: 0,
+                  transition: "background 150ms ease, color 150ms ease",
+                  opacity: isPending ? 0.6 : 1,
+                }}
+              >
+                {e.label}
+              </button>
             );
           })}
         </div>
-      </div>
+      </header>
 
       {/* ── BODY ── */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
