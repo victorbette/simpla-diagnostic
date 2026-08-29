@@ -1,7 +1,12 @@
 import { useMemo, type CSSProperties } from "react";
 import { formatCurrency } from "@/lib/format";
 import { calcularIF } from "@/types/financialPlanning";
-import { calcularProjecaoIF, type PontoProjecao } from "@/lib/financialFreedomCalc";
+import {
+  calcularProjecaoIF,
+  calcularPatrimonioNecessario,
+  calcularPatrimonioPerpetuidade,
+  type PontoProjecao,
+} from "@/lib/financialFreedomCalc";
 import { getTaxaRentabilidade } from "@/lib/rentabilidade";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
@@ -77,19 +82,33 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const mesNascimento = parseDateNasc(plan.dadosCliente.dataNascimento)?.mes;
 
   const rendaDesejada = rif?.rendaMensalDesejada ?? pi.rendaMensalDesejada;
-  const patrimonioNecessario = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
+  const idadeMeta = rif?.idadeMeta ?? pi.idadeMeta ?? 65;
+
+  // Aposentadoria Ideal: PV de anuidade até 90 anos (mesma lógica do FP tool)
+  const aposentadoriaIdeal = rif?.patrimonioNecessario
+    ?? (rendaDesejada > 0 ? calcularPatrimonioNecessario(rendaDesejada, idadeMeta) : 0);
+
+  // Fallback para perpetuidade quando não há dado salvo e idadeMeta indisponível
+  const patrimonioNecessarioFallback = rendaDesejada > 0
+    ? calcularPatrimonioPerpetuidade(rendaDesejada) : 0;
+  const metaExibida = aposentadoriaIdeal > 0 ? aposentadoriaIdeal : patrimonioNecessarioFallback;
+
   const simplesIF = !rif && !projecaoData.projecao.length && pi.rendaMensalDesejada > 0
     ? calcularIF(pi) : null;
   const patrimonioNaIF = rif?.patrimonioAposentadoria
     ?? (projecaoData.mesIF !== undefined && projecaoData.mesIF < projecaoData.projecao.length
         ? (projecaoData.projecao[projecaoData.mesIF]?.patrimonio ?? 0)
         : (simplesIF?.patrimonioProjetado ?? 0));
-  const rendaSustentavel = (patrimonioNaIF * 0.04) / 12;
-  const aporteDefinido = rif?.aporteAtual ?? pi.aporteMensal;
-  const objetivos = rif?.objetivos ?? [];
-  const temDados = patrimonioNecessario > 0 || projecaoData.projecao.length > 0;
 
-  const metaAtingida = rendaDesejada > 0 && rendaSustentavel >= rendaDesejada;
+  // Aporte Necessário salvo como aporteAjustado
+  const aporteNecessario = rif?.aporteAjustado ?? 0;
+  const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
+
+  const curvaIdeal = rif?.curvaIdeal;
+  const objetivos = rif?.objetivos ?? [];
+  const temDados = metaExibida > 0 || projecaoData.projecao.length > 0;
+
+  const metaAtingida = patrimonioNaIF > 0 && patrimonioNaIF >= metaExibida;
 
   const blocos: BlocoDoc[] = [
     {
@@ -120,50 +139,53 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
       chave: "metricas",
       node: temDados ? (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {/* Aposentadoria Ideal */}
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Patrimônio Necessário</p>
+            <p style={LABEL_CARD}>Aposentadoria Ideal</p>
             <p style={{ fontSize: 15, fontWeight: 700, color: DOC.blue, margin: 0 }}>
-              {formatCurrency(patrimonioNecessario)}
+              {formatCurrency(metaExibida)}
             </p>
             <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>
-              perpetuidade (regra dos 4%)
+              {rendaDesejada > 0
+                ? `Para ${fmtInteiro.format(rendaDesejada)}/mês até os 90 anos`
+                : "Patrimônio necessário na aposentadoria"}
             </p>
           </div>
 
+          {/* Patrimônio Total Projetado */}
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Projeção Atual</p>
+            <p style={LABEL_CARD}>Patrimônio Total Projetado</p>
             <p style={{ fontSize: 15, fontWeight: 700, color: metaAtingida ? DOC.verde : DOC.vermelho, margin: 0 }}>
               {formatCurrency(patrimonioNaIF)}
             </p>
             <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>na aposentadoria</p>
           </div>
 
+          {/* Aporte Necessário */}
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Aporte Definido</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: DOC.blue, margin: 0 }}>
-              {aporteDefinido > 0 ? `${fmtInteiro.format(aporteDefinido)}/mês` : "—"}
+            <p style={LABEL_CARD}>Aporte Necessário</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: aporteNecessario <= aporteAtual && aporteNecessario > 0 ? DOC.verde : DOC.blue, margin: 0 }}>
+              {aporteNecessario > 0 ? `${fmtInteiro.format(aporteNecessario)}/mês` : "Meta atingível"}
             </p>
             <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>
-              Valor definido na simulação
-              {objetivos.length > 0 && ` · ${objetivos.length} objetivo(s) incluído(s)`}
+              {aporteNecessario > 0 && aporteAtual > 0
+                ? aporteNecessario <= aporteAtual
+                  ? "Aporte atual suficiente"
+                  : `Aporte atual: ${fmtInteiro.format(aporteAtual)}/mês`
+                : "Para atingir a Aposentadoria Ideal"}
+              {objetivos.length > 0 && ` · ${objetivos.length} objetivo(s)`}
             </p>
           </div>
 
+          {/* Renda Desejada */}
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Renda Sustentável</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: metaAtingida ? DOC.verde : DOC.ink, margin: 0 }}>
-              {rendaSustentavel > 0 ? fmtInteiro.format(rendaSustentavel) : "—"}
+            <p style={LABEL_CARD}>Renda Desejada</p>
+            <p style={{ fontSize: 15, fontWeight: 700, color: DOC.ink, margin: 0 }}>
+              {rendaDesejada > 0 ? `${fmtInteiro.format(rendaDesejada)}/mês` : "—"}
             </p>
             <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>
-              /mês com a projeção atual
+              a partir da aposentadoria
             </p>
-            {rendaDesejada > 0 && rendaSustentavel > 0 && (
-              <p style={{ fontSize: 9.5, fontWeight: 600, color: metaAtingida ? DOC.verde : DOC.vermelho, margin: "3px 0 0" }}>
-                {metaAtingida
-                  ? `✓ Meta de ${fmtInteiro.format(rendaDesejada)}/mês atingida`
-                  : `Meta: ${fmtInteiro.format(rendaDesejada)}/mês`}
-              </p>
-            )}
           </div>
         </div>
       ) : (
@@ -187,7 +209,8 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
         >
           <CardProjecaoPatrimonial
             projecao={projecaoData.projecao}
-            patrimonioNecessario={patrimonioNecessario}
+            patrimonioNecessario={curvaIdeal ? undefined : metaExibida}
+            curvaIdeal={curvaIdeal}
             mesIF={projecaoData.mesIF}
             mesNascimento={mesNascimento}
             objetivos={objetivos}
