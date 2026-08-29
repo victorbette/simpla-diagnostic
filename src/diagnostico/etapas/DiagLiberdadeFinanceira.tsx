@@ -242,10 +242,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ));
   }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, taxaMensal]);
 
-  const rendaSustentavel = useMemo(() => {
-    if (patrimonioProjetado <= 0) return 0;
-    return (patrimonioProjetado * 0.04) / 12;
-  }, [patrimonioProjetado]);
 
   // projecaoSimples é anual (índice = anos desde a idade atual), não mensal
   const mesIF = Math.max(0, Math.round(params.idadeAposentadoria - params.idadeAtual));
