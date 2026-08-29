@@ -321,7 +321,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
 
   // Ideal curve: starts at patrimonioInicial, accumulates without objectives,
   // withdraws from patrimonioNecessario at 4% a.a., stops at IDADE_FIM_AMARELA
-  const totalMesesIdeal = Math.min(Math.round((IDADE_FIM_AMARELA - idadeExataHoje) * 12), projecao.length - 1);
+  // Use projecao.length - 1 to avoid decimal-age rounding cutting the curve short
+  const totalMesesIdeal = projecao.length - 1;
   const curvaIdeal: (number | null)[] = [];
   let patIdeal = patrimonioInicial;
   curvaIdeal.push(Math.round(patIdeal)); // i=0: same starting point as blue line
