@@ -209,7 +209,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
   const curvaIdealDiag = useMemo((): (number | null)[] | undefined => {
     if (!isFeatureUser || !params.rendaDesejada || metaIF <= 0) return undefined;
-    const nMeses = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
+    // Must align to annual steps (mesIF * 12) since curvaIdealDiag is consumed by the annual chart
+    const nMeses = Math.max(1, mesIF * 12);
     const f = Math.pow(1 + taxaMensal, nMeses);
     const aporteIdeal = f > 1 && params.patrimonioInicial * f < metaIF
       ? Math.max(0, (metaIF - params.patrimonioInicial * f) * taxaMensal / (f - 1))
@@ -249,14 +250,17 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
 
   // projecaoSimples é anual (índice = anos desde a idade atual), não mensal
-  const mesIF = Math.max(0, Math.round(params.idadeAposentadoria - idadeExataHoje));
+  // mesIF = integer years to retirement — used as array index into annual projecaoSimples
+  const mesIF = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
 
   // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
   const projecaoSimples: PontoProjecao[] = useMemo(() => {
     const IDADE_MAXIMA = 90;
     const anosTotal    = Math.max(0, IDADE_MAXIMA - params.idadeAtual);
     const anoAtual     = new Date().getFullYear();
-    const mesesIF      = Math.max(0, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
+    // Align to annual steps (mesIF years * 12) so accumulation/withdrawal boundary
+    // falls on a chart point; projecaoSimples only has points at multiples of 12
+    const mesesIF      = mesIF * 12;
     // Patrimônio no momento da aposentadoria (início da fase de retirada)
     const fIF = mesesIF > 0 ? Math.pow(1 + taxaMensal, mesesIF) : 1;
     const patrimonioIF = isFinite(fIF)
