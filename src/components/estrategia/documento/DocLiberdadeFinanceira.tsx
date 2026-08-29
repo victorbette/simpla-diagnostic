@@ -40,9 +40,9 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const pi = plan.planejamentoIF;
   const rif = resultados.if;
 
-  const projecaoData = useMemo((): { projecao: PontoProjecao[]; mesIF?: number } => {
+  const projecaoData = useMemo((): { projecao: PontoProjecao[]; mesIF?: number; curvaIdeal?: (number | null)[] } => {
     if (rif?.projecao && rif.projecao.length > 0) {
-      return { projecao: rif.projecao, mesIF: rif.mesInicioRetirada };
+      return { projecao: rif.projecao, mesIF: rif.mesInicioRetirada, curvaIdeal: rif.curvaIdeal };
     }
     if (!pi.rendaMensalDesejada || !pi.idadeMeta) return { projecao: [] };
 
@@ -73,7 +73,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
         mesNascimento: mesNasc,
         objetivos: [],
       });
-      return { projecao: result.projecao, mesIF: result.mesInicioRetirada };
+      return { projecao: result.projecao, mesIF: result.mesInicioRetirada, curvaIdeal: result.curvaIdeal };
     } catch {
       return { projecao: [] };
     }
@@ -104,7 +104,7 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const aporteNecessario = rif?.aporteAjustado ?? 0;
   const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
 
-  const curvaIdeal = rif?.curvaIdeal;
+  const curvaIdeal = projecaoData.curvaIdeal;
   const objetivos = rif?.objetivos ?? [];
   const temDados = metaExibida > 0 || projecaoData.projecao.length > 0;
 
