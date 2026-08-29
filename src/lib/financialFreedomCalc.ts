@@ -218,9 +218,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
 
-  // Use integer age (same as calcularProjecao / cards) so all values converge consistently
   const mesInicioRetirada = Math.round((idadeMeta - idadeAtual) * 12);
-  const totalMeses = (idadeMaxima - idadeAtual) * 12;
+  // Round from decimal age so the last projecao point lands at idade ≈ 90.0 (passes the ≤90 filter in GraficoIF)
+  const totalMeses = Math.round((idadeMaxima - idadeExataHoje) * 12);
 
   const projecao: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
@@ -319,27 +319,23 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     aporteNecessario = Math.ceil(high);
   }
 
-  // Ideal curve: starts at patrimonioInicial, accumulates without objectives,
-  // withdraws from patrimonioNecessario at 4% a.a., stops at IDADE_FIM_AMARELA
-  // Use projecao.length - 1 to avoid decimal-age rounding cutting the curve short
-  const totalMesesIdeal = projecao.length - 1;
+  // Ideal curve: accumulates without objectives, withdraws from patrimonioNecessario,
+  // calibrated to reach 0 at the last projecao point (idade ≈ 90).
+  // pmtIdeal depletes patrimonioNecessario in exactly (totalMeses - mesInicioRetirada) months.
+  const mesesRetiradaIdeal = Math.max(1, totalMeses - mesInicioRetirada);
+  const pmtIdeal = pmtMensal(patrimonioNecessario, TAXA_RET_MENSAL, mesesRetiradaIdeal);
   const curvaIdeal: (number | null)[] = [];
   let patIdeal = patrimonioInicial;
-  curvaIdeal.push(Math.round(patIdeal)); // i=0: same starting point as blue line
+  curvaIdeal.push(Math.round(patIdeal));
   for (let i = 1; i < projecao.length; i++) {
-    if (i > totalMesesIdeal) {
-      curvaIdeal.push(null); // no data beyond age 90
-    } else if (i < mesInicioRetirada) {
-      // Accumulation: no objectives, use aporteNecessarioSemObjetivos
+    if (i < mesInicioRetirada) {
       patIdeal = patIdeal * (1 + taxaMensalReal) + aporteNecessarioSemObjetivos;
       curvaIdeal.push(Math.round(patIdeal));
     } else if (i === mesInicioRetirada) {
-      // IF transition point: pin to patrimonioNecessario for clean handoff
       patIdeal = patrimonioNecessario;
       curvaIdeal.push(patrimonioNecessario);
     } else {
-      // Withdrawal: 4% a.a., guaranteed to reach 0 at IDADE_FIM_AMARELA
-      patIdeal = patIdeal * (1 + TAXA_RET_MENSAL) - rendaMensalDesejada;
+      patIdeal = patIdeal * (1 + TAXA_RET_MENSAL) - pmtIdeal;
       patIdeal = Math.max(0, patIdeal);
       curvaIdeal.push(Math.round(patIdeal));
     }
