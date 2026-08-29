@@ -472,7 +472,7 @@ export function HomePage() {
             </p>
             <div className="flex items-baseline gap-3">
               <h1 className="font-bold" style={{ color: DARK, fontSize: 32 }}>
-                Meus Clientes
+                Financial Planning
               </h1>
               <span style={{ color: "#6B7280", fontSize: 18 }}>
                 ({totalClientes} {totalClientes === 1 ? "cliente" : "clientes"})

@@ -140,17 +140,19 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
     <div style={{ minHeight: "100vh", backgroundColor: "#F8F9FA" }}>
 
       {/* Minimal nav header */}
-      <header style={{ backgroundColor: "#1E3A8A", padding: "10px 24px", display: "flex", alignItems: "center", gap: 14 }}>
+      <header style={{ backgroundColor: "#1E3A8A", padding: "16px 24px", display: "flex", alignItems: "center", gap: 14 }}>
         <button
           onClick={onVoltar}
           style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "5px 13px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
         >
           ← Voltar
         </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/diamond-icon-small.png" alt="Simpla" style={{ height: 28, width: 28, objectFit: "contain", borderRadius: 3 }} />
-          <span style={{ color: "white", fontWeight: 700, fontSize: 14, fontFamily: "Poppins, sans-serif" }}>Simpla Invest</span>
-          <span style={{ color: "#93C5FD", fontSize: 11, fontFamily: "Poppins, sans-serif" }}>Financial Planning</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img src="/diamond-icon-small.png" alt="Simpla" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+            <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "Poppins, sans-serif" }}>Simpla Invest</span>
+            <span style={{ color: "#93C5FD", fontSize: 11, fontFamily: "Poppins, sans-serif", fontWeight: 400, letterSpacing: "0.04em" }}>Financial Planning</span>
+          </div>
         </div>
       </header>
 
