@@ -207,6 +207,9 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria);
   }, [isFeatureUser, patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
 
+  // mesIF = integer years to retirement — used as array index into annual projecaoSimples
+  const mesIF = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
+
   const curvaIdealDiag = useMemo((): (number | null)[] | undefined => {
     if (!isFeatureUser || !params.rendaDesejada || metaIF <= 0) return undefined;
     // Must align to annual steps (mesIF * 12) since curvaIdealDiag is consumed by the annual chart
@@ -248,10 +251,6 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     ));
   }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, taxaMensal]);
 
-
-  // projecaoSimples é anual (índice = anos desde a idade atual), não mensal
-  // mesIF = integer years to retirement — used as array index into annual projecaoSimples
-  const mesIF = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
 
   // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
   const projecaoSimples: PontoProjecao[] = useMemo(() => {
