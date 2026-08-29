@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft } from "lucide-react";
 import type { ResultadosEstrategia, ResultadoIF } from "@/types/estrategiaResultados";
 import { defaultResultados } from "@/types/estrategiaResultados";
@@ -6,6 +6,7 @@ import { useFinancialPlanStore } from "@/hooks/useFinancialPlanStore";
 import { GestaoInvestimentos } from "@/components/acompanhamento/GestaoInvestimentos";
 import { AcompLF } from "@/components/acompanhamento/AcompLF";
 import { EvolucaoPatrimonio } from "@/components/acompanhamento/EvolucaoPatrimonio";
+import { EstrategiaFinal } from "@/components/estrategia/EstrategiaFinal";
 
 interface Props {
   clienteId: string;
@@ -13,12 +14,13 @@ interface Props {
   onVoltar: () => void;
 }
 
-type Tab = "investimentos" | "lf" | "evolucao";
+type Tab = "investimentos" | "lf" | "evolucao" | "relatorio";
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: "evolucao",      label: "Evolução do Patrimônio", icon: "ti-trending-up"  },
   { id: "investimentos", label: "Gestão de Investimentos", icon: "ti-chart-pie"   },
   { id: "lf",            label: "Liberdade Financeira",   icon: "ti-beach"        },
+  { id: "relatorio",     label: "Relatório",              icon: "ti-file-text"    },
 ];
 
 interface AcompData {
@@ -132,6 +134,11 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
     saveTimerRef.current = setTimeout(() => setSaveStatus("idle"), 3000);
   }
 
+  const handleConcluirRelatorio = useCallback(async () => {
+    if (!plan?.id) return;
+    await saveEstrategia(plan.id, resultadosRef.current as unknown as Record<string, unknown>);
+  }, [plan?.id, saveEstrategia]);
+
   async function handleSwitchTab(newTab: Tab) {
     if (newTab === tab) return;
     // Auto-save LF antes de sair da aba
@@ -218,84 +225,100 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
       </header>
 
       {/* Content */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
-        {tab === "evolucao" && (
-          <EvolucaoPatrimonio
-            clienteId={clienteId}
-            resultadoIF={resultados.if}
+      {tab === "relatorio" ? (
+        plan ? (
+          <EstrategiaFinal
+            plan={plan}
+            resultados={resultados}
+            clientName={clienteNome}
+            onResultadosChange={(r) => setResultados(r)}
+            onConcluir={handleConcluirRelatorio}
           />
-        )}
-
-        {tab === "investimentos" && (
-          <GestaoInvestimentos carteira={resultados.carteira} />
-        )}
-
-        {tab === "lf" && (
-          plan ? (
-            <AcompLF
-              plan={plan}
-              comentario={data.comentarios["aposentadoria"] ?? ""}
-              onComentarioChange={(v) => handleComentario("aposentadoria", v)}
-              tags={data.tags["aposentadoria"] ?? []}
-              onTagsChange={(v) => handleTags("aposentadoria", v)}
-              resultadoIF={resultados.if}
-              onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
-              onSaveCloud={handleSaveToSupabase}
-              triggerSaveRef={lfSaveRef}
-              storageChave={`acomp_lf_${clienteId}`}
-            />
-          ) : (
+        ) : (
+          <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
             <PlanLoading loading={loading} />
-          )
-        )}
+          </main>
+        )
+      ) : (
+        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+          {tab === "evolucao" && (
+            <EvolucaoPatrimonio
+              clienteId={clienteId}
+              resultadoIF={resultados.if}
+            />
+          )}
 
-        {/* ── Barra de salvar ─────────────────────────────────────── */}
-        <div style={{
-          marginTop: 32,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 12,
-          padding: "12px 0",
-          borderTop: "0.5px solid #E5E7EB",
-        }}>
-          {saveStatus === "saving" && (
-            <span style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6 }}>
-              <i className="ti ti-loader-2" style={{ fontSize: 14, animation: "spin 1s linear infinite" }} />
-              Salvando...
-            </span>
+          {tab === "investimentos" && (
+            <GestaoInvestimentos carteira={resultados.carteira} />
           )}
-          {saveStatus === "saved" && (
-            <span style={{ fontSize: 12, color: "#15803D", display: "flex", alignItems: "center", gap: 5 }}>
-              <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
-              Salvo com sucesso
-            </span>
+
+          {tab === "lf" && (
+            plan ? (
+              <AcompLF
+                plan={plan}
+                comentario={data.comentarios["aposentadoria"] ?? ""}
+                onComentarioChange={(v) => handleComentario("aposentadoria", v)}
+                tags={data.tags["aposentadoria"] ?? []}
+                onTagsChange={(v) => handleTags("aposentadoria", v)}
+                resultadoIF={resultados.if}
+                onResultadoIF={(r: ResultadoIF) => handleResultados({ if: r })}
+                onSaveCloud={handleSaveToSupabase}
+                triggerSaveRef={lfSaveRef}
+                storageChave={`acomp_lf_${clienteId}`}
+              />
+            ) : (
+              <PlanLoading loading={loading} />
+            )
           )}
-          {saveStatus === "idle" && tab === "evolucao" && (
-            <span style={{ fontSize: 12, color: "#9CA3AF" }}>Registros salvos automaticamente</span>
-          )}
-          {saveStatus === "idle" && tab === "investimentos" && (
-            <span style={{ fontSize: 12, color: "#9CA3AF" }}>Dados sincronizados do Financial Planning</span>
-          )}
-          <button
-            onClick={handleManualSave}
-            disabled={saveStatus === "saving"}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "8px 20px",
-              fontSize: 13, fontWeight: 600,
-              backgroundColor: saveStatus === "saving" ? "#BFDBFE" : "#1E3A8A",
-              color: "white",
-              border: "none", borderRadius: 8,
-              cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
-            }}
-          >
-            <i className="ti ti-device-floppy" style={{ fontSize: 15 }} />
-            Salvar
-          </button>
-        </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </main>
+
+          {/* ── Barra de salvar ─────────────────────────────────────── */}
+          <div style={{
+            marginTop: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: 12,
+            padding: "12px 0",
+            borderTop: "0.5px solid #E5E7EB",
+          }}>
+            {saveStatus === "saving" && (
+              <span style={{ fontSize: 12, color: "#6B7280", display: "flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-loader-2" style={{ fontSize: 14, animation: "spin 1s linear infinite" }} />
+                Salvando...
+              </span>
+            )}
+            {saveStatus === "saved" && (
+              <span style={{ fontSize: 12, color: "#15803D", display: "flex", alignItems: "center", gap: 5 }}>
+                <i className="ti ti-circle-check" style={{ fontSize: 14 }} />
+                Salvo com sucesso
+              </span>
+            )}
+            {saveStatus === "idle" && tab === "evolucao" && (
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>Registros salvos automaticamente</span>
+            )}
+            {saveStatus === "idle" && tab === "investimentos" && (
+              <span style={{ fontSize: 12, color: "#9CA3AF" }}>Dados sincronizados do Financial Planning</span>
+            )}
+            <button
+              onClick={handleManualSave}
+              disabled={saveStatus === "saving"}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 20px",
+                fontSize: 13, fontWeight: 600,
+                backgroundColor: saveStatus === "saving" ? "#BFDBFE" : "#1E3A8A",
+                color: "white",
+                border: "none", borderRadius: 8,
+                cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
+              }}
+            >
+              <i className="ti ti-device-floppy" style={{ fontSize: 15 }} />
+              Salvar
+            </button>
+          </div>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </main>
+      )}
     </div>
   );
 }
