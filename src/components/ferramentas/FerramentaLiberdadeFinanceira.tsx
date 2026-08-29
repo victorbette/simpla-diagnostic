@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useFerramentaStorage } from "@/hooks/useFerramentaStorage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import { formatCurrency } from "@/lib/format";
 import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
+  calcularPatrimonioNecessario,
   calcularAporteMensalNecessario,
   calcularIdadeComAporte,
   expandirObjetivos,
@@ -99,6 +101,9 @@ function migrateObjetivo(
 export function FerramentaLiberdadeFinanceira({
   clientId, planejamentoIF, dataNascimento, dadosCliente, resultadoIF, triggerSaveRef, storageChave, onSave,
 }: Props) {
+  const { user } = useAuth();
+  const isFeatureUser = user?.email === "victor.bette@simplawealth.com";
+
   // ── Birth date → age + anoNascimento/mesNascimento ─────────────────────────
   const parsed = parseDateNasc(dataNascimento ?? "");
   const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - planejamentoIF.idadeAtual);
@@ -290,6 +295,13 @@ export function FerramentaLiberdadeFinanceira({
     return calcularPatrimonioPerpetuidade(params.rendaDesejada);
   }, [params.rendaDesejada]);
 
+  // Para victor.bette@simplawealth.com: meta = PV de anuidade até 90 anos (IPCA+4%)
+  // Para todos os outros: continua usando perpetuidade
+  const metaIF = useMemo(() => {
+    if (!isFeatureUser || !params.rendaDesejada || params.rendaDesejada <= 0) return patrimonioPerpetuidade;
+    return calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria);
+  }, [isFeatureUser, patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
+
   const projecaoParams: ProjecaoIFParams = useMemo(() => ({
     idadeAtual:           params.idadeAtual,
     idadeMeta:            params.idadeAposentadoria,
@@ -318,7 +330,7 @@ export function FerramentaLiberdadeFinanceira({
   }, [projecaoParams]);
 
   const aporteNecessario = useMemo(() => {
-    if (patrimonioPerpetuidade <= 0) return 0;
+    if (metaIF <= 0) return 0;
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
     const nRaw = Math.round((params.idadeAposentadoria - params.idadeAtual) * 12);
     // Guard: idadeMeta undefined/NaN causes n=NaN → while(simular(high)<meta) high*=2 loops forever
@@ -356,29 +368,29 @@ export function FerramentaLiberdadeFinanceira({
     const f = Math.pow(1 + taxaMensal, n);
     const aporteBase = (() => {
       const fvSemAporte = params.patrimonioInicial * f;
-      if (patrimonioPerpetuidade <= fvSemAporte) return 0;
-      return Math.max(0, (patrimonioPerpetuidade - fvSemAporte) * taxaMensal / (f - 1));
+      if (metaIF <= fvSemAporte) return 0;
+      return Math.max(0, (metaIF - fvSemAporte) * taxaMensal / (f - 1));
     })();
 
-    if (simular(0) >= patrimonioPerpetuidade) return 0;
+    if (simular(0) >= metaIF) return 0;
 
     // Binary search — 60 iterations → precision < R$0,01
     let low = 0;
-    let high = Math.max(patrimonioPerpetuidade, aporteBase * 4);
+    let high = Math.max(metaIF, aporteBase * 4);
     let guard = 0;
-    while (simular(high) < patrimonioPerpetuidade && ++guard < 100) high *= 2;
+    while (simular(high) < metaIF && ++guard < 100) high *= 2;
     if (guard >= 100) return 0; // bail out — convergence impossible
 
     for (let i = 0; i < 60; i++) {
       const mid = (low + high) / 2;
-      if (simular(mid) >= patrimonioPerpetuidade) high = mid;
+      if (simular(mid) >= metaIF) high = mid;
       else low = mid;
       if (high - low < 0.01) break;
     }
 
     return Math.ceil(high);
   }, [params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria,
-      patrimonioPerpetuidade, objetivosExpandidos, ajustesCalc]);
+      metaIF, objetivosExpandidos, ajustesCalc]);
 
   const projecaoComAporteAtual = useMemo(() => {
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
@@ -498,7 +510,7 @@ export function FerramentaLiberdadeFinanceira({
   const sensAporteScenarios = useMemo(() => {
     if (!result) return [] as { pct: number; aporte: number; idadeResult: number }[];
     const base = params.aporteMensal;
-    const alvo = patrimonioPerpetuidade;
+    const alvo = metaIF;
     return [-0.4, -0.2, 0, 0.2, 0.4].map(pct => {
       const aporte = Math.max(0, Math.round(base * (1 + pct) / 100) * 100);
       const idadeResult = calcularIdadeComAporte({
@@ -511,12 +523,12 @@ export function FerramentaLiberdadeFinanceira({
       });
       return { pct, aporte, idadeResult };
     });
-  }, [result, params, objetivosExpandidos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosExpandidos, metaIF]);
 
   const sensPrazoScenarios = useMemo(() => {
     if (!result) return [] as { delta: number; idadeAlvo: number; aporte: number }[];
     const base = params.idadeAposentadoria;
-    const alvo = patrimonioPerpetuidade;
+    const alvo = metaIF;
     return [-4, -2, 0, 2, 4].map(delta => {
       const idadeAlvo = Math.max(params.idadeAtual + 1, base + delta);
       const aporte = calcularAporteMensalNecessario({
@@ -529,7 +541,7 @@ export function FerramentaLiberdadeFinanceira({
       });
       return { delta, idadeAlvo, aporte };
     });
-  }, [result, params, objetivosExpandidos, patrimonioPerpetuidade]);
+  }, [result, params, objetivosExpandidos, metaIF]);
 
   const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
   const anoAtualCliente = anoNascimento + params.idadeAtual;
@@ -888,7 +900,7 @@ export function FerramentaLiberdadeFinanceira({
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={patrimonioPerpetuidade}
+            patrimonioNecessario={metaIF}
             taxaLabel={
               ajustes.usarTaxaCustom
                 ? formatarTaxaLabel(ajustes.taxaCustomAnual)
@@ -903,14 +915,18 @@ export function FerramentaLiberdadeFinanceira({
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Patrimônio Necessário</span>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>
+                {isFeatureUser ? "Aposentadoria Ideal" : "Patrimônio Necessário"}
+              </span>
             </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">
-              {formatCurrency(patrimonioPerpetuidade)}
+              {formatCurrency(metaIF)}
             </p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>
               {params.rendaDesejada > 0
-                ? `Para gerar ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
+                ? isFeatureUser
+                  ? `Para ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês até os 90 anos`
+                  : `Para gerar ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
                 : "Preencha a renda desejada"
               }
             </p>
@@ -920,7 +936,9 @@ export function FerramentaLiberdadeFinanceira({
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>Projeção Atual</span>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em" }}>
+                {isFeatureUser ? "Patrimônio Total Projetado" : "Projeção Atual"}
+              </span>
             </div>
             <p style={{ fontSize: 17, fontWeight: 700, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }} className="tabular-nums">
               {formatCurrency(projecaoComAporteAtual)}
@@ -929,7 +947,7 @@ export function FerramentaLiberdadeFinanceira({
           </CardContent>
         </Card>
 
-        <Card style={{ ...cardGreenTop, border: `0.5px solid ${aporteNecessario <= params.aporteMensal && patrimonioPerpetuidade > 0 ? "#BBF7D0" : "#E5E7EB"}` }}>
+        <Card style={{ ...cardGreenTop, border: `0.5px solid ${aporteNecessario <= params.aporteMensal && metaIF > 0 ? "#BBF7D0" : "#E5E7EB"}` }}>
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
               <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Aporte Necessário</span>

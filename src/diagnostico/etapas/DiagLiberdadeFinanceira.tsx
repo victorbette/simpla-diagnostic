@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 import {
   calcularPatrimonioPerpetuidade,
+  calcularPatrimonioNecessario,
   type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
@@ -92,6 +94,9 @@ function fmtBRL(v: number) {
 }
 
 export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalvar }: Props) {
+  const { user } = useAuth();
+  const isFeatureUser = user?.email === "victor.bette@simplawealth.com";
+
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
   const mesNascimento = parsed?.mes ?? 1;
 
@@ -192,6 +197,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return calcularPatrimonioPerpetuidade(params.rendaDesejada);
   }, [params.rendaDesejada]);
 
+  const metaIF = useMemo(() => {
+    if (!isFeatureUser || !params.rendaDesejada || params.rendaDesejada <= 0) return patrimonioPerpetuidade;
+    return calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria);
+  }, [isFeatureUser, patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
+
   const patrimonioProjetado = useMemo(() => {
     const meses = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
     if (meses === 0) return params.patrimonioInicial;
@@ -256,25 +266,25 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
     const f = Math.pow(1 + taxaMensal, n);
     const fv = isFinite(f) ? params.patrimonioInicial * f + aporteC * (f - 1) / taxaMensal : params.patrimonioInicial;
-    const pctMeta = patrimonioPerpetuidade > 0
-      ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
+    const pctMeta = metaIF > 0
+      ? Math.min(100, Math.round(fv / metaIF * 100)) : 0;
     return { pctVariacao: pct, aporteC, fv, pctMeta };
-  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, patrimonioPerpetuidade, taxaMensal]);
+  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, metaIF, taxaMensal]);
 
   const cenariosIdade = useMemo(() => [-5, -2, 0, 2, 5].map(delta => {
     const idadeC = Math.max(params.idadeAtual + 1, params.idadeAposentadoria + delta);
     const n = Math.max(1, Math.round((idadeC - params.idadeAtual) * 12));
     const f = Math.pow(1 + taxaMensal, n);
     const fv = isFinite(f) ? params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal : params.patrimonioInicial;
-    const pctMeta = patrimonioPerpetuidade > 0
-      ? Math.min(100, Math.round(fv / patrimonioPerpetuidade * 100)) : 0;
+    const pctMeta = metaIF > 0
+      ? Math.min(100, Math.round(fv / metaIF * 100)) : 0;
     return { delta, idadeC, fv, pctMeta };
-  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, patrimonioPerpetuidade, taxaMensal]);
+  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, metaIF, taxaMensal]);
 
   const corMeta = (pct: number) =>
     pct >= 100 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
 
-  const ifAlcancada = patrimonioProjetado >= patrimonioPerpetuidade && patrimonioPerpetuidade > 0;
+  const ifAlcancada = patrimonioProjetado >= metaIF && metaIF > 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -508,7 +518,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={patrimonioPerpetuidade}
+            patrimonioNecessario={metaIF}
             taxaLabel={taxaLabel}
             mostrarZoom={false}
           />
@@ -519,15 +529,21 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>Patrimônio Necessário</p>
-            <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">{formatCurrency(patrimonioPerpetuidade)}</p>
-            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>perpetuidade (regra dos 4%)</p>
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+              {isFeatureUser ? "Aposentadoria Ideal" : "Patrimônio Necessário"}
+            </p>
+            <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">{formatCurrency(metaIF)}</p>
+            <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>
+              {isFeatureUser ? `Para ${fmtBRL(params.rendaDesejada)}/mês até os 90 anos` : "perpetuidade (regra dos 4%)"}
+            </p>
           </CardContent>
         </Card>
 
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>Projeção Atual</p>
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
+              {isFeatureUser ? "Patrimônio Total Projetado" : "Projeção Atual"}
+            </p>
             <p style={{ fontSize: 17, fontWeight: 700, color: ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(patrimonioProjetado)}</p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
           </CardContent>

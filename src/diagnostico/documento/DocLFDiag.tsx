@@ -1,7 +1,9 @@
+import { useAuth } from "@/contexts/AuthContext";
 import type { Lead } from "../types";
 import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
+  calcularPatrimonioNecessario,
   type ProjecaoIFParams,
 } from "@/lib/financialFreedomCalc";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
@@ -29,6 +31,9 @@ function formatBRL(v: number): string {
 interface Props { lead: Lead; }
 
 export function DocLFDiag({ lead }: Props) {
+  const { user } = useAuth();
+  const isFeatureUser = user?.email === "victor.bette@simplawealth.com";
+
   const { dadosColeta, dadosLF } = lead;
   const nome = lead.nome.split(" ")[0];
 
@@ -42,7 +47,11 @@ export function DocLFDiag({ lead }: Props) {
   const aporteMensal       = Number(dadosLF.aporteMensal       ?? dadosColeta.aporteMensal)               || 0;
   const rendaDesejada      = Number(dadosLF.rendaDesejada      ?? dadosColeta.rendaDesejadaAposentadoria) || 0;
   const idadeMeta          = Number(dadosLF.idadeAlvo          ?? dadosColeta.idadeMeta)                  || 0;
-  const patrimonioNecessario = rendaDesejada > 0 ? calcularPatrimonioPerpetuidade(rendaDesejada) : 0;
+  const patrimonioNecessario = rendaDesejada > 0
+    ? (isFeatureUser && idadeMeta > 0
+        ? calcularPatrimonioNecessario(rendaDesejada, idadeMeta)
+        : calcularPatrimonioPerpetuidade(rendaDesejada))
+    : 0;
 
   // ── Ajustes: mesma lógica da aba LF ──
   const dadosAjustes    = dadosLF.ajustes;
@@ -197,7 +206,7 @@ export function DocLFDiag({ lead }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 4 }}>
           <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
             <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-              Projeção Atual
+              {isFeatureUser ? "Patrimônio Total Projetado" : "Projeção Atual"}
             </div>
             <div style={{ fontSize: 14, fontWeight: 800, color: projecaoNaIF >= patrimonioNecessario && projecaoNaIF > 0 ? "#15803D" : "#111827" }}>
               {formatBRL(projecaoNaIF)}

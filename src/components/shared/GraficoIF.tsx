@@ -200,13 +200,13 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
         {patrimonioIdealVal != null && (
           <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 14, height: 2, background: "#1E3A8A", display: "inline-block", borderRadius: 1, flexShrink: 0 }} />
-            Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioIdealVal)}
+            Aposentadoria Ideal: {formatCurrency(patrimonioIdealVal)}
           </div>
         )}
         {patrimonioNecessario !== undefined && patrimonioNecessario > 0 && patrimonioIdealVal == null && (
           <div style={{ color: "#1E3A8A", fontSize: 11, marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 14, height: 0, borderTop: "2px dashed #1E3A8A", display: "inline-block", flexShrink: 0 }} />
-            Aposentadoria Ideal (Perpetuidade): {formatCurrency(patrimonioNecessario)}
+            Aposentadoria Ideal: {formatCurrency(patrimonioNecessario)}
           </div>
         )}
         {objsDoPonto.map((obj) => {
@@ -362,7 +362,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           />
           <Tooltip content={<CustomTooltip />} />
 
-          {/* LINHA DE REFERÊNCIA HORIZONTAL — Aposentadoria Ideal (Perpetuidade) */}
+          {/* LINHA DE REFERÊNCIA HORIZONTAL — Aposentadoria Ideal */}
           {patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
             <ReferenceLine
               y={patrimonioNecessario}
@@ -468,13 +468,13 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             }}
           >
             <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
-            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal (Perpetuidade)</span>
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
           </button>
         )}
         {!temCurvaIdeal && patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
             <div style={{ width: 24, borderTop: "2px dashed #1E3A8A" }} />
-            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal (Perpetuidade)</span>
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
           </div>
         )}
       </div>
