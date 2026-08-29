@@ -1,20 +1,16 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/format";
 import {
   calcularPatrimonioPerpetuidade,
   calcularPatrimonioNecessario,
-  type PontoProjecao,
+  calcularProjecaoIF,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 
-import { TAXA_LF_RETIRO, taxaMensalDe } from "@/lib/taxasDiag";
-
 const TAXA_PADRAO_DIAG = 6.0; // IPCA+6% padrão da seção LF — acumulação
-const TAXA_MENSAL_RETIRO = taxaMensalDe(TAXA_LF_RETIRO); // IPCA+4% — fase de retirada
 
 interface Ajustes {
   usarTaxaCustom: boolean;
@@ -94,9 +90,6 @@ function fmtBRL(v: number) {
 }
 
 export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalvar }: Props) {
-  const { user } = useAuth();
-  const isFeatureUser = user?.email === "victor.bette@simplawealth.com";
-
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
   const mesNascimento = parsed?.mes ?? 1;
   const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
@@ -203,45 +196,34 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }, [params.rendaDesejada]);
 
   const metaIF = useMemo(() => {
-    if (!isFeatureUser || !params.rendaDesejada || params.rendaDesejada <= 0) return patrimonioPerpetuidade;
+    if (!params.rendaDesejada || params.rendaDesejada <= 0) return patrimonioPerpetuidade;
     return calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria);
-  }, [isFeatureUser, patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
+  }, [patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
 
-  // mesIF = integer years to retirement — used as array index into annual projecaoSimples
-  const mesIF = Math.max(0, params.idadeAposentadoria - params.idadeAtual);
-
-  const curvaIdealDiag = useMemo((): (number | null)[] | undefined => {
-    if (!isFeatureUser || !params.rendaDesejada || metaIF <= 0) return undefined;
-    // Must align to annual steps (mesIF * 12) since curvaIdealDiag is consumed by the annual chart
-    const nMeses = Math.max(1, mesIF * 12);
-    const f = Math.pow(1 + taxaMensal, nMeses);
-    const aporteIdeal = f > 1 && params.patrimonioInicial * f < metaIF
-      ? Math.max(0, (metaIF - params.patrimonioInicial * f) * taxaMensal / (f - 1))
-      : 0;
-    const anosTotal = Math.max(0, 90 - params.idadeAtual);
-    const arr: (number | null)[] = new Array(anosTotal * 12 + 1).fill(null);
-    for (let i = 0; i <= anosTotal; i++) {
-      const m = i * 12;
-      if (m >= arr.length) break;
-      let val: number;
-      if (m < nMeses) {
-        const fi = Math.pow(1 + taxaMensal, m);
-        val = m === 0
-          ? params.patrimonioInicial
-          : Math.round(params.patrimonioInicial * fi + aporteIdeal * (fi - 1) / taxaMensal);
-      } else if (m === nMeses) {
-        val = metaIF;
-      } else {
-        const mr = m - nMeses;
-        const fr = Math.pow(1 + TAXA_MENSAL_RETIRO, mr);
-        val = Math.max(0, Math.round(metaIF * fr - params.rendaDesejada * (fr - 1) / TAXA_MENSAL_RETIRO));
-      }
-      arr[m] = val;
+  // Projeção mensal completa (igual ao FP) — dá pico pontiagudo no gráfico
+  const projecaoResult = useMemo(() => {
+    if (!params.rendaDesejada || params.rendaDesejada <= 0) return null;
+    if (params.idadeAposentadoria <= params.idadeAtual) return null;
+    try {
+      return calcularProjecaoIF({
+        idadeAtual: idadeExataHoje,
+        idadeMeta: params.idadeAposentadoria,
+        idadeMaxima: 90,
+        patrimonioInicial: params.patrimonioInicial,
+        aporteMensal: params.aporteMensal,
+        rendaMensalDesejada: params.rendaDesejada,
+        taxaRetornoAnual: taxaAnualEfetiva,
+        anoNascimento,
+        mesNascimento,
+        objetivos: [],
+      });
+    } catch {
+      return null;
     }
-    return arr;
-  }, [isFeatureUser, metaIF, params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria, params.rendaDesejada, taxaMensal]);
+  }, [idadeExataHoje, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento]);
 
   const patrimonioProjetado = useMemo(() => {
+    if (projecaoResult) return projecaoResult.patrimonioNaIF;
     const meses = Math.max(0, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     if (meses === 0) return params.patrimonioInicial;
     const f = Math.pow(1 + taxaMensal, meses);
@@ -249,50 +231,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return Math.max(0, Math.round(
       params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal
     ));
-  }, [params.patrimonioInicial, params.aporteMensal, params.idadeAtual, params.idadeAposentadoria, taxaMensal]);
-
-
-  // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
-  const projecaoSimples: PontoProjecao[] = useMemo(() => {
-    const IDADE_MAXIMA = 90;
-    const anosTotal    = Math.max(0, IDADE_MAXIMA - params.idadeAtual);
-    const anoAtual     = new Date().getFullYear();
-    // Align to annual steps (mesIF years * 12) so accumulation/withdrawal boundary
-    // falls on a chart point; projecaoSimples only has points at multiples of 12
-    const mesesIF      = mesIF * 12;
-    // Patrimônio no momento da aposentadoria (início da fase de retirada)
-    const fIF = mesesIF > 0 ? Math.pow(1 + taxaMensal, mesesIF) : 1;
-    const patrimonioIF = isFinite(fIF)
-      ? Math.round(params.patrimonioInicial * fIF + (mesesIF > 0 ? params.aporteMensal * (fIF - 1) / taxaMensal : 0))
-      : params.patrimonioInicial;
-    const retiradaMensal = params.rendaDesejada || 0;
-
-    return Array.from({ length: anosTotal + 1 }, (_, i) => {
-      const meses       = i * 12;
-      const naAcumulacao = meses <= mesesIF;
-      let patrimonio: number;
-      if (naAcumulacao) {
-        const f = meses > 0 ? Math.pow(1 + taxaMensal, meses) : 1;
-        patrimonio = isFinite(f)
-          ? Math.round(params.patrimonioInicial * f + (meses > 0 ? params.aporteMensal * (f - 1) / taxaMensal : 0))
-          : params.patrimonioInicial;
-      } else {
-        const mesesRetira = meses - mesesIF;
-        const f = Math.pow(1 + TAXA_MENSAL_RETIRO, mesesRetira);
-        patrimonio = isFinite(f)
-          ? Math.round(patrimonioIF * f - retiradaMensal * (f - 1) / TAXA_MENSAL_RETIRO)
-          : patrimonioIF;
-      }
-      return {
-        mes:       meses,
-        ano:       anoAtual + i,
-        mesDoAno:  mesNascimento,
-        idade:     params.idadeAtual + i,
-        patrimonio: Math.max(0, patrimonio),
-        fase:      naAcumulacao ? ("acumulacao" as const) : ("decumulacao" as const),
-      };
-    });
-  }, [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaMensal, mesNascimento]);
+  }, [projecaoResult, params.patrimonioInicial, params.aporteMensal, params.idadeAposentadoria, idadeExataHoje, taxaMensal]);
 
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
@@ -547,13 +486,13 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         {/* Card largo — Gráfico */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <CardProjecaoPatrimonial
-            projecao={projecaoSimples}
+            projecao={projecaoResult?.projecao ?? []}
             objetivos={[]}
             height={420}
-            mesIF={mesIF}
+            mesIF={projecaoResult?.mesInicioRetirada}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={isFeatureUser ? undefined : metaIF}
-            curvaIdeal={curvaIdealDiag}
+            patrimonioNecessario={projecaoResult?.curvaIdeal ? undefined : metaIF}
+            curvaIdeal={projecaoResult?.curvaIdeal}
             taxaLabel={taxaLabel}
             mostrarZoom={false}
           />
@@ -565,11 +504,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-              {isFeatureUser ? "Aposentadoria Ideal" : "Patrimônio Necessário"}
+              Aposentadoria Ideal
             </p>
             <p style={{ fontSize: 17, fontWeight: 700, color: "#1E40AF" }} className="tabular-nums">{formatCurrency(metaIF)}</p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>
-              {isFeatureUser ? `Para ${fmtBRL(params.rendaDesejada)}/mês até os 90 anos` : "perpetuidade (regra dos 4%)"}
+              Para {fmtBRL(params.rendaDesejada)}/mês até os 90 anos
             </p>
           </CardContent>
         </Card>
@@ -577,7 +516,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.06em", marginBottom: 4 }}>
-              {isFeatureUser ? "Patrimônio Total Projetado" : "Projeção Atual"}
+              Patrimônio Total Projetado
             </p>
             <p style={{ fontSize: 17, fontWeight: 700, color: ifAlcancada ? "#15803D" : "#B91C1C" }} className="tabular-nums">{formatCurrency(patrimonioProjetado)}</p>
             <p style={{ fontSize: 10, color: "#9CA3AF", margin: "2px 0 0" }}>na aposentadoria</p>
