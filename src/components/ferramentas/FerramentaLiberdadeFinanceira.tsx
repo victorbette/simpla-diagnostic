@@ -979,31 +979,19 @@ export function FerramentaLiberdadeFinanceira({
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Sustentável</span>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Desejada</span>
             </div>
             <p style={{
-              fontSize: 20, fontWeight: 800, margin: 0,
-              color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827",
+              fontSize: 20, fontWeight: 800, margin: 0, color: "#111827",
             }} className="tabular-nums">
-              {rendaSustentavel > 0
-                ? rendaSustentavel.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
+              {params.rendaDesejada > 0
+                ? params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
                 : "—"
               }
             </p>
             <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
-              /mês com a projeção atual
+              /mês a partir da aposentadoria
             </p>
-            {params.rendaDesejada > 0 && rendaSustentavel > 0 && (
-              <p style={{
-                fontSize: 10, marginTop: 4, fontWeight: 500,
-                color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C",
-              }}>
-                {rendaSustentavel >= params.rendaDesejada
-                  ? `✓ Meta de ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês atingida`
-                  : `Meta: ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
-                }
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>

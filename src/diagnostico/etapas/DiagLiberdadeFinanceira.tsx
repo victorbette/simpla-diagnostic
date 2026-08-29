@@ -582,18 +582,11 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Sustentável</p>
-            <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#111827" }} className="tabular-nums">
-              {rendaSustentavel > 0 ? fmtBRL(rendaSustentavel) : "—"}
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Desejada</p>
+            <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#111827" }} className="tabular-nums">
+              {params.rendaDesejada > 0 ? fmtBRL(params.rendaDesejada) : "—"}
             </p>
-            <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>/mês com a projeção atual</p>
-            {params.rendaDesejada > 0 && rendaSustentavel > 0 && (
-              <p style={{ fontSize: 10, marginTop: 4, fontWeight: 500, color: rendaSustentavel >= params.rendaDesejada ? "#15803D" : "#B91C1C" }}>
-                {rendaSustentavel >= params.rendaDesejada
-                  ? `✓ Meta de ${fmtBRL(params.rendaDesejada)}/mês atingida`
-                  : `Meta: ${fmtBRL(params.rendaDesejada)}/mês`}
-              </p>
-            )}
+            <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>/mês a partir da aposentadoria</p>
           </CardContent>
         </Card>
       </div>
