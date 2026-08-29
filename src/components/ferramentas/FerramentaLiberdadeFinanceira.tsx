@@ -579,23 +579,23 @@ export function FerramentaLiberdadeFinanceira({
     secoes: [
       {
         titulo: 'O que é a Liberdade Financeira?',
-        conteudo: `A seção de Liberdade Financeira projeta a jornada do cliente até a independência financeira — o momento em que o patrimônio acumulado gera renda suficiente para manter o padrão de vida sem depender do trabalho ativo.\n\nO cálculo considera o patrimônio atual, os aportes mensais, a rentabilidade estimada e a renda desejada na aposentadoria.`,
+        conteudo: `A seção de Liberdade Financeira projeta a jornada do cliente até a independência financeira — o momento em que o patrimônio acumulado gera renda suficiente para manter o padrão de vida sem depender do trabalho ativo.\n\nO cálculo considera o patrimônio atual, os aportes mensais, a rentabilidade estimada e a renda desejada na aposentadoria. A projeção usa a data de nascimento exata do cliente para calcular os meses com precisão de fração de ano.`,
       },
       {
-        titulo: 'Patrimônio Necessário',
-        conteudo: `É o valor total que o cliente precisa acumular para viver dos rendimentos.\n\nCalculado pela fórmula:\nRenda desejada × 12 ÷ 4%\n\nExemplo: renda de R$ 20.000/mês\n→ 20.000 × 12 ÷ 0,04 = R$ 6.000.000\n\nUsamos 4% ao ano como taxa de retirada segura — percentual que permite retiradas perpétuas sem consumir o capital.`,
+        titulo: 'Aposentadoria Ideal',
+        conteudo: `É o patrimônio que o cliente precisa ter acumulado na data de aposentadoria para sustentar a renda desejada até os 90 anos.\n\nCalculado como o valor presente de uma anuidade mensal usando IPCA + 4% ao ano como taxa de retirada:\n\nPV = Renda × (1 − (1 + i)^(−n)) ÷ i\n\nOnde i = taxa mensal (IPCA+4% a.a.) e n = meses da aposentadoria até os 90 anos.\n\nExemplo: renda R$ 20.000/mês, aposentadoria aos 65 anos (300 meses de retirada) → Aposentadoria Ideal ≈ R$ 3.750.000.\n\nEssa meta é representada pela linha azul escura no gráfico — ela mostra a trajetória ideal de consumo do patrimônio dos X anos até os 90.`,
       },
       {
-        titulo: 'Projeção Atual',
-        conteudo: `Simula o patrimônio acumulado até a data de aposentadoria considerando:\n\n- Patrimônio financeiro atual\n- Aporte mensal definido\n- Taxa de rentabilidade (IPCA + X%)\n- Crescimento real dos aportes (se ativado)\n- Impacto dos objetivos de vida\n\nSe a projeção atingir o Patrimônio Necessário antes da data alvo, o cliente está no caminho certo.`,
+        titulo: 'Patrimônio Total Projetado',
+        conteudo: `Simula o patrimônio acumulado mês a mês até a data de aposentadoria considerando:\n\n- Patrimônio financeiro atual\n- Aporte mensal definido\n- Taxa de rentabilidade (IPCA + X%)\n- Crescimento real dos aportes (se ativado)\n- Impacto dos objetivos de vida\n\nSe o Patrimônio Total Projetado atingir ou superar a Aposentadoria Ideal na data alvo, o cliente está no caminho certo para a independência financeira.`,
       },
       {
         titulo: 'Renda Sustentável',
-        conteudo: `É a renda mensal que o cliente conseguirá gerar com o patrimônio projetado, sem consumir o capital:\n\nRenda = Projeção × 4% ÷ 12\n\nSe a Renda Sustentável for maior ou igual à Renda Desejada, o cliente atinge a independência financeira na data planejada.`,
+        conteudo: `É a renda mensal que o cliente conseguirá gerar com o Patrimônio Total Projetado, sustentada por IPCA + 4% ao ano durante o período da aposentadoria até os 90 anos.\n\nCalculada como o PMT (parcela mensal) que esgota o patrimônio projetado exatamente aos 90 anos:\n\nRenda Sustentável = PMT(patrimônio projetado, taxa IPCA+4% a.a., meses até 90 anos)\n\nSe a Renda Sustentável for maior ou igual à Renda Desejada, o cliente atinge a independência financeira na data planejada.`,
       },
       {
         titulo: 'Aporte Necessário',
-        conteudo: `É o valor mensal que o cliente precisaria investir para atingir o Patrimônio Necessário exatamente na data alvo, considerando todos os objetivos de vida programados.\n\nSe o aporte atual for maior que o necessário, o cliente chegará antes do prazo.\nSe for menor, precisará de ajustes na estratégia.`,
+        conteudo: `É o valor mensal que o cliente precisaria investir para atingir a Aposentadoria Ideal exatamente na data alvo, considerando todos os objetivos de vida programados.\n\nSe o aporte atual for maior que o necessário, o cliente chegará antes do prazo.\nSe for menor, precisará de ajustes na estratégia.`,
       },
       {
         titulo: 'Objetivos de Vida',
@@ -607,7 +607,7 @@ export function FerramentaLiberdadeFinanceira({
       },
       {
         titulo: 'Gráfico de Projeção',
-        conteudo: `A linha azul mostra a evolução do patrimônio ao longo dos anos até a aposentadoria.\n\nA linha pontilhada laranja representa o Patrimônio Necessário (meta).\n\nQuando a linha azul cruza a linha laranja antes da data alvo, o cliente atingirá a independência financeira antes do prazo planejado.\n\nOs marcadores no gráfico indicam os Objetivos de Vida programados.`,
+        conteudo: `A área azul com gradiente mostra a evolução do Patrimônio Total Projetado ao longo dos anos.\n\nA linha azul escura (Aposentadoria Ideal) representa a trajetória ideal do patrimônio durante a fase de retirada — começa na meta de patrimônio na aposentadoria e decresce até zero aos 90 anos, sustentando a renda desejada com IPCA + 4% ao ano.\n\nAs legendas abaixo do gráfico são clicáveis: é possível ocultar cada série individualmente para facilitar a análise.\n\nO ícone de pôr do sol marca o momento exato da aposentadoria na curva projetada.\n\nOs marcadores no gráfico indicam os Objetivos de Vida programados.`,
       },
     ],
   };
