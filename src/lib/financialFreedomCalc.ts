@@ -218,8 +218,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     objByMesAno.set(key, (objByMesAno.get(key) ?? 0) + sinal * obj.valorBRL);
   }
 
-  const mesInicioRetirada = Math.round((idadeMeta - idadeAtual) * 12);
-  const totalMeses = (idadeMaxima - idadeAtual) * 12;
+  // Use decimal age so retirement month aligns to the exact birthday month
+  const mesInicioRetirada = Math.round((idadeMeta - idadeExataHoje) * 12);
+  const totalMeses = Math.round((idadeMaxima - idadeExataHoje) * 12);
 
   const projecao: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
@@ -258,8 +259,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
-      // Cap at idadeMaxima so decimal-age overshoot (e.g. 90.17) passes GraficoIF's ≤90 filter
-      idade: Math.min(Math.round((idadeExataHoje + m / 12) * 10) / 10, idadeMaxima),
+      idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
       patrimonio: Math.round(patrimonio),
       fase: acumulando ? "acumulacao" : "decumulacao",
     });

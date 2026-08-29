@@ -109,6 +109,10 @@ export function FerramentaLiberdadeFinanceira({
   const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - planejamentoIF.idadeAtual);
   const mesNascimento = parsed?.mes ?? 1;
 
+  // Decimal age today — used to align retirement month to the exact birthday
+  const _hoje = new Date();
+  const idadeExataHoje = (_hoje.getFullYear() - anoNascimento) + (_hoje.getMonth() + 1 - mesNascimento) / 12;
+
   const idadeAtualCalculada = parsed
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
     : (planejamentoIF.idadeAtual || 0);
@@ -332,7 +336,7 @@ export function FerramentaLiberdadeFinanceira({
   const aporteNecessario = useMemo(() => {
     if (metaIF <= 0) return 0;
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const nRaw = Math.round((params.idadeAposentadoria - params.idadeAtual) * 12);
+    const nRaw = Math.round((params.idadeAposentadoria - idadeExataHoje) * 12);
     // Guard: idadeMeta undefined/NaN causes n=NaN → while(simular(high)<meta) high*=2 loops forever
     if (!isFinite(nRaw) || nRaw < 1) return 0;
     const n = nRaw;
@@ -394,7 +398,7 @@ export function FerramentaLiberdadeFinanceira({
 
   const projecaoComAporteAtual = useMemo(() => {
     const taxaMensal = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const meses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const meses = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
 
     // Build objectives impact map (same calendar anchoring as calcularProjecaoIF)
     const objByMesAno = new Map<string, number>();
@@ -439,7 +443,7 @@ export function FerramentaLiberdadeFinanceira({
       return result?.projecao ?? [];
     }
     const taxaMensalAcum = Math.pow(1 + ajustesCalc.taxaAnualCombinada, 1 / 12) - 1;
-    const mesesAcum = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const mesesAcum = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     const pontos: PontoProjecao[] = [];
     let saldo = params.patrimonioInicial;
     let aporte = params.aporteMensal;
@@ -459,7 +463,7 @@ export function FerramentaLiberdadeFinanceira({
 
     pontos.push({
       mes: 0, ano: anoAtual, mesDoAno: mesAtual,
-      idade: Math.round(params.idadeAtual * 10) / 10,
+      idade: Math.round(idadeExataHoje * 10) / 10,
       patrimonio: Math.max(0, Math.round(saldo)),
       fase: "acumulacao",
     });
@@ -477,7 +481,7 @@ export function FerramentaLiberdadeFinanceira({
 
       pontos.push({
         mes: m, ano: anoAtual, mesDoAno: mesAtual,
-        idade: Math.round((params.idadeAtual + m / 12) * 10) / 10,
+        idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
         patrimonio: Math.max(0, Math.round(saldo)),
         fase: "acumulacao",
       });
@@ -485,7 +489,7 @@ export function FerramentaLiberdadeFinanceira({
 
     // Withdrawal phase using standard 4% real rate
     let saldoRet = saldo;
-    const mesesRet = (100 - params.idadeAposentadoria) * 12;
+    const mesesRet = Math.round((100 - idadeExataHoje) * 12) - mesesAcum;
     for (let m = 1; m <= mesesRet && saldoRet > 0; m++) {
       mesAtual++;
       if (mesAtual > 12) { mesAtual = 1; anoAtual++; }
@@ -493,7 +497,7 @@ export function FerramentaLiberdadeFinanceira({
       const totalMes = mesesAcum + m;
       pontos.push({
         mes: totalMes, ano: anoAtual, mesDoAno: mesAtual,
-        idade: Math.round((params.idadeAtual + totalMes / 12) * 10) / 10,
+        idade: Math.round((idadeExataHoje + totalMes / 12) * 10) / 10,
         patrimonio: Math.max(0, Math.round(saldoRet)),
         fase: "decumulacao",
       });
@@ -543,7 +547,7 @@ export function FerramentaLiberdadeFinanceira({
     });
   }, [result, params, objetivosExpandidos, metaIF]);
 
-  const mesIF = result ? result.mesInicioRetirada : (params.idadeAposentadoria - params.idadeAtual) * 12;
+  const mesIF = result ? result.mesInicioRetirada : Math.round((params.idadeAposentadoria - idadeExataHoje) * 12);
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente  = anoNascimento + params.idadeAposentadoria;
 

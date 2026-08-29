@@ -99,10 +99,15 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
   const mesNascimento = parsed?.mes ?? 1;
+  const anoNascimento = parsed?.ano ?? (new Date().getFullYear() - 30);
 
   const idadeAtualCalculada = parsed
     ? Math.floor((Date.now() - new Date(parsed.ano, parsed.mes - 1).getTime()) / (365.25 * 24 * 3600 * 1000))
     : 30;
+
+  // Decimal age — aligns retirement month to the exact birthday month
+  const _hojeD = new Date();
+  const idadeExataHoje = (_hojeD.getFullYear() - anoNascimento) + (_hojeD.getMonth() + 1 - mesNascimento) / 12;
 
   const patrimonioColeta    = Number(dadosColeta.patrimonioFinanceiro) || 0;
   const aporteColeta        = Number(dadosColeta.aporteMensal) || 0;
@@ -204,7 +209,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
   const curvaIdealDiag = useMemo((): (number | null)[] | undefined => {
     if (!isFeatureUser || !params.rendaDesejada || metaIF <= 0) return undefined;
-    const nMeses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const nMeses = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     const f = Math.pow(1 + taxaMensal, nMeses);
     const aporteIdeal = f > 1 && params.patrimonioInicial * f < metaIF
       ? Math.max(0, (metaIF - params.patrimonioInicial * f) * taxaMensal / (f - 1))
@@ -233,7 +238,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }, [isFeatureUser, metaIF, params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria, params.rendaDesejada, taxaMensal]);
 
   const patrimonioProjetado = useMemo(() => {
-    const meses = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const meses = Math.max(0, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     if (meses === 0) return params.patrimonioInicial;
     const f = Math.pow(1 + taxaMensal, meses);
     if (!isFinite(f)) return params.patrimonioInicial;
@@ -244,14 +249,14 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
 
   // projecaoSimples é anual (índice = anos desde a idade atual), não mensal
-  const mesIF = Math.max(0, Math.round(params.idadeAposentadoria - params.idadeAtual));
+  const mesIF = Math.max(0, Math.round(params.idadeAposentadoria - idadeExataHoje));
 
   // Projeção simples — sempre renderizável, mesmo se calcularProjecaoIF lançar
   const projecaoSimples: PontoProjecao[] = useMemo(() => {
     const IDADE_MAXIMA = 90;
     const anosTotal    = Math.max(0, IDADE_MAXIMA - params.idadeAtual);
     const anoAtual     = new Date().getFullYear();
-    const mesesIF      = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const mesesIF      = Math.max(0, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     // Patrimônio no momento da aposentadoria (início da fase de retirada)
     const fIF = mesesIF > 0 ? Math.pow(1 + taxaMensal, mesesIF) : 1;
     const patrimonioIF = isFinite(fIF)
@@ -289,7 +294,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
     const aporteC = Math.max(0, params.aporteMensal * (1 + pct / 100));
-    const n = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const n = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
     const f = Math.pow(1 + taxaMensal, n);
     const fv = isFinite(f) ? params.patrimonioInicial * f + aporteC * (f - 1) / taxaMensal : params.patrimonioInicial;
     const pctMeta = metaIF > 0
