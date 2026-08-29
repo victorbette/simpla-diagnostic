@@ -377,9 +377,9 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <Area
               type="monotone"
               dataKey="patrimonio"
-              stroke={interativo ? "none" : "#2563EB"}
-              strokeWidth={interativo ? 0 : 2}
-              fill={interativo ? "url(#gradReal)" : "#BFDBFE"}
+              stroke="none"
+              strokeWidth={0}
+              fill="url(#gradReal)"
               fillOpacity={1}
               dot={false}
               activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
@@ -470,6 +470,28 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
             <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
           </button>
+        )}
+        {!temCurvaIdeal && patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
+            <div style={{ width: 24, borderTop: "2px dashed #1E3A8A" }} />
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
+          </div>
+        )}
+      </div>
+      )}
+
+      {/* Legenda estática para modo documento (não interativo) */}
+      {!interativo && (temCurvaIdeal || (patrimonioNecessario !== undefined && patrimonioNecessario > 0)) && (
+      <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
+          <div style={{ width: 24, height: 3, background: "#2563EB", borderRadius: 2 }} />
+          <span style={{ fontSize: 12, color: "#374151" }}>Patrimônio Total Projetado</span>
+        </div>
+        {temCurvaIdeal && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
+            <div style={{ width: 24, height: 2, background: "#1E3A8A", borderRadius: 2 }} />
+            <span style={{ fontSize: 12, color: "#374151" }}>Aposentadoria Ideal</span>
+          </div>
         )}
         {!temCurvaIdeal && patrimonioNecessario !== undefined && patrimonioNecessario > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 8px" }}>
