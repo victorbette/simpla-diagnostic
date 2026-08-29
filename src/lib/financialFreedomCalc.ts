@@ -219,8 +219,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   }
 
   const mesInicioRetirada = Math.round((idadeMeta - idadeAtual) * 12);
-  // Round from decimal age so the last projecao point lands at idade ≈ 90.0 (passes the ≤90 filter in GraficoIF)
-  const totalMeses = Math.round((idadeMaxima - idadeExataHoje) * 12);
+  const totalMeses = (idadeMaxima - idadeAtual) * 12;
 
   const projecao: PontoProjecao[] = [];
   let patrimonio = patrimonioInicial;
@@ -259,7 +258,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
-      idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
+      // Cap at idadeMaxima so decimal-age overshoot (e.g. 90.17) passes GraficoIF's ≤90 filter
+      idade: Math.min(Math.round((idadeExataHoje + m / 12) * 10) / 10, idadeMaxima),
       patrimonio: Math.round(patrimonio),
       fase: acumulando ? "acumulacao" : "decumulacao",
     });
@@ -319,11 +319,9 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     aporteNecessario = Math.ceil(high);
   }
 
-  // Ideal curve: accumulates without objectives, withdraws from patrimonioNecessario,
-  // calibrated to reach 0 at the last projecao point (idade ≈ 90).
-  // pmtIdeal depletes patrimonioNecessario in exactly (totalMeses - mesInicioRetirada) months.
-  const mesesRetiradaIdeal = Math.max(1, totalMeses - mesInicioRetirada);
-  const pmtIdeal = pmtMensal(patrimonioNecessario, TAXA_RET_MENSAL, mesesRetiradaIdeal);
+  // Ideal curve: accumulates without objectives, withdraws rendaMensalDesejada from
+  // patrimonioNecessario — by construction reaches 0 at m = totalMeses (age idadeMaxima).
+  // projecao entries are capped at idadeMaxima so the last point always passes GraficoIF's ≤90 filter.
   const curvaIdeal: (number | null)[] = [];
   let patIdeal = patrimonioInicial;
   curvaIdeal.push(Math.round(patIdeal));
@@ -335,7 +333,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       patIdeal = patrimonioNecessario;
       curvaIdeal.push(patrimonioNecessario);
     } else {
-      patIdeal = patIdeal * (1 + TAXA_RET_MENSAL) - pmtIdeal;
+      // rendaMensalDesejada depletes patrimonioNecessario in exactly mesesRetirada months
+      patIdeal = patIdeal * (1 + TAXA_RET_MENSAL) - rendaMensalDesejada;
       patIdeal = Math.max(0, patIdeal);
       curvaIdeal.push(Math.round(patIdeal));
     }
