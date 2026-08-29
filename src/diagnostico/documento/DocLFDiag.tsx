@@ -190,7 +190,8 @@ export function DocLFDiag({ lead }: Props) {
             height={260}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={patrimonioNecessario}
+            patrimonioNecessario={isFeatureUser ? undefined : patrimonioNecessario}
+            curvaIdeal={isFeatureUser ? (result?.curvaIdeal ?? undefined) : undefined}
             interativo={false}
           />
         </div>

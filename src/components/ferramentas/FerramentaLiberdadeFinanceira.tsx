@@ -900,7 +900,8 @@ export function FerramentaLiberdadeFinanceira({
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={metaIF}
+            patrimonioNecessario={isFeatureUser ? undefined : metaIF}
+            curvaIdeal={isFeatureUser ? (result?.curvaIdeal ?? undefined) : undefined}
             taxaLabel={
               ajustes.usarTaxaCustom
                 ? formatarTaxaLabel(ajustes.taxaCustomAnual)

@@ -202,6 +202,36 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     return calcularPatrimonioNecessario(params.rendaDesejada, params.idadeAposentadoria);
   }, [isFeatureUser, patrimonioPerpetuidade, params.rendaDesejada, params.idadeAposentadoria]);
 
+  const curvaIdealDiag = useMemo((): (number | null)[] | undefined => {
+    if (!isFeatureUser || !params.rendaDesejada || metaIF <= 0) return undefined;
+    const nMeses = Math.max(1, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
+    const f = Math.pow(1 + taxaMensal, nMeses);
+    const aporteIdeal = f > 1 && params.patrimonioInicial * f < metaIF
+      ? Math.max(0, (metaIF - params.patrimonioInicial * f) * taxaMensal / (f - 1))
+      : 0;
+    const anosTotal = Math.max(0, 90 - params.idadeAtual);
+    const arr: (number | null)[] = new Array(anosTotal * 12 + 1).fill(null);
+    for (let i = 0; i <= anosTotal; i++) {
+      const m = i * 12;
+      if (m >= arr.length) break;
+      let val: number;
+      if (m < nMeses) {
+        const fi = Math.pow(1 + taxaMensal, m);
+        val = m === 0
+          ? params.patrimonioInicial
+          : Math.round(params.patrimonioInicial * fi + aporteIdeal * (fi - 1) / taxaMensal);
+      } else if (m === nMeses) {
+        val = metaIF;
+      } else {
+        const mr = m - nMeses;
+        const fr = Math.pow(1 + TAXA_MENSAL_RETIRO, mr);
+        val = Math.max(0, Math.round(metaIF * fr - params.rendaDesejada * (fr - 1) / TAXA_MENSAL_RETIRO));
+      }
+      arr[m] = val;
+    }
+    return arr;
+  }, [isFeatureUser, metaIF, params.patrimonioInicial, params.idadeAtual, params.idadeAposentadoria, params.rendaDesejada, taxaMensal]);
+
   const patrimonioProjetado = useMemo(() => {
     const meses = Math.max(0, Math.round((params.idadeAposentadoria - params.idadeAtual) * 12));
     if (meses === 0) return params.patrimonioInicial;
@@ -518,7 +548,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             height={420}
             mesIF={mesIF}
             mesNascimento={mesNascimento}
-            patrimonioNecessario={metaIF}
+            patrimonioNecessario={isFeatureUser ? undefined : metaIF}
+            curvaIdeal={curvaIdealDiag}
             taxaLabel={taxaLabel}
             mostrarZoom={false}
           />

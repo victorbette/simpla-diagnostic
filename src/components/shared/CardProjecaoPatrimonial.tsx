@@ -6,6 +6,7 @@ import type { ObjetivoVida } from "@/types/objetivos";
 interface Props {
   projecao: PontoProjecao[];
   patrimonioNecessario?: number;
+  curvaIdeal?: (number | null)[];
   objetivos?: ObjetivoVida[];
   mesIF?: number;
   mesNascimento?: number;
@@ -18,6 +19,7 @@ interface Props {
 export function CardProjecaoPatrimonial({
   projecao,
   patrimonioNecessario,
+  curvaIdeal,
   objetivos,
   mesIF,
   mesNascimento,
@@ -34,6 +36,7 @@ export function CardProjecaoPatrimonial({
         </p>
         <GraficoIF
           projecao={projecao}
+          curvaIdeal={curvaIdeal}
           objetivos={objetivos}
           height={height}
           mesIF={mesIF}
