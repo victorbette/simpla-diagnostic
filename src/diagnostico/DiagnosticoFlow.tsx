@@ -49,14 +49,23 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         style={{ backgroundColor: "#1E3A8A" }}
       >
         {/* Linha superior */}
-        <div style={{ padding: "14px 32px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ padding: "16px 32px", display: "flex", alignItems: "center", gap: 16 }}>
           <button
             onClick={onVoltar}
-            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "6px 14px", fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
           >
             ← Voltar
           </button>
-          <span style={{ color: "white", fontWeight: 700, fontSize: 16, flex: 1 }}>
+          <div style={{ width: 1, height: 24, backgroundColor: "rgba(255,255,255,0.2)", flexShrink: 0 }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/diamond-icon-small.png" alt="Simpla Invest" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
+            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
+              <span style={{ color: "#FFFFFF", fontFamily: "Poppins, sans-serif", fontWeight: 700, fontSize: 15 }}>Simpla Invest</span>
+              <span style={{ color: "#93C5FD", fontFamily: "Poppins, sans-serif", fontWeight: 400, fontSize: 11, letterSpacing: "0.04em" }}>Financial Planning</span>
+            </div>
+          </div>
+          <div style={{ flex: 1 }} />
+          <span style={{ color: "white", fontWeight: 600, fontSize: 14 }}>
             {lead.nome}
           </span>
           <span style={{ background: "rgba(255,255,255,0.2)", color: "white", borderRadius: 6, padding: "3px 10px", fontSize: 11, fontWeight: 600 }}>
