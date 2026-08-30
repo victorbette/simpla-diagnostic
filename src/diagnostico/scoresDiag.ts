@@ -97,22 +97,16 @@ export function calcularScoresDiag(
   const scoreInvestimentos = comecandoDoZero ? 0 : (!aaTemDados ? -1 : pontos);
 
   // ── Score Blindagem ──
+  // Toggle inicia desligado (false); ausência de dado = lead não possui o item = risco real
   const possuiSeguro      = dadosColeta.possuiSeguro === true;
   const possuiPrevidencia = dadosColeta.temPrevidencia === true;
-  const blindagemTemDados = dadosColeta.possuiSeguro !== undefined || dadosColeta.temPrevidencia !== undefined;
+  const blindagemTemDados = true; // seção sempre avaliada — toggle off = "Não possui"
 
-  let scoreBlindagem: number;
-  if (!blindagemTemDados) {
-    scoreBlindagem = -1;                       // não avaliado
-  } else if (possuiSeguro && possuiPrevidencia) {
-    scoreBlindagem = 80;                       // ambos → Precisa Desenvolver (tamanho das coberturas a revisar)
-  } else if (possuiSeguro && !possuiPrevidencia) {
-    scoreBlindagem = 40;                       // só seguro → Atenção Urgente
-  } else if (!possuiSeguro && possuiPrevidencia) {
-    scoreBlindagem = 30;                       // só previdência → Crítico
-  } else {
-    scoreBlindagem = 0;                        // nenhum → Crítico
-  }
+  const scoreBlindagem =
+    possuiSeguro && possuiPrevidencia ? 80 :   // ambos → Precisa Desenvolver
+    possuiSeguro && !possuiPrevidencia ? 40 :   // só seguro → Atenção Urgente
+    !possuiSeguro && possuiPrevidencia ? 30 :   // só previdência → Crítico
+    0;                                          // nenhum → Crítico
 
   // ── Score Geral ──
   const lista = [scoreLF, scoreInvestimentos, scoreBlindagem].filter(s => s >= 0);

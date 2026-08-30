@@ -97,7 +97,7 @@ export function DiagResultado({ lead }: Props) {
     lfTemDados, pctIF,
     aaTemDados, nRuinsCount,
     pontoDiversificacao, pontoQualidade,
-    blindagemTemDados, possuiSeguro, possuiPrevidencia,
+    possuiSeguro, possuiPrevidencia,
     comecandoDoZero,
   } = calcularScoresDiag(dadosColeta);
 
@@ -351,9 +351,6 @@ export function DiagResultado({ lead }: Props) {
     if (area === "inv") return "";
 
     if (area === "blind") {
-      if (!blindagemTemDados) {
-        return "Não conseguimos avaliar sua proteção patrimonial. Complete os dados de seguro e previdência para descobrir se sua família estaria protegida em caso de imprevistos.";
-      }
       return gerarTextoBlindagem();
     }
 
