@@ -598,13 +598,7 @@ export function HomePage() {
                 >
                   {/* CLIENTE */}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#1E3A8A", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-                      {getInitials(c.nome)}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
-                      <div style={{ fontSize: 11, color: "#9CA3AF" }}>{c.email ?? "—"}</div>
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.nome}</div>
                   </div>
 
                   {/* STATUS FP */}
