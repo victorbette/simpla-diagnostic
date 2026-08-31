@@ -326,14 +326,12 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   let patIdeal = patrimonioInicial;
   curvaIdeal.push(Math.round(patIdeal));
   for (let i = 1; i < projecao.length; i++) {
-    if (i < mesInicioRetirada) {
+    if (i <= mesInicioRetirada) {
+      // aporteNecessarioSemObjetivos is calculated so patIdeal reaches
+      // patrimonioNecessario exactly at mesInicioRetirada — no forced jump needed.
       patIdeal = patIdeal * (1 + taxaMensalReal) + aporteNecessarioSemObjetivos;
       curvaIdeal.push(Math.round(patIdeal));
-    } else if (i === mesInicioRetirada) {
-      patIdeal = patrimonioNecessario;
-      curvaIdeal.push(patrimonioNecessario);
     } else {
-      // rendaMensalDesejada depletes patrimonioNecessario in exactly mesesRetirada months
       patIdeal = patIdeal * (1 + TAXA_RET_MENSAL) - rendaMensalDesejada;
       patIdeal = Math.max(0, patIdeal);
       curvaIdeal.push(Math.round(patIdeal));
