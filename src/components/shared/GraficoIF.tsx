@@ -292,8 +292,15 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     <>
     <style>{`
       @media print {
-        .recharts-area-area { display: block !important; visibility: visible !important; }
         .recharts-layer { display: block !important; }
+        .recharts-area-area { display: block !important; visibility: visible !important; }
+        /* Gradient fills (url(#...)) are not serialized by Chrome PDF renderer.
+           Override with a solid fill so the area is always visible in PDF. */
+        .recharts-area-Patrimônio-Total-Projetado .recharts-area-area,
+        .recharts-area-area[fill^="url"] {
+          fill: #2563EB !important;
+          fill-opacity: 0.35 !important;
+        }
       }
     `}</style>
     <div>
@@ -376,10 +383,10 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
             <Area
               type="monotone"
               dataKey="patrimonio"
-              stroke="none"
-              strokeWidth={0}
-              fill="url(#gradReal)"
-              fillOpacity={1}
+              stroke="#2563EB"
+              strokeWidth={2}
+              fill={interativo ? "url(#gradReal)" : "#2563EB"}
+              fillOpacity={interativo ? 1 : 0.3}
               dot={false}
               activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
               isAnimationActive={false}
