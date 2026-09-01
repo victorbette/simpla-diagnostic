@@ -1,5 +1,4 @@
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import type { FinancialPlan } from "@/types/financialPlanning";
 import { FerramentaLiberdadeFinanceira } from "@/components/ferramentas/FerramentaLiberdadeFinanceira";
 import { calcularPatrimonioNecessario } from "@/lib/financialFreedomCalc";
@@ -27,11 +26,6 @@ interface Props {
   storageChave?: string;
 }
 
-function useIsFeatureUser() {
-  const { user } = useAuth();
-  return user?.email === "victor.bette@simplawealth.com";
-}
-
 export function SecaoAposentadoria({
   plan,
   comentario,
@@ -44,8 +38,6 @@ export function SecaoAposentadoria({
   triggerSaveRef,
   storageChave,
 }: Props) {
-  const isFeatureUser = useIsFeatureUser();
-
   function toggleTag(t: string) {
     onTagsChange(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t]);
   }
@@ -70,9 +62,7 @@ export function SecaoAposentadoria({
             liberdadeAlcancada: rendaSustentavelDisplay >= params.rendaMensalDesejada,
             aporteAjustado: display.aporteNecessario,
             patrimonioNecessario: params.rendaMensalDesejada > 0
-              ? (isFeatureUser
-                  ? calcularPatrimonioNecessario(params.rendaMensalDesejada, params.idadeMeta)
-                  : (params.rendaMensalDesejada * 12) / 0.04)
+              ? calcularPatrimonioNecessario(params.rendaMensalDesejada, params.idadeMeta)
               : result.patrimonioNecessario,
             patrimonioAtual: params.patrimonioInicial,
             idadeAtual: params.idadeAtual,
