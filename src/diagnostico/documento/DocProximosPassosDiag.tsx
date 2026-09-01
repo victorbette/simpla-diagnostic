@@ -25,28 +25,110 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             Esses números não são aspiracionais. São dados reais, medidos ao longo de décadas, com milhares de investidores. E eles revelam uma verdade que os melhores investidores já entenderam: a diferença entre construir patrimônio com consistência ou ficar para trás não está nos produtos escolhidos — está no acompanhamento, na estratégia e nas decisões tomadas no momento certo.
           </p>
 
-          {/* 3. Cards brancos 2×2 */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "0 0 16px" }}>
-            {[
-              { destaque: "3,9×", texto: "mais patrimônio acumulado em 15 anos com um consultor independente" },
-              { destaque: "76%",  texto: "dos investidores com consultor relatam segurança e bem-estar em relação ao próprio futuro" },
-              { destaque: "80%",  texto: "afirmam que o consultor foi fundamental para ajudá-los a acumular patrimônio" },
-              { destaque: "1,7×", texto: "mais patrimônio já entre 4 e 6 anos de acompanhamento — o impacto começa cedo e cresce com o tempo" },
-            ].map((item, i) => (
-              <div key={i} style={{
-                background: "white", border: "0.5px solid #E5E7EB",
-                borderRadius: 8, padding: "10px 12px",
-                display: "flex", alignItems: "flex-start", gap: 12,
-              }}>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#1E40AF", lineHeight: 1, flexShrink: 0, minWidth: 36 }}>
-                  {item.destaque}
-                </div>
-                <div style={{ fontSize: 10, color: "#374151", lineHeight: 1.5 }}>
-                  {item.texto}
-                </div>
-              </div>
+          {/* 3. Infográfico RBC — barras + ícones */}
+          <svg
+            viewBox="0 0 540 230"
+            style={{ width: "100%", height: "auto", margin: "0 0 10px", display: "block" }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Hachura ouro — sem consultor */}
+              <pattern id="pGold" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                <rect width="6" height="6" fill="#F5DFA0" />
+                <line x1="0" y1="0" x2="0" y2="6" stroke="#C8973A" strokeWidth="2.5" />
+              </pattern>
+              {/* Hachura azul-escuro — com consultor */}
+              <pattern id="pNavy" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                <rect width="6" height="6" fill="#4B6CB7" />
+                <line x1="0" y1="0" x2="0" y2="6" stroke="#1B3A8A" strokeWidth="2.5" />
+              </pattern>
+            </defs>
+
+            {/* ── PAINEL ESQUERDO: barras ────────────────────────── */}
+            {/* Título */}
+            <text x="14" y="17" fontSize="8.5" fontWeight="700" fill="#111827" fontFamily="sans-serif">IMPACTO DO ACOMPANHAMENTO PROFISSIONAL</text>
+            <text x="14" y="28" fontSize="8" fill="#6B7280" fontFamily="sans-serif">Patrimônio acumulado relativo (sem consultor = 1×)</text>
+
+            {/* Baseline */}
+            <line x1="14" y1="188" x2="272" y2="188" stroke="#9CA3AF" strokeWidth="0.8" />
+
+            {/* Grupo 1 — 4 a 6 anos */}
+            {/* Gold bar 1× */}
+            <rect x="28" y="152" width="26" height="36" fill="url(#pGold)" stroke="#C8973A" strokeWidth="0.8" rx="1" />
+            <text x="41" y="148" fontSize="8" fontWeight="700" fill="#92671A" textAnchor="middle" fontFamily="sans-serif">1×</text>
+            {/* Navy bar 1.7× */}
+            <rect x="58" y="125" width="26" height="63" fill="url(#pNavy)" stroke="#1B3A8A" strokeWidth="0.8" rx="1" />
+            <text x="71" y="121" fontSize="8" fontWeight="700" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">1,7×</text>
+            {/* Label eixo x */}
+            <text x="57" y="200" fontSize="7.5" fill="#374151" textAnchor="middle" fontFamily="sans-serif">4 a 6 anos</text>
+
+            {/* Grupo 2 — 7 a 14 anos */}
+            <rect x="118" y="152" width="26" height="36" fill="url(#pGold)" stroke="#C8973A" strokeWidth="0.8" rx="1" />
+            <text x="131" y="148" fontSize="8" fontWeight="700" fill="#92671A" textAnchor="middle" fontFamily="sans-serif">1×</text>
+            <rect x="148" y="86" width="26" height="102" fill="url(#pNavy)" stroke="#1B3A8A" strokeWidth="0.8" rx="1" />
+            <text x="161" y="82" fontSize="8" fontWeight="700" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">2,7×</text>
+            <text x="147" y="200" fontSize="7.5" fill="#374151" textAnchor="middle" fontFamily="sans-serif">7 a 14 anos</text>
+
+            {/* Grupo 3 — 15+ anos */}
+            <rect x="208" y="152" width="26" height="36" fill="url(#pGold)" stroke="#C8973A" strokeWidth="0.8" rx="1" />
+            <text x="221" y="148" fontSize="8" fontWeight="700" fill="#92671A" textAnchor="middle" fontFamily="sans-serif">1×</text>
+            <rect x="238" y="46" width="26" height="142" fill="url(#pNavy)" stroke="#1B3A8A" strokeWidth="0.8" rx="1" />
+            <text x="251" y="42" fontSize="8" fontWeight="700" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">3,9×</text>
+            <text x="237" y="200" fontSize="7.5" fill="#374151" textAnchor="middle" fontFamily="sans-serif">15+ anos</text>
+
+            {/* Legenda barras */}
+            <rect x="14" y="210" width="10" height="10" fill="url(#pGold)" stroke="#C8973A" strokeWidth="0.7" rx="1" />
+            <text x="27" y="219" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Sem consultor</text>
+            <rect x="100" y="210" width="10" height="10" fill="url(#pNavy)" stroke="#1B3A8A" strokeWidth="0.7" rx="1" />
+            <text x="113" y="219" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Com consultor independente</text>
+
+            {/* ── DIVISÓRIA ─────────────────────────────────────── */}
+            <line x1="280" y1="12" x2="280" y2="225" stroke="#E5E7EB" strokeWidth="0.8" />
+
+            {/* ── PAINEL DIREITO: ícones de pessoas ─────────────── */}
+            <text x="294" y="17" fontSize="8.5" fontWeight="700" fill="#111827" fontFamily="sans-serif">PERCEPÇÃO DOS INVESTIDORES</text>
+            <text x="294" y="28" fontSize="8" fill="#6B7280" fontFamily="sans-serif">Com consultor independente</text>
+
+            {/* Ícones — linha 1 (todos navy) cy_head=68 */}
+            {[306, 332, 358, 384, 410].map((cx) => (
+              <g key={`r1-${cx}`}>
+                <circle cx={cx} cy={68} r={7} fill="none" stroke="#1B3A8A" strokeWidth="1.5" />
+                <path
+                  d={`M${cx - 10},95 Q${cx - 10},82 ${cx},80 Q${cx + 10},82 ${cx + 10},95`}
+                  fill="none" stroke="#1B3A8A" strokeWidth="1.5" strokeLinecap="round"
+                />
+              </g>
             ))}
-          </div>
+
+            {/* Ícones — linha 2: 3 navy + 2 gold cy_head=112 */}
+            {[
+              { cx: 306, color: "#1B3A8A" },
+              { cx: 332, color: "#1B3A8A" },
+              { cx: 358, color: "#1B3A8A" },
+              { cx: 384, color: "#C8973A" },
+              { cx: 410, color: "#C8973A" },
+            ].map(({ cx, color }) => (
+              <g key={`r2-${cx}`}>
+                <circle cx={cx} cy={112} r={7} fill="none" stroke={color} strokeWidth="1.5" />
+                <path
+                  d={`M${cx - 10},139 Q${cx - 10},126 ${cx},124 Q${cx + 10},126 ${cx + 10},139`}
+                  fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round"
+                />
+              </g>
+            ))}
+
+            {/* Stat grande */}
+            <text x="432" y="105" fontSize="38" fontWeight="900" fill="#1B3A8A" fontFamily="sans-serif" textAnchor="start">80%</text>
+
+            {/* Descrição direita */}
+            <text x="294" y="155" fontSize="8" fill="#374151" fontFamily="sans-serif">afirmam que o consultor foi</text>
+            <text x="294" y="166" fontSize="8" fill="#374151" fontFamily="sans-serif">fundamental para acumular</text>
+            <text x="294" y="177" fontSize="8" fontWeight="600" fill="#1B3A8A" fontFamily="sans-serif">patrimônio com consistência.</text>
+
+            {/* Nota 76% */}
+            <text x="294" y="198" fontSize="7.5" fill="#6B7280" fontFamily="sans-serif">76% relatam segurança e bem-estar</text>
+            <text x="294" y="208" fontSize="7.5" fill="#6B7280" fontFamily="sans-serif">em relação ao próprio futuro.</text>
+          </svg>
 
           {/* 4. Citação */}
           <div style={{ borderLeft: "3px solid #2563EB", paddingLeft: 14, marginBottom: 6 }}>
