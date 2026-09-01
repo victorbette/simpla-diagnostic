@@ -29,7 +29,7 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
           {/* 3A. Gráfico de barras — largura total */}
           <svg
             viewBox="0 0 520 210"
-            style={{ width: "100%", height: "auto", margin: "0 0 10px", display: "block" }}
+            style={{ width: "100%", height: "auto", margin: "0 0 22px", display: "block" }}
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
@@ -86,7 +86,7 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             style={{ width: "100%", height: "auto", margin: "0 0 14px", display: "block" }}
             xmlns="http://www.w3.org/2000/svg"
           >
-            {/* ── SEÇÃO A: 76% ──────────────────────────── x 0–190 */}
+            {/* ── SEÇÃO A: 76% ─────────────────────────── x 0–192 */}
             <text x="14" y="16" fontSize="9"  fontWeight="700" fill="#111827" fontFamily="sans-serif">SEGURANÇA E BEM-ESTAR</text>
             <text x="14" y="27" fontSize="8"  fill="#6B7280"  fontFamily="sans-serif">dos investidores com consultor</text>
             <text x="14" y="90" fontSize="46" fontWeight="900" fill="#1B3A8A" fontFamily="sans-serif">76%</text>
@@ -94,15 +94,15 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             <text x="14" y="120" fontSize="8" fill="#374151" fontFamily="sans-serif">em relação ao próprio futuro</text>
             <text x="14" y="132" fontSize="8" fill="#374151" fontFamily="sans-serif">financeiro com o consultor</text>
 
-            {/* Divisória A|B */}
+            {/* Divisória A | painel unificado */}
             <line x1="196" y1="10" x2="196" y2="148" stroke="#E5E7EB" strokeWidth="0.8" />
 
-            {/* ── SEÇÃO B: ícones pessoas ────────────────── x 204–390 */}
-            <text x="206" y="16" fontSize="9"  fontWeight="700" fill="#111827" fontFamily="sans-serif">CONSULTOR FOI FUNDAMENTAL</text>
-            <text x="206" y="27" fontSize="8"  fill="#6B7280"  fontFamily="sans-serif">para acumular patrimônio com consistência</text>
+            {/* ── SEÇÃO B+C: ícones + 80% — painel único ── x 204–520 */}
+            <text x="210" y="16" fontSize="9"  fontWeight="700" fill="#111827" fontFamily="sans-serif">CONSULTOR FOI FUNDAMENTAL</text>
+            <text x="210" y="27" fontSize="8"  fill="#6B7280"  fontFamily="sans-serif">para acumular patrimônio com consistência</text>
 
-            {/* Linha 1 — todos navy — cy_head=57 */}
-            {[220, 253, 286, 319, 352].map((cx) => (
+            {/* Ícones linha 1 — todos navy — cy_head=57 */}
+            {[222, 254, 286, 318, 350].map((cx) => (
               <g key={`r1-${cx}`}>
                 <circle cx={cx} cy={57} r={8} fill="none" stroke="#1B3A8A" strokeWidth="1.5" />
                 <path d={`M${cx-11},83 Q${cx-11},70 ${cx},68 Q${cx+11},70 ${cx+11},83`}
@@ -110,37 +110,32 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
               </g>
             ))}
 
-            {/* Linha 2 — 3 navy + 2 gold — cy_head=105 */}
+            {/* Ícones linha 2 — 3 navy + 2 gold — cy_head=102 */}
             {[
-              { cx: 220, cor: "#1B3A8A" },
-              { cx: 253, cor: "#1B3A8A" },
+              { cx: 222, cor: "#1B3A8A" },
+              { cx: 254, cor: "#1B3A8A" },
               { cx: 286, cor: "#1B3A8A" },
-              { cx: 319, cor: "#C8973A" },
-              { cx: 352, cor: "#C8973A" },
+              { cx: 318, cor: "#C8973A" },
+              { cx: 350, cor: "#C8973A" },
             ].map(({ cx, cor }) => (
               <g key={`r2-${cx}`}>
-                <circle cx={cx} cy={105} r={8} fill="none" stroke={cor} strokeWidth="1.5" />
-                <path d={`M${cx-11},131 Q${cx-11},118 ${cx},116 Q${cx+11},118 ${cx+11},131`}
+                <circle cx={cx} cy={102} r={8} fill="none" stroke={cor} strokeWidth="1.5" />
+                <path d={`M${cx-11},128 Q${cx-11},115 ${cx},113 Q${cx+11},115 ${cx+11},128`}
                   fill="none" stroke={cor} strokeWidth="1.5" strokeLinecap="round" />
               </g>
             ))}
 
             {/* Legenda ícones */}
-            <circle cx="212" cy="144" r="5" fill="none" stroke="#1B3A8A" strokeWidth="1.5" />
-            <text x="220" cy="144" y="148" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Com consultor</text>
-            <circle cx="298" cy="144" r="5" fill="none" stroke="#C8973A" strokeWidth="1.5" />
-            <text x="306" cy="144" y="148" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Sem consultor</text>
+            <circle cx="215" cy="143" r="5" fill="none" stroke="#1B3A8A" strokeWidth="1.5" />
+            <text x="223" y="147" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Com consultor</text>
+            <circle cx="305" cy="143" r="5" fill="none" stroke="#C8973A" strokeWidth="1.5" />
+            <text x="313" y="147" fontSize="7.5" fill="#374151" fontFamily="sans-serif">Sem consultor</text>
 
-            {/* Divisória B|C */}
-            <line x1="392" y1="10" x2="392" y2="148" stroke="#E5E7EB" strokeWidth="0.8" />
-
-            {/* ── SEÇÃO C: 80% ──────────────────────────── x 400–520 */}
-            <text x="456" y="16" fontSize="9"  fontWeight="700" fill="#111827" textAnchor="middle" fontFamily="sans-serif">FUNDAMENTAL</text>
-            <text x="456" y="27" fontSize="8"  fill="#6B7280"  textAnchor="middle" fontFamily="sans-serif">para acumular</text>
-            <text x="456" y="90" fontSize="46" fontWeight="900" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">80%</text>
-            <text x="456" y="108" fontSize="8" fill="#374151" textAnchor="middle" fontFamily="sans-serif">afirmam que o</text>
-            <text x="456" y="120" fontSize="8" fill="#374151" textAnchor="middle" fontFamily="sans-serif">consultor foi</text>
-            <text x="456" y="132" fontSize="8" fill="#374151" textAnchor="middle" fontFamily="sans-serif">essencial</text>
+            {/* "80%" — mesmo painel, à direita dos ícones, sem linha divisória */}
+            <text x="455" y="88" fontSize="46" fontWeight="900" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">80%</text>
+            <text x="455" y="107" fontSize="8" fill="#374151" textAnchor="middle" fontFamily="sans-serif">afirmam que o</text>
+            <text x="455" y="119" fontSize="8" fill="#374151" textAnchor="middle" fontFamily="sans-serif">consultor foi</text>
+            <text x="455" y="131" fontSize="8" fontWeight="600" fill="#1B3A8A" textAnchor="middle" fontFamily="sans-serif">fundamental</text>
           </svg>
 
           {/* 4. Citação */}
