@@ -6,8 +6,7 @@ interface Props { nomeCliente: string; }
 export function DocProximosPassosDiag({ nomeCliente }: Props) {
   const [dataReuniao, setDataReuniao] = useState("");
 
-  const blocos: BlocoDoc[] = [
-    /* ── PÁGINA 1: estudo RBC + infográficos ──────────────── */
+  const blocosEstudo: BlocoDoc[] = [
     {
       chave: "estudo",
       node: (
@@ -153,7 +152,9 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
       ),
     },
 
-    /* ── PÁGINA 2: próximos passos ────────────────────────── */
+  ];
+
+  const blocosPassos: BlocoDoc[] = [
     {
       chave: "passos",
       node: (
@@ -251,10 +252,17 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
   ];
 
   return (
-    <PaginaDocFluidaDiag
-      titulo="Próximos Passos"
-      nomeCliente={nomeCliente}
-      blocos={blocos}
-    />
+    <>
+      <PaginaDocFluidaDiag
+        titulo="O Impacto do Acompanhamento Profissional"
+        nomeCliente={nomeCliente}
+        blocos={blocosEstudo}
+      />
+      <PaginaDocFluidaDiag
+        titulo="Próximos Passos"
+        nomeCliente={nomeCliente}
+        blocos={blocosPassos}
+      />
+    </>
   );
 }
