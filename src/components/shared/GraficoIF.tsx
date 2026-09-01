@@ -119,21 +119,10 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
 
   // ── Derived values (non-hook, safe after early return) ────────────────────────
 
-  // Y-axis based on visible (filtered) data.
-  // Base scale on the real projection; include curvaIdeal only when it stays
-  // within 1.5× the real peak to avoid the chart being compressed by a
-  // far-off retirement target.
-  const maxRealProjecao = Math.max(
-    ...dadosFiltrados.map((p) => Number(p.patrimonio) || 0),
-    0,
-  );
-  const maxIdealProjecao = Math.max(
-    ...dadosFiltrados.map((p) => Number(p.patrimonioIdeal) || 0),
-    0,
-  );
+  // Y-axis based on both curves so neither is clipped.
   const maxPatrimonio = Math.max(
-    maxRealProjecao,
-    maxIdealProjecao <= maxRealProjecao * 1.5 ? maxIdealProjecao : 0,
+    ...dadosFiltrados.map((p) => Number(p.patrimonio) || 0),
+    ...dadosFiltrados.map((p) => Number(p.patrimonioIdeal) || 0),
     0,
   );
   const STEP = 500_000;
