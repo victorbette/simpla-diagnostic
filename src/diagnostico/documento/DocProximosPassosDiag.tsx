@@ -16,12 +16,56 @@ export function DocProximosPassosDiag({ nomeCliente }: Props) {
             Este diagnóstico trouxe clareza sobre onde você está hoje — e clareza é o primeiro passo para a mudança. Mas o conhecimento sem ação não transforma nada. O que separa as pessoas que constroem o futuro que desejam das que apenas sonham com ele é exatamente este momento: a decisão de agir.
           </p>
 
-          {/* 2. Texto de transição */}
+          {/* 2. Estudo RBC — texto */}
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 12px", textAlign: "justify" as const }}>
+            Segundo estudo do Royal Bank of Canadá — uma das maiores instituições financeiras do mundo — investidores que tiveram um consultor independente por 15 anos tiveram, na média, um patrimônio quase quatro vezes maior do que os que não tinham um consultor.
+          </p>
+
+          <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 16px", textAlign: "justify" as const }}>
+            Esses números não são aspiracionais. São dados reais, medidos ao longo de décadas, com milhares de investidores. E eles revelam uma verdade que os melhores investidores já entenderam: a diferença entre construir patrimônio com consistência ou ficar para trás não está nos produtos escolhidos — está no acompanhamento, na estratégia e nas decisões tomadas no momento certo.
+          </p>
+
+          {/* 3. Cards brancos 2×2 */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, margin: "0 0 16px" }}>
+            {[
+              { destaque: "3,9×", texto: "mais patrimônio acumulado em 15 anos com um consultor independente" },
+              { destaque: "76%",  texto: "dos investidores com consultor relatam segurança e bem-estar em relação ao próprio futuro" },
+              { destaque: "80%",  texto: "afirmam que o consultor foi fundamental para ajudá-los a acumular patrimônio" },
+              { destaque: "1,7×", texto: "mais patrimônio já entre 4 e 6 anos de acompanhamento — o impacto começa cedo e cresce com o tempo" },
+            ].map((item, i) => (
+              <div key={i} style={{
+                background: "white", border: "0.5px solid #E5E7EB",
+                borderRadius: 8, padding: "10px 12px",
+                display: "flex", alignItems: "flex-start", gap: 12,
+              }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#1E40AF", lineHeight: 1, flexShrink: 0, minWidth: 36 }}>
+                  {item.destaque}
+                </div>
+                <div style={{ fontSize: 10, color: "#374151", lineHeight: 1.5 }}>
+                  {item.texto}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 4. Citação */}
+          <div style={{ borderLeft: "3px solid #2563EB", paddingLeft: 14, marginBottom: 6 }}>
+            <p style={{ fontSize: 12, color: "#1E40AF", lineHeight: 1.8, margin: 0, fontStyle: "italic", fontWeight: 500 }}>
+              "Os números mostram que o acompanhamento profissional não é um custo — é o investimento com maior retorno comprovado. Cada ano sem um consultor é um ano em que a diferença cresce silenciosamente na direção errada."
+            </p>
+          </div>
+
+          {/* 5. Referência */}
+          <p style={{ fontSize: 9, color: "#9CA3AF", margin: "0 0 20px", fontStyle: "italic" }}>
+            Fonte: RBC Global Asset Management Inc. (2020). The Value of Advice Report.
+          </p>
+
+          {/* 6. Texto de transição */}
           <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.95, margin: "0 0 20px", textAlign: "justify" as const }}>
             Os próximos passos foram definidos para que a jornada comece de forma estruturada, segura e com o suporte necessário para que cada decisão seja tomada com clareza.
           </p>
 
-          {/* 3. Os 4 passos numerados */}
+          {/* 7. Os 4 passos numerados */}
           {[
             {
               num: 1,
