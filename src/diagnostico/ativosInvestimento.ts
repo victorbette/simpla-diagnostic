@@ -3,7 +3,7 @@ export type QualidadeAtivo = "muito_atrativo" | "atrativo" | "moderado" | "pouco
 export interface AtivoInvestimento {
   id: string;
   label: string;
-  classe: "renda_fixa" | "renda_variavel" | "exterior" | "cripto" | "alternativos";
+  classe: "renda_fixa" | "renda_variavel" | "exterior" | "cripto" | "alternativos" | "previdencia";
   qualidade: QualidadeAtivo;
   icone: string;
   cor: string;
@@ -57,6 +57,9 @@ export const ATIVOS_INVESTIMENTO: AtivoInvestimento[] = [
   { id: "coe",                 label: "COE",                          classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
   { id: "fundo_cetipado",      label: "Fundos Cetipados",             classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
   { id: "produto_estruturado", label: "Produtos Estruturados",        classe: "alternativos",  qualidade: "nada_atrativo",  icone: "ti-alert-circle",  cor: "#B91C1C" },
+
+  // ─── PREVIDÊNCIA ───────────────────────────────────────────────────────────
+  { id: "previdencia_privada", label: "Previdência Privada (PGBL/VGBL)", classe: "previdencia", qualidade: "moderado",       icone: "ti-shield-check",  cor: "#B45309" },
 ];
 
 export const CLASSES_INVESTIMENTO: {
@@ -69,4 +72,5 @@ export const CLASSES_INVESTIMENTO: {
   { classe: "exterior",      label: "Exterior",        cor: "#B45309" },
   { classe: "cripto",        label: "Cripto",          cor: "#6D28D9" },
   { classe: "alternativos",  label: "Alternativos",    cor: "#B91C1C" },
+  { classe: "previdencia",   label: "Previdência",      cor: "#7C3AED" },
 ];

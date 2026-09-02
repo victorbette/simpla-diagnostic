@@ -8,8 +8,6 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
 
   const temFilhos        = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
   const temSeguro        = dadosColeta.possuiSeguro === true;
-  const temPrevidencia   = dadosColeta.temPrevidencia === true;
-  const saldoPrevidencia = Number(dadosColeta.saldoPrevidencia) || 0;
   const estadoCivil      = dadosColeta.estadoCivil ?? "";
   const temConjuge       = estadoCivil === "casado" || estadoCivil === "uniao_estavel";
 
@@ -27,12 +25,6 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
     }
 
     texto += `\n\nA probabilidade de sofrer uma invalidez ou doença grave ao longo da vida é maior do que a de falecer prematuramente. Nesses casos, você continua presente mas sem gerar renda — enquanto as despesas aumentam com tratamentos. Coberturas em vida são proteção inteligente, não pessimismo.`;
-
-    if (temPrevidencia && saldoPrevidencia > 0) {
-      texto += `\n\nVocê já possui previdência privada — um ponto positivo. Ela e o seguro são instrumentos complementares, cada um com papel específico na estratégia.`;
-    } else if (!temPrevidencia) {
-      texto += `\n\nA previdência privada também compõe a blindagem: acumula capital com benefícios fiscais e pode ser um complemento de renda em momentos de necessidade.`;
-    }
 
     if (temSeguro) {
       texto += `\n\nVocê já possui seguro de vida — ótimo. O próximo passo é garantir que a cobertura ainda reflete sua realidade atual, já que família e patrimônio crescem ao longo dos anos.`;
