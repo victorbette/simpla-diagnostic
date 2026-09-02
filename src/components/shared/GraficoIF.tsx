@@ -298,8 +298,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
            Override with a solid fill so the area is always visible in PDF. */
         .recharts-area-Patrimônio-Total-Projetado .recharts-area-area,
         .recharts-area-area[fill^="url"] {
-          fill: #2563EB !important;
-          fill-opacity: 0.35 !important;
+          fill: #93C5FD !important;
+          fill-opacity: 0.55 !important;
         }
       }
     `}</style>
@@ -385,8 +385,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
               dataKey="patrimonio"
               stroke="#2563EB"
               strokeWidth={2}
-              fill={interativo ? "url(#gradReal)" : "#2563EB"}
-              fillOpacity={interativo ? 1 : 0.3}
+              fill={interativo ? "url(#gradReal)" : "#93C5FD"}
+              fillOpacity={interativo ? 1 : 0.55}
               dot={false}
               activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
               isAnimationActive={false}
