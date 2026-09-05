@@ -1,4 +1,5 @@
 import type { Lead } from "../types";
+import type { ObjetivoVida } from "@/types/objetivos";
 import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
@@ -31,6 +32,7 @@ interface Props { lead: Lead; }
 
 export function DocLFDiag({ lead }: Props) {
   const { dadosColeta, dadosLF } = lead;
+  const objetivos = (dadosLF.objetivos ?? []) as ObjetivoVida[];
   const nome = lead.nome.split(" ")[0];
 
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
@@ -78,7 +80,7 @@ export function DocLFDiag({ lead }: Props) {
     taxaRetornoAnual: TAXA_ANUAL,
     anoNascimento,
     mesNascimento,
-    objetivos: [],
+    objetivos,
   };
 
   let result: ReturnType<typeof calcularProjecaoIF> | null = null;
@@ -180,7 +182,7 @@ export function DocLFDiag({ lead }: Props) {
         <div style={{ marginBottom: 10 }}>
           <CardProjecaoPatrimonial
             projecao={projecaoGrafico}
-            objetivos={[]}
+            objetivos={objetivos}
             height={260}
             mesIF={mesIF}
             mesNascimento={mesNascimento}

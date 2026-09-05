@@ -9,6 +9,8 @@ import {
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
+import { ListaObjetivos } from "@/components/shared/ListaObjetivos";
+import type { ObjetivoVida } from "@/types/objetivos";
 
 const TAXA_PADRAO_DIAG = 6.0; // IPCA+6% padrão da seção LF — acumulação
 
@@ -138,6 +140,12 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   });
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
+  const objetivos = (dadosLF.objetivos ?? []) as ObjetivoVida[];
+
+  function handleObjetivos(obs: ObjetivoVida[]) {
+    onChangeRef.current({ objetivos: obs });
+  }
+
   const isFirstRender       = useRef(true);
   const isAjustesFirstRender = useRef(true);
   const onChangeRef = useRef(onChange);
@@ -215,12 +223,13 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         taxaRetornoAnual: taxaAnualEfetiva,
         anoNascimento,
         mesNascimento,
-        objetivos: [],
+        objetivos,
       });
     } catch {
       return null;
     }
-  }, [idadeExataHoje, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idadeExataHoje, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivos]);
 
   const patrimonioProjetado = useMemo(() => {
     if (projecaoResult) return projecaoResult.patrimonioNaIF;
@@ -487,7 +496,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         <div style={{ flex: 1, minWidth: 0 }}>
           <CardProjecaoPatrimonial
             projecao={projecaoResult?.projecao ?? []}
-            objetivos={[]}
+            objetivos={objetivos}
             height={420}
             mesIF={projecaoResult?.mesInicioRetirada}
             mesNascimento={mesNascimento}
@@ -534,7 +543,17 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         </Card>
       </div>
 
-      {/* ── 4. Análise de Sensibilidade ── */}
+      {/* ── 4. Objetivos de Vida ── */}
+      <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
+        <ListaObjetivos
+          objetivos={objetivos}
+          onObjetivos={handleObjetivos}
+          anoAtual={new Date().getFullYear()}
+          anoMeta={anoNascimento + params.idadeAposentadoria}
+        />
+      </div>
+
+      {/* ── 5. Análise de Sensibilidade ── */}
       <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "20px 24px" }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", marginBottom: 16 }}>
           Análise de Sensibilidade
