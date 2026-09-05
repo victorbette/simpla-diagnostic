@@ -104,7 +104,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
   );
 
   const todasOcorrencias = useMemo(
-    () => expandirOcorrenciasGrafico(objetivos),
+    () => expandirOcorrenciasGrafico(objetivos.filter(o => o.ativo !== false)),
     [objetivos],
   );
 
