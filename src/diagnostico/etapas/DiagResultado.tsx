@@ -164,24 +164,7 @@ export function DiagResultado({ lead }: Props) {
     return `${faltam.length === 1 ? "Um pilar ainda está ausente" : "Alguns pilares ainda estão ausentes"} da sua carteira: ${lista}. A Simpla recomenda distribuição entre Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais para equilibrar segurança, crescimento e diversificação geográfica.`;
   }
 
-  function gerarTextoPrevidencia(
-    tipo: "PGBL" | "VGBL" | undefined,
-    valor: number | undefined,
-  ): string {
-    const valorFmt = valor && valor > 0
-      ? valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
-      : "";
-
-    if (tipo === "PGBL") {
-      return `${nome}, você possui${valorFmt ? ` ${valorFmt} em` : ""} PGBL — uma escolha eficiente para quem declara o IR pelo modelo completo, pois permite deduzir até 12% da renda bruta anual. Mantenha as contribuições regulares para maximizar o benefício fiscal e o acúmulo de longo prazo.`;
-    }
-
-    if (tipo === "VGBL") {
-      return `${nome}, você possui${valorFmt ? ` ${valorFmt} em` : ""} VGBL — ideal para quem declara pelo modelo simplificado, pois o IR incide apenas sobre os rendimentos no resgate. É uma boa ferramenta de acúmulo de longo prazo com sucessão patrimonial simplificada.`;
-    }
-
-    return `${nome}, você possui previdência privada na carteira. É um instrumento importante para o planejamento de longo prazo — tanto para acumulação quanto para sucessão patrimonial. Defina o tipo (PGBL ou VGBL) para otimizar o benefício fiscal conforme seu perfil.`;
-  }
+  const textoPrevidencia = `A previdência privada oferece dois benefícios relevantes para o planejamento de longo prazo: a sucessão patrimonial simplificada — os recursos são transferidos diretamente aos beneficiários sem necessidade de inventário — e o diferimento fiscal, já que o imposto incide apenas no momento do resgate, permitindo que o capital cresça sem tributação intermediária. No caso do PGBL, há ainda a possibilidade de deduzir até 12% da renda bruta anual na declaração completa do IR.\n\nO ponto de atenção está na qualidade do fundo onde o patrimônio está aplicado. Muitos planos comercializados por bancos concentram os recursos em fundos com taxas de administração elevadas e desempenho abaixo do CDI — o que pode comprometer boa parte dos benefícios fiscais. A vantagem da previdência só se concretiza com um fundo de qualidade, com taxa baixa e gestão eficiente.`;
 
   function renderConteudoInvestimentos() {
     const intro = introInvestimentos();
@@ -294,30 +277,12 @@ export function DiagResultado({ lead }: Props) {
         )}
 
         {dadosColeta.temPrevidencia && (
-          <div style={{
-            background: "#F5F3FF",
-            border: "1px solid #DDD6FE",
-            borderRadius: 12,
-            padding: "14px 16px",
-            marginBottom: 16,
-          }}>
-            <div style={{
-              fontSize: 12, fontWeight: 700,
-              color: "#7C3AED", marginBottom: 8,
-              display: "flex", alignItems: "center", gap: 6,
-            }}>
-              <i className="ti ti-shield-check" style={{ fontSize: 14 }} />
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 10 }}>
               Previdência Privada
             </div>
-            <p style={{
-              fontSize: 12, color: "#374151",
-              lineHeight: 1.75, margin: 0,
-              textAlign: "justify" as const,
-            }}>
-              {gerarTextoPrevidencia(
-                dadosColeta.tipoPrevidencia,
-                dadosColeta.saldoPrevidencia,
-              )}
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: 0, textAlign: "justify" as const, whiteSpace: "pre-line" as const }}>
+              {textoPrevidencia}
             </p>
           </div>
         )}
