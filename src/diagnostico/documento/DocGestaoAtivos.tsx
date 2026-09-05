@@ -23,7 +23,7 @@ export function DocGestaoAtivos({ lead }: Props) {
   const valorAlt    = Number(ativosMap.valorAlternativos)  || 0;
   const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
 
-  const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true);
+  const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true && a.classe !== "previdencia");
   const ativosBons    = ativosDoLead.filter(a => a.qualidade === "muito_atrativo" || a.qualidade === "atrativo");
   const ativosAtencao = ativosDoLead.filter(a => a.qualidade === "moderado");
   const ativosRuins   = ativosDoLead.filter(a => a.qualidade === "pouco_atrativo" || a.qualidade === "nada_atrativo");
@@ -330,6 +330,35 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
       node: (
         <p style={{ fontSize: 11, color: "#374151", lineHeight: 1.8, margin: 0, textAlign: "justify" as const }}>
           {gerarTextoDiversificacao()}
+        </p>
+      ),
+    });
+  }
+
+  if (lead.dadosColeta.temPrevidencia) {
+    const textoPrevidencia = `A previdência privada oferece dois benefícios relevantes para o planejamento de longo prazo: a sucessão patrimonial simplificada — os recursos são transferidos diretamente aos beneficiários sem necessidade de inventário — e o diferimento fiscal, já que o imposto incide apenas no momento do resgate, permitindo que o capital cresça sem tributação intermediária. No caso do PGBL, há ainda a possibilidade de deduzir até 12% da renda bruta anual na declaração completa do IR.\n\nO ponto de atenção está na qualidade do fundo onde o patrimônio está aplicado. Muitos planos comercializados por bancos concentram os recursos em fundos com taxas de administração elevadas e desempenho abaixo do CDI — o que pode comprometer boa parte dos benefícios fiscais. A vantagem da previdência só se concretiza com um fundo de qualidade, com taxa baixa e gestão eficiente.`;
+
+    blocos.push({
+      chave: "prev_label",
+      grudaNoProximo: true,
+      node: (
+        <div style={{
+          marginTop: 28, fontSize: 12, fontWeight: 700, color: "#374151",
+          marginBottom: 10, display: "flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-shield-check" style={{ fontSize: 14 }} />
+          Previdência Privada
+        </div>
+      ),
+    });
+    blocos.push({
+      chave: "prev_texto",
+      node: (
+        <p style={{
+          fontSize: 11, color: "#374151", lineHeight: 1.8,
+          margin: 0, textAlign: "justify" as const, whiteSpace: "pre-line" as const,
+        }}>
+          {textoPrevidencia}
         </p>
       ),
     });
