@@ -198,7 +198,7 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
   const taxaRetornoAnual = Number(params.taxaRetornoAnual) || 0;
   const anoNascimento   = Number(params.anoNascimento)   || (new Date().getFullYear() - idadeAtual);
   const mesNascimento   = Number(params.mesNascimento)   || 1;
-  const objetivos       = params.objetivos ?? [];
+  const objetivos       = (params.objetivos ?? []).filter(o => o.ativo !== false);
 
   if (idadeMeta <= idadeAtual || idadeMaxima <= idadeMeta) return EMPTY_RESULT;
 
@@ -402,11 +402,12 @@ function projetarComObjetivos(p: {
   const nMeses = Math.max(0, Math.round((p.idadeAlvo - p.idadeAtual) * 12));
   if (!isFinite(nMeses)) return p.patrimonioAtual;
   let patrimonio = p.patrimonioAtual;
+  const objetivosAtivos = p.objetivos.filter(o => o.ativo !== false);
   for (let m = 0; m < nMeses; m++) {
     mesIter++;
     if (mesIter > 12) { mesIter = 1; anoIter++; }
     patrimonio = patrimonio * (1 + p.taxaMensal) + p.aporteMensal;
-    for (const obj of p.objetivos) {
+    for (const obj of objetivosAtivos) {
       if (obj.ano === anoIter && obj.mes === mesIter) {
         const sinal = isEntradaObjetivo(obj) ? 1 : -1;
         patrimonio = Math.max(0, patrimonio + sinal * obj.valorBRL);
@@ -502,11 +503,12 @@ export function calcularIdadeComAporte(p: {
     let anoIter = hoje.getFullYear();
     let mesIter = hoje.getMonth() + 1;
     let pat = p.patrimonioAtual;
+    const objetivosAtivos = p.objetivos.filter(o => o.ativo !== false);
     for (let m = 1; m <= 600; m++) {
       mesIter++;
       if (mesIter > 12) { mesIter = 1; anoIter++; }
       pat = pat * (1 + r) + p.aporteMensal;
-      for (const obj of p.objetivos) {
+      for (const obj of objetivosAtivos) {
         if (obj.ano === anoIter && obj.mes === mesIter) {
           const sinal = isEntradaObjetivo(obj) ? 1 : -1;
           pat = Math.max(0, pat + sinal * obj.valorBRL);
