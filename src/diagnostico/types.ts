@@ -40,7 +40,7 @@ export interface DadosLFDiag {
   aporteMensal?: number;
   idadeAlvo?: number;
   rendaDesejada?: number;
-  objetivos?: unknown[];
+  objetivos?: import("@/types/objetivos").ObjetivoVida[];
   taxaTravada?: boolean;
   taxaTravadaValor?: number | null;
   ajustes?: {
