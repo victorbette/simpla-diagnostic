@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import { CARD_ORDER, CARD_META, HIERARQUIA_CLASSES } from "@/lib/carteira/types";
-import type { CardId } from "@/lib/carteira/types";
+import type { CardId, Ativo } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -11,12 +11,14 @@ interface AtivoRebal {
   card: CardId;
   nome: string;
   valorAtual: number;
+  fromFP?: boolean; // veio do Financial Planning
 }
 
 interface EstadoRebal {
   ativos: AtivoRebal[];
   aporte: number;
   ajustes: Partial<Record<CardId, number>>;
+  dataSnapshot?: string;
 }
 
 interface SubclasseCalc {
@@ -37,12 +39,29 @@ interface SubclasseCalc {
 
 const storageKey = (id: string) => `rebalanceamento_v1_${id}`;
 
-function loadState(clienteId: string): EstadoRebal {
+function ativosDeAtivos(src: Ativo[]): AtivoRebal[] {
+  return src.map(a => ({
+    id: a.id,
+    card: a.card,
+    nome: a.nome,
+    valorAtual: a.valorBRL,
+    fromFP: true,
+  }));
+}
+
+function loadState(clienteId: string, seed: AtivoRebal[]): EstadoRebal {
   try {
     const raw = localStorage.getItem(storageKey(clienteId));
-    if (raw) return JSON.parse(raw) as EstadoRebal;
+    if (raw) {
+      const parsed = JSON.parse(raw) as EstadoRebal;
+      // If no ativos saved yet, seed from Financial Planning
+      if ((!parsed.ativos || parsed.ativos.length === 0) && seed.length > 0) {
+        return { ...parsed, ativos: seed };
+      }
+      return parsed;
+    }
   } catch { /* ignore */ }
-  return { ativos: [], aporte: 0, ajustes: {} };
+  return { ativos: seed, aporte: 0, ajustes: {}, dataSnapshot: new Date().toISOString() };
 }
 
 function saveState(clienteId: string, s: EstadoRebal) {
@@ -65,13 +84,17 @@ function toBRLDisplay(n: number): string {
 interface Props {
   carteira: ResultadoCarteira;
   clienteId: string;
+  ativosIniciais?: Ativo[];
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function Rebalanceamento({ carteira, clienteId }: Props) {
+export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Props) {
   const [view, setView] = useState<"carteira" | "rebalancear">("carteira");
-  const [estado, setEstado] = useState<EstadoRebal>(() => loadState(clienteId));
+
+  const seed = useMemo(() => ativosDeAtivos(ativosIniciais), [ativosIniciais]);
+
+  const [estado, setEstado] = useState<EstadoRebal>(() => loadState(clienteId, seed));
 
   // add-form
   const [addCard, setAddCard] = useState<CardId>("resgate_longo");
@@ -107,8 +130,11 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
       const metaPct = Number(macroMeta[cardId]) || 0;
       const valorMeta = (metaPct / 100) * patrimonioTotal;
       const pctAtual = patrimonioTotal > 0 ? (valorAtual / patrimonioTotal) * 100 : 0;
-      const gap = valorMeta - valorAtual; // negative = above target
-      return { cardId, label: meta.label, cor: meta.cor, corBg: meta.corBg, icone: meta.icone, valorAtual, pctAtual, metaPct, valorMeta, gap, ativos: ativosNaClasse };
+      const gap = valorMeta - valorAtual;
+      return {
+        cardId, label: meta.label, cor: meta.cor, corBg: meta.corBg, icone: meta.icone,
+        valorAtual, pctAtual, metaPct, valorMeta, gap, ativos: ativosNaClasse,
+      };
     }).filter(s => s.valorAtual > 0 || s.metaPct > 0);
   }, [estado.ativos, macroMeta, patrimonioTotal]);
 
@@ -119,14 +145,12 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
     if (totalNecessidade <= 0) return {};
     const result: Partial<Record<CardId, number>> = {};
     if (estado.aporte >= totalNecessidade) {
-      // Fill all gaps; distribute remainder proportionally to meta %
       const sobra = estado.aporte - totalNecessidade;
       const totalMetaPct = necessidades.reduce((s, c) => s + c.metaPct, 0);
       necessidades.forEach(s => {
         result[s.cardId] = s.gap + (totalMetaPct > 0 ? (s.metaPct / totalMetaPct) * sobra : 0);
       });
     } else {
-      // Distribute proportionally to gap size
       necessidades.forEach(s => {
         result[s.cardId] = (s.gap / totalNecessidade) * estado.aporte;
       });
@@ -138,25 +162,42 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
   const sugestaoFinal: Partial<Record<CardId, number>> = temAjuste ? estado.ajustes : sugestaoAuto;
 
   const totalAjustado = Object.values(sugestaoFinal).reduce((s, v) => s + (v ?? 0), 0);
-  const deltaAjuste = estado.aporte - totalAjustado; // positive = still to distribute
+  const deltaAjuste = estado.aporte - totalAjustado;
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
   const addAtivo = useCallback(() => {
     const val = parseBRL(addValorStr);
     if (!addNome.trim() || val <= 0) return;
-    setEstado(p => ({ ...p, ativos: [...p.ativos, { id: gid(), card: addCard, nome: addNome.trim(), valorAtual: val }] }));
+    setEstado(p => ({
+      ...p,
+      ativos: [...p.ativos, { id: gid(), card: addCard, nome: addNome.trim(), valorAtual: val }],
+    }));
     setAddNome(""); setAddValorStr("");
   }, [addNome, addValorStr, addCard]);
 
-  const removeAtivo = (id: string) => setEstado(p => ({ ...p, ativos: p.ativos.filter(a => a.id !== id) }));
+  const removeAtivo = (id: string) =>
+    setEstado(p => ({ ...p, ativos: p.ativos.filter(a => a.id !== id) }));
 
-  const startEdit = (a: AtivoRebal) => { setEditId(a.id); setEditNome(a.nome); setEditValorStr(toBRLDisplay(a.valorAtual)); };
+  const startEdit = (a: AtivoRebal) => {
+    setEditId(a.id); setEditNome(a.nome); setEditValorStr(toBRLDisplay(a.valorAtual));
+  };
+
   const saveEdit = (id: string) => {
     const val = parseBRL(editValorStr);
-    if (!editNome.trim() || val <= 0) return;
-    setEstado(p => ({ ...p, ativos: p.ativos.map(a => a.id === id ? { ...a, nome: editNome.trim(), valorAtual: val } : a) }));
+    if (!editNome.trim() || val < 0) return;
+    setEstado(p => ({
+      ...p,
+      ativos: p.ativos.map(a => a.id === id ? { ...a, nome: editNome.trim(), valorAtual: val, fromFP: false } : a),
+    }));
     setEditId(null);
+  };
+
+  const restaurarFP = () => {
+    if (seed.length === 0) return;
+    if (!confirm("Restaurar os ativos e valores do Financial Planning? Os valores editados serão perdidos.")) return;
+    setEstado(p => ({ ...p, ativos: seed, ajustes: {}, dataSnapshot: new Date().toISOString() }));
+    setAjusteStr({});
   };
 
   const setAporte = (raw: string) => {
@@ -174,26 +215,31 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
 
   const resetAjustes = () => { setEstado(p => ({ ...p, ajustes: {} })); setAjusteStr({}); };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Styles ───────────────────────────────────────────────────────────────
 
   const inputStyle: React.CSSProperties = {
     border: "1px solid #D1D5DB", borderRadius: 6, padding: "6px 10px",
     fontSize: 12, color: "#111827", outline: "none", background: "white",
   };
-
-  const btnStyle = (color: string, bg: string): React.CSSProperties => ({
+  const btn = (color: string, bg: string, extra?: React.CSSProperties): React.CSSProperties => ({
     border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 11,
-    fontWeight: 600, cursor: "pointer", color, background: bg,
+    fontWeight: 600, cursor: "pointer", color, background: bg, ...extra,
   });
+
+  const dataSnap = estado.dataSnapshot
+    ? new Date(estado.dataSnapshot).toLocaleDateString("pt-BR")
+    : null;
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
-      {/* Sub-tab bar */}
-      <div style={{ display: "flex", borderBottom: "2px solid #E5E7EB" }}>
+      {/* Tab bar */}
+      <div style={{ display: "flex", borderBottom: "2px solid #E5E7EB", alignItems: "center" }}>
         {(["carteira", "rebalancear"] as const).map(v => (
           <button key={v} onClick={() => setView(v)} style={{
-            padding: "8px 20px", fontSize: 12, fontWeight: 500, border: "none",
+            padding: "10px 24px", fontSize: 13, fontWeight: 500, border: "none",
             cursor: "pointer", background: "transparent",
             color: view === v ? "#1E3A8A" : "#6B7280",
             borderBottom: `2px solid ${view === v ? "#1E3A8A" : "transparent"}`,
@@ -203,8 +249,9 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
           </button>
         ))}
         {patrimonioAtual > 0 && (
-          <span style={{ marginLeft: "auto", fontSize: 11, color: "#6B7280", display: "flex", alignItems: "center", paddingRight: 4 }}>
-            Patrimônio lançado: <strong style={{ marginLeft: 4, color: "#111827" }}>{formatBRL(patrimonioAtual)}</strong>
+          <span style={{ marginLeft: "auto", fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 4 }}>
+            Patrimônio: <strong style={{ color: "#111827" }}>{formatBRL(patrimonioAtual)}</strong>
+            {dataSnap && <span style={{ marginLeft: 6 }}>· atualizado em {dataSnap}</span>}
           </span>
         )}
       </div>
@@ -213,16 +260,34 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
       {view === "carteira" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
+          {/* Actions bar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: 0 }}>Posições Atuais da Carteira</p>
+              <p style={{ fontSize: 11, color: "#9CA3AF", margin: "2px 0 0" }}>
+                {seed.length > 0
+                  ? "Pré-carregado do Financial Planning — atualize os valores de mercado conforme necessário"
+                  : "Lance manualmente os ativos da carteira atual do cliente"}
+              </p>
+            </div>
+            {seed.length > 0 && (
+              <button onClick={restaurarFP} style={btn("#B45309", "#FEF3C7")}>
+                <i className="ti ti-refresh" style={{ marginRight: 4 }} />
+                Restaurar do Financial Planning
+              </button>
+            )}
+          </div>
+
           {/* Add form */}
           <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 14px" }}>
-              Adicionar Ativo
+            <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", margin: "0 0 12px" }}>
+              + Adicionar Ativo
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr auto", gap: 10, alignItems: "flex-end" }}>
               <div>
                 <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Subclasse</div>
                 <select value={addCard} onChange={e => setAddCard(e.target.value as CardId)}
-                  style={{ ...inputStyle, width: "100%", appearance: "none" }}>
+                  style={{ ...inputStyle, width: "100%", appearance: "none" as const }}>
                   {CARD_ORDER.map(c => (
                     <option key={c} value={c}>{CARD_META[c].label}</option>
                   ))}
@@ -234,22 +299,20 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                   value={addNome} onChange={e => setAddNome(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addAtivo()}
                   placeholder="Ex: Tesouro IPCA+ 2029"
-                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box" as const }}
                 />
               </div>
               <div>
                 <div style={{ fontSize: 10, color: "#6B7280", fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.04em" }}>Valor Atual (R$)</div>
                 <input
-                  value={addValorStr}
-                  onChange={e => setAddValorStr(e.target.value)}
+                  value={addValorStr} onChange={e => setAddValorStr(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addAtivo()}
-                  placeholder="0,00"
-                  inputMode="decimal"
-                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box", textAlign: "right" }}
+                  placeholder="0,00" inputMode="decimal"
+                  style={{ ...inputStyle, width: "100%", boxSizing: "border-box" as const, textAlign: "right" as const }}
                 />
               </div>
-              <button onClick={addAtivo} style={{ ...btnStyle("white", "#1E40AF"), padding: "7px 18px", alignSelf: "flex-end" }}>
-                + Adicionar
+              <button onClick={addAtivo} style={btn("white", "#1E40AF", { padding: "7px 18px", alignSelf: "flex-end" as const })}>
+                Adicionar
               </button>
             </div>
           </div>
@@ -258,7 +321,7 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
           {estado.ativos.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 0", color: "#9CA3AF", fontSize: 13 }}>
               <i className="ti ti-wallet-off" style={{ fontSize: 32, display: "block", marginBottom: 8 }} />
-              Nenhum ativo lançado. Adicione os ativos da carteira atual do cliente.
+              Nenhum ativo lançado.
             </div>
           ) : (
             <>
@@ -270,64 +333,108 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                 const grupoTotal = subsComAtivos.reduce((sum, s) =>
                   sum + estado.ativos.filter(a => a.card === s.cardId).reduce((ss, a) => ss + a.valorAtual, 0), 0
                 );
+                const macroPct = patrimonioAtual > 0 ? (grupoTotal / patrimonioAtual) * 100 : 0;
+                const metaPct = grupo.subclasses.reduce((s, sub) => s + (Number(macroMeta[sub.cardId]) || 0), 0);
+
                 return (
                   <div key={grupo.id} style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
                     {/* Group header */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: grupo.corBg, borderBottom: "0.5px solid #E5E7EB" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: 16, padding: "10px 16px", background: grupo.corBg, borderBottom: "0.5px solid #E5E7EB" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <i className={`ti ${grupo.icone}`} style={{ fontSize: 14, color: grupo.cor }} />
                         <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor }}>{grupo.label}</span>
                       </div>
+                      <span style={{ fontSize: 11, color: grupo.cor, opacity: 0.8 }}>
+                        {macroPct.toFixed(1)}% atual · {metaPct.toFixed(1)}% meta
+                      </span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: grupo.cor }}>{formatBRL(grupoTotal)}</span>
+                    </div>
+
+                    {/* Column headers */}
+                    <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 130px 80px", gap: 8, padding: "5px 16px 5px 32px", background: "#F8FAFC", borderBottom: "0.5px solid #F3F4F6" }}>
+                      {["Ativo / Subclasse", "Valor Original (FP)", "Valor Atual de Mercado", ""].map((h, i) => (
+                        <span key={i} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.04em", textAlign: i > 0 ? "right" as const : "left" as const }}>{h}</span>
+                      ))}
                     </div>
 
                     {subsComAtivos.map(sub => {
                       const ativosNaSub = estado.ativos.filter(a => a.card === sub.cardId);
                       const subTotal = ativosNaSub.reduce((s, a) => s + a.valorAtual, 0);
+                      const subPct = patrimonioAtual > 0 ? (subTotal / patrimonioAtual) * 100 : 0;
+                      const subMetaPct = Number(macroMeta[sub.cardId]) || 0;
+
                       return (
                         <div key={sub.cardId}>
-                          {/* Subclass header */}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 16px 7px 32px", background: "#F8FAFC", borderBottom: "0.5px solid #F3F4F6" }}>
+                          {/* Subclass row */}
+                          <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 130px 80px", gap: 8, padding: "7px 16px 7px 32px", background: "#F8FAFC", borderBottom: "0.5px solid #F3F4F6", alignItems: "center" }}>
                             <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{sub.label}</span>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{formatBRL(subTotal)}</span>
+                            <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>—</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "#374151", textAlign: "right" as const }}>{formatBRL(subTotal)}</span>
+                            <span style={{ fontSize: 10, color: subMetaPct > 0 ? (Math.abs(subPct - subMetaPct) < 1 ? "#15803D" : subPct < subMetaPct ? "#B91C1C" : "#B45309") : "#9CA3AF", textAlign: "right" as const }}>
+                              {subPct.toFixed(1)}% / {subMetaPct.toFixed(1)}%
+                            </span>
                           </div>
 
                           {/* Asset rows */}
-                          {ativosNaSub.map(ativo => (
-                            <div key={ativo.id} style={{ borderBottom: "0.5px solid #F9FAFB" }}>
-                              {editId === ativo.id ? (
-                                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, padding: "8px 16px 8px 48px", alignItems: "center" }}>
-                                  <input value={editNome} onChange={e => setEditNome(e.target.value)}
-                                    autoFocus style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }} />
-                                  <input value={editValorStr} onChange={e => setEditValorStr(e.target.value)}
-                                    inputMode="decimal" style={{ ...inputStyle, textAlign: "right", boxSizing: "border-box" }} />
-                                  <div style={{ display: "flex", gap: 6 }}>
-                                    <button onClick={() => saveEdit(ativo.id)} style={btnStyle("white", "#15803D")}>✓</button>
-                                    <button onClick={() => setEditId(null)} style={btnStyle("#6B7280", "#F3F4F6")}>✕</button>
+                          {ativosNaSub.map(ativo => {
+                            const fpOriginal = ativosIniciais.find(a => a.id === ativo.id);
+                            const valorOriginal = fpOriginal?.valorBRL;
+                            const mudou = valorOriginal !== undefined && Math.abs(ativo.valorAtual - valorOriginal) > 0.5;
+
+                            return (
+                              <div key={ativo.id} style={{ borderBottom: "0.5px solid #F9FAFB" }}>
+                                {editId === ativo.id ? (
+                                  <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 130px 80px", gap: 8, padding: "8px 16px 8px 48px", alignItems: "center" }}>
+                                    <input value={editNome} onChange={e => setEditNome(e.target.value)}
+                                      autoFocus style={{ ...inputStyle, boxSizing: "border-box" as const }} />
+                                    <span />
+                                    <input value={editValorStr} onChange={e => setEditValorStr(e.target.value)}
+                                      inputMode="decimal" onKeyDown={e => e.key === "Enter" && saveEdit(ativo.id)}
+                                      style={{ ...inputStyle, textAlign: "right" as const, boxSizing: "border-box" as const }} />
+                                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                                      <button onClick={() => saveEdit(ativo.id)} style={btn("white", "#15803D", { padding: "4px 10px" })}>✓</button>
+                                      <button onClick={() => setEditId(null)} style={btn("#6B7280", "#F3F4F6", { padding: "4px 8px" })}>✕</button>
+                                    </div>
                                   </div>
-                                </div>
-                              ) : (
-                                <div
-                                  style={{ display: "grid", gridTemplateColumns: "2fr 1fr auto", gap: 8, padding: "8px 16px 8px 48px", alignItems: "center" }}
-                                  onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
-                                  onMouseLeave={e => (e.currentTarget.style.background = "white")}
-                                >
-                                  <span style={{ fontSize: 12, color: "#374151" }}>{ativo.nome}</span>
-                                  <span style={{ fontSize: 12, color: "#374151", textAlign: "right" }}>{formatBRL(ativo.valorAtual)}</span>
-                                  <div style={{ display: "flex", gap: 4 }}>
-                                    <button onClick={() => startEdit(ativo)} title="Editar"
-                                      style={{ border: "none", background: "none", cursor: "pointer", color: "#6B7280", fontSize: 14, padding: "2px 4px" }}>
-                                      <i className="ti ti-pencil" />
-                                    </button>
-                                    <button onClick={() => removeAtivo(ativo.id)} title="Remover"
-                                      style={{ border: "none", background: "none", cursor: "pointer", color: "#B91C1C", fontSize: 14, padding: "2px 4px" }}>
-                                      <i className="ti ti-trash" />
-                                    </button>
+                                ) : (
+                                  <div
+                                    style={{ display: "grid", gridTemplateColumns: "2fr 100px 130px 80px", gap: 8, padding: "7px 16px 7px 48px", alignItems: "center" }}
+                                    onMouseEnter={e => (e.currentTarget.style.background = "#FAFAFA")}
+                                    onMouseLeave={e => (e.currentTarget.style.background = "")}
+                                  >
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                      <span style={{ color: "#D1D5DB", fontSize: 10 }}>↳</span>
+                                      <span style={{ fontSize: 12, color: "#374151" }}>{ativo.nome}</span>
+                                      {ativo.fromFP && !mudou && (
+                                        <span style={{ fontSize: 9, color: "#9CA3AF", background: "#F3F4F6", padding: "1px 5px", borderRadius: 4 }}>FP</span>
+                                      )}
+                                    </div>
+                                    <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>
+                                      {valorOriginal !== undefined ? formatBRL(valorOriginal) : "—"}
+                                    </span>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+                                      {mudou && (
+                                        <span style={{ fontSize: 9, color: "#B45309", background: "#FEF3C7", padding: "1px 5px", borderRadius: 4 }}>atualizado</span>
+                                      )}
+                                      <span style={{ fontSize: 12, fontWeight: mudou ? 600 : 400, color: mudou ? "#111827" : "#374151" }}>
+                                        {formatBRL(ativo.valorAtual)}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                                      <button onClick={() => startEdit(ativo)} title="Editar valor atual"
+                                        style={{ border: "none", background: "none", cursor: "pointer", color: "#6B7280", fontSize: 14, padding: "2px 4px" }}>
+                                        <i className="ti ti-pencil" />
+                                      </button>
+                                      <button onClick={() => removeAtivo(ativo.id)} title="Remover"
+                                        style={{ border: "none", background: "none", cursor: "pointer", color: "#B91C1C", fontSize: 14, padding: "2px 4px" }}>
+                                        <i className="ti ti-trash" />
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     })}
@@ -375,7 +482,7 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                       onChange={e => setAporte(e.target.value)}
                       onBlur={() => { if (estado.aporte > 0) setAporteStr(toBRLDisplay(estado.aporte)); }}
                       placeholder="0,00"
-                      style={{ border: "none", background: "transparent", outline: "none", fontSize: 15, fontWeight: 600, color: "#111827", width: 150, textAlign: "right" }}
+                      style={{ border: "none", background: "transparent", outline: "none", fontSize: 15, fontWeight: 600, color: "#111827", width: 150, textAlign: "right" as const }}
                     />
                   </div>
                 </div>
@@ -386,13 +493,12 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                 <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", gap: 8 }}>
                   <i className="ti ti-arrows-exchange" style={{ fontSize: 16, color: "#2563EB" }} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Carteira Atual vs Meta</span>
-                  <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>por classe e subclasse</span>
+                  <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>por classe, subclasse e ativo</span>
                 </div>
 
-                {/* Column headers */}
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 90px 110px 110px 110px", gap: 4, padding: "6px 16px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB" }}>
-                  {["Classe / Ativo", "% Atual", "% Meta", "R$ Atual", "R$ Meta", "Desvio"].map(h => (
-                    <span key={h} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", textAlign: h !== "Classe / Ativo" ? "right" : "left" }}>{h}</span>
+                  {["Classe / Ativo", "% Atual", "% Meta", "R$ Atual", "R$ Meta", "Desvio"].map((h, i) => (
+                    <span key={h} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.04em", textAlign: i > 0 ? "right" as const : "left" as const }}>{h}</span>
                   ))}
                 </div>
 
@@ -400,29 +506,27 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                   const subs = grupo.subclasses.map(s => porSubclasse.find(p => p.cardId === s.cardId)).filter(Boolean) as SubclasseCalc[];
                   if (subs.length === 0) return null;
                   const macroAtual = subs.reduce((s, c) => s + c.valorAtual, 0);
-                  const macroMeta_ = subs.reduce((s, c) => s + c.valorMeta, 0);
+                  const macroMetaR = subs.reduce((s, c) => s + c.valorMeta, 0);
                   const macroPctAtual = patrimonioTotal > 0 ? (macroAtual / patrimonioTotal) * 100 : 0;
                   const macroPctMeta = subs.reduce((s, c) => s + c.metaPct, 0);
-                  const macroDesvio = macroAtual - macroMeta_;
+                  const macroDesvio = macroAtual - macroMetaR;
 
                   return (
                     <div key={grupo.id}>
-                      {/* Macro row */}
                       <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 90px 110px 110px 110px", gap: 4, padding: "9px 16px", background: grupo.corBg, borderBottom: "0.5px solid #E5E7EB" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <i className={`ti ${grupo.icone}`} style={{ fontSize: 13, color: grupo.cor }} />
                           <span style={{ fontSize: 12, fontWeight: 700, color: grupo.cor }}>{grupo.label}</span>
                         </div>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" }}>{macroPctAtual.toFixed(1)}%</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" }}>{macroPctMeta.toFixed(1)}%</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" }}>{formatBRL(macroAtual)}</span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" }}>{formatBRL(macroMeta_)}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, textAlign: "right", color: Math.abs(macroDesvio) < 100 ? "#9CA3AF" : macroDesvio < 0 ? "#B91C1C" : "#B45309" }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" as const }}>{macroPctAtual.toFixed(1)}%</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" as const }}>{macroPctMeta.toFixed(1)}%</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" as const }}>{formatBRL(macroAtual)}</span>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: grupo.cor, textAlign: "right" as const }}>{formatBRL(macroMetaR)}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, textAlign: "right" as const, color: Math.abs(macroDesvio) < 100 ? "#9CA3AF" : macroDesvio < 0 ? "#B91C1C" : "#B45309" }}>
                           {Math.abs(macroDesvio) < 100 ? "—" : `${macroDesvio > 0 ? "+" : "−"}${formatBRL(Math.abs(macroDesvio))}`}
                         </span>
                       </div>
 
-                      {/* Subclass rows */}
                       {subs.map(sub => {
                         const isAbaixo = sub.gap > 100;
                         const isAcima = sub.gap < -100;
@@ -430,11 +534,11 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                           <div key={sub.cardId}>
                             <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 90px 110px 110px 110px", gap: 4, padding: "8px 16px 8px 32px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center" }}>
                               <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{sub.label}</span>
-                              <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{sub.pctAtual.toFixed(1)}%</span>
-                              <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{sub.metaPct.toFixed(1)}%</span>
-                              <span style={{ fontSize: 12, color: "#374151", textAlign: "right" }}>{formatBRL(sub.valorAtual)}</span>
-                              <span style={{ fontSize: 12, color: "#374151", textAlign: "right" }}>{formatBRL(sub.valorMeta)}</span>
-                              <div style={{ textAlign: "right" }}>
+                              <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{sub.pctAtual.toFixed(1)}%</span>
+                              <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{sub.metaPct.toFixed(1)}%</span>
+                              <span style={{ fontSize: 12, color: "#374151", textAlign: "right" as const }}>{formatBRL(sub.valorAtual)}</span>
+                              <span style={{ fontSize: 12, color: "#374151", textAlign: "right" as const }}>{formatBRL(sub.valorMeta)}</span>
+                              <div style={{ textAlign: "right" as const }}>
                                 {!isAbaixo && !isAcima
                                   ? <span style={{ fontSize: 10, color: "#15803D", background: "#DCFCE7", padding: "2px 7px", borderRadius: 99, fontWeight: 600 }}>Na meta</span>
                                   : <span style={{ fontSize: 12, fontWeight: 600, color: isAbaixo ? "#B91C1C" : "#B45309" }}>
@@ -444,20 +548,19 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                               </div>
                             </div>
 
-                            {/* Asset rows (indented) */}
                             {sub.ativos.map(ativo => (
                               <div key={ativo.id} style={{ display: "grid", gridTemplateColumns: "2fr 90px 90px 110px 110px 110px", gap: 4, padding: "5px 16px 5px 52px", borderBottom: "0.5px solid #F9FAFB", background: "#FAFAFA" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                   <span style={{ color: "#D1D5DB", fontSize: 10 }}>↳</span>
                                   <span style={{ fontSize: 11, color: "#6B7280" }}>{ativo.nome}</span>
                                 </div>
-                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" }}>
+                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>
                                   {patrimonioTotal > 0 ? ((ativo.valorAtual / patrimonioTotal) * 100).toFixed(1) + "%" : "—"}
                                 </span>
-                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" }}>—</span>
-                                <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" }}>{formatBRL(ativo.valorAtual)}</span>
-                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" }}>—</span>
-                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" }}>—</span>
+                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>—</span>
+                                <span style={{ fontSize: 11, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(ativo.valorAtual)}</span>
+                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>—</span>
+                                <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>—</span>
                               </div>
                             ))}
                           </div>
@@ -467,16 +570,15 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                   );
                 })}
 
-                {/* Total footer */}
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 90px 110px 110px 110px", gap: 4, padding: "10px 16px", background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB" }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>
                     {patrimonioTotal > 0 ? ((patrimonioAtual / patrimonioTotal) * 100).toFixed(1) + "%" : "100%"}
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>100%</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>{formatBRL(patrimonioAtual)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>{formatBRL(patrimonioTotal)}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" }}>—</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>100%</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(patrimonioAtual)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(patrimonioTotal)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textAlign: "right" as const }}>—</span>
                 </div>
               </div>
 
@@ -489,21 +591,20 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                       <div>
                         <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Sugestão de Aporte por Subclasse</span>
                         <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 8 }}>
-                          {temAjuste ? "ajuste manual" : "automático — prioriza os mais distantes da meta"}
+                          {temAjuste ? "ajuste manual ativo" : "automático — prioriza os mais distantes da meta"}
                         </span>
                       </div>
                     </div>
                     {temAjuste && (
-                      <button onClick={resetAjustes} style={{ ...btnStyle("#B91C1C", "#FEE2E2"), fontSize: 10 }}>
+                      <button onClick={resetAjustes} style={btn("#B91C1C", "#FEE2E2", { fontSize: 10 })}>
                         Resetar para automático
                       </button>
                     )}
                   </div>
 
-                  {/* Column headers */}
                   <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "6px 16px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB" }}>
-                    {["Subclasse", "Atual R$", "Meta R$", "Aportar (R$)", "Saldo pós-aporte"].map(h => (
-                      <span key={h} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.04em", textAlign: h !== "Subclasse" ? "right" : "left" }}>{h}</span>
+                    {["Subclasse", "Atual R$", "Meta R$", "Aportar (R$)", "Saldo pós-aporte"].map((h, i) => (
+                      <span key={h} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.04em", textAlign: i > 0 ? "right" as const : "left" as const }}>{h}</span>
                     ))}
                   </div>
 
@@ -519,31 +620,27 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                           <div style={{ width: 8, height: 8, borderRadius: "50%", background: sub.cor, flexShrink: 0 }} />
                           <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{sub.label}</span>
                         </div>
-                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(sub.valorAtual)}</span>
-                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(sub.valorMeta)}</span>
+                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorAtual)}</span>
+                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorMeta)}</span>
 
-                        {/* Editable aporte input */}
-                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                            <span style={{ fontSize: 11, color: "#6B7280", marginRight: 3 }}>R$</span>
-                            <input
-                              type="text" inputMode="decimal"
-                              value={ajusteStr[sub.cardId] ?? (aporteCardSugerido > 0 ? toBRLDisplay(aporteCardSugerido) : "")}
-                              onChange={e => setAjuste(sub.cardId, e.target.value)}
-                              onFocus={e => { if (!temAjuste) { setAjusteStr(p => ({ ...p, [sub.cardId]: toBRLDisplay(aporteCardSugerido) })); } e.target.select(); }}
-                              placeholder="0,00"
-                              style={{
-                                border: "1px solid #BFDBFE", borderRadius: 6, padding: "5px 8px",
-                                fontSize: 12, fontWeight: 600, color: "#15803D",
-                                background: aporteCardSugerido > 0 ? "#F0FDF4" : "#FAFAFA",
-                                outline: "none", width: 90, textAlign: "right",
-                              }}
-                            />
-                          </div>
+                        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontSize: 11, color: "#6B7280" }}>R$</span>
+                          <input
+                            type="text" inputMode="decimal"
+                            value={ajusteStr[sub.cardId] ?? (aporteCardSugerido > 0.5 ? toBRLDisplay(aporteCardSugerido) : "")}
+                            onChange={e => setAjuste(sub.cardId, e.target.value)}
+                            onFocus={e => { if (!temAjuste) setAjusteStr(p => ({ ...p, [sub.cardId]: toBRLDisplay(aporteCardSugerido) })); e.target.select(); }}
+                            placeholder="0,00"
+                            style={{
+                              border: "1px solid #BFDBFE", borderRadius: 6, padding: "5px 8px",
+                              fontSize: 12, fontWeight: 600, color: "#15803D",
+                              background: aporteCardSugerido > 0.5 ? "#F0FDF4" : "#FAFAFA",
+                              outline: "none", width: 90, textAlign: "right" as const,
+                            }}
+                          />
                         </div>
 
-                        {/* Saldo pós-aporte */}
-                        <div style={{ textAlign: "right" }}>
+                        <div style={{ textAlign: "right" as const }}>
                           <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{pctPos.toFixed(1)}%</div>
                           <div style={{ fontSize: 10, color: Math.abs(desvioPos) < 0.5 ? "#15803D" : desvioPos < 0 ? "#B91C1C" : "#B45309" }}>
                             {Math.abs(desvioPos) < 0.5 ? "✓ Na meta" : `${desvioPos > 0 ? "+" : ""}${desvioPos.toFixed(1)}% vs meta`}
@@ -553,12 +650,11 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                     );
                   })}
 
-                  {/* Total row */}
                   <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "10px 16px", background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonioAtual)}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" }}>{formatBRL(patrimonioTotal)}</span>
-                    <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" as const }}>{formatBRL(patrimonioAtual)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" as const }}>{formatBRL(patrimonioTotal)}</span>
+                    <div style={{ textAlign: "right" as const }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: Math.abs(deltaAjuste) < 1 ? "#15803D" : "#B91C1C" }}>
                         {formatBRL(totalAjustado)}
                       </span>
@@ -568,7 +664,7 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                         </div>
                       )}
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>{formatBRL(patrimonioTotal)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>{formatBRL(patrimonioTotal)}</span>
                   </div>
                 </div>
               )}
@@ -579,13 +675,11 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                   <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #E5E7EB", display: "flex", alignItems: "center", gap: 8 }}>
                     <i className="ti ti-target" style={{ fontSize: 16, color: "#2563EB" }} />
                     <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Carteira Meta</span>
-                    <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>ativos do Financial Planning — referência para alocação dentro de cada subclasse</span>
+                    <span style={{ fontSize: 11, color: "#9CA3AF", marginLeft: 4 }}>referência de ativos por subclasse — do Financial Planning</span>
                   </div>
 
                   {HIERARQUIA_CLASSES.map(grupo => {
-                    const ativosGrupo = ativosRecomendados.filter(a =>
-                      grupo.subclasses.some(s => s.cardId === a.card)
-                    );
+                    const ativosGrupo = ativosRecomendados.filter(a => grupo.subclasses.some(s => s.cardId === a.card));
                     if (ativosGrupo.length === 0) return null;
                     const grupoTotal = ativosGrupo.reduce((s, a) => s + a.valorBRL, 0);
                     return (
@@ -607,19 +701,18 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                                 <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{sub.label}</span>
                                 <span style={{ fontSize: 11, fontWeight: 600, color: "#374151" }}>{formatBRL(subTotal)}</span>
                               </div>
-                              {ativosSub.map(ativo => {
-                                const pct = grupoTotal > 0 ? (ativo.valorBRL / grupoTotal) * 100 : 0;
-                                return (
-                                  <div key={ativo.id} style={{ display: "grid", gridTemplateColumns: "2fr 80px 100px", gap: 8, padding: "6px 16px 6px 48px", borderBottom: "0.5px solid #F9FAFB" }}>
-                                    <div>
-                                      <div style={{ fontSize: 12, color: "#374151" }}>{ativo.nome}</div>
-                                      {ativo.segmento && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{ativo.segmento}</div>}
-                                    </div>
-                                    <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" }}>{pct.toFixed(1)}% sub</span>
-                                    <span style={{ fontSize: 12, fontWeight: 500, color: "#374151", textAlign: "right" }}>{formatBRL(ativo.valorBRL)}</span>
+                              {ativosSub.map(ativo => (
+                                <div key={ativo.id} style={{ display: "grid", gridTemplateColumns: "2fr 80px 100px", gap: 8, padding: "6px 16px 6px 48px", borderBottom: "0.5px solid #F9FAFB" }}>
+                                  <div>
+                                    <div style={{ fontSize: 12, color: "#374151" }}>{ativo.nome}</div>
+                                    {ativo.segmento && <div style={{ fontSize: 10, color: "#9CA3AF" }}>{ativo.segmento}</div>}
                                   </div>
-                                );
-                              })}
+                                  <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>
+                                    {grupoTotal > 0 ? ((ativo.valorBRL / grupoTotal) * 100).toFixed(1) + "% sub" : "—"}
+                                  </span>
+                                  <span style={{ fontSize: 12, fontWeight: 500, color: "#374151", textAlign: "right" as const }}>{formatBRL(ativo.valorBRL)}</span>
+                                </div>
+                              ))}
                             </div>
                           );
                         })}
@@ -629,7 +722,7 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                 </div>
               )}
 
-              {/* Bar comparison chart */}
+              {/* Bar chart */}
               <div style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: 20 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", margin: "0 0 16px" }}>Alocação Visual: Atual vs Meta</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -639,8 +732,7 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: sub.cor, flexShrink: 0 }} />
                         <span style={{ fontSize: 12, color: "#374151", flex: 1 }}>{sub.label}</span>
                         <span style={{ fontSize: 11, color: "#6B7280" }}>
-                          <strong>{sub.pctAtual.toFixed(1)}%</strong> atual
-                          {" → "}
+                          <strong>{sub.pctAtual.toFixed(1)}%</strong> atual{" → "}
                           <strong style={{ color: sub.cor }}>{sub.metaPct.toFixed(1)}%</strong> meta
                           {estado.aporte > 0 && (() => {
                             const ap = sugestaoFinal[sub.cardId] ?? 0;
@@ -650,32 +742,27 @@ export function Rebalanceamento({ carteira, clienteId }: Props) {
                         </span>
                       </div>
                       <div style={{ height: 8, background: "#F3F4F6", borderRadius: 99, overflow: "hidden", position: "relative" }}>
-                        {/* Meta marker */}
-                        <div style={{ position: "absolute", left: `${Math.min(sub.metaPct, 100)}%`, top: 0, height: "100%", width: 2, background: sub.cor, opacity: 0.5, transform: "translateX(-50%)", zIndex: 2 }} />
-                        {/* Actual bar */}
+                        <div style={{ position: "absolute", left: `${Math.min(sub.metaPct, 100)}%`, top: 0, height: "100%", width: 2, background: sub.cor, opacity: 0.4, transform: "translateX(-50%)", zIndex: 2 }} />
                         <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${Math.min(sub.pctAtual, 100)}%`, background: sub.cor, borderRadius: 99, opacity: 0.7 }} />
-                        {/* Post-aporte bar */}
                         {estado.aporte > 0 && (() => {
                           const ap = sugestaoFinal[sub.cardId] ?? 0;
                           const pctPos = patrimonioTotal > 0 ? ((sub.valorAtual + ap) / patrimonioTotal) * 100 : 0;
                           return pctPos > sub.pctAtual ? (
-                            <div style={{ position: "absolute", left: `${sub.pctAtual}%`, top: 0, height: "100%", width: `${Math.min(pctPos - sub.pctAtual, 100 - sub.pctAtual)}%`, background: "#15803D", borderRadius: 99, opacity: 0.5 }} />
+                            <div style={{ position: "absolute", left: `${sub.pctAtual}%`, top: 0, height: "100%", width: `${Math.min(pctPos - sub.pctAtual, 100 - sub.pctAtual)}%`, background: "#15803D", opacity: 0.5 }} />
                           ) : null;
                         })()}
                       </div>
                     </div>
                   ))}
                   <div style={{ display: "flex", gap: 16, marginTop: 4 }}>
+                    {[["#6B7280", 0.7, "Atual"], ["#15803D", 0.5, "Aporte sugerido"]].map(([c, o, l]) => (
+                      <div key={l as string} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <div style={{ width: 16, height: 6, borderRadius: 3, background: c as string, opacity: o as number }} />
+                        <span style={{ fontSize: 10, color: "#9CA3AF" }}>{l as string}</span>
+                      </div>
+                    ))}
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 16, height: 6, borderRadius: 3, background: "#6B7280", opacity: 0.7 }} />
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>Atual</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 16, height: 6, borderRadius: 3, background: "#15803D", opacity: 0.5 }} />
-                      <span style={{ fontSize: 10, color: "#9CA3AF" }}>Aporte sugerido</span>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: 3, height: 10, background: "#6B7280", opacity: 0.5 }} />
+                      <div style={{ width: 2, height: 10, background: "#6B7280", opacity: 0.4 }} />
                       <span style={{ fontSize: 10, color: "#9CA3AF" }}>Linha meta</span>
                     </div>
                   </div>
