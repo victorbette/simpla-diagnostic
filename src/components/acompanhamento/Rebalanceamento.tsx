@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import { CARD_ORDER, CARD_META, HIERARQUIA_CLASSES } from "@/lib/carteira/types";
 import type { CardId, Ativo } from "@/lib/carteira/types";
@@ -112,10 +112,38 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
   // ajuste display strings (manual overrides)
   const [ajusteStr, setAjusteStr] = useState<Partial<Record<CardId, string>>>({});
 
-  const macroMeta = carteira.macroMeta ?? {};
+  // Fallback: dados antigos do FP podem ter salvo em alocacaoMeta mas não em macroMeta
+  const macroMeta = (carteira.macroMeta && Object.keys(carteira.macroMeta).length > 0)
+    ? carteira.macroMeta
+    : (carteira.alocacaoMeta ?? {});
   const ativosRecomendados = carteira.ativosRecomendados ?? [];
 
   useEffect(() => { saveState(clienteId, estado); }, [estado, clienteId]);
+
+  // Re-popula ativos do FP quando chegam async (Supabase carrega depois do mount)
+  useEffect(() => {
+    if (seed.length === 0) return;
+    setEstado(prev => {
+      if (prev.ativos.length > 0) return prev; // não sobrescreve dados já preenchidos
+      const next = { ...prev, ativos: seed, dataSnapshot: new Date().toISOString() };
+      saveState(clienteId, next);
+      return next;
+    });
+  }, [seed, clienteId]);
+
+  // Reset completo quando clienteId muda (troca de cliente sem remount)
+  const prevClienteIdRef = useRef<string>(clienteId);
+  useEffect(() => {
+    if (prevClienteIdRef.current === clienteId) return;
+    prevClienteIdRef.current = clienteId;
+    const freshState = loadState(clienteId, seed);
+    setEstado(freshState);
+    setAporteStr(toBRLDisplay(freshState.aporte));
+    setAjusteStr({});
+    setEditId(null);
+    setView("carteira");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clienteId]);
 
   // ─── Computed ──────────────────────────────────────────────────────────────
 

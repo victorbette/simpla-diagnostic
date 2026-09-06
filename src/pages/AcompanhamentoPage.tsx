@@ -76,6 +76,8 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
 
   // Flag to avoid re-loading from Supabase after we've already done it
   const supabaseCarregadoRef = useRef(false);
+  // Track whether estrategia is still loading from Supabase
+  const [estrategiaCarregando, setEstrategiaCarregando] = useState(true);
 
   useEffect(() => {
     carregarPlano(clienteId);
@@ -83,18 +85,19 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
 
   // Load resultados from Supabase once plan.id is available — takes priority over localStorage
   useEffect(() => {
-    if (plan?.id && !supabaseCarregadoRef.current) {
-      supabaseCarregadoRef.current = true;
-      loadEstrategia(plan.id)
-        .then((estrategia) => {
-          if (estrategia && Object.keys(estrategia).length > 0) {
-            const loaded = estrategia as unknown as ResultadosEstrategia;
-            setResultados(loaded);
-            try { localStorage.setItem(resultadosKey, JSON.stringify(loaded)); } catch { /**/ }
-          }
-        })
-        .catch(console.error);
-    }
+    if (!plan?.id) return;
+    if (supabaseCarregadoRef.current) { setEstrategiaCarregando(false); return; }
+    supabaseCarregadoRef.current = true;
+    loadEstrategia(plan.id)
+      .then((estrategia) => {
+        if (estrategia && Object.keys(estrategia).length > 0) {
+          const loaded = estrategia as unknown as ResultadosEstrategia;
+          setResultados(loaded);
+          try { localStorage.setItem(resultadosKey, JSON.stringify(loaded)); } catch { /**/ }
+        }
+      })
+      .catch(console.error)
+      .finally(() => setEstrategiaCarregando(false));
   }, [plan?.id, loadEstrategia, resultadosKey]);
 
   function handleComentario(secao: string, v: string) {
@@ -249,7 +252,11 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
           )}
 
           {tab === "investimentos" && (
-            <GestaoInvestimentos carteira={resultados.carteira} clienteId={clienteId} />
+            <GestaoInvestimentos
+              carteira={resultados.carteira}
+              clienteId={clienteId}
+              loading={loading || estrategiaCarregando}
+            />
           )}
 
           {tab === "lf" && (
