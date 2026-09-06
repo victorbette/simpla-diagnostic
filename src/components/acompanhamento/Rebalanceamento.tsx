@@ -92,7 +92,20 @@ interface Props {
 export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Props) {
   const [view, setView] = useState<"carteira" | "rebalancear">("carteira");
 
-  const seed = useMemo(() => ativosDeAtivos(ativosIniciais), [ativosIniciais]);
+  const seed = useMemo((): AtivoRebal[] => {
+    if (ativosIniciais.length > 0) return ativosDeAtivos(ativosIniciais);
+    // Fallback: derive current portfolio from planoAcao (excludes 'novo' items added by plan)
+    const VALID = new Set(CARD_ORDER as string[]);
+    return (carteira.planoAcao ?? [])
+      .filter(item => item.acao !== "novo" && item.valorAtualBRL > 0 && VALID.has(item.card ?? ""))
+      .map(item => ({
+        id: item.id,
+        card: item.card as CardId,
+        nome: item.nomeAtivo,
+        valorAtual: item.valorAtualBRL,
+        fromFP: true,
+      }));
+  }, [ativosIniciais, carteira.planoAcao]);
 
   const [estado, setEstado] = useState<EstadoRebal>(() => loadState(clienteId, seed));
 
@@ -116,7 +129,43 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
   const macroMeta = (carteira.macroMeta && Object.keys(carteira.macroMeta).length > 0)
     ? carteira.macroMeta
     : (carteira.alocacaoMeta ?? {});
-  const ativosRecomendados = carteira.ativosRecomendados ?? [];
+  const ativosRecomendados = useMemo((): Ativo[] => {
+    const plano = carteira.planoAcao ?? [];
+    if (plano.length === 0) return carteira.ativosRecomendados ?? [];
+    const ativosAtuaisRef = carteira.ativosAtuais ?? [];
+    const VALID = new Set(CARD_ORDER as string[]);
+    return plano
+      .map(item => {
+        let valorFinal: number;
+        switch (item.acao) {
+          case "manter": valorFinal = item.valorAtualBRL; break;
+          case "aportar": case "novo":
+            valorFinal = item.valorAtualBRL + (item.movimentacaoEditada ?? Math.abs(item.movimentacaoBRL ?? 0)); break;
+          case "resgatar_total": valorFinal = 0; break;
+          case "resgatar_parcial": {
+            const resgate = item.valorResgateBRL !== undefined ? item.valorResgateBRL : Math.abs(item.movimentacaoBRL ?? 0);
+            valorFinal = Math.max(0, item.valorAtualBRL - resgate); break;
+          }
+          default: valorFinal = item.valorAtualBRL;
+        }
+        if (valorFinal <= 0 || !VALID.has(item.card ?? "")) return null;
+        const ativoAtual = ativosAtuaisRef.find(
+          a => a.id === item.id || (a.nome === item.nomeAtivo && a.card === item.card)
+        );
+        const vencimento = item.vencimento?.trim() ? item.vencimento : ativoAtual?.vencimento;
+        return {
+          id: item.id,
+          card: item.card as CardId,
+          nome: item.nomeAtivo,
+          segmento: item.segmento ?? "",
+          valorBRL: valorFinal,
+          vencimento,
+          adicionadoManualmente: item.adicionadoManualmente,
+          observacao: item.observacao,
+        } as Ativo;
+      })
+      .filter(Boolean) as Ativo[];
+  }, [carteira.planoAcao, carteira.ativosAtuais, carteira.ativosRecomendados]);
 
   useEffect(() => { saveState(clienteId, estado); }, [estado, clienteId]);
 
