@@ -238,6 +238,51 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
   const temAjuste = Object.values(estado.ajustes).some(v => v !== undefined && v > 0);
   const sugestaoFinal: Partial<Record<CardId, number>> = temAjuste ? estado.ajustes : sugestaoAuto;
 
+  interface AtivoSugestao {
+    id: string;
+    nome: string;
+    valorAtual: number;
+    valorMeta: number;
+    aporte: number;
+    isNovo: boolean;
+  }
+
+  const sugestaoAporteAtivos = useMemo((): Record<string, AtivoSugestao[]> => {
+    const result: Record<string, AtivoSugestao[]> = {};
+    for (const sub of porSubclasse) {
+      const aporteNaSub = sugestaoFinal[sub.cardId] ?? 0;
+      const recomNaSub = ativosRecomendados.filter(a => a.card === sub.cardId);
+
+      const currentWithMeta: AtivoSugestao[] = sub.ativos.map(a => {
+        const rec = recomNaSub.find(r => r.id === a.id || r.nome === a.nome);
+        return { id: a.id, nome: a.nome, valorAtual: a.valorAtual, valorMeta: rec?.valorBRL ?? 0, aporte: 0, isNovo: false };
+      });
+      const novos: AtivoSugestao[] = recomNaSub
+        .filter(r => !sub.ativos.some(a => a.id === r.id || a.nome === r.nome))
+        .map(r => ({ id: r.id, nome: r.nome, valorAtual: 0, valorMeta: r.valorBRL, aporte: 0, isNovo: true }));
+
+      const all = [...currentWithMeta, ...novos];
+      const gaps = all.map(a => ({ ...a, gap: Math.max(0, a.valorMeta - a.valorAtual) }));
+      const totalGap = gaps.reduce((s, a) => s + a.gap, 0);
+
+      if (aporteNaSub > 0) {
+        if (totalGap > 0) {
+          result[sub.cardId] = gaps.map(a => ({ ...a, aporte: (a.gap / totalGap) * aporteNaSub }));
+        } else {
+          // Nenhum gap individual — distribui pelo peso na meta (ou igualmente se sem meta)
+          const totalMeta = all.reduce((s, a) => s + a.valorMeta, 0);
+          result[sub.cardId] = all.map(a => ({
+            ...a, aporte: totalMeta > 0 ? (a.valorMeta / totalMeta) * aporteNaSub : aporteNaSub / (all.length || 1),
+          }));
+        }
+      } else {
+        result[sub.cardId] = gaps.map(a => ({ ...a, aporte: 0 }));
+      }
+    }
+    return result;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [porSubclasse, sugestaoFinal, ativosRecomendados]);
+
   const totalAjustado = Object.values(sugestaoFinal).reduce((s, v) => s + (v ?? 0), 0);
   const deltaAjuste = estado.aporte - totalAjustado;
 
@@ -680,7 +725,7 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "6px 16px", background: "#F8FAFF", borderBottom: "0.5px solid #E5E7EB" }}>
-                    {["Subclasse", "Atual R$", "Meta R$", "Aportar (R$)", "Saldo pós-aporte"].map((h, i) => (
+                    {["Subclasse / Ativo", "Atual R$", "Meta R$", "Aportar (R$)", "Saldo pós-aporte"].map((h, i) => (
                       <span key={h} style={{ fontSize: 9, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.04em", textAlign: i > 0 ? "right" as const : "left" as const }}>{h}</span>
                     ))}
                   </div>
@@ -690,39 +735,72 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
                     const valorPos = sub.valorAtual + aporteCardSugerido;
                     const pctPos = patrimonioTotal > 0 ? (valorPos / patrimonioTotal) * 100 : 0;
                     const desvioPos = pctPos - sub.metaPct;
+                    const ativosSubSugestao = sugestaoAporteAtivos[sub.cardId] ?? [];
+                    const temAtivoComAporte = ativosSubSugestao.some(a => a.aporte > 0.5);
 
                     return (
-                      <div key={sub.cardId} style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "9px 16px", borderBottom: "0.5px solid #F3F4F6", alignItems: "center" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 8, height: 8, borderRadius: "50%", background: sub.cor, flexShrink: 0 }} />
-                          <span style={{ fontSize: 12, color: "#374151", fontWeight: 500 }}>{sub.label}</span>
-                        </div>
-                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorAtual)}</span>
-                        <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorMeta)}</span>
+                      <div key={sub.cardId} style={{ borderBottom: "0.5px solid #F3F4F6" }}>
+                        {/* Linha da subclasse */}
+                        <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "9px 16px", alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: sub.cor, flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>{sub.label}</span>
+                          </div>
+                          <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorAtual)}</span>
+                          <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" as const }}>{formatBRL(sub.valorMeta)}</span>
 
-                        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontSize: 11, color: "#6B7280" }}>R$</span>
-                          <input
-                            type="text" inputMode="decimal"
-                            value={ajusteStr[sub.cardId] ?? (aporteCardSugerido > 0.5 ? toBRLDisplay(aporteCardSugerido) : "")}
-                            onChange={e => setAjuste(sub.cardId, e.target.value)}
-                            onFocus={e => { if (!temAjuste) setAjusteStr(p => ({ ...p, [sub.cardId]: toBRLDisplay(aporteCardSugerido) })); e.target.select(); }}
-                            placeholder="0,00"
-                            style={{
-                              border: "1px solid #BFDBFE", borderRadius: 6, padding: "5px 8px",
-                              fontSize: 12, fontWeight: 600, color: "#15803D",
-                              background: aporteCardSugerido > 0.5 ? "#F0FDF4" : "#FAFAFA",
-                              outline: "none", width: 90, textAlign: "right" as const,
-                            }}
-                          />
-                        </div>
+                          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 4 }}>
+                            <span style={{ fontSize: 11, color: "#6B7280" }}>R$</span>
+                            <input
+                              type="text" inputMode="decimal"
+                              value={ajusteStr[sub.cardId] ?? (aporteCardSugerido > 0.5 ? toBRLDisplay(aporteCardSugerido) : "")}
+                              onChange={e => setAjuste(sub.cardId, e.target.value)}
+                              onFocus={e => { if (!temAjuste) setAjusteStr(p => ({ ...p, [sub.cardId]: toBRLDisplay(aporteCardSugerido) })); e.target.select(); }}
+                              placeholder="0,00"
+                              style={{
+                                border: "1px solid #BFDBFE", borderRadius: 6, padding: "5px 8px",
+                                fontSize: 12, fontWeight: 600, color: "#15803D",
+                                background: aporteCardSugerido > 0.5 ? "#F0FDF4" : "#FAFAFA",
+                                outline: "none", width: 90, textAlign: "right" as const,
+                              }}
+                            />
+                          </div>
 
-                        <div style={{ textAlign: "right" as const }}>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{pctPos.toFixed(1)}%</div>
-                          <div style={{ fontSize: 10, color: Math.abs(desvioPos) < 0.5 ? "#15803D" : desvioPos < 0 ? "#B91C1C" : "#B45309" }}>
-                            {Math.abs(desvioPos) < 0.5 ? "✓ Na meta" : `${desvioPos > 0 ? "+" : ""}${desvioPos.toFixed(1)}% vs meta`}
+                          <div style={{ textAlign: "right" as const }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{pctPos.toFixed(1)}%</div>
+                            <div style={{ fontSize: 10, color: Math.abs(desvioPos) < 0.5 ? "#15803D" : desvioPos < 0 ? "#B91C1C" : "#B45309" }}>
+                              {Math.abs(desvioPos) < 0.5 ? "✓ Na meta" : `${desvioPos > 0 ? "+" : ""}${desvioPos.toFixed(1)}% vs meta`}
+                            </div>
                           </div>
                         </div>
+
+                        {/* Linhas por ativo (só quando há aporte a distribuir) */}
+                        {temAtivoComAporte && ativosSubSugestao.map(ativo => {
+                          const posAtivo = ativo.valorAtual + ativo.aporte;
+                          return (
+                            <div key={ativo.id} style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "5px 16px 5px 32px", background: "#FAFBFF", borderTop: "0.5px solid #F3F4F6", alignItems: "center" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <span style={{ color: "#D1D5DB", fontSize: 10 }}>↳</span>
+                                <span style={{ fontSize: 11, color: "#374151" }}>{ativo.nome}</span>
+                                {ativo.isNovo && (
+                                  <span style={{ fontSize: 9, color: "#7C3AED", background: "#EDE9FE", padding: "1px 5px", borderRadius: 4, fontWeight: 600 }}>novo</span>
+                                )}
+                              </div>
+                              <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>
+                                {ativo.valorAtual > 0 ? formatBRL(ativo.valorAtual) : "—"}
+                              </span>
+                              <span style={{ fontSize: 11, color: "#9CA3AF", textAlign: "right" as const }}>
+                                {ativo.valorMeta > 0 ? formatBRL(ativo.valorMeta) : "—"}
+                              </span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: ativo.aporte > 0.5 ? "#15803D" : "#9CA3AF", textAlign: "right" as const }}>
+                                {ativo.aporte > 0.5 ? formatBRL(ativo.aporte) : "—"}
+                              </span>
+                              <span style={{ fontSize: 11, color: "#374151", textAlign: "right" as const }}>
+                                {posAtivo > 0 ? formatBRL(posAtivo) : "—"}
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
