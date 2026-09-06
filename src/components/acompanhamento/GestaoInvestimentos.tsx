@@ -8,6 +8,7 @@ import { Rebalanceamento } from "./Rebalanceamento";
 
 interface Props {
   carteira: ResultadoCarteira | null;
+  clienteId: string;
 }
 
 type SubTab = "investimentos" | "rebalanceamento";
@@ -37,7 +38,7 @@ function calcularValorFinalItem(item: PlanoAcaoItem): number {
   }
 }
 
-export function GestaoInvestimentos({ carteira }: Props) {
+export function GestaoInvestimentos({ carteira, clienteId }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("investimentos");
 
   if (!carteira) {
@@ -82,7 +83,7 @@ export function GestaoInvestimentos({ carteira }: Props) {
       </div>
 
       {subTab === "investimentos" && <Investimentos carteira={carteira} savedAt={savedAt} />}
-      {subTab === "rebalanceamento" && <Rebalanceamento carteira={carteira} />}
+      {subTab === "rebalanceamento" && <Rebalanceamento carteira={carteira} clienteId={clienteId} />}
     </div>
   );
 }

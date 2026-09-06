@@ -249,7 +249,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
           )}
 
           {tab === "investimentos" && (
-            <GestaoInvestimentos carteira={resultados.carteira} />
+            <GestaoInvestimentos carteira={resultados.carteira} clienteId={clienteId} />
           )}
 
           {tab === "lf" && (
