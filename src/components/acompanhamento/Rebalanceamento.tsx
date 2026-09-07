@@ -287,23 +287,28 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
       const all = [...currentWithMeta, ...novos];
       const gaps = all.map(a => ({ ...a, gap: Math.max(0, a.valorMeta - a.valorAtual) }));
       const totalGap = gaps.reduce((s, a) => s + a.gap, 0);
-      const hasMetaInfo = all.some(a => a.valorMeta > 0);
 
       if (aporteNaSub > 0) {
         if (totalGap > 0) {
           // Cap each ativo's aporte at its own gap to prevent exceeding individual meta
           const ratio = Math.min(1, aporteNaSub / totalGap);
           result[sub.cardId] = gaps.map(a => ({ ...a, aporte: a.gap * ratio }));
-        } else if (hasMetaInfo) {
-          // All ativos at or above their individual targets — don't push more in
-          result[sub.cardId] = all.map(a => ({ ...a, aporte: 0 }));
         } else {
-          // No FP recommendations for this subclass — distribute by current value weight
-          const totalAtual = all.reduce((s, a) => s + a.valorAtual, 0);
-          result[sub.cardId] = all.map(a => ({
-            ...a,
-            aporte: totalAtual > 0 ? (a.valorAtual / totalAtual) * aporteNaSub : aporteNaSub / (all.length || 1),
-          }));
+          // No individual gaps: FP said "manter", no recommendation, or subclass grew.
+          // Distribute by current weight among ativos NOT marked for reduction.
+          // Only skip ativos where FP explicitly said reduce (0 < valorMeta < valorAtual).
+          const eligible = all.filter(a => a.valorMeta === 0 || a.valorMeta >= a.valorAtual);
+          const totalEligible = eligible.reduce((s, a) => s + a.valorAtual, 0);
+          result[sub.cardId] = all.map(a => {
+            const isEligible = eligible.some(e => e.id === a.id);
+            if (!isEligible) return { ...a, aporte: 0 };
+            return {
+              ...a,
+              aporte: totalEligible > 0
+                ? (a.valorAtual / totalEligible) * aporteNaSub
+                : aporteNaSub / (eligible.length || 1),
+            };
+          });
         }
       } else {
         result[sub.cardId] = gaps.map(a => ({ ...a, aporte: 0 }));
