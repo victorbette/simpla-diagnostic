@@ -442,21 +442,6 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
         );
       })}
 
-      {/* Summary bar */}
-      {goals.length > 1 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 4 }}>
-          {[
-            { label: "Objetivos", val: String(goals.length) },
-            { label: "Total metas", val: formatBRL(goals.reduce((s, o) => s + o.valorBRL, 0)) },
-            { label: "Total alocado", val: formatBRL(goals.reduce((s, o) => s + alocadoTotal(o.id), 0)) },
-          ].map(({ label, val }) => (
-            <div key={label} style={{ background: "white", border: "0.5px solid #E5E7EB", borderRadius: 12, padding: "12px 16px", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>{label}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
