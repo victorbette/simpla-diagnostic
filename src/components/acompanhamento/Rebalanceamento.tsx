@@ -290,13 +290,12 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
 
       if (aporteNaSub > 0) {
         if (totalGap > 0) {
-          result[sub.cardId] = gaps.map(a => ({ ...a, aporte: (a.gap / totalGap) * aporteNaSub }));
+          // Cap each ativo's aporte at its own gap to prevent exceeding individual meta
+          const ratio = Math.min(1, aporteNaSub / totalGap);
+          result[sub.cardId] = gaps.map(a => ({ ...a, aporte: a.gap * ratio }));
         } else {
-          // Nenhum gap individual — distribui pelo peso na meta (ou igualmente se sem meta)
-          const totalMeta = all.reduce((s, a) => s + a.valorMeta, 0);
-          result[sub.cardId] = all.map(a => ({
-            ...a, aporte: totalMeta > 0 ? (a.valorMeta / totalMeta) * aporteNaSub : aporteNaSub / (all.length || 1),
-          }));
+          // All ativos at or above their individual targets — don't push more in
+          result[sub.cardId] = all.map(a => ({ ...a, aporte: 0 }));
         }
       } else {
         result[sub.cardId] = gaps.map(a => ({ ...a, aporte: 0 }));
