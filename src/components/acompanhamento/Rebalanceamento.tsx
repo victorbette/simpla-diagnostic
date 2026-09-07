@@ -126,9 +126,12 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
   const [ajusteStr, setAjusteStr] = useState<Partial<Record<CardId, string>>>({});
 
   // Fallback: dados antigos do FP podem ter salvo em alocacaoMeta mas não em macroMeta
-  const macroMeta = (carteira.macroMeta && Object.keys(carteira.macroMeta).length > 0)
-    ? carteira.macroMeta
-    : (carteira.alocacaoMeta ?? {});
+  const macroMeta = useMemo(
+    () => (carteira.macroMeta && Object.keys(carteira.macroMeta).length > 0)
+      ? carteira.macroMeta
+      : (carteira.alocacaoMeta ?? {}),
+    [carteira.macroMeta, carteira.alocacaoMeta],
+  );
   const ativosRecomendados = useMemo((): Ativo[] => {
     const plano = carteira.planoAcao ?? [];
     if (plano.length === 0) return carteira.ativosRecomendados ?? [];
@@ -219,15 +222,32 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
     if (estado.aporte <= 0) return {};
     const necessidades = porSubclasse.filter(s => s.gap > 0);
     const totalNecessidade = necessidades.reduce((s, c) => s + c.gap, 0);
-    if (totalNecessidade <= 0) return {};
     const result: Partial<Record<CardId, number>> = {};
+
+    if (totalNecessidade <= 0) {
+      // Carteira já alinhada (ou sem metas): distribui o aporte proporcionalmente pelo metaPct
+      const comMeta = porSubclasse.filter(s => s.metaPct > 0);
+      const totalMetaPct = comMeta.reduce((s, c) => s + c.metaPct, 0);
+      if (totalMetaPct <= 0) return {};
+      comMeta.forEach(s => { result[s.cardId] = (s.metaPct / totalMetaPct) * estado.aporte; });
+      return result;
+    }
+
     if (estado.aporte >= totalNecessidade) {
+      // Preenche todos os gaps; distribui a sobra proporcionalmente pelo metaPct de TODAS as subclasses com meta
       const sobra = estado.aporte - totalNecessidade;
-      const totalMetaPct = necessidades.reduce((s, c) => s + c.metaPct, 0);
+      const comMeta = porSubclasse.filter(s => s.metaPct > 0);
+      const totalMetaPct = comMeta.reduce((s, c) => s + c.metaPct, 0);
       necessidades.forEach(s => {
-        result[s.cardId] = s.gap + (totalMetaPct > 0 ? (s.metaPct / totalMetaPct) * sobra : 0);
+        result[s.cardId] = s.gap;
       });
+      if (sobra > 0 && totalMetaPct > 0) {
+        comMeta.forEach(s => {
+          result[s.cardId] = (result[s.cardId] ?? 0) + (s.metaPct / totalMetaPct) * sobra;
+        });
+      }
     } else {
+      // Aporte menor que a necessidade total: distribui proporcionalmente pelos gaps
       necessidades.forEach(s => {
         result[s.cardId] = (s.gap / totalNecessidade) * estado.aporte;
       });
@@ -236,7 +256,10 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
   }, [porSubclasse, estado.aporte]);
 
   const temAjuste = Object.values(estado.ajustes).some(v => v !== undefined && v > 0);
-  const sugestaoFinal: Partial<Record<CardId, number>> = temAjuste ? estado.ajustes : sugestaoAuto;
+  const sugestaoFinal = useMemo(
+    (): Partial<Record<CardId, number>> => temAjuste ? estado.ajustes : sugestaoAuto,
+    [temAjuste, estado.ajustes, sugestaoAuto],
+  );
 
   interface AtivoSugestao {
     id: string;
@@ -280,11 +303,14 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
       }
     }
     return result;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [porSubclasse, sugestaoFinal, ativosRecomendados]);
 
   const totalAjustado = Object.values(sugestaoFinal).reduce((s, v) => s + (v ?? 0), 0);
   const deltaAjuste = estado.aporte - totalAjustado;
+  const totalMeta = useMemo(
+    () => porSubclasse.reduce((s, sub) => s + sub.valorMeta, 0),
+    [porSubclasse],
+  );
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
 
@@ -674,9 +700,9 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
                           </div>
 
                           <div style={{ textAlign: "right" as const }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{pctPos.toFixed(1)}%</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{formatBRL(valorPos)}</div>
                             <div style={{ fontSize: 10, color: Math.abs(desvioPos) < 0.5 ? "#15803D" : desvioPos < 0 ? "#B91C1C" : "#B45309" }}>
-                              {Math.abs(desvioPos) < 0.5 ? "✓ Na meta" : `${desvioPos > 0 ? "+" : ""}${desvioPos.toFixed(1)}% vs meta`}
+                              {pctPos.toFixed(1)}%{" · "}{Math.abs(desvioPos) < 0.5 ? "✓ na meta" : `${desvioPos > 0 ? "+" : ""}${desvioPos.toFixed(1)}% vs meta`}
                             </div>
                           </div>
                         </div>
@@ -715,7 +741,7 @@ export function Rebalanceamento({ carteira, clienteId, ativosIniciais = [] }: Pr
                   <div style={{ display: "grid", gridTemplateColumns: "2fr 100px 100px 130px 120px", gap: 4, padding: "10px 16px", background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>Total</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" as const }}>{formatBRL(patrimonioAtual)}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" as const }}>{formatBRL(patrimonioTotal)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", textAlign: "right" as const }}>{formatBRL(totalMeta)}</span>
                     <div style={{ textAlign: "right" as const }}>
                       <span style={{ fontSize: 12, fontWeight: 700, color: Math.abs(deltaAjuste) < 1 ? "#15803D" : "#B91C1C" }}>
                         {formatBRL(totalAjustado)}
