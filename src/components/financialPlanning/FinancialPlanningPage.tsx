@@ -599,10 +599,6 @@ export function FinancialPlanningPage({ clientId, clientName, onClose, onPlanSta
             <div style={{ padding: "28px 32px" }}>
               <SecaoAposentadoria
                 plan={plan}
-                comentario={secaoComentario}
-                onComentarioChange={handleComentarioChange}
-                tags={secaoTags}
-                onTagsChange={handleTagsChange}
                 resultadoIF={resultados.if}
                 onResultadoIF={(r) => setResultados((prev) => ({ ...prev, if: r }))}
                 onSaveCloud={async (r) => {

@@ -184,8 +184,6 @@ export function FerramentaLiberdadeFinanceira({
     return [];
   });
   const [sensTab, setSensTab] = useState<"aporte" | "prazo">("aporte");
-  const [salvando, setSalvando] = useState(false);
-  const [salvo, setSalvo] = useState(false);
   const [mostrarAjustes, setMostrarAjustes] = useState(false);
   const [ajustes, setAjustes] = useState<Ajustes>(() => {
     try {
@@ -548,14 +546,7 @@ export function FerramentaLiberdadeFinanceira({
 
   const handleSalvar = async () => {
     if (!result) return;
-    setSalvando(true);
-    try {
-      await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual, dadosGrafico, ajustes });
-      setSalvo(true);
-      setTimeout(() => setSalvo(false), 2500);
-    } finally {
-      setSalvando(false);
-    }
+    await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual, dadosGrafico, ajustes });
   };
 
   // Expõe handleSalvar via ref para que o pai possa disparar o save ao trocar de aba
@@ -1113,36 +1104,6 @@ export function FerramentaLiberdadeFinanceira({
         onFechar={() => setPainelAjudaAberto(false)}
       />
 
-      {/* ── 7. BOTÃO SALVAR ─────────────────────────────────────────────────── */}
-      <style>{`@keyframes lf-spin { to { transform: rotate(360deg); } }`}</style>
-      <button
-        onClick={handleSalvar}
-        disabled={salvando}
-        style={{
-          width: "100%", backgroundColor: "#15803D", color: "white",
-          border: "none", borderRadius: 8, padding: "12px 0",
-          fontSize: 14, fontWeight: 600, cursor: salvando ? "not-allowed" : "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          opacity: salvando ? 0.85 : 1,
-        }}
-      >
-        {salvando ? (
-          <>
-            <i className="ti ti-loader-2" style={{ fontSize: 16, display: "inline-block", animation: "lf-spin 1s linear infinite" }} />
-            Salvando…
-          </>
-        ) : salvo ? (
-          <>
-            <i className="ti ti-circle-check" style={{ fontSize: 16, color: "#86EFAC" }} />
-            Salvo!
-          </>
-        ) : (
-          <>
-            <i className="ti ti-device-floppy" style={{ fontSize: 16 }} />
-            Salvar simulação
-          </>
-        )}
-      </button>
     </div>
   );
 }

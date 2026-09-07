@@ -299,10 +299,6 @@ export function EstrategiaInicialPage({ plan, clientName, onClose, onSave, onSav
         return (
           <SecaoAposentadoria
             plan={plan}
-            comentario={comentario}
-            onComentarioChange={onComentarioChange}
-            tags={tags}
-            onTagsChange={onTagsChange}
             resultadoIF={resultados.if}
             onResultadoIF={(r) => setResultados((prev) => ({ ...prev, if: r }))}
           />
