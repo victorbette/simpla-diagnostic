@@ -1,8 +1,18 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import {
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
+} from "lucide-react";
 import type { ObjetivoVida } from "@/types/objetivos";
+import { getObjetivoMeta } from "@/types/objetivos";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import type { Ativo } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  Home, Car, BookOpen, Plane, Briefcase, Star, Heart,
+  Monitor, Shield, TrendingUp, MoreHorizontal,
+};
 
 // ─── Rebalanceamento reader ───────────────────────────────────────────────────
 
@@ -31,30 +41,6 @@ function loadGBI(clienteId: string): GBIState {
 function saveGBI(clienteId: string, s: GBIState) {
   try { localStorage.setItem(`gbi_v1_${clienteId}`, JSON.stringify(s)); } catch { /* ignore */ }
 }
-
-// ─── Visual maps ─────────────────────────────────────────────────────────────
-
-const TIPO_ICONE: Record<string, string> = {
-  viagem: "ti-plane", veiculo: "ti-car", casa: "ti-home", familia: "ti-users",
-  eletronico: "ti-device-laptop", educacao: "ti-school", hobby: "ti-star",
-  profissional: "ti-briefcase", saude: "ti-heart-rate-monitor",
-  outro: "ti-target", aportes_financeiros: "ti-trending-up",
-};
-interface Cor { bg: string; text: string; bar: string; }
-const TIPO_COR: Record<string, Cor> = {
-  viagem:   { bg: "#EFF6FF", text: "#1D4ED8", bar: "#3B82F6" },
-  veiculo:  { bg: "#F0FDF4", text: "#15803D", bar: "#22C55E" },
-  casa:     { bg: "#FFF7ED", text: "#C2410C", bar: "#F97316" },
-  familia:  { bg: "#FDF2F8", text: "#9D174D", bar: "#EC4899" },
-  eletronico: { bg: "#F5F3FF", text: "#6D28D9", bar: "#8B5CF6" },
-  educacao: { bg: "#ECFDF5", text: "#065F46", bar: "#10B981" },
-  hobby:    { bg: "#FEFCE8", text: "#854D0E", bar: "#EAB308" },
-  profissional: { bg: "#EFF6FF", text: "#1E40AF", bar: "#2563EB" },
-  saude:    { bg: "#FFF1F2", text: "#9F1239", bar: "#F43F5E" },
-  outro:    { bg: "#F9FAFB", text: "#374151", bar: "#6B7280" },
-  aportes_financeiros: { bg: "#F0FDF4", text: "#166534", bar: "#16A34A" },
-};
-const defaultCor: Cor = { bg: "#F9FAFB", text: "#374151", bar: "#6B7280" };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -196,8 +182,9 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
 
       {/* Goal cards */}
       {goals.map(obj => {
-        const cor = TIPO_COR[obj.tipo] ?? defaultCor;
-        const icone = TIPO_ICONE[obj.tipo] ?? "ti-target";
+        const meta = getObjetivoMeta(obj.tipo);
+        const Icon = ICON_MAP[meta.icone];
+        const cor = meta.cor;
         const alocado = alocadoTotal(obj.id);
         const pct = obj.valorBRL > 0 ? Math.min(100, (alocado / obj.valorBRL) * 100) : 0;
         const concluido = pct >= 100;
@@ -215,8 +202,8 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
             <div style={{ padding: "18px 20px 14px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: cor.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <i className={`ti ${icone}`} style={{ fontSize: 20, color: cor.text }} />
+                  <div style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: `${cor}18`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {Icon && <Icon style={{ width: 18, height: 18, color: cor }} />}
                   </div>
                   <div>
                     <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 2 }}>
@@ -243,7 +230,7 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
               {/* Progress bar */}
               <div style={{ marginTop: 14 }}>
                 <div style={{ height: 7, background: "#F0F2F5", borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ height: "100%", borderRadius: 99, width: `${pct}%`, background: concluido ? "#16A34A" : cor.bar, transition: "width 0.5s ease" }} />
+                  <div style={{ height: "100%", borderRadius: 99, width: `${pct}%`, background: concluido ? "#16A34A" : cor, transition: "width 0.5s ease" }} />
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
                   <span style={{ fontSize: 12, color: "#6B7280" }}>
