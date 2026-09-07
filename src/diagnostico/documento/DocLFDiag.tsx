@@ -135,15 +135,36 @@ export function DocLFDiag({ lead }: Props) {
     return texto;
   }
 
-  // ── Análise de Sensibilidade — mesmos parâmetros da aba LF ──
-  const calcularFV = (nMeses: number, aporteC: number): number => {
-    const f = Math.pow(1 + TAXA_MENSAL, nMeses);
-    return patrimonioInicial * f + aporteC * (f - 1) / TAXA_MENSAL;
+  // ── Análise de Sensibilidade — usa simulação completa com objetivos ──
+  const baseArgs = {
+    idadeAtual,
+    idadeMeta,
+    idadeMaxima: 100 as const,
+    patrimonioInicial,
+    aporteMensal,
+    rendaMensalDesejada: rendaDesejada,
+    taxaRetornoAnual: TAXA_ANUAL,
+    anoNascimento,
+    mesNascimento,
+    objetivos,
+  };
+
+  const calcularFVComObjetivos = (override: { aporteMensal?: number; idadeMeta?: number }): number => {
+    const idadeMetaC = override.idadeMeta ?? idadeMeta;
+    if (!rendaDesejada || idadeMetaC <= idadeAtual) return patrimonioInicial;
+    try {
+      return calcularProjecaoIF({ ...baseArgs, ...override, idadeMeta: idadeMetaC }).patrimonioNaIF;
+    } catch {
+      const n = Math.max(1, Math.round((idadeMetaC - idadeAtual) * 12));
+      const f = Math.pow(1 + TAXA_MENSAL, n);
+      const ap = override.aporteMensal ?? aporteMensal;
+      return isFinite(f) ? patrimonioInicial * f + ap * (f - 1) / TAXA_MENSAL : patrimonioInicial;
+    }
   };
 
   const cenariosAporte = [-40, -20, 0, 20, 40].map(pctVariacao => {
     const aporteC = Math.max(0, aporteMensal * (1 + pctVariacao / 100));
-    const fv = calcularFV(nMesesBase, aporteC);
+    const fv = calcularFVComObjetivos({ aporteMensal: aporteC });
     const pctMeta = patrimonioNecessario > 0
       ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
     return { pctVariacao, aporteC, fv, pctMeta };
@@ -151,10 +172,11 @@ export function DocLFDiag({ lead }: Props) {
 
   const cenariosIdade = [-5, -2, 0, 2, 5].map(delta => {
     const idadeC = Math.max(idadeAtual + 1, idadeMeta + delta);
-    const n = Math.max(1, Math.round((idadeC - idadeAtual) * 12));
-    const fv = calcularFV(n, aporteMensal);
-    const pctMeta = patrimonioNecessario > 0
-      ? Math.min(100, Math.round(fv / patrimonioNecessario * 100)) : 0;
+    const metaC = rendaDesejada > 0
+      ? calcularPatrimonioNecessario(rendaDesejada, idadeC)
+      : patrimonioNecessario;
+    const fv = calcularFVComObjetivos({ idadeMeta: idadeC });
+    const pctMeta = metaC > 0 ? Math.min(100, Math.round(fv / metaC * 100)) : 0;
     return { delta, idadeC, fv, pctMeta };
   });
 

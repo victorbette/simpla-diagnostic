@@ -243,25 +243,51 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   }, [projecaoResult, params.patrimonioInicial, params.aporteMensal, params.idadeAposentadoria, idadeExataHoje, taxaMensal]);
 
   // ── Análise de Sensibilidade ──────────────────────────────────────────────
+  // Uses the same full month-by-month simulation as the chart (including objectives)
+  // so values are consistent with the "Patrimônio Total Projetado" card.
+  const baseProjecaoArgs = useMemo(() => ({
+    idadeAtual: idadeExataHoje,
+    idadeMeta: params.idadeAposentadoria,
+    idadeMaxima: 90 as const,
+    patrimonioInicial: params.patrimonioInicial,
+    aporteMensal: params.aporteMensal,
+    rendaMensalDesejada: params.rendaDesejada,
+    taxaRetornoAnual: taxaAnualEfetiva,
+    anoNascimento,
+    mesNascimento,
+    objetivos,
+  }), [idadeExataHoje, params.idadeAposentadoria, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivos]);
+
+  const projecaoSensivel = (override: { aporteMensal?: number; idadeMeta?: number }): number => {
+    if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
+    const idadeMeta = override.idadeMeta ?? baseProjecaoArgs.idadeMeta;
+    if (idadeMeta <= idadeExataHoje) return params.patrimonioInicial;
+    try {
+      return calcularProjecaoIF({ ...baseProjecaoArgs, ...override, idadeMeta }).patrimonioNaIF;
+    } catch {
+      const n = Math.max(1, Math.round((idadeMeta - idadeExataHoje) * 12));
+      const f = Math.pow(1 + taxaMensal, n);
+      const ap = override.aporteMensal ?? params.aporteMensal;
+      return isFinite(f) ? params.patrimonioInicial * f + ap * (f - 1) / taxaMensal : params.patrimonioInicial;
+    }
+  };
+
   const cenariosAporte = useMemo(() => [-40, -20, 0, 20, 40].map(pct => {
     const aporteC = Math.max(0, params.aporteMensal * (1 + pct / 100));
-    const n = Math.max(1, Math.round((params.idadeAposentadoria - idadeExataHoje) * 12));
-    const f = Math.pow(1 + taxaMensal, n);
-    const fv = isFinite(f) ? params.patrimonioInicial * f + aporteC * (f - 1) / taxaMensal : params.patrimonioInicial;
-    const pctMeta = metaIF > 0
-      ? Math.min(100, Math.round(fv / metaIF * 100)) : 0;
+    const fv = projecaoSensivel({ aporteMensal: aporteC });
+    const pctMeta = metaIF > 0 ? Math.min(100, Math.round(fv / metaIF * 100)) : 0;
     return { pctVariacao: pct, aporteC, fv, pctMeta };
-  }), [params.aporteMensal, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, metaIF, taxaMensal]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [baseProjecaoArgs, metaIF, params.aporteMensal, taxaMensal]);
 
   const cenariosIdade = useMemo(() => [-5, -2, 0, 2, 5].map(delta => {
     const idadeC = Math.max(params.idadeAtual + 1, params.idadeAposentadoria + delta);
-    const n = Math.max(1, Math.round((idadeC - params.idadeAtual) * 12));
-    const f = Math.pow(1 + taxaMensal, n);
-    const fv = isFinite(f) ? params.patrimonioInicial * f + params.aporteMensal * (f - 1) / taxaMensal : params.patrimonioInicial;
-    const pctMeta = metaIF > 0
-      ? Math.min(100, Math.round(fv / metaIF * 100)) : 0;
+    const metaC = params.rendaDesejada > 0 ? calcularPatrimonioNecessario(params.rendaDesejada, idadeC) : metaIF;
+    const fv = projecaoSensivel({ idadeMeta: idadeC });
+    const pctMeta = metaC > 0 ? Math.min(100, Math.round(fv / metaC * 100)) : 0;
     return { delta, idadeC, fv, pctMeta };
-  }), [params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, metaIF, taxaMensal]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [baseProjecaoArgs, metaIF, params.idadeAposentadoria, params.idadeAtual, params.rendaDesejada, taxaMensal]);
 
   const corMeta = (pct: number) =>
     pct >= 100 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
