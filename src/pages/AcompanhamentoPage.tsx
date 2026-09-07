@@ -272,6 +272,7 @@ export function AcompanhamentoPage({ clienteId, clienteNome, onVoltar }: Props) 
                 onSaveCloud={handleSaveToSupabase}
                 triggerSaveRef={lfSaveRef}
                 storageChave={`acomp_lf_${clienteId}`}
+                carteira={resultados.carteira}
               />
             ) : (
               <PlanLoading loading={loading} />
