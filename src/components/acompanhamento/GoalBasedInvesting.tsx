@@ -28,7 +28,9 @@ function loadRebalAtivos(clienteId: string): RebalAtivo[] {
 
 // ─── GBI persistence ─────────────────────────────────────────────────────────
 
-interface GBILink { ativoId: string; ativoNome: string; valorAlocado: number; }
+// pctAlocado is the source of truth — valorAlocado is recomputed from it when
+// current ativo prices are available; it's kept as a fallback for unknown ativos.
+interface GBILink { ativoId: string; ativoNome: string; valorAlocado: number; pctAlocado?: number; }
 interface GBIState { alocacoes: Record<string, GBILink[]>; }
 
 function loadGBI(clienteId: string): GBIState {
@@ -115,21 +117,32 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
     [objetivos]
   );
 
+  // Recompute allocated value using current ativo price when pct is known
+  function resolvedValor(l: GBILink): number {
+    if (l.pctAlocado != null) {
+      const a = ativos.find(a => a.id === l.ativoId);
+      if (a) return (l.pctAlocado / 100) * a.valorBRL;
+    }
+    return l.valorAlocado;
+  }
+
   function alocadoTotal(objId: string) {
-    return (gbi.alocacoes[objId] ?? []).reduce((s, l) => s + l.valorAlocado, 0);
+    return (gbi.alocacoes[objId] ?? []).reduce((s, l) => s + resolvedValor(l), 0);
   }
 
   function commitLink(objId: string, ativo: Ativo, valor: number) {
+    const pctAlocado = ativo.valorBRL > 0 ? (valor / ativo.valorBRL) * 100 : undefined;
     setGBI(prev => {
       const links = prev.alocacoes[objId] ?? [];
       let next: GBILink[];
       if (valor <= 0) {
         next = links.filter(l => l.ativoId !== ativo.id);
       } else {
+        const entry: GBILink = { ativoId: ativo.id, ativoNome: ativo.nome, valorAlocado: valor, pctAlocado };
         const existing = links.find(l => l.ativoId === ativo.id);
         next = existing
-          ? links.map(l => l.ativoId === ativo.id ? { ...l, valorAlocado: valor } : l)
-          : [...links, { ativoId: ativo.id, ativoNome: ativo.nome, valorAlocado: valor }];
+          ? links.map(l => l.ativoId === ativo.id ? entry : l)
+          : [...links, entry];
       }
       const state: GBIState = { ...prev, alocacoes: { ...prev.alocacoes, [objId]: next } };
       saveGBI(clienteId, state);
@@ -266,17 +279,21 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
                       const isSelected = selectedIds.includes(ativo.id);
                       const linked = links.find(l => l.ativoId === ativo.id);
 
-                      // Displayed valor: draft → persisted → ""
+                      // Use pctAlocado as source of truth: recompute valor from current price
+                      const resolvedV = linked ? resolvedValor(linked) : 0;
+                      const resolvedP = linked
+                        ? (linked.pctAlocado ?? (ativo.valorBRL > 0 ? (linked.valorAlocado / ativo.valorBRL) * 100 : 0))
+                        : 0;
+
+                      // Displayed valor: draft → recomputed from current price → ""
                       const displayValor = draftValor[ativo.id] !== undefined
                         ? draftValor[ativo.id]
-                        : linked ? toBRLStr(linked.valorAlocado) : "";
+                        : linked ? toBRLStr(resolvedV) : "";
 
-                      // Displayed pct: draft → derived from persisted → ""
+                      // Displayed pct: draft → stored pct → ""
                       const displayPct = draftPct[ativo.id] !== undefined
                         ? draftPct[ativo.id]
-                        : linked && ativo.valorBRL > 0
-                          ? toPctStr((linked.valorAlocado / ativo.valorBRL) * 100)
-                          : "";
+                        : linked ? toPctStr(resolvedP) : "";
 
                       return (
                         <div key={ativo.id} style={{ borderBottom: "0.5px solid #F3F4F6" }}>
