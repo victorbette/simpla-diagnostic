@@ -1,8 +1,29 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { ObjetivoVida } from "@/types/objetivos";
 import type { ResultadoCarteira } from "@/types/estrategiaResultados";
 import type { Ativo } from "@/lib/carteira/types";
 import { formatBRL } from "@/lib/carteira/calculos";
+
+// ─── Rebalanceamento state reader ────────────────────────────────────────────
+
+interface RebalAtivo {
+  id: string;
+  card: string;
+  nome: string;
+  valorAtual: number;
+  fromFP?: boolean;
+}
+
+function loadRebalAtivos(clienteId: string): RebalAtivo[] {
+  try {
+    const raw = localStorage.getItem(`rebalanceamento_v1_${clienteId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { ativos?: RebalAtivo[] };
+      return parsed.ativos ?? [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,20 +109,40 @@ export function GoalBasedInvesting({ objetivos, clienteId, carteira }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
 
-  // Portfolio ativos — prefer ativosAtuais, fallback to planoAcao current values
-  const ativos = useMemo((): Ativo[] => {
-    if (!carteira) return [];
-    if ((carteira.ativosAtuais ?? []).length > 0) return carteira.ativosAtuais!;
-    return (carteira.planoAcao ?? [])
-      .filter(item => item.acao !== "novo" && item.valorAtualBRL > 0)
-      .map(item => ({
-        id: item.id,
-        card: item.card as Ativo["card"],
-        nome: item.nomeAtivo,
-        segmento: item.segmento ?? "",
-        valorBRL: item.valorAtualBRL,
-      }));
-  }, [carteira]);
+  // Ativos lidos do localStorage do Rebalanceamento (Carteira Atual em Gestão de Investimentos)
+  // Relido sempre que um card é expandido para garantir dados frescos
+  const [ativos, setAtivos] = useState<Ativo[]>([]);
+
+  useEffect(() => {
+    function resolveAtivos(): Ativo[] {
+      // 1ª prioridade: Carteira Atual do Rebalanceamento (valores editados pelo consultor)
+      const rebal = loadRebalAtivos(clienteId);
+      if (rebal.length > 0) {
+        return rebal.map(a => ({
+          id: a.id,
+          card: a.card as Ativo["card"],
+          nome: a.nome,
+          segmento: "",
+          valorBRL: a.valorAtual,
+        }));
+      }
+      // 2ª prioridade: ativosAtuais do Financial Planning (Supabase)
+      if ((carteira?.ativosAtuais ?? []).length > 0) return carteira!.ativosAtuais!;
+      // 3ª prioridade: derivar do planoAcao
+      return (carteira?.planoAcao ?? [])
+        .filter(item => item.acao !== "novo" && item.valorAtualBRL > 0)
+        .map(item => ({
+          id: item.id,
+          card: item.card as Ativo["card"],
+          nome: item.nomeAtivo,
+          segmento: item.segmento ?? "",
+          valorBRL: item.valorAtualBRL,
+        }));
+    }
+    setAtivos(resolveAtivos());
+  // Re-resolve whenever a card is expanded or the client changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedId, clienteId, carteira]);
 
   // Only saída goals with valorBRL > 0
   const goals = useMemo(() =>
