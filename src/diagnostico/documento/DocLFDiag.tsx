@@ -4,6 +4,7 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioPerpetuidade,
   calcularPatrimonioNecessario,
+  expandirObjetivos,
   type ProjecaoIFParams,
 } from "@/lib/financialFreedomCalc";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
@@ -33,6 +34,7 @@ interface Props { lead: Lead; }
 export function DocLFDiag({ lead }: Props) {
   const { dadosColeta, dadosLF } = lead;
   const objetivos = (dadosLF.objetivos ?? []) as ObjetivoVida[];
+  const objetivosExpandidos = expandirObjetivos(objetivos);
   const nome = lead.nome.split(" ")[0];
 
   const parsed = parseDateNasc(dadosColeta.dataNascimento ?? "");
@@ -80,7 +82,7 @@ export function DocLFDiag({ lead }: Props) {
     taxaRetornoAnual: TAXA_ANUAL,
     anoNascimento,
     mesNascimento,
-    objetivos,
+    objetivos: objetivosExpandidos,
   };
 
   let result: ReturnType<typeof calcularProjecaoIF> | null = null;
@@ -146,7 +148,7 @@ export function DocLFDiag({ lead }: Props) {
     taxaRetornoAnual: TAXA_ANUAL,
     anoNascimento,
     mesNascimento,
-    objetivos,
+    objetivos: objetivosExpandidos,
   };
 
   const calcularFVComObjetivos = (override: { aporteMensal?: number; idadeMeta?: number }): number => {

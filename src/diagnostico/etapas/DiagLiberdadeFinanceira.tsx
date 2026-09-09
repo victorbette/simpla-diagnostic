@@ -6,6 +6,7 @@ import {
   calcularPatrimonioPerpetuidade,
   calcularPatrimonioNecessario,
   calcularProjecaoIF,
+  expandirObjetivos,
 } from "@/lib/financialFreedomCalc";
 import type { DadosColetaDiag, DadosLFDiag } from "../types";
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
@@ -141,6 +142,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
   const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
   const objetivos = (dadosLF.objetivos ?? []) as ObjetivoVida[];
+  const objetivosExpandidos = useMemo(() => expandirObjetivos(objetivos), [objetivos]);
 
   function handleObjetivos(obs: ObjetivoVida[]) {
     onChangeRef.current({ objetivos: obs });
@@ -223,13 +225,13 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
         taxaRetornoAnual: taxaAnualEfetiva,
         anoNascimento,
         mesNascimento,
-        objetivos,
+        objetivos: objetivosExpandidos,
       });
     } catch {
       return null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idadeExataHoje, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivos]);
+  }, [idadeExataHoje, params.idadeAposentadoria, params.idadeAtual, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivosExpandidos]);
 
   const patrimonioProjetado = useMemo(() => {
     if (projecaoResult) return projecaoResult.patrimonioNaIF;
@@ -255,8 +257,8 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
     taxaRetornoAnual: taxaAnualEfetiva,
     anoNascimento,
     mesNascimento,
-    objetivos,
-  }), [idadeExataHoje, params.idadeAposentadoria, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivos]);
+    objetivos: objetivosExpandidos,
+  }), [idadeExataHoje, params.idadeAposentadoria, params.patrimonioInicial, params.aporteMensal, params.rendaDesejada, taxaAnualEfetiva, anoNascimento, mesNascimento, objetivosExpandidos]);
 
   const projecaoSensivel = (override: { aporteMensal?: number; idadeMeta?: number }): number => {
     if (!params.rendaDesejada || params.rendaDesejada <= 0) return 0;
