@@ -237,12 +237,18 @@ export function DocLFDiag({ lead }: Props) {
 
           <div style={{ border: "0.5px solid #E5E7EB", borderRadius: 10, padding: "10px 14px" }}>
             <div style={{ fontSize: 9, color: "#9CA3AF", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 4 }}>
-              Renda Desejada
+              Renda Projetada
             </div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "#111827" }}>
-              {rendaDesejada > 0 ? `${formatBRL(rendaDesejada)}/mês` : "—"}
+            <div style={{ fontSize: 14, fontWeight: 800, color: rendaSustentavel > 0 && rendaDesejada > 0 && rendaSustentavel >= rendaDesejada ? "#15803D" : "#111827" }}>
+              {rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "—"}
             </div>
-            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>A partir da aposentadoria</div>
+            <div style={{ fontSize: 9, color: "#9CA3AF", marginTop: 2 }}>
+              {rendaSustentavel > 0 && rendaDesejada > 0
+                ? rendaSustentavel >= rendaDesejada
+                  ? `✓ meta atingida · desejada ${formatBRL(rendaDesejada)}/mês`
+                  : `faltam ${formatBRL(rendaDesejada - rendaSustentavel)}/mês`
+                : "Regra dos 4%"}
+            </div>
           </div>
         </div>
         <div style={{ fontSize: 8, color: "#9CA3AF", textAlign: "right" as const, marginBottom: 10 }}>

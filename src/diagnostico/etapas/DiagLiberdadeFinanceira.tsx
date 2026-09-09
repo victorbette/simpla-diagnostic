@@ -564,7 +564,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
           <CardContent className="pt-4 pb-4">
             <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Projetada</p>
             {(() => {
-              const rendaProj = projecaoResult?.rendaSustentavel ?? 0;
+              const rendaProj = patrimonioProjetado > 0 ? (patrimonioProjetado * 0.04) / 12 : 0;
               const atingeMeta = params.rendaDesejada > 0 && rendaProj >= params.rendaDesejada;
               const cor = rendaProj <= 0 ? "#111827" : atingeMeta ? "#15803D" : "#B91C1C";
               return (
