@@ -69,8 +69,7 @@ export function DocLFDiag({ lead }: Props) {
     return patrimonioInicial * f + aporteMensal * (f - 1) / TAXA_MENSAL;
   };
 
-  const projecaoNaIF     = Math.max(0, Math.round(calcularProjecao()));
-  const rendaSustentavel = (projecaoNaIF * 0.04) / 12;
+  const projecaoNaIFSimples = Math.max(0, Math.round(calcularProjecao()));
 
   const projecaoParams: ProjecaoIFParams = {
     idadeAtual,
@@ -87,6 +86,10 @@ export function DocLFDiag({ lead }: Props) {
 
   let result: ReturnType<typeof calcularProjecaoIF> | null = null;
   try { result = calcularProjecaoIF(projecaoParams); } catch { /* sem dados suficientes */ }
+
+  // Usa patrimonioNaIF da simulação completa (inclui objetivos); fallback para fórmula simples
+  const projecaoNaIF = result?.patrimonioNaIF ?? projecaoNaIFSimples;
+  const rendaSustentavel = (projecaoNaIF * 0.04) / 12;
 
   const mesIF = result
     ? result.mesInicioRetirada
