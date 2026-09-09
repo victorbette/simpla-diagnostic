@@ -243,12 +243,11 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
     const acumulando = m <= mesInicioRetirada;
 
     if (acumulando) {
-      // Apply objectives BEFORE growth (spec requirement)
+      // Apply objectives BEFORE growth (spec requirement).
+      // Do NOT clamp here — let patrimônio go negative so that recovery
+      // correctly accounts for the debt instead of restarting from zero.
       const effect = objByMesAno.get(`${anoAtual}-${mesAtual}`) ?? 0;
-      if (effect !== 0) {
-        patrimonio += effect;
-        patrimonio = Math.max(0, patrimonio);
-      }
+      if (effect !== 0) patrimonio += effect;
       patrimonio = patrimonio * (1 + taxaMensalReal) + aporteMensal;
     } else {
       patrimonio = patrimonio * (1 + TAXA_RET_MENSAL) - rendaMensalDesejada;
@@ -260,7 +259,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       ano: anoAtual,
       mesDoAno: mesAtual,
       idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
-      patrimonio: Math.round(patrimonio),
+      // Clamp only for display — internal `patrimonio` keeps the real negative value
+      patrimonio: Math.max(0, Math.round(patrimonio)),
       fase: acumulando ? "acumulacao" : "decumulacao",
     });
   }
@@ -300,7 +300,8 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       mesS++;
       if (mesS > 12) { mesS = 1; anoS++; }
       const effect = objByMesAno.get(`${anoS}-${mesS}`) ?? 0;
-      if (effect !== 0) { p += effect; p = Math.max(0, p); }
+      if (effect !== 0) p += effect;
+      // No clamp — same logic as main loop; negative periods recover via aporte
       p = p * (1 + taxaMensalReal) + aporte;
     }
     return p;
