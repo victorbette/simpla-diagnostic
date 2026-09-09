@@ -562,11 +562,26 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
 
         <Card style={cardStyle}>
           <CardContent className="pt-4 pb-4">
-            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Desejada</p>
-            <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#111827" }} className="tabular-nums">
-              {params.rendaDesejada > 0 ? fmtBRL(params.rendaDesejada) : "—"}
-            </p>
-            <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>/mês a partir da aposentadoria</p>
+            <p style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em", marginBottom: 4 }}>Renda Projetada</p>
+            {(() => {
+              const rendaProj = projecaoResult?.rendaSustentavel ?? 0;
+              const atingeMeta = params.rendaDesejada > 0 && rendaProj >= params.rendaDesejada;
+              const cor = rendaProj <= 0 ? "#111827" : atingeMeta ? "#15803D" : "#B91C1C";
+              return (
+                <>
+                  <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: cor }} className="tabular-nums">
+                    {rendaProj > 0 ? fmtBRL(rendaProj) : "—"}
+                  </p>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+                    {rendaProj > 0 && params.rendaDesejada > 0
+                      ? atingeMeta
+                        ? `✓ meta atingida · desejada ${fmtBRL(params.rendaDesejada)}`
+                        : `faltam ${fmtBRL(params.rendaDesejada - rendaProj)}/mês`
+                      : "/mês sustentável com o patrimônio projetado"}
+                  </p>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
