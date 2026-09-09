@@ -62,7 +62,7 @@ const VALOR_POR_CLASSE: Record<string, { label: string; key: string; hint?: stri
   renda_variavel:[{ label: "Valor em Renda Variável (R$)",  key: "valorRendaVariavel", hint: "Total em ações, FIIs e ETFs" }],
   exterior:      [{ label: "Valor no Exterior (R$)",        key: "valorExterior" }],
   cripto:        [{ label: "Valor em Cripto (R$)",          key: "valorCripto" }],
-  alternativos:  [{ label: "Valor em Alternativos (R$)",    key: "valorAlternativos" }],
+  previdencia:   [{ label: "Valor em Previdência (R$)",     key: "valorPrevidencia" }],
 };
 
 interface Props {
