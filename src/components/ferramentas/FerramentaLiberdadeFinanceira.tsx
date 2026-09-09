@@ -544,9 +544,19 @@ export function FerramentaLiberdadeFinanceira({
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente  = anoNascimento + params.idadeAposentadoria;
 
+  const [salvando, setSalvando] = useState(false);
+  const [salvo, setSalvo] = useState(false);
+
   const handleSalvar = async () => {
     if (!result) return;
-    await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual, dadosGrafico, ajustes });
+    setSalvando(true);
+    try {
+      await onSave(projecaoParams, objetivos, result, { taxaTravada: false, taxaTravadaValor: null }, { aporteNecessario, projecaoComAporteAtual, dadosGrafico, ajustes });
+      setSalvo(true);
+      setTimeout(() => setSalvo(false), 2500);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   // Expõe handleSalvar via ref para que o pai possa disparar o save ao trocar de aba
@@ -1095,6 +1105,34 @@ export function FerramentaLiberdadeFinanceira({
           )}
         </CardContent>
       </Card>}
+
+      {/* ── BOTÃO SALVAR ──────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, paddingBottom: 8 }}>
+        {salvo && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#15803D" }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 16 }} />
+            Análise salva com sucesso
+          </div>
+        )}
+        <button
+          onClick={handleSalvar}
+          disabled={salvando || !result}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            backgroundColor: "#2563EB",
+            color: "white", border: "none", borderRadius: 8,
+            padding: "10px 20px", fontSize: 13, fontWeight: 600,
+            cursor: salvando || !result ? "not-allowed" : "pointer",
+            opacity: salvando || !result ? 0.6 : 1,
+            fontFamily: "inherit",
+          }}
+        >
+          {salvando
+            ? <><i className="ti ti-loader-2" style={{ fontSize: 14 }} /> Salvando...</>
+            : <><i className="ti ti-device-floppy" style={{ fontSize: 14 }} /> Salvar análise</>
+          }
+        </button>
+      </div>
 
       {/* ── PAINEL LATERAL DE AJUDA ─────────────────────────────────────────── */}
       <PainelAjuda
