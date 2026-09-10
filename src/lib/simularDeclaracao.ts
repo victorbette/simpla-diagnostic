@@ -1,4 +1,4 @@
-import { calcularIRAnual, calcularINSSMensal, DEDUCAO_DEPENDENTE, DESCONTO_SIMPLIFICADO_ANUAL } from "./tax";
+import { calcularIRAnual, DEDUCAO_DEPENDENTE, DESCONTO_SIMPLIFICADO_ANUAL } from "./tax";
 
 export interface DeclaracaoInput {
   rendaBruta: number;
@@ -20,22 +20,16 @@ export interface DeclaracaoResult {
   resultadoCom: number;
   aliqEfetivaCom: number;
   economia: number;
-  inssAnual: number; // INSS deduzido da base (declaração completa)
   reformaZerouIR: boolean; // true quando a Reforma IRPF 2026 (não a tabela) zerou o imposto
 }
 
 export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
   const isSimplificada = i.tipoDeclaracao === "simplificada";
 
-  // INSS anual dedutível (na simplificada o desconto padrão já substitui todas as deduções)
-  const inssAnual = isSimplificada
-    ? 0
-    : calcularINSSMensal(i.rendaBruta / 12) * 12;
-
   // Base de cálculo sem PGBL
   const baseSemPGBL = isSimplificada
     ? Math.max(0, i.rendaBruta - DESCONTO_SIMPLIFICADO_ANUAL)
-    : Math.max(0, i.rendaBruta - inssAnual - i.despesas - Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE);
+    : Math.max(0, i.rendaBruta - i.despesas - Math.max(0, i.dependentes) * DEDUCAO_DEPENDENTE);
 
   // IR sem reforma: usado para detectar se foi a reforma (não a tabela) que zerou o imposto
   const irSemReforma = calcularIRAnual(baseSemPGBL);
@@ -68,7 +62,6 @@ export function simularDeclaracaoIRPF(i: DeclaracaoInput): DeclaracaoResult {
     tetoPGBL, aporteEfetivo,
     baseComPGBL, irComPGBL, resultadoCom, aliqEfetivaCom,
     economia,
-    inssAnual,
     reformaZerouIR,
   };
 }

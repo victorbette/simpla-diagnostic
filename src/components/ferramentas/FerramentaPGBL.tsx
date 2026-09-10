@@ -525,12 +525,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                  {metricBlock(
-                    "Base de Cálculo",
-                    formatBRL(sim.baseSemPGBL),
-                    undefined,
-                    sim.inssAnual > 0 ? `Deduz INSS: ${formatBRL(sim.inssAnual)}/ano` : undefined,
-                  )}
+                  {metricBlock("Base de Cálculo", formatBRL(sim.baseSemPGBL))}
                   {metricBlock("Imposto Devido",    formatBRL(sim.irSemPGBL), "#B91C1C")}
                   {metricBlock("Alíquota Efetiva",  sim.aliqEfetivaSem.toFixed(2) + "%")}
                 </div>
