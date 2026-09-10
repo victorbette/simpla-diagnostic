@@ -21,7 +21,8 @@ export function DocGestaoAtivos({ lead }: Props) {
   const valorExt    = Number(ativosMap.valorExterior)      || 0;
   const valorCripto = Number(ativosMap.valorCripto)        || 0;
   const valorAlt    = Number(ativosMap.valorAlternativos)  || 0;
-  const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt;
+  const valorPrev   = Number(ativosMap.valorPrevidencia)   || 0;
+  const totalPatrimonio = valorRF + valorRV + valorExt + valorCripto + valorAlt + valorPrev;
 
   const ativosDoLead = ATIVOS_INVESTIMENTO.filter(a => ativosMap[a.id] === true && a.classe !== "previdencia");
   const ativosBons    = ativosDoLead.filter(a => a.qualidade === "muito_atrativo" || a.qualidade === "atrativo");
@@ -181,6 +182,19 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
                 }),
               ];
             })}
+            {valorPrev > 0 && (
+              <tr style={{ background: "#F8FAFF", borderTop: "0.5px solid #E5E7EB" }}>
+                <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#111827" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <i className="ti ti-shield-check" style={{ fontSize: 13, color: "#7C3AED" }} />
+                    Previdência Privada
+                  </div>
+                </td>
+                <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" as const }}>
+                  {formatBRL(valorPrev)}
+                </td>
+              </tr>
+            )}
             {ativosDoLead.length === 0 && totalPatrimonio === 0 && (
               <tr>
                 <td colSpan={2} style={{ padding: "16px 12px", fontSize: 12, color: "#9CA3AF", textAlign: "center" as const }}>
