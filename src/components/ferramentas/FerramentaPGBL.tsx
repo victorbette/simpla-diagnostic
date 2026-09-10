@@ -525,7 +525,12 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                  {metricBlock("Base de Cálculo",  formatBRL(sim.baseSemPGBL))}
+                  {metricBlock(
+                    "Base de Cálculo",
+                    formatBRL(sim.baseSemPGBL),
+                    undefined,
+                    sim.inssAnual > 0 ? `Deduz INSS: ${formatBRL(sim.inssAnual)}/ano` : undefined,
+                  )}
                   {metricBlock("Imposto Devido",    formatBRL(sim.irSemPGBL), "#B91C1C")}
                   {metricBlock("Alíquota Efetiva",  sim.aliqEfetivaSem.toFixed(2) + "%")}
                 </div>
@@ -548,6 +553,19 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Aviso: Reforma IRPF 2026 zerou o imposto */}
+            {sim.reformaZerouIR && (
+              <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+                <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.7 }}>
+                  <strong>Isenção pela Reforma do IRPF 2026:</strong> Renda anual de {formatBRL(renda.value)} está abaixo de R$ 60.000/ano (R$ 5.000/mês). Pelo desconto complementar da reforma, o imposto é zerado nessa faixa — mesmo que a tabela progressiva gerasse imposto sobre a base deduzida.
+                  {sim.economia === 0 && (
+                    <> O PGBL só gera economia fiscal para rendas acima de R$ 60.000/ano. Para este cliente, o PGBL pode ser avaliado como estratégia de acumulação (VGBL) em vez de diferimento fiscal.</>
+                  )}
+                </p>
+              </div>
+            )}
 
           </div>
 
