@@ -420,7 +420,7 @@ export function DiagLiberdadeFinanceira({ dadosColeta, dadosLF, onChange, onSalv
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio</label>
+                  <label style={{ fontSize: 11, color: "#6B7280", fontWeight: 500 }}>Patrimônio Inicial</label>
                   {patrimonioEditado && (
                     <button
                       onClick={() => { setP({ patrimonioInicial: patrimonioColeta }); setPatrimonioEditado(false); }}
