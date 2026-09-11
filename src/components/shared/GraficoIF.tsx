@@ -265,13 +265,11 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     const objsDoPonto = objByMesIdx.get(payload.mes) ?? [];
     if (objsDoPonto.length === 0) return <g />;
 
-    const r = 18;
+    const r = 13;
     const ra = r + 2;
     // If the IF icon is at the same point, offset objectives above it
     const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
     const baseOffset = ehIF ? (ra * 2 + 8) : 0;
-
-    const isNegativo = Number(payload.patrimonioReal ?? payload.patrimonio) < 0;
 
     return (
       <g>
@@ -280,15 +278,14 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           const Icon = ICON_MAP[meta.icone];
           const offsetY = cy - r - 4 - baseOffset - i * (r * 2 + 4);
           const iconSize = (r - 2) * 2;
-          const corFinal = isNegativo ? "#DC2626" : meta.cor;
           return (
             <g key={obj.id}>
               {/* linha fina do gráfico até o ícone */}
-              <line x1={cx} y1={cy} x2={cx} y2={offsetY + r} stroke={corFinal} strokeWidth={1} strokeOpacity={0.6} />
-              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={corFinal} strokeWidth={1.5} />
+              <line x1={cx} y1={cy} x2={cx} y2={offsetY + r} stroke={meta.cor} strokeWidth={1} strokeOpacity={0.6} />
+              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={meta.cor} strokeWidth={1.5} />
               <foreignObject x={cx - r + 2} y={offsetY - r + 2} width={iconSize} height={iconSize}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-                  {Icon && <Icon style={{ width: 15, height: 15, color: corFinal }} />}
+                  {Icon && <Icon style={{ width: 11, height: 11, color: meta.cor }} />}
                 </div>
               </foreignObject>
             </g>
