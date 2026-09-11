@@ -355,7 +355,7 @@ export function FerramentaLiberdadeFinanceira({
         mesS++;
         if (mesS > 12) { mesS = 1; anoS++; }
         const effect = objByMesAno.get(`${anoS}-${mesS}`) ?? 0;
-        if (effect !== 0) { p += effect; p = Math.max(0, p); }
+        if (effect !== 0) p += effect;
         p = p * (1 + taxaMensal) + aporte;
       }
       return p;
@@ -412,7 +412,7 @@ export function FerramentaLiberdadeFinanceira({
       if (mesIter > 12) { mesIter = 1; anoIter++; }
 
       const effect = objByMesAno.get(`${anoIter}-${mesIter}`) ?? 0;
-      if (effect !== 0) saldo = Math.max(0, saldo + effect);
+      if (effect !== 0) saldo += effect;
 
       saldo = saldo * (1 + taxaMensal) + aporte;
 
