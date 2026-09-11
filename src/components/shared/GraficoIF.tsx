@@ -103,6 +103,15 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     [dadosMesclados, dominioX],
   );
 
+  // Adiciona campo para segmento negativo: 0 quando patrimônio < 0, null caso contrário
+  const dadosGrafico = useMemo(
+    () => dadosFiltrados.map(p => ({
+      ...p,
+      patrimonioNeg: Number(p.patrimonio) < 0 ? (0 as number | null) : null,
+    })),
+    [dadosFiltrados],
+  );
+
   const todasOcorrencias = useMemo(
     () => expandirOcorrenciasGrafico(objetivos.filter(o => o.ativo !== false)),
     [objetivos],
@@ -262,6 +271,8 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
     const baseOffset = ehIF ? (ra * 2 + 8) : 0;
 
+    const isNegativo = Number(payload.patrimonio) < 0;
+
     return (
       <g>
         {objsDoPonto.map((obj, i) => {
@@ -269,15 +280,16 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           const Icon = ICON_MAP[meta.icone];
           const offsetY = cy - r - 4 - baseOffset - i * (r * 2 + 4);
           const iconSize = (r - 2) * 2;
+          const corFinal = isNegativo ? "#DC2626" : meta.cor;
           return (
             <g key={obj.id}>
-              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={meta.cor} strokeWidth={1.5} />
+              <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={corFinal} strokeWidth={1.5} />
               <foreignObject x={cx - r + 2} y={offsetY - r + 2} width={iconSize} height={iconSize}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-                  {Icon && <Icon style={{ width: 15, height: 15, color: meta.cor }} />}
+                  {Icon && <Icon style={{ width: 15, height: 15, color: corFinal }} />}
                 </div>
               </foreignObject>
-              <circle cx={cx} cy={cy} r={5} fill="white" stroke="#374151" strokeWidth={1.5} />
+              <circle cx={cx} cy={cy} r={5} fill="white" stroke={isNegativo ? "#DC2626" : "#374151"} strokeWidth={1.5} />
             </g>
           );
         })}
@@ -330,7 +342,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
       )}
 
       <ResponsiveContainer width="100%" height={height}>
-        <AreaChart data={dadosFiltrados} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
+        <AreaChart data={dadosGrafico} margin={{ top: 60, right: 20, bottom: 0, left: 8 }}>
           <defs>
             <linearGradient id="gradReal" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%"  stopColor="#2563EB" stopOpacity={0.6} />
@@ -391,6 +403,23 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
               activeDot={{ r: 5, fill: "#2563EB", stroke: "white", strokeWidth: 2 }}
               isAnimationActive={false}
               name="Patrimônio Total Projetado"
+            />
+          )}
+
+          {/* 1b. LINHA VERMELHA — segmento onde patrimônio é negativo (clamped to y=0) */}
+          {mostrarProjetado && (
+            <Area
+              type="monotone"
+              dataKey="patrimonioNeg"
+              stroke="#DC2626"
+              strokeWidth={2}
+              fill="none"
+              fillOpacity={0}
+              dot={false}
+              activeDot={false}
+              connectNulls={false}
+              isAnimationActive={false}
+              name="Patrimônio negativo"
             />
           )}
 
