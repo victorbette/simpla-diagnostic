@@ -124,7 +124,8 @@ export interface PontoProjecao {
   ano: number;        // calendar year
   mesDoAno: number;   // 1-12
   idade: number;      // decimal age, e.g. 43.5
-  patrimonio: number;
+  patrimonio: number; // clamped to 0 for display
+  patrimonioReal?: number; // unclamped — may be negative (used for color alerts)
   fase: "acumulacao" | "decumulacao";
 }
 
@@ -254,13 +255,14 @@ export function calcularProjecaoIF(params: ProjecaoIFParams): ProjecaoIFResult {
       patrimonio = Math.max(0, patrimonio);
     }
 
+    const pat = Math.round(patrimonio);
     projecao.push({
       mes: m,
       ano: anoAtual,
       mesDoAno: mesAtual,
       idade: Math.round((idadeExataHoje + m / 12) * 10) / 10,
-      // Clamp only for display — internal `patrimonio` keeps the real negative value
-      patrimonio: Math.max(0, Math.round(patrimonio)),
+      patrimonio: Math.max(0, pat), // clamped to 0 for display
+      patrimonioReal: pat,          // unclamped — may be negative
       fase: acumulando ? "acumulacao" : "decumulacao",
     });
   }

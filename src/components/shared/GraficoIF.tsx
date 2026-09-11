@@ -103,11 +103,11 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     [dadosMesclados, dominioX],
   );
 
-  // Adiciona campo para segmento negativo: 0 quando patrimônio < 0, null caso contrário
+  // Adiciona campo para segmento negativo: 0 quando patrimonioReal < 0, null caso contrário
   const dadosGrafico = useMemo(
     () => dadosFiltrados.map(p => ({
       ...p,
-      patrimonioNeg: Number(p.patrimonio) < 0 ? (0 as number | null) : null,
+      patrimonioNeg: Number(p.patrimonioReal ?? p.patrimonio) < 0 ? (0 as number | null) : null,
     })),
     [dadosFiltrados],
   );
@@ -271,7 +271,7 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     const ehIF = ifPonto !== undefined && payload.mes === ifPonto.mes;
     const baseOffset = ehIF ? (ra * 2 + 8) : 0;
 
-    const isNegativo = Number(payload.patrimonio) < 0;
+    const isNegativo = Number(payload.patrimonioReal ?? payload.patrimonio) < 0;
 
     return (
       <g>
