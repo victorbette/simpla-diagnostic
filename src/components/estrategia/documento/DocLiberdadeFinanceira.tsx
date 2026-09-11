@@ -5,6 +5,8 @@ import {
   calcularProjecaoIF,
   calcularPatrimonioNecessario,
   calcularPatrimonioPerpetuidade,
+  calcularRendaSustentavel,
+  TAXA_RET_MENSAL,
   type PontoProjecao,
 } from "@/lib/financialFreedomCalc";
 import { getTaxaRentabilidade } from "@/lib/rentabilidade";
@@ -104,6 +106,11 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
   const aporteNecessario = rif?.aporteAjustado ?? 0;
   const aporteAtual = rif?.aporteAtual ?? pi.aporteMensal;
 
+  const rendaSustentavel = rif?.rendaSustentavel
+    ?? (patrimonioNaIF > 0
+        ? calcularRendaSustentavel(patrimonioNaIF, TAXA_RET_MENSAL, (90 - idadeMeta) * 12)
+        : 0);
+
   const curvaIdeal = projecaoData.curvaIdeal;
   const objetivos = rif?.objetivos ?? [];
   const temDados = metaExibida > 0 || projecaoData.projecao.length > 0;
@@ -177,14 +184,21 @@ export function DocLiberdadeFinanceira({ nomeCliente, plan, resultados }: Props)
             </p>
           </div>
 
-          {/* Renda Desejada */}
+          {/* Renda Sustentável */}
           <div className="doc-card" style={{ ...CARD, padding: "10px 14px" }}>
-            <p style={LABEL_CARD}>Renda Desejada</p>
-            <p style={{ fontSize: 15, fontWeight: 700, color: DOC.ink, margin: 0 }}>
-              {rendaDesejada > 0 ? `${fmtInteiro.format(rendaDesejada)}/mês` : "—"}
+            <p style={LABEL_CARD}>Renda Sustentável</p>
+            <p style={{
+              fontSize: 15, fontWeight: 700, margin: 0,
+              color: rendaSustentavel <= 0 ? DOC.ink : rendaSustentavel >= rendaDesejada ? DOC.verde : DOC.vermelho,
+            }}>
+              {rendaSustentavel > 0 ? `${fmtInteiro.format(rendaSustentavel)}/mês` : "—"}
             </p>
             <p style={{ fontSize: 9.5, color: DOC.hint, margin: "3px 0 0" }}>
-              a partir da aposentadoria
+              {rendaSustentavel > 0 && rendaDesejada > 0
+                ? rendaSustentavel >= rendaDesejada
+                  ? `✓ meta atingida · desejada ${fmtInteiro.format(rendaDesejada)}/mês`
+                  : `faltam ${fmtInteiro.format(rendaDesejada - rendaSustentavel)}/mês`
+                : "/mês sustentável com o patrimônio projetado"}
             </p>
           </div>
         </div>
