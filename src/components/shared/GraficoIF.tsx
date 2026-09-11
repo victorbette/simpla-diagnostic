@@ -242,13 +242,13 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
     if (!payload || cx === undefined || cy === undefined) return <g />;
     if (ifPonto === undefined || payload.mes !== ifPonto.mes) return <g />;
 
-    const ra = 20;
+    const ra = 13;
     return (
       <g>
         <circle cx={cx} cy={cy - ra - 4} r={ra} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
         <foreignObject x={cx - ra} y={cy - ra - 4 - ra} width={ra * 2} height={ra * 2}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-            <Sunset style={{ width: 16, height: 16, color: COR_APOSENTADORIA }} />
+            <Sunset style={{ width: 11, height: 11, color: COR_APOSENTADORIA }} />
           </div>
         </foreignObject>
         <circle cx={cx} cy={cy} r={5} fill="white" stroke={COR_APOSENTADORIA} strokeWidth={2} />
