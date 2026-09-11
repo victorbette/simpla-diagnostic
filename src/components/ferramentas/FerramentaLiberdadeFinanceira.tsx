@@ -544,6 +544,46 @@ export function FerramentaLiberdadeFinanceira({
   const anoAtualCliente = anoNascimento + params.idadeAtual;
   const anoMetaCliente  = anoNascimento + params.idadeAposentadoria;
 
+  const MESES_ABREV_LF = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+  // Detecta fase de patrimônio negativo na acumulação — para exibir banner de alerta
+  const alertaPatrimonioNegativo = useMemo(() => {
+    if (!result) return null;
+    const pontosNegativos = result.projecao.filter(
+      p => p.fase === "acumulacao" && (p.patrimonioReal ?? p.patrimonio) < 0,
+    );
+    if (pontosNegativos.length === 0) return null;
+
+    const primeiro = pontosNegativos[0];
+    const ultimo   = pontosNegativos[pontosNegativos.length - 1];
+    const duracaoMeses = pontosNegativos.length;
+    const anos  = Math.floor(duracaoMeses / 12);
+    const meses = duracaoMeses % 12;
+
+    const duracaoLabel = anos > 0 && meses > 0
+      ? `${anos} ano${anos > 1 ? "s" : ""} e ${meses} mês${meses > 1 ? "es" : ""}`
+      : anos > 0
+      ? `${anos} ano${anos > 1 ? "s" : ""}`
+      : `${meses} mês${meses > 1 ? "es" : ""}`;
+
+    // Objetivos de saída que coincidem com o início da fase negativa (até 3 meses antes)
+    const mesInicio = primeiro.mes;
+    const objetivosCausadores = objetivosExpandidos.filter(obj => {
+      if (isEntradaObjetivo(obj)) return false;
+      const pontoObj = result.projecao.find(p => p.ano === obj.ano && p.mesDoAno === obj.mes);
+      if (!pontoObj) return false;
+      // Objetivo está no início da fase negativa (até 3 meses de folga)
+      return pontoObj.mes >= mesInicio - 3 && pontoObj.mes <= mesInicio + 1;
+    });
+
+    return {
+      inicioLabel: `${MESES_ABREV_LF[(primeiro.mesDoAno - 1)]}/${primeiro.ano}`,
+      fimLabel:    `${MESES_ABREV_LF[(ultimo.mesDoAno   - 1)]}/${ultimo.ano}`,
+      duracaoLabel,
+      objetivosCausadores,
+    };
+  }, [result, objetivosExpandidos]);
+
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(false);
 
@@ -910,6 +950,36 @@ export function FerramentaLiberdadeFinanceira({
           />
         </div>
       </div>
+
+      {/* ── 2b. BANNER — patrimônio negativo ────────────────────────────────── */}
+      {alertaPatrimonioNegativo && (
+        <div style={{
+          display: "flex", gap: 12, alignItems: "flex-start",
+          background: "#FFFBEB",
+          border: "1px solid #FCD34D",
+          borderRadius: 10,
+          padding: "12px 16px",
+        }}>
+          <i className="ti ti-alert-triangle" style={{ fontSize: 18, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: "#92400E" }}>
+              Patrimônio negativo detectado na projeção
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: "#78350F", lineHeight: 1.5 }}>
+              {alertaPatrimonioNegativo.objetivosCausadores.length > 0
+                ? <>
+                    O objetivo <strong>{alertaPatrimonioNegativo.objetivosCausadores.map(o => o.label).join(", ")}</strong> torna
+                    o patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> até <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}).
+                  </>
+                : <>
+                    Os objetivos programados tornam o patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> até <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}).
+                  </>
+              }
+              {" "}Neste cenário, o cliente precisaria de crédito para financiar a despesa. Considere ajustar o valor, a data ou o aporte mensal.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
