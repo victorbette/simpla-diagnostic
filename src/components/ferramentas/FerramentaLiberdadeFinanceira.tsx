@@ -1047,19 +1047,27 @@ export function FerramentaLiberdadeFinanceira({
         <Card style={cardGreenTop}>
           <CardContent className="pt-4 pb-4">
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Desejada</span>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#9CA3AF", letterSpacing: "0.05em" }}>Renda Sustentável</span>
             </div>
-            <p style={{
-              fontSize: 20, fontWeight: 800, margin: 0, color: "#111827",
-            }} className="tabular-nums">
-              {params.rendaDesejada > 0
-                ? params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })
-                : "—"
-              }
-            </p>
-            <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
-              /mês a partir da aposentadoria
-            </p>
+            {(() => {
+              const rendaProj = result?.rendaSustentavel ?? 0;
+              const atingeMeta = params.rendaDesejada > 0 && rendaProj >= params.rendaDesejada;
+              const cor = rendaProj <= 0 ? "#111827" : atingeMeta ? "#15803D" : "#B91C1C";
+              return (
+                <>
+                  <p style={{ fontSize: 20, fontWeight: 800, margin: 0, color: cor }} className="tabular-nums">
+                    {rendaProj > 0 ? rendaProj.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }) : "—"}
+                  </p>
+                  <p style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
+                    {rendaProj > 0 && params.rendaDesejada > 0
+                      ? atingeMeta
+                        ? `✓ meta atingida · desejada ${params.rendaDesejada.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}`
+                        : `faltam ${(params.rendaDesejada - rendaProj).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 })}/mês`
+                      : "/mês sustentável com o patrimônio projetado"}
+                  </p>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
