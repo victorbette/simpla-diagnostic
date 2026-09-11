@@ -283,13 +283,14 @@ export function GraficoIF({ projecao, curvaIdeal, objetivos = [], height = 420, 
           const corFinal = isNegativo ? "#DC2626" : meta.cor;
           return (
             <g key={obj.id}>
+              {/* linha fina do gráfico até o ícone */}
+              <line x1={cx} y1={cy} x2={cx} y2={offsetY + r} stroke={corFinal} strokeWidth={1} strokeOpacity={0.6} />
               <circle cx={cx} cy={offsetY} r={r} fill="white" stroke={corFinal} strokeWidth={1.5} />
               <foreignObject x={cx - r + 2} y={offsetY - r + 2} width={iconSize} height={iconSize}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
                   {Icon && <Icon style={{ width: 15, height: 15, color: corFinal }} />}
                 </div>
               </foreignObject>
-              <circle cx={cx} cy={cy} r={5} fill="white" stroke={isNegativo ? "#DC2626" : "#374151"} strokeWidth={1.5} />
             </g>
           );
         })}
