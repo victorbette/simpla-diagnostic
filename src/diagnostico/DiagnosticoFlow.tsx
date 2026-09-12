@@ -105,22 +105,12 @@ export function DiagnosticoFlow({ lead, onAtualizar, onVoltar }: Props) {
         )}
 
         {etapaAtiva === "lf" && (
-          <>
-            <DiagLiberdadeFinanceira
-              dadosColeta={lead.dadosColeta}
-              dadosLF={lead.dadosLF}
-              onChange={atualizarLF}
-              onSalvar={handleSalvar}
-            />
-            <div className="diag-no-print" style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                onClick={() => handleTrocarAba("resultado")}
-                style={{ background: "#1E3A8A", color: "white", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-              >
-                Ver Diagnóstico →
-              </button>
-            </div>
-          </>
+          <DiagLiberdadeFinanceira
+            dadosColeta={lead.dadosColeta}
+            dadosLF={lead.dadosLF}
+            onChange={atualizarLF}
+            onSalvar={handleSalvar}
+          />
         )}
 
         {etapaAtiva === "resultado" && (
