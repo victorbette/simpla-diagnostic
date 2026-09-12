@@ -942,11 +942,6 @@ export function FerramentaLiberdadeFinanceira({
             mesNascimento={mesNascimento}
             patrimonioNecessario={undefined}
             curvaIdeal={result?.curvaIdeal ?? undefined}
-            taxaLabel={
-              ajustes.usarTaxaCustom
-                ? formatarTaxaLabel(ajustes.taxaCustomAnual)
-                : formatarTaxaLabel(taxaPadrao)
-            }
           />
         </div>
       </div>

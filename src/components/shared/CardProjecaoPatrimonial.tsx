@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraficoIF } from "@/components/shared/GraficoIF";
 import type { PontoProjecao } from "@/lib/financialFreedomCalc";
@@ -13,7 +14,7 @@ interface Props {
   height?: number;
   interativo?: boolean;
   mostrarZoom?: boolean;
-  taxaLabel?: string;
+  alertaTexto?: ReactNode;
 }
 
 export function CardProjecaoPatrimonial({
@@ -26,7 +27,7 @@ export function CardProjecaoPatrimonial({
   height = 420,
   interativo = true,
   mostrarZoom = true,
-  taxaLabel,
+  alertaTexto,
 }: Props) {
   return (
     <Card style={{ border: "0.5px solid #E5E7EB", borderRadius: 12, boxShadow: "none" }}>
@@ -45,22 +46,21 @@ export function CardProjecaoPatrimonial({
           interativo={interativo}
           mostrarZoom={mostrarZoom}
         />
-        {taxaLabel && (
+        {alertaTexto && (
           <div style={{
-            marginTop: 6,
-            fontSize: 10,
-            color: "#9CA3AF",
+            marginTop: 8,
             display: "flex",
-            alignItems: "center",
-            gap: 4,
+            alignItems: "flex-start",
+            gap: 6,
+            padding: "7px 10px",
+            background: "#FFFBEB",
+            border: "1px solid #FCD34D",
+            borderRadius: 8,
           }}>
-            <span style={{
-              width: 10, height: 2,
-              background: "#9CA3AF",
-              display: "inline-block",
-              borderRadius: 99,
-            }} />
-            Taxa utilizada: {taxaLabel}
+            <i className="ti ti-alert-triangle" style={{ fontSize: 13, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
+            <span style={{ fontSize: 11, color: "#78350F", lineHeight: 1.4 }}>
+              {alertaTexto}
+            </span>
           </div>
         )}
       </CardContent>
