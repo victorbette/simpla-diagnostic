@@ -942,39 +942,18 @@ export function FerramentaLiberdadeFinanceira({
             mesNascimento={mesNascimento}
             patrimonioNecessario={undefined}
             curvaIdeal={result?.curvaIdeal ?? undefined}
+            alertaTexto={alertaPatrimonioNegativo ? (
+              alertaPatrimonioNegativo.objetivosCausadores.length > 0
+                ? <>
+                    Patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> a <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}) causado pelo objetivo <strong>{alertaPatrimonioNegativo.objetivosCausadores.map(o => o.label).join(", ")}</strong>. Considere ajustar o valor, a data ou o aporte.
+                  </>
+                : <>
+                    Patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> a <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}). Considere ajustar os objetivos ou o aporte mensal.
+                  </>
+            ) : undefined}
           />
         </div>
       </div>
-
-      {/* ── 2b. BANNER — patrimônio negativo ────────────────────────────────── */}
-      {alertaPatrimonioNegativo && (
-        <div style={{
-          display: "flex", gap: 12, alignItems: "flex-start",
-          background: "#FFFBEB",
-          border: "1px solid #FCD34D",
-          borderRadius: 10,
-          padding: "12px 16px",
-        }}>
-          <i className="ti ti-alert-triangle" style={{ fontSize: 18, color: "#D97706", flexShrink: 0, marginTop: 1 }} />
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 700, color: "#92400E" }}>
-              Patrimônio negativo detectado na projeção
-            </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#78350F", lineHeight: 1.5 }}>
-              {alertaPatrimonioNegativo.objetivosCausadores.length > 0
-                ? <>
-                    O objetivo <strong>{alertaPatrimonioNegativo.objetivosCausadores.map(o => o.label).join(", ")}</strong> torna
-                    o patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> até <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}).
-                  </>
-                : <>
-                    Os objetivos programados tornam o patrimônio negativo de <strong>{alertaPatrimonioNegativo.inicioLabel}</strong> até <strong>{alertaPatrimonioNegativo.fimLabel}</strong> ({alertaPatrimonioNegativo.duracaoLabel}).
-                  </>
-              }
-              {" "}Neste cenário, o cliente precisaria de crédito para financiar a despesa. Considere ajustar o valor, a data ou o aporte mensal.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* ── 3. CARDS DE RESULTADO 2×2 ────────────────────────────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
