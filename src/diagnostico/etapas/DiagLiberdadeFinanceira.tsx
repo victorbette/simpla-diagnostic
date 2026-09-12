@@ -551,7 +551,6 @@ const taxaMensal = useMemo(
             )}
           </div>
 
-          <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Liberdade Financeira" />
         </div>
 
         {/* Card largo — Gráfico */}
@@ -698,6 +697,7 @@ const taxaMensal = useMemo(
         </div>
       </div>
 
+      <BotaoSalvar onSalvar={onSalvar} rotulo="Salvar Liberdade Financeira" />
     </div>
   );
 }
