@@ -99,7 +99,19 @@ export function DocLFDiag({ lead }: Props) {
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > 0 && idadeMeta > idadeAtual;
 
-  const temFilhos = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
+  const temFilhos    = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
+  const estadoCivil  = dadosColeta.estadoCivil ?? "";
+  const casado       = estadoCivil === "casado" || estadoCivil === "uniao_estavel";
+  const conjuge      = dadosColeta.nomeConjuge?.trim() || "";
+  const conjugeRef   = conjuge || "sua família";
+
+  const vinculos: string[] = Array.isArray(dadosColeta.vinculoProfissional)
+    ? dadosColeta.vinculoProfissional
+    : dadosColeta.vinculoProfissional ? [dadosColeta.vinculoProfissional] : [];
+  const ehAutonomo   = vinculos.includes("autonomo");
+  const ehEmpresario = vinculos.includes("empresario");
+  const ehServidor   = vinculos.includes("servidor");
+  const rendaVariavel = ehAutonomo || ehEmpresario;
 
   // Aporte necessário calculado com a mesma taxa e parâmetros do gráfico (TAXA_MENSAL / nMesesBase)
   const aporteIdealCalc = (() => {
@@ -119,25 +131,50 @@ export function DocLFDiag({ lead }: Props) {
     const anosRestantes = idadeMeta - idadeAtual;
     const atingeMeta = projecaoNaIF >= patrimonioNecessario;
 
+    // Referências de família para o texto
+    const familiaRef = casado && temFilhos
+      ? `você e ${conjugeRef}`
+      : casado ? `você e ${conjugeRef}` : "você";
+
+    // Nota de profissão — parágrafo 2
+    const notaProf = rendaVariavel
+      ? `Como ${ehEmpresario ? "empresário" : "autônomo"}, a sua renda é variável — sem 13º, sem FGTS, sem renda garantida pelo empregador. A construção do patrimônio${casado ? ` para ${familiaRef}${temFilhos ? " e seus filhos" : ""}` : temFilhos ? " para sua família" : ""} depende exclusivamente da estratégia que você montar agora. Cada ano sem um plano estruturado tem um custo muito maior do que para a maioria das pessoas.`
+      : ehServidor
+        ? `Como servidor público, você tem uma base de segurança que poucos têm — mas a aposentadoria pelo regime público raramente mantém o padrão de vida de quem estava na ativa. A diferença entre o que o RPPS garante e o que ${casado ? `você e ${conjugeRef} imaginam` : "você imagina"} como aposentadoria ideal é o que precisa ser planejado e construído agora.`
+        : "";
+
+    // Parágrafo 3 — sensibilidade + sonhos + call to action
+    const sonhos = temFilhos && casado
+      ? `A melhor escola para seus filhos, a liberdade de ${conjugeRef} também ter mais opções, a aposentadoria que imaginam juntos — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
+      : casado
+        ? `As viagens que vocês planejaram, a liberdade de ${conjugeRef} também ter mais opções, a aposentadoria que imaginam juntos — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
+        : temFilhos
+          ? `A melhor escola para seus filhos, a faculdade sem aperto financeiro, estar presente nos momentos que importam — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
+          : `As viagens que sempre adiou, a liberdade de trabalhar por vontade e não por obrigação — esses projetos têm um preço, e esse preço precisa estar no plano.`;
+
     if (atingeMeta) {
-      let t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável. Sua meta de ${formatBRL(rendaDesejada)}/mês está dentro do alcance com a trajetória atual.`;
-      t += `\n\nEsse resultado coloca você em uma posição que a maioria das pessoas nunca alcança — mas chegar é só metade do trabalho. Uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer o que levou décadas para construir.${temFilhos ? ` Cada ponto percentual a mais de rentabilidade tem impacto exponencial no legado que você constrói para seus filhos.` : ""}`;
-      t += `\n\nA análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado. O objetivo não é apenas chegar à meta — é chegar com folga e com a estrutura certa para se manter lá.`;
+      const legadoRef = temFilhos
+        ? ` Cada ponto percentual a mais de rentabilidade tem impacto exponencial no legado para seus filhos${casado ? ` e na tranquilidade de ${conjugeRef}` : ""}.`
+        : casado ? ` Cada ponto percentual a mais de rentabilidade tem impacto exponencial na tranquilidade de ${conjugeRef}.` : "";
+
+      let t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} chegam` : "Você chega"} ao patamar de independência financeira que ${casado ? "planejaram" : "planejou"}.`;
+      t += `\n\n${notaProf || `Esse resultado coloca você em uma posição que a maioria das pessoas nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer décadas de esforço.${legadoRef}`}`;
+      t += `\n\nA análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado. O objetivo não é apenas chegar à meta — é chegar com folga e com a estrutura certa para ${casado || temFilhos ? `manter ${casado ? conjugeRef : "seus filhos"} protegidos` : "se manter lá"}, independente do que aconteça.`;
       return t;
     }
 
     const diferencaRenda = rendaDesejada > rendaSustentavel ? rendaDesejada - rendaSustentavel : 0;
     const rendaSustStr = rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "abaixo do necessário";
 
-    let texto = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — ${pct}% do necessário. Seu patrimônio geraria ${rendaSustStr} de forma sustentável${diferencaRenda > 0 ? `, ${formatBRL(diferencaRenda)}/mês abaixo da meta de ${formatBRL(rendaDesejada)}` : ""}. Fechar essa diferença exigiria ${formatBRL(aporteIdealCalc)}/mês${aporteIdealCalc > aporteMensal ? ` — ${formatBRL(aporteIdealCalc - aporteMensal)}/mês a mais do ritmo atual` : ""}.`;
+    const p1 = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — ${pct}% do necessário para a aposentadoria que ${casado ? `você e ${conjugeRef} planejam` : "você planejou"}. A renda sustentável seria de ${rendaSustStr}${diferencaRenda > 0 ? ` — ${formatBRL(diferencaRenda)}/mês abaixo da meta de ${formatBRL(rendaDesejada)}/mês` : ""}. Fechar essa diferença exigiria ${formatBRL(aporteIdealCalc)}/mês${aporteIdealCalc > aporteMensal ? ` — ${formatBRL(aporteIdealCalc - aporteMensal)}/mês a mais do ritmo atual` : ""}.`;
 
-    texto += `\n\nAporte não é o único caminho: uma carteira mais eficiente pode aumentar a rentabilidade real e encurtar essa distância sem necessariamente investir mais. A análise de sensibilidade abaixo mostra que cada ano de atraso aumenta o esforço de forma desproporcional — ${anosRestantes <= 15 ? `com ${anosRestantes} anos até a aposentadoria, a janela existe, mas se fecha mais rápido do que parece` : `você tem ${anosRestantes} anos para mudar o cenário de forma significativa, mas não tempo infinito`}.`;
+    const p2 = notaProf || `Aporte não é o único caminho: uma carteira mais eficiente pode aumentar a rentabilidade real e encurtar essa distância sem necessariamente investir mais. A análise de sensibilidade abaixo mostra que cada ano de atraso aumenta o esforço de forma desproporcional — ${anosRestantes <= 15 ? `com ${anosRestantes} anos até a aposentadoria, a janela existe, mas se fecha mais rápido do que parece` : `você tem ${anosRestantes} anos para mudar o cenário de forma significativa, mas não tempo infinito`}.`;
 
-    if (temFilhos) {
-      texto += `\n\nSeus filhos são parte do que está sendo construído aqui. Cada ajuste feito hoje não é só sobre a sua aposentadoria — é sobre a estabilidade e o legado que você deixa para eles.`;
-    }
+    const p3 = notaProf
+      ? `Aporte não é o único caminho: uma carteira mais eficiente pode encurtar essa distância. ${sonhos}`
+      : sonhos;
 
-    return texto;
+    return `${p1}\n\n${p2}\n\n${p3}`;
   }
 
   // ── Análise de Sensibilidade — usa simulação completa com objetivos ──
