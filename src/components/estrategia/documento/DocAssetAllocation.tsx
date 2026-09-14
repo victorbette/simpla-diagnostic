@@ -3,6 +3,7 @@ import { PERFIL_LABELS } from "@/types/financialPlanning";
 import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
 import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO } from "@/lib/carteira/types";
+import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
 
@@ -146,8 +147,8 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
           ))}
         </div>
 
-        {/* Groups */}
-        {HIERARQUIA_CLASSES.map((grupo) => {
+        {/* Groups — previdência handled separately below */}
+        {HIERARQUIA_CLASSES.filter((g) => g.id !== 'previdencia_privada').map((grupo) => {
           const subsData = grupo.subclasses.map((sub) => ({
             ...sub,
             pct: Number(macroMeta[sub.cardId]) || 0,
@@ -194,6 +195,49 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
             </div>
           );
         })}
+
+        {/* Previdência — separate section (not part of the recommended allocation %) */}
+        {(() => {
+          if (!rc) return null;
+          const prevAtivos = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? [])
+            .filter((a) => a.card === 'previdencia');
+          const prevTotal = prevAtivos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+          if (prevTotal <= 0) return null;
+          return (
+            <div>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px", backgroundColor: "#E0F2FE", borderBottom: `0.5px solid ${DOC.linha}`, alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 20, height: 20, borderRadius: 5, backgroundColor: "#0284C7", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <i className="ti ti-piggy-bank" style={{ fontSize: 10, color: "white" }} aria-hidden="true" />
+                  </span>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
+                  <span style={{ fontSize: 9, color: "#0369A1", fontStyle: "italic" }}>classe separada</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>
+                </div>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: "#0284C7", textAlign: "right" }}>
+                  {formatCurrency(prevTotal)}
+                </span>
+              </div>
+              {prevAtivos.map((a) => (
+                <div key={a.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "6px 12px 6px 16px", borderBottom: "0.5px solid #F9FAFB", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 10, height: 14, borderLeft: "1.5px solid #0284C740", borderBottom: "1.5px solid #0284C740", flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, color: DOC.texto }}>{a.nome}</span>
+                    {a.segmento && (
+                      <span style={{ fontSize: 9, color: "#0284C7", background: "#E0F2FE", padding: "1px 6px", borderRadius: 99 }}>{a.segmento}</span>
+                    )}
+                  </div>
+                  <div />
+                  <span style={{ fontSize: 11, color: DOC.muted, textAlign: "right" }}>
+                    {formatCurrency(Number(a.valorBRL) || 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Footer */}
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px", backgroundColor: "#F8FAFF", borderTop: `0.5px solid ${DOC.linha}`, alignItems: "center" }}>
