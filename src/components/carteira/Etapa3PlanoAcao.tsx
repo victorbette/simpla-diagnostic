@@ -116,14 +116,17 @@ function calcularValorFinalItem(i: PlanoAcaoItem): number {
       return Number(i.valorAtualBRL) || 0;
     case "resgatar_parcial":
       return Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
-    case "resgatar_total": case "portabilidade":
+    case "resgatar_total":
       return 0;
+    case "portabilidade":
+      return i.portabilidadeDestino?.valor ?? 0;
     default:
       return Number(i.valorAtualBRL) || 0;
   }
 }
 
 function movEfetivo(item: PlanoAcaoItem): number {
+  if (item.acao === "portabilidade") return 0;
   if (item.acao === "aportar" || item.acao === "novo") {
     return item.movimentacaoEditada ?? item.movimentacaoBRL;
   }

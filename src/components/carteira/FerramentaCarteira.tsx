@@ -76,11 +76,16 @@ function migrateAtivo(a: any): Ativo {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateItemPlano(p: any): PlanoAcaoItem {
   const VALID: CardId[] = ["resgate_rapido", "resgate_longo", "acoes", "fiis", "exterior", "cripto", "alternativos", "previdencia"];
-  const VALID_ACAO = ["manter", "aportar", "resgatar_parcial", "resgatar_total", "novo"];
+  const VALID_ACAO = ["manter", "aportar", "resgatar_parcial", "resgatar_total", "novo", "portabilidade"];
   const card: CardId = VALID.includes(p.card) ? p.card : "resgate_rapido";
   // support both 'acao' (new) and 'tipo' (legacy localStorage data)
   const acaoRaw = p.acao ?? p.tipo;
   const acao: PlanoAcaoItem["acao"] = VALID_ACAO.includes(acaoRaw) ? acaoRaw : "manter";
+  const dest = p.portabilidadeDestino;
+  const portabilidadeDestino: PlanoAcaoItem["portabilidadeDestino"] =
+    dest && typeof dest === "object" && dest.nome
+      ? { nome: String(dest.nome), tipo: dest.tipo === "PGBL" ? "PGBL" : "VGBL", valor: Number(dest.valor) || 0 }
+      : undefined;
   return {
     id: String(p.id ?? Math.random()),
     card,
@@ -96,6 +101,7 @@ function migrateItemPlano(p: any): PlanoAcaoItem {
     prioridade: ["alta", "media", "baixa"].includes(p.prioridade) ? p.prioridade : "baixa",
     adicionadoManualmente: p.adicionadoManualmente ? true : undefined,
     valorResgateBRL: p.valorResgateBRL != null ? Number(p.valorResgateBRL) : undefined,
+    portabilidadeDestino,
     ajustadoPorRedistribuicao: p.ajustadoPorRedistribuicao === true ? true : undefined,
   };
 }
