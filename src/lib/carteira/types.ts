@@ -26,7 +26,7 @@ export interface PlanoAcaoItem {
   card: CardId;
   nomeAtivo: string;
   segmento: string;
-  acao: 'manter' | 'aportar' | 'resgatar_parcial' | 'resgatar_total' | 'novo';
+  acao: 'manter' | 'aportar' | 'resgatar_parcial' | 'resgatar_total' | 'novo' | 'portabilidade';
   valorAtualBRL: number;
   valorMetaBRL: number;
   movimentacaoBRL: number;
@@ -35,6 +35,7 @@ export interface PlanoAcaoItem {
   observacao: string;
   prioridade: 'alta' | 'media' | 'baixa';
   valorResgateBRL?: number;
+  portabilidadeDestino?: { nome: string; tipo: 'PGBL' | 'VGBL'; valor: number };
   adicionadoManualmente?: boolean;
   ajustadoPorRedistribuicao?: boolean;
 }

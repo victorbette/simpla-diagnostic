@@ -58,6 +58,7 @@ const TIPO_CONFIG: Record<PlanoAcaoItem["acao"], { bg: string; color: string; la
   resgatar_parcial: { bg: "#FEE2E2", color: "#B91C1C", label: "↓ Resgatar" },
   resgatar_total:   { bg: "#FEE2E2", color: "#B91C1C", label: "↓ Resgatar tudo" },
   novo:             { bg: "#DBEAFE", color: "#1E40AF", label: "✦ Novo" },
+  portabilidade:    { bg: "#E0F2FE", color: "#0284C7", label: "⇄ Portabilidade" },
 };
 
 const selectStyle: React.CSSProperties = {
@@ -115,7 +116,7 @@ function calcularValorFinalItem(i: PlanoAcaoItem): number {
       return Number(i.valorAtualBRL) || 0;
     case "resgatar_parcial":
       return Math.max(0, (Number(i.valorAtualBRL) || 0) - (i.valorResgateBRL ?? Math.abs(i.movimentacaoBRL ?? 0)));
-    case "resgatar_total":
+    case "resgatar_total": case "portabilidade":
       return 0;
     default:
       return Number(i.valorAtualBRL) || 0;
@@ -1077,6 +1078,9 @@ export function Etapa3PlanoAcao({
                       <option value="resgatar_parcial">Resgatar parcialmente</option>
                       <option value="resgatar_total">Resgatar tudo</option>
                       <option value="novo">Novo</option>
+                      {item.card === "previdencia" && (
+                        <option value="portabilidade">Portabilidade</option>
+                      )}
                     </select>
 
                     <input
@@ -1200,6 +1204,83 @@ export function Etapa3PlanoAcao({
                           <strong style={{ color: "#374151" }}>
                             {formatBRL(Math.max(0, item.valorAtualBRL - (item.valorResgateBRL ?? Math.abs(item.movimentacaoBRL))))}
                           </strong>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Portabilidade — descrição + destino */}
+                  {item.acao === "portabilidade" && (
+                    <div style={{ padding: "0 14px 10px" }}>
+                      <div style={{
+                        display: "flex", flexDirection: "column", gap: 8,
+                        padding: "10px 12px",
+                        background: "#F0F9FF",
+                        border: "0.5px solid #BAE6FD",
+                        borderRadius: 6,
+                      }}>
+                        <div style={{ fontSize: 10, color: "#0369A1", fontWeight: 600 }}>
+                          ⇄ Portabilidade — descreva a mudança
+                        </div>
+                        <input
+                          type="text"
+                          value={item.observacao ?? ""}
+                          onChange={(e) => updateItem(item.id, { observacao: e.target.value })}
+                          placeholder="Ex: Portabilidade para fundo com taxa menor, mesma seguradora..."
+                          style={{
+                            width: "100%", border: "1px solid #BAE6FD", borderRadius: 6,
+                            padding: "6px 10px", fontSize: 12, color: "#374151",
+                            background: "white", boxSizing: "border-box" as const, outline: "none",
+                          }}
+                        />
+                        <div style={{ fontSize: 10, color: "#0369A1", fontWeight: 600 }}>
+                          Nova previdência de destino
+                        </div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" as const }}>
+                          <input
+                            type="text"
+                            value={item.portabilidadeDestino?.nome ?? ""}
+                            onChange={(e) => updateItem(item.id, {
+                              portabilidadeDestino: {
+                                nome: e.target.value,
+                                tipo: item.portabilidadeDestino?.tipo ?? "VGBL",
+                                valor: item.portabilidadeDestino?.valor ?? 0,
+                              },
+                            })}
+                            placeholder="Nome do fundo"
+                            style={{
+                              flex: "2 1 120px", border: "1px solid #BFDBFE", borderRadius: 6,
+                              padding: "5px 8px", fontSize: 12, color: "#374151",
+                              background: "white", outline: "none",
+                            }}
+                          />
+                          <select
+                            value={item.portabilidadeDestino?.tipo ?? "VGBL"}
+                            onChange={(e) => updateItem(item.id, {
+                              portabilidadeDestino: {
+                                nome: item.portabilidadeDestino?.nome ?? "",
+                                tipo: e.target.value as "PGBL" | "VGBL",
+                                valor: item.portabilidadeDestino?.valor ?? 0,
+                              },
+                            })}
+                            style={{ ...selectStyle, flex: "0 0 auto" }}
+                          >
+                            <option value="PGBL">PGBL</option>
+                            <option value="VGBL">VGBL</option>
+                          </select>
+                          <div style={{ flex: "1 1 110px" }}>
+                            <CurrencyInput
+                              value={item.portabilidadeDestino?.valor ?? 0}
+                              onChange={(v) => updateItem(item.id, {
+                                portabilidadeDestino: {
+                                  nome: item.portabilidadeDestino?.nome ?? "",
+                                  tipo: item.portabilidadeDestino?.tipo ?? "VGBL",
+                                  valor: v,
+                                },
+                              })}
+                              placeholder="R$ 0,00"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
