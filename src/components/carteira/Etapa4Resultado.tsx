@@ -58,6 +58,7 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
     case "novo":
       return item.valorAtualBRL + (item.movimentacaoEditada ?? Math.abs(item.movimentacaoBRL ?? 0));
     case "resgatar_total":
+    case "portabilidade":
       return 0;
     case "resgatar_parcial": {
       const resgate = item.valorResgateBRL !== undefined
@@ -119,30 +120,39 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
   );
 
   const carteiraFinal = useMemo(() =>
-    planoAcao
-      .map((item) => {
-        const valorFinal = calcularValorFinal(item);
-        if (valorFinal <= 0) return null;
-        const ativoAtual = ativosAtuais.find(
-          (a) => a.id === item.id || (a.nome === item.nomeAtivo && a.card === item.card)
-        );
-        const vencimento = item.vencimento?.trim()
-          ? item.vencimento
-          : ativoAtual?.vencimento?.trim()
-            ? ativoAtual.vencimento
-            : undefined;
-        return {
-          id: item.id,
-          nome: item.nomeAtivo,
-          card: item.card,
-          segmento: item.segmento ?? "",
-          valorBRL: valorFinal,
-          vencimento,
-          adicionadoManualmente: item.adicionadoManualmente,
-          observacao: item.observacao,
-        } as Ativo;
-      })
-      .filter(Boolean) as Ativo[],
+    planoAcao.flatMap((item) => {
+      if (item.acao === "portabilidade") {
+        const dest = item.portabilidadeDestino;
+        if (!dest?.nome || (dest.valor ?? 0) <= 0) return [];
+        return [{
+          id: `previdencia-portab-${item.id}`,
+          nome: dest.nome,
+          card: "previdencia" as CardId,
+          segmento: dest.tipo || "VGBL",
+          valorBRL: dest.valor,
+        } as Ativo];
+      }
+      const valorFinal = calcularValorFinal(item);
+      if (valorFinal <= 0) return [];
+      const ativoAtual = ativosAtuais.find(
+        (a) => a.id === item.id || (a.nome === item.nomeAtivo && a.card === item.card)
+      );
+      const vencimento = item.vencimento?.trim()
+        ? item.vencimento
+        : ativoAtual?.vencimento?.trim()
+          ? ativoAtual.vencimento
+          : undefined;
+      return [{
+        id: item.id,
+        nome: item.nomeAtivo,
+        card: item.card,
+        segmento: item.segmento ?? "",
+        valorBRL: valorFinal,
+        vencimento,
+        adicionadoManualmente: item.adicionadoManualmente,
+        observacao: item.observacao,
+      } as Ativo];
+    }),
     [planoAcao, ativosAtuais]
   );
 

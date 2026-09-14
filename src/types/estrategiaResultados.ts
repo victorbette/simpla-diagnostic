@@ -18,6 +18,7 @@ export interface PlanoAcaoItem {
   prioridade?: string;
   observacao?: string;
   valorResgateBRL?: number;
+  portabilidadeDestino?: { nome: string; tipo: string; valor: number };
   adicionadoManualmente?: boolean;
 }
 

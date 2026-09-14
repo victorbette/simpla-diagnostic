@@ -12,43 +12,54 @@ export function montarCarteiraFinal(
   ativosRecomendados: Ativo[],
   ativosAtuais?: Ativo[],
 ): Ativo[] {
-  return (planoAcao ?? [])
-    .map((item) => {
-      if (!item.card) return null;
-      const acao = item.acao ?? item.tipo ?? "";
-      let valorFinal = 0;
-      switch (acao) {
-        case "novo":
-        case "aportar":
-          valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0);
-          break;
-        case "manter":
-          valorFinal = item.valorAtualBRL ?? 0;
-          break;
-        case "resgatar_parcial": {
-          const resgate = item.valorResgateBRL !== undefined
-            ? item.valorResgateBRL
-            : Math.abs(item.movimentacaoBRL ?? 0);
-          valorFinal = Math.max(0, (item.valorAtualBRL ?? 0) - resgate);
-          break;
-        }
-        case "resgatar_total":
-          return null;
-        default:
-          valorFinal = item.valorAtualBRL ?? 0;
+  return (planoAcao ?? []).flatMap((item) => {
+    if (!item.card) return [];
+    const acao = item.acao ?? item.tipo ?? "";
+
+    if (acao === "portabilidade") {
+      const dest = item.portabilidadeDestino;
+      if (!dest?.nome || (dest.valor ?? 0) <= 0) return [];
+      return [{
+        id: `previdencia-portab-${item.id}`,
+        card: "previdencia" as CardId,
+        nome: dest.nome,
+        segmento: dest.tipo || "VGBL",
+        valorBRL: dest.valor,
+      } satisfies Ativo];
+    }
+
+    let valorFinal = 0;
+    switch (acao) {
+      case "novo":
+      case "aportar":
+        valorFinal = (item.valorAtualBRL ?? 0) + (item.movimentacaoEditada ?? item.movimentacaoBRL ?? 0);
+        break;
+      case "manter":
+        valorFinal = item.valorAtualBRL ?? 0;
+        break;
+      case "resgatar_parcial": {
+        const resgate = item.valorResgateBRL !== undefined
+          ? item.valorResgateBRL
+          : Math.abs(item.movimentacaoBRL ?? 0);
+        valorFinal = Math.max(0, (item.valorAtualBRL ?? 0) - resgate);
+        break;
       }
-      if (valorFinal <= 0) return null;
-      const cardId = item.card as CardId;
-      const base = (ativosRecomendados ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
-      const atual = (ativosAtuais ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
-      return {
-        id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
-        card: cardId,
-        nome: item.nomeAtivo,
-        segmento: item.segmento ?? base?.segmento ?? "",
-        vencimento: item.vencimento?.trim() ? item.vencimento : (atual?.vencimento?.trim() ? atual.vencimento : base?.vencimento),
-        valorBRL: valorFinal,
-      } satisfies Ativo;
-    })
-    .filter(Boolean) as Ativo[];
+      case "resgatar_total":
+        return [];
+      default:
+        valorFinal = item.valorAtualBRL ?? 0;
+    }
+    if (valorFinal <= 0) return [];
+    const cardId = item.card as CardId;
+    const base = (ativosRecomendados ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
+    const atual = (ativosAtuais ?? []).find((a) => a.nome === item.nomeAtivo && a.card === cardId);
+    return [{
+      id: base?.id ?? `${cardId}-${item.nomeAtivo}`,
+      card: cardId,
+      nome: item.nomeAtivo,
+      segmento: item.segmento ?? base?.segmento ?? "",
+      vencimento: item.vencimento?.trim() ? item.vencimento : (atual?.vencimento?.trim() ? atual.vencimento : base?.vencimento),
+      valorBRL: valorFinal,
+    } satisfies Ativo];
+  });
 }
