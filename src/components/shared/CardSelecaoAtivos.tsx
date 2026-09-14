@@ -10,6 +10,7 @@ interface Props {
   patrimonio: number;
   titulo?: string;
   subtitulo?: string;
+  cardsExcluirPct?: CardId[];
 }
 
 export function CardSelecaoAtivos({
@@ -18,6 +19,7 @@ export function CardSelecaoAtivos({
   patrimonio,
   titulo = "Seleção de Ativos Recomendados",
   subtitulo = "Carteira recomendada por classe",
+  cardsExcluirPct = [],
 }: Props) {
   if (ativosRecomendados.length === 0) return null;
 
@@ -37,6 +39,7 @@ export function CardSelecaoAtivos({
         const ativos = ativosRecomendados.filter((a) => a.card === cardId);
         if (ativos.length === 0) return null;
         const meta = CARD_META[cardId];
+        const excluirPct = cardsExcluirPct.includes(cardId);
         const pct = Number(macroMeta[cardId]) || 0;
         const brlMeta = (pct / 100) * patrimonio;
         const totalGrupo = ativos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
@@ -52,9 +55,11 @@ export function CardSelecaoAtivos({
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <i className={`ti ${meta.icone}`} style={{ fontSize: 15, color: meta.cor }} aria-hidden="true" />
                 <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{meta.label}</span>
-                <span style={{ fontSize: 10, color: "#6B7280", background: "#F3F4F6", padding: "2px 8px", borderRadius: 99 }}>
-                  {pct.toFixed(1)}% · {formatBRL(brlMeta)}
-                </span>
+                {!excluirPct && (
+                  <span style={{ fontSize: 10, color: "#6B7280", background: "#F3F4F6", padding: "2px 8px", borderRadius: 99 }}>
+                    {pct.toFixed(1)}% · {formatBRL(brlMeta)}
+                  </span>
+                )}
               </div>
               <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>{formatBRL(totalGrupo)}</span>
             </div>
@@ -63,7 +68,7 @@ export function CardSelecaoAtivos({
               <span>Ativo</span>
               <span>Segmento</span>
               {mostrarVencimento && <span>Vencimento</span>}
-              <span style={{ textAlign: "right" }}>R$ Meta</span>
+              <span style={{ textAlign: "right" }}>{excluirPct ? "R$ Investido" : "R$ Meta"}</span>
             </div>
 
             {ativos.map((ativo) => (

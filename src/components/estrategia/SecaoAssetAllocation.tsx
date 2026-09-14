@@ -378,8 +378,8 @@ export function SecaoAssetAllocation({
             </div>
           </div>
 
-          {/* Groups */}
-          {HIERARQUIA_CLASSES.map((grupo) => {
+          {/* Groups — previdência is handled separately below */}
+          {HIERARQUIA_CLASSES.filter((g) => g.id !== 'previdencia_privada').map((grupo) => {
             const subsData = grupo.subclasses.map((sub) => ({
               ...sub,
               pct: Number(rc.macroMeta[sub.cardId]) || 0,
@@ -429,6 +429,48 @@ export function SecaoAssetAllocation({
             );
           })}
 
+          {/* Previdência — separate section (not part of the recommended allocation %) */}
+          {(() => {
+            const prevAtivos = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? [])
+              .filter((a) => a.card === 'previdencia');
+            const prevTotal = prevAtivos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+            if (prevTotal <= 0) return null;
+            return (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#E0F2FE", borderBottom: "0.5px solid #E5E7EB", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: "#0284C7", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <i className="ti ti-piggy-bank" style={{ fontSize: 12, color: "white" }} />
+                    </span>
+                    <div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
+                      <span style={{ fontSize: 10, color: "#0369A1", marginLeft: 8 }}>classe separada</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7", textAlign: "right" }}>
+                    {formatBRL(prevTotal)}
+                  </span>
+                </div>
+                {prevAtivos.map((a) => (
+                  <div key={a.id} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px 8px 16px", borderBottom: "0.5px solid #F9FAFB", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 12, height: 18, borderLeft: "1.5px solid #0284C740", borderBottom: "1.5px solid #0284C740", flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: "#374151" }}>{a.nome}</span>
+                      {a.segmento && (
+                        <span style={{ fontSize: 10, color: "#0284C7", background: "#E0F2FE", padding: "1px 6px", borderRadius: 99 }}>{a.segmento}</span>
+                      )}
+                    </div>
+                    <div />
+                    <span style={{ fontSize: 12, color: "#6B7280", textAlign: "right" }}>{formatBRL(Number(a.valorBRL) || 0)}</span>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {/* Footer */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#F8FAFF", borderTop: "0.5px solid #E5E7EB", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -454,6 +496,7 @@ export function SecaoAssetAllocation({
               patrimonio={patrimonioMeta}
               titulo="Como sua carteira deverá ficar"
               subtitulo="Seleção de ativos após execução do plano"
+              cardsExcluirPct={['previdencia']}
             />
           );
         })()}

@@ -254,7 +254,7 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
               </tr>
             </thead>
             <tbody>
-              {cardTotais.map(({ cardId, atual, meta, dif }, i) => (
+              {cardTotais.filter(({ cardId }) => cardId !== 'previdencia').map(({ cardId, atual, meta, dif }, i) => (
                 <tr key={cardId} style={{ backgroundColor: i % 2 === 0 ? "#F0F7FF" : "white" }}>
                   <td style={{ padding: "8px 14px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
