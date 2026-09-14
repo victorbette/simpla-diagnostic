@@ -211,7 +211,6 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
                     <i className="ti ti-piggy-bank" style={{ fontSize: 10, color: "white" }} aria-hidden="true" />
                   </span>
                   <span style={{ fontSize: 11.5, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
-                  <span style={{ fontSize: 9, color: "#0369A1", fontStyle: "italic" }}>classe separada</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>

@@ -442,10 +442,7 @@ export function SecaoAssetAllocation({
                     <span style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: "#0284C7", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <i className="ti ti-piggy-bank" style={{ fontSize: 12, color: "white" }} />
                     </span>
-                    <div>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
-                      <span style={{ fontSize: 10, color: "#0369A1", marginLeft: 8 }}>classe separada</span>
-                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>
