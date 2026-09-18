@@ -11,6 +11,7 @@ import { DEDUCAO_DEPENDENTE_ANUAL, REDUTOR_2026_ISENCAO_ATE, LIMITE_DESPESA_INST
 import type { TipoDeclaracao } from "@/lib/tributario/types";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
+import { ImportarDeclaracaoIA, type ValoresFiscaisImportados } from "@/components/ferramentas/ImportarDeclaracaoIA";
 
 export interface SavedPGBLResult {
   tipoDeclaracao?: string;
@@ -82,6 +83,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? 0));
   const [salvo, setSalvo] = useState(false);
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
+  const [modalIAAberto, setModalIAAberto] = useState(false);
 
   const entrada: EntradaPgbl = useMemo(() => ({
     hoje: new Date(),
@@ -153,6 +155,16 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       setSalvo(false);
       onClose?.();
     }, 2000);
+  }
+
+  function handleAplicarIA(valores: ValoresFiscaisImportados) {
+    if (valores.rendaAnualBruta !== undefined) renda.set(valores.rendaAnualBruta);
+    if (valores.inssPago !== undefined) inssPago.set(valores.inssPago);
+    if (valores.irRetidoFonte !== undefined) irRetido.set(valores.irRetidoFonte);
+    if (valores.dependentes !== undefined) setDependentes(String(valores.dependentes));
+    if (valores.despesasMedicas !== undefined) despesasMedicas.set(valores.despesasMedicas);
+    if (valores.despesasInstrucao !== undefined) despesasInstrucao.set(valores.despesasInstrucao);
+    if (valores.pensaoAlimenticia !== undefined) pensao.set(valores.pensaoAlimenticia);
   }
 
   const cardStyle = (_borderColor: string, bg = "white"): React.CSSProperties => ({
@@ -260,21 +272,35 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {/* ── HEADER COM BOTÃO AJUDA ────────────────────────────────────────── */}
+      {/* ── HEADER COM BOTÕES ────────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#111827" }}>Planejamento Tributário</p>
-        <button
-          onClick={() => setPainelAjudaAberto(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: 4,
-            background: "#EFF6FF", border: "1px solid #BFDBFE",
-            borderRadius: 20, padding: "4px 10px", cursor: "pointer",
-            fontSize: 11, fontWeight: 600, color: "#2563EB", fontFamily: "inherit",
-          }}
-        >
-          <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
-          Ajuda
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => setModalIAAberto(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "#F0FDF4", border: "1px solid #BBF7D0",
+              borderRadius: 20, padding: "4px 10px", cursor: "pointer",
+              fontSize: 11, fontWeight: 600, color: "#15803D", fontFamily: "inherit",
+            }}
+          >
+            <i className="ti ti-sparkles" style={{ fontSize: 13 }} />
+            Importar com IA
+          </button>
+          <button
+            onClick={() => setPainelAjudaAberto(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "#EFF6FF", border: "1px solid #BFDBFE",
+              borderRadius: 20, padding: "4px 10px", cursor: "pointer",
+              fontSize: 11, fontWeight: 600, color: "#2563EB", fontFamily: "inherit",
+            }}
+          >
+            <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
+            Ajuda
+          </button>
+        </div>
       </div>
 
       {/* ── CARD 1: Tipo de Declaração ─────────────────────────────────────── */}
@@ -737,6 +763,14 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         aberto={painelAjudaAberto}
         onFechar={() => setPainelAjudaAberto(false)}
       />
+
+      {/* ── MODAL IMPORTAR COM IA ─────────────────────────────────────────────── */}
+      {modalIAAberto && (
+        <ImportarDeclaracaoIA
+          onAplicar={handleAplicarIA}
+          onFechar={() => setModalIAAberto(false)}
+        />
+      )}
 
       {/* ── Salvar ────────────────────────────────────────────────────────── */}
       {onSave && (
