@@ -236,15 +236,19 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
       },
       {
         titulo: "IR Retido na Fonte e Saldo",
-        conteudo: `O IR Retido na Fonte é o imposto já descontado pelo empregador ao longo do ano.\n\nSaldo = Imposto Devido − IR Retido na Fonte\n\nPositivo → A pagar (DARF na entrega da declaração)\nNegativo → A restituir (Receita Federal devolve)\n\nO IR retido não muda a base de cálculo nem o imposto devido — apenas muda se o cliente vai pagar ou receber na entrega.`,
+        conteudo: `O IR Retido na Fonte é o imposto já descontado pelo empregador ao longo do ano (consta no informe de rendimentos).\n\nSaldo = Imposto Devido − IR Retido na Fonte\n\nPositivo → A pagar (recolher DARF na entrega da declaração)\nNegativo → A restituir (Receita Federal devolve)\nZero → Declaração sem saldo\n\nO IR retido não altera a base de cálculo nem o imposto devido — apenas determina se o cliente vai pagar ou receber na entrega. O PGBL reduz o imposto devido, o que pode transformar um "a pagar" em "a restituir" ou aumentar a restituição.`,
+      },
+      {
+        titulo: "Como o IR é calculado?",
+        conteudo: `Tabela progressiva anual do IRPF 2026 (base de cálculo após deduções):\n\nAté R$ 28.467,20 → isento (0%)\nR$ 28.467,21 a R$ 33.919,80 → 7,5% (− R$ 2.135,04)\nR$ 33.919,81 a R$ 45.012,60 → 15% (− R$ 4.679,03)\nR$ 45.012,61 a R$ 55.976,16 → 22,5% (− R$ 8.054,97)\nAcima de R$ 55.976,16 → 27,5% (− R$ 10.853,78)\n\nA base de cálculo é:\n• Modelo completo: renda bruta − INSS − médicas − instrução − dependentes − pensão − PGBL\n• Modelo simplificado: renda bruta − 20% (limitado a R$ 16.754,34)\n\nCada real deduzido com PGBL economiza a alíquota marginal do cliente. Para quem está em 27,5%, cada R$ 100 deduzidos economizam R$ 27,50.\n\nTabela conferida contra declaração de ajuste anual real com recibo (exercício 2026, ano-calendário 2025): Desconto Simplificado R$ 16.754,34 · Base R$ 141.844,48 · Imposto R$ 28.153,45 · Alíquota 17,75% — todos bateram.`,
       },
       {
         titulo: "Reforma do IRPF 2026",
-        conteudo: `Em 2026, uma faixa de isenção adicional foi criada:\n\nAté R$ 60.000/ano (R$ 5.000/mês): imposto zerado pelo desconto complementar, independente da tabela progressiva.\n\nDe R$ 60.000 a R$ 88.200/ano: redução linear do imposto (proporcional à distância do limite de isenção).\n\nAcima de R$ 88.200/ano: tabela progressiva plena, sem redutor.\n\nPara rendas na faixa de isenção, o PGBL só faz sentido como estratégia de acumulação (sem economia fiscal direta), ou para rendas futuras tributáveis no resgate.`,
+        conteudo: `Em 2026 foi criado um desconto complementar que reduz ou zera o IR para rendas mais baixas:\n\nAté R$ 60.000/ano (R$ 5.000/mês): imposto zerado integralmente, independente da tabela progressiva.\n\nDe R$ 60.001 a R$ 88.200/ano: redução linear proporcional à distância do limite de isenção — quanto mais próximo de R$ 60 mil, menor o imposto.\n\nAcima de R$ 88.200/ano: tabela progressiva plena, sem nenhum redutor.\n\nPara rendas na faixa de isenção total (≤ R$ 60 mil): o PGBL não gera economia fiscal direta. Pode ser avaliado como acumulação previdenciária via VGBL, já que o resgate futuro pode ser tributável.`,
       },
       {
         titulo: "Score Tributário",
-        conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100 (não há como otimizar, está no modelo correto)\n\nNão analisado → "Não avaliado" (sem impacto no score geral)\n\nCompleta + sem PGBL → score 0 (grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
+        conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100\n(modelo correto para o perfil — não há como otimizar mais)\n\nComparar → score baseado no cenário vencedor\n(se completa com PGBL for melhor, o score segue o aproveitamento do teto)\n\nNenhum tipo selecionado → "Não avaliado"\n(sem impacto no score geral do diagnóstico)\n\nCompleta + sem PGBL → score 0\n(grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
       },
       {
         titulo: "Dicas para o consultor",
