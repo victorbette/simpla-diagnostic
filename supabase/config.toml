@@ -10,3 +10,8 @@ verify_jwt = true
 # Leitura de prints da carteira via OpenAI. Exige JWT de usuário autenticado
 # (a função revalida o token antes de gastar chamada de IA).
 verify_jwt = true
+
+[functions.extract-tax-data]
+# Extração de dados fiscais (Informe de Rendimentos, DIRF etc.) via OpenAI.
+# Exige JWT de usuário autenticado.
+verify_jwt = true
