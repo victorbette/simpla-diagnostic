@@ -125,12 +125,21 @@ export interface ResultadoFiscal {
   aproveitandoTeto: boolean;
   dataCalculo: string;
   savedAt: string;
+  // Saldo IR (positivo = a pagar; negativo = a restituir)
+  irRetidoFonte?: number;
+  saldoSemPGBL?: number;
+  saldoComPGBL?: number;
   // Inputs do formulário (para restauração ao reabrir a calculadora)
   inputRendaAnualBruta?: number;
-  inputDespesas?: number;
+  inputInssPago?: number;
+  inputDespesasMedicas?: number;
+  inputDespesasInstrucao?: number;
+  inputPensaoAlimenticia?: number;
   inputDependentes?: number;
   inputAporteAnualPGBL?: number;
+  inputIrRetidoFonte?: number;
   inputSaldoPrevidencia?: number;
+  inputDespesas?: number;  // legacy
   analisado?: boolean;
   dataUltimoSalvamento?: string;
 }

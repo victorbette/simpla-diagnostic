@@ -390,7 +390,7 @@ export function calcularProtecao(p: ProtecaoSimplificada): ResultadoProtecao {
 export interface PlanejamentoFiscal {
   rendaBrutaAnual: number;
   rendaAnualAjustada: boolean;
-  tipoDeclaracao: "simplificada" | "completa" | "nao_sei";
+  tipoDeclaracao: "simplificada" | "completa" | "comparativo" | "nao_sei";
   temPGBL: boolean;
   valorPGBLAnual: number;
   temVGBL: boolean;
@@ -402,6 +402,12 @@ export interface PlanejamentoFiscal {
   temRendimentosIsentos: boolean;
   valorRendimentosIsentos: number;
   tiposRendimentosIsentos: string[];
+  // Campos de dedução separados (substituem o bucket único "despesas")
+  inssPago?: number;
+  despesasMedicas?: number;
+  despesasInstrucao?: number;
+  pensaoAlimenticia?: number;
+  irRetidoFonte?: number;
 }
 
 export const initialPlanejamentoFiscal: PlanejamentoFiscal = {

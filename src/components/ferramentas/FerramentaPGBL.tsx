@@ -5,8 +5,10 @@ import {
   BarChart, Bar, Cell, LabelList,
 } from "recharts";
 import type { FinancialPlan } from "@/types/financialPlanning";
-import { formatBRL, DEDUCAO_DEPENDENTE } from "@/lib/tax";
-import { simularDeclaracaoIRPF, calcularProjecaoPatrimonio } from "@/lib/simularDeclaracao";
+import { formatBRL } from "@/lib/tax";
+import { calcularResultadoPgbl, compararModelosDeclaracao, type EntradaPgbl } from "@/lib/tributario/pgbl";
+import { DEDUCAO_DEPENDENTE_ANUAL, REDUTOR_2026_ISENCAO_ATE, LIMITE_DESPESA_INSTRUCAO_ANUAL_POR_PESSOA } from "@/lib/tributario/irpf";
+import type { TipoDeclaracao } from "@/lib/tributario/types";
 import { useCurrencyInput } from "@/hooks/useCurrencyInput";
 import { PainelAjuda } from "@/components/shared/PainelAjuda";
 
@@ -20,11 +22,19 @@ export interface SavedPGBLResult {
   economiaAnual: number;
   espacoDisponivelMensal: number;
   aproveitandoTeto: boolean;
+  irRetidoFonte?: number;
+  saldoSemPGBL?: number;
+  saldoComPGBL?: number;
   inputRendaAnualBruta?: number;
-  inputDespesas?: number;
+  inputInssPago?: number;
+  inputDespesasMedicas?: number;
+  inputDespesasInstrucao?: number;
+  inputPensaoAlimenticia?: number;
   inputDependentes?: number;
   inputAporteAnualPGBL?: number;
+  inputIrRetidoFonte?: number;
   inputSaldoPrevidencia?: number;
+  inputDespesas?: number;  // legacy
   analisado?: boolean;
   dataUltimoSalvamento?: string;
 }
@@ -38,9 +48,9 @@ interface Props {
 }
 
 const TIPOS_DECLARACAO = [
-  { id: "completa",     label: "Completa",     descricao: "Deduz dependentes, saúde, educação", icone: "ti-file-certificate" },
-  { id: "simplificada", label: "Simplificada", descricao: "Desconto automático de R$ 16.754,34/ano",   icone: "ti-file-minus"       },
-  { id: "nao_sei",      label: "Não sei",      descricao: "Consultor vai orientar",              icone: "ti-help-circle"      },
+  { id: "completa",     label: "Completa",    descricao: "Deduz INSS, saúde, educação, dependentes", icone: "ti-file-certificate" },
+  { id: "simplificada", label: "Simplificada", descricao: "Desconto automático de R$ 16.754,34/ano",  icone: "ti-file-minus"       },
+  { id: "comparativo",  label: "Comparar",    descricao: "Mostra qual modelo é mais vantajoso",       icone: "ti-scale"            },
 ];
 
 export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
@@ -55,75 +65,85 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
   const idadeMeta = plan?.planejamentoIF?.idadeMeta ?? 60;
   const nAnos     = idadeAtual > 0 ? Math.max(1, idadeMeta - idadeAtual) : 0;
 
-  const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(
-    savedResult?.tipoDeclaracao ?? ""
-  );
+  // Map legacy 'nao_sei' → 'comparativo' on load
+  const initialTipo = savedResult?.tipoDeclaracao === "nao_sei"
+    ? "comparativo"
+    : (savedResult?.tipoDeclaracao ?? "");
+  const [tipoDeclaracao, setTipoDeclaracao] = useState<string>(initialTipo);
 
-  const renda      = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? 0);
-  const despesas   = useCurrencyInput(savedResult?.inputDespesas ?? 0);
-  const aporteAnual = useCurrencyInput(savedResult?.inputAporteAnualPGBL ?? 0);
-  const saldoAtual  = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? 0);
+  const renda             = useCurrencyInput(savedResult?.inputRendaAnualBruta ?? 0);
+  const inssPago          = useCurrencyInput(savedResult?.inputInssPago ?? 0);
+  const despesasMedicas   = useCurrencyInput(savedResult?.inputDespesasMedicas ?? (savedResult?.inputDespesas ?? 0));
+  const despesasInstrucao = useCurrencyInput(savedResult?.inputDespesasInstrucao ?? 0);
+  const pensao            = useCurrencyInput(savedResult?.inputPensaoAlimenticia ?? 0);
+  const irRetido          = useCurrencyInput(savedResult?.inputIrRetidoFonte ?? (savedResult?.irRetidoFonte ?? 0));
+  const aporteAnual       = useCurrencyInput(savedResult?.inputAporteAnualPGBL ?? 0);
+  const saldoAtual        = useCurrencyInput(savedResult?.inputSaldoPrevidencia ?? 0);
   const [dependentes, setDependentes] = useState(String(savedResult?.inputDependentes ?? 0));
   const [salvo, setSalvo] = useState(false);
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
 
+  const entrada: EntradaPgbl = useMemo(() => ({
+    hoje: new Date(),
+    tipoDeclaracao: tipoDeclaracao as TipoDeclaracao,
+    rendaAnualBruta: renda.value,
+    inssPago: inssPago.value,
+    despesasMedicas: despesasMedicas.value,
+    despesasInstrucao: despesasInstrucao.value,
+    pensaoAlimenticia: pensao.value,
+    dependentes: Math.max(0, parseInt(dependentes) || 0),
+    aporteAnualPgbl: aporteAnual.value,
+    irRetidoFonte: irRetido.value,
+    saldoPrevidencia: saldoAtual.value,
+    idadeAtual,
+    idadeMeta,
+  }), [tipoDeclaracao, renda.value, inssPago.value, despesasMedicas.value, despesasInstrucao.value,
+      pensao.value, dependentes, aporteAnual.value, irRetido.value, saldoAtual.value, idadeAtual, idadeMeta]);
+
   const sim = useMemo(() => {
     if (renda.value <= 0) return null;
-    const aporteAnualVal = aporteAnual.value > 0 ? aporteAnual.value : undefined;
-    return simularDeclaracaoIRPF({
-      rendaBruta:     renda.value,
-      despesas:       despesas.value,
-      dependentes:    Math.max(0, parseInt(dependentes) || 0),
-      aporteAnual:    aporteAnualVal,
-      tipoDeclaracao,
-    });
-  }, [renda.value, despesas.value, dependentes, aporteAnual.value, tipoDeclaracao]);
+    return calcularResultadoPgbl(entrada);
+  }, [renda.value, entrada]);
 
-  const projecao = useMemo(() => {
-    if (!sim || sim.economia <= 0) return [];
-    return calcularProjecaoPatrimonio({
-      aporteAnualPGBL: sim.aporteEfetivo,
-      economiaAnual:   sim.economia,
-      nAnos,
-      idadeAtual,
-      saldoInicial:    saldoAtual.value,
-    });
-  }, [sim, nAnos, idadeAtual, saldoAtual.value]);
+  const compararModelos = useMemo(() => {
+    if (renda.value <= 0) return null;
+    return compararModelosDeclaracao(entrada);
+  }, [renda.value, entrada]);
 
-  const ultimoPonto = projecao[projecao.length - 1];
-  const diferencaFinal = ultimoPonto ? ultimoPonto.comPGBL - ultimoPonto.semPGBL : 0;
-
-  const aporteAnualPGBL  = aporteAnual.value;
-  const tetoPGBLLive     = sim?.tetoPGBL ?? 0;
-  const aproveitamentoPct = tetoPGBLLive > 0
-    ? Math.min(100, Math.round((aporteAnualPGBL / tetoPGBLLive) * 100))
-    : 0;
-  const excedenteAnual   = tetoPGBLLive > 0 ? Math.max(0, aporteAnualPGBL - tetoPGBLLive) : 0;
-  const espacoDisponivel = tetoPGBLLive > 0 ? Math.max(0, tetoPGBLLive - aporteAnualPGBL) : 0;
-
-  const mesAtual = new Date().getMonth() + 1; // 1–12
-  const mesesRestantes = Math.max(0, 12 - mesAtual + 1);
-  const jaInvestidoAno = aporteAnual.value;
-  const aporteMensalDisponivel = mesesRestantes > 0 && espacoDisponivel > 0
-    ? espacoDisponivel / mesesRestantes
-    : 0;
+  const tetoPGBLLive          = sim?.tetoPgbl ?? 0;
+  const aproveitamentoPct     = sim?.aproveitamentoPct ?? 0;
+  const excedenteAnual        = sim?.excedenteAnual ?? 0;
+  const espacoDisponivel      = sim?.espacoDisponivelAnual ?? 0;
+  const mesesRestantes        = sim?.mesesRestantes ?? 0;
+  const aporteMensalDisponivel = sim?.aporteMensalDisponivel ?? 0;
+  const jaInvestidoAno        = aporteAnual.value;
+  const ultimoPonto           = sim?.projecao[sim.projecao.length - 1];
+  const diferencaFinal        = ultimoPonto ? ultimoPonto.comPgbl - ultimoPonto.semPgbl : 0;
+  const isencaoTotal          = renda.value > 0 && renda.value <= REDUTOR_2026_ISENCAO_ATE;
 
   function handleSave() {
     if (!onSave) return;
     onSave({
       tipoDeclaracao,
       rendaAnual:             renda.value,
-      tetoPGBLAnual:          sim?.tetoPGBL ?? 0,
+      tetoPGBLAnual:          sim?.tetoPgbl ?? 0,
       aporteAnual:            aporteAnual.value,
-      irComPGBL:              sim?.irComPGBL ?? 0,
-      irSemPGBL:              sim?.irSemPGBL ?? 0,
-      economiaAnual:          sim?.economia ?? 0,
-      espacoDisponivelMensal: sim ? Math.max(0, (sim.tetoPGBL - aporteAnual.value) / 12) : 0,
-      aproveitandoTeto:       sim ? aporteAnual.value >= sim.tetoPGBL : false,
+      irComPGBL:              sim?.irComPgbl ?? 0,
+      irSemPGBL:              sim?.irSemPgbl ?? 0,
+      economiaAnual:          sim?.economiaAnual ?? 0,
+      espacoDisponivelMensal: sim?.aporteMensalDisponivel ?? 0,
+      aproveitandoTeto:       sim ? aporteAnual.value >= sim.tetoPgbl : false,
+      irRetidoFonte:          irRetido.value,
+      saldoSemPGBL:           sim?.saldoSemPgbl,
+      saldoComPGBL:           sim?.saldoComPgbl,
       inputRendaAnualBruta:   renda.value,
-      inputDespesas:          despesas.value,
+      inputInssPago:          inssPago.value,
+      inputDespesasMedicas:   despesasMedicas.value,
+      inputDespesasInstrucao: despesasInstrucao.value,
+      inputPensaoAlimenticia: pensao.value,
       inputDependentes:       Math.max(0, parseInt(dependentes) || 0),
       inputAporteAnualPGBL:   aporteAnual.value,
+      inputIrRetidoFonte:     irRetido.value,
       inputSaldoPrevidencia:  saldoAtual.value,
       analisado:              true,
       dataUltimoSalvamento:   new Date().toISOString(),
@@ -172,63 +192,63 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
     );
   }
 
-  function resultCard(resultado: number) {
-    const aPagar = resultado > 0;
+  function resultCard(saldo: number) {
+    const aPagar = saldo > 0;
     return (
       <div style={{ backgroundColor: "white", border: "0.5px solid #E5E7EB", borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: 13, color: "#6B7280" }}>Resultado Final</span>
         <span style={{ fontSize: 18, fontWeight: 700, color: aPagar ? "#B91C1C" : "#15803D" }}>
           {aPagar
-            ? `A pagar: ${formatBRL(resultado)}`
-            : `A restituir: ${formatBRL(Math.abs(resultado))}`}
+            ? `A pagar: ${formatBRL(saldo)}`
+            : `A restituir: ${formatBRL(Math.abs(saldo))}`}
         </span>
       </div>
     );
   }
 
   const dadosGrafico = sim ? [
-    { label: "IR sem PGBL", valor: sim.irSemPGBL, fill: "#B91C1C", bg: "#FEE2E2" },
-    { label: "IR com PGBL", valor: sim.irComPGBL, fill: "#2563EB", bg: "#DBEAFE" },
-    { label: "Economia",    valor: sim.economia,   fill: "#15803D", bg: "#DCFCE7" },
+    { label: "IR sem PGBL", valor: sim.irSemPgbl,    fill: "#B91C1C", bg: "#FEE2E2" },
+    { label: "IR com PGBL", valor: sim.irComPgbl,    fill: "#2563EB", bg: "#DBEAFE" },
+    { label: "Economia",    valor: sim.economiaAnual, fill: "#15803D", bg: "#DCFCE7" },
   ] : [];
 
   const fmtBRLInt = (v: number) =>
     v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   const AJUDA_TRIBUTARIO = {
-    titulo: 'Planejamento Tributário',
+    titulo: "Planejamento Tributário",
     secoes: [
       {
-        titulo: 'O que é o Planejamento Tributário?',
+        titulo: "O que é o Planejamento Tributário?",
         conteudo: `Esta seção analisa a eficiência fiscal do cliente e identifica oportunidades legais de redução do Imposto de Renda.\n\nO foco principal é a utilização do PGBL (Plano Gerador de Benefício Livre) como instrumento de dedução fiscal para quem declara pelo modelo completo.\n\nUma boa estratégia tributária pode representar uma economia significativa ao longo dos anos — recursos que permanecem investidos e continuam crescendo.`,
       },
       {
-        titulo: 'Modelo de Declaração',
-        conteudo: `Modelo Simplificado:\nA Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável (limitado a R$ 16.754,34 em 2026). É mais vantajoso quando as deduções individuais são menores que esse desconto.\n\nNeste modelo, contribuições ao PGBL NÃO geram dedução adicional.\n\nModelo Completo:\nPermite deduzir despesas reais: médicas, educação, dependentes e contribuições ao PGBL (até 12% da renda bruta anual).\n\nÉ mais vantajoso quando a soma das deduções supera o desconto do modelo simplificado.\n\nNão sei:\nQuando o cliente não sabe qual modelo utiliza, o planejamento tributário fica marcado como "Não avaliado" e não impacta o score.`,
+        titulo: "Modelo de Declaração",
+        conteudo: `Modelo Completo:\nPermite deduzir despesas reais: INSS, médicas (sem teto), instrução (teto de R$ 3.561,50/pessoa/ano), dependentes (R$ 2.275,08/dep/ano), pensão alimentícia e PGBL (até 12% da renda bruta). Mais vantajoso quando a soma das deduções supera o desconto padrão de 20%.\n\nModelo Simplificado:\nA Receita Federal aplica automaticamente um desconto de 20% sobre a renda tributável (limitado a R$ 16.754,34 em 2026). O PGBL NÃO gera dedução adicional neste modelo.\n\nComparar:\nMostra os três cenários lado a lado (completa sem PGBL, completa com PGBL, simplificada) para identificar o mais vantajoso.`,
       },
       {
-        titulo: 'O que é o PGBL?',
-        conteudo: `PGBL (Plano Gerador de Benefício Livre) é um plano de previdência privada com benefício fiscal exclusivo para quem declara pelo modelo completo.\n\nComo funciona o benefício:\nContribuições ao PGBL podem ser deduzidas da base de cálculo do IR, limitadas a 12% da renda bruta anual tributável.\n\nEfeito prático:\nSe o cliente tem renda anual de R$ 240.000 e contribui R$ 28.800 (12%) ao PGBL, a base de cálculo do IR reduz em R$ 28.800 — gerando economia imediata de imposto.\n\nImportante: o IR é apenas diferido, não eliminado. No resgate, incidirá alíquota sobre o total acumulado. Por isso é ideal para acumulação de longo prazo.`,
+        titulo: "O que é o PGBL?",
+        conteudo: `PGBL (Plano Gerador de Benefício Livre) é um plano de previdência privada com benefício fiscal exclusivo para quem declara pelo modelo completo.\n\nComo funciona: Contribuições ao PGBL podem ser deduzidas da base de cálculo do IR, limitadas a 12% da renda bruta anual tributável.\n\nEfeito prático: Se o cliente tem renda anual de R$ 240.000 e contribui R$ 28.800 (12%) ao PGBL, a base de cálculo do IR reduz em R$ 28.800 — gerando economia imediata de imposto.\n\nImportante: O IR é apenas diferido, não eliminado. No resgate incide alíquota sobre o total acumulado. Por isso é ideal para acumulação de longo prazo.`,
       },
       {
-        titulo: 'Teto do PGBL',
-        conteudo: `O limite legal de dedução é 12% da Renda Bruta Anual Tributável.\n\nExemplo:\nRenda anual: R$ 240.000\nTeto PGBL: R$ 240.000 × 12% = R$ 28.800/ano\nou R$ 2.400/mês\n\nAproveitamento:\nQuanto mais próximo do teto o cliente contribui, maior a eficiência fiscal e melhor o score tributário.\n\n0% do teto → score baixo (oportunidade desperdiçada)\n100% do teto → score máximo (máxima eficiência)`,
+        titulo: "Teto do PGBL e deduções",
+        conteudo: `Limite de dedução PGBL: 12% da Renda Bruta Anual Tributável.\n\nExemplo:\nRenda anual: R$ 240.000\nTeto PGBL: R$ 28.800/ano (R$ 2.400/mês)\n\nDeduções na declaração completa:\n- INSS pago: sem teto\n- Despesas médicas: sem teto\n- Instrução: R$ 3.561,50/ano por pessoa (titular + cada dependente)\n- Dependentes: R$ 2.275,08/dep/ano\n- Pensão alimentícia: sem teto\n- PGBL: até 12% da renda bruta\n\nAporte de PGBL em branco (zero): o simulador assume o teto cheio, mostrando a economia máxima possível.`,
       },
       {
-        titulo: 'Como o IR é calculado?',
-        conteudo: `Tabela IRPF 2026 (anual):\n\nAté R$ 26.963,20 → isento\nR$ 26.963,21 a R$ 33.919,80 → 7,5%\nR$ 33.919,81 a R$ 45.012,60 → 15%\nR$ 45.012,61 a R$ 55.976,16 → 22,5%\nAcima de R$ 55.976,16 → 27,5%\n\nDeduções no modelo completo:\n- Dependentes: R$ 2.275,08/ano por dependente\n- Despesas dedutíveis: médicas, educação, etc.\n- PGBL: até 12% da renda bruta\n\nA base de cálculo é: Renda - Deduções - PGBL`,
+        titulo: "IR Retido na Fonte e Saldo",
+        conteudo: `O IR Retido na Fonte é o imposto já descontado pelo empregador ao longo do ano.\n\nSaldo = Imposto Devido − IR Retido na Fonte\n\nPositivo → A pagar (DARF na entrega da declaração)\nNegativo → A restituir (Receita Federal devolve)\n\nO IR retido não muda a base de cálculo nem o imposto devido — apenas muda se o cliente vai pagar ou receber na entrega.`,
       },
       {
-        titulo: 'Economia e Diferimento',
-        conteudo: `A economia fiscal é a diferença entre o IR sem PGBL e o IR com PGBL:\n\nEconomia = IR (sem PGBL) - IR (com PGBL)\n\nEssa economia não desaparece — ela fica investida na previdência, continuando a render até o resgate.\n\nDiferimento:\nO benefício do PGBL é o diferimento do IR — você paga o imposto no futuro (no resgate) em vez de agora. Como o valor fica investido mais tempo, o resultado final é maior mesmo pagando IR no resgate.`,
+        titulo: "Reforma do IRPF 2026",
+        conteudo: `Em 2026, uma faixa de isenção adicional foi criada:\n\nAté R$ 60.000/ano (R$ 5.000/mês): imposto zerado pelo desconto complementar, independente da tabela progressiva.\n\nDe R$ 60.000 a R$ 88.200/ano: redução linear do imposto (proporcional à distância do limite de isenção).\n\nAcima de R$ 88.200/ano: tabela progressiva plena, sem redutor.\n\nPara rendas na faixa de isenção, o PGBL só faz sentido como estratégia de acumulação (sem economia fiscal direta), ou para rendas futuras tributáveis no resgate.`,
       },
       {
-        titulo: 'Score Tributário',
-        conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100\n(não há como otimizar, está no modelo correto)\n\nNão sabe / Não analisado → "Não avaliado"\n(sem impacto no score geral)\n\nCompleta + sem PGBL → score 0\n(grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
+        titulo: "Score Tributário",
+        conteudo: `O score reflete a eficiência fiscal do cliente:\n\nSimplificada → score 100 (não há como otimizar, está no modelo correto)\n\nNão analisado → "Não avaliado" (sem impacto no score geral)\n\nCompleta + sem PGBL → score 0 (grande oportunidade desperdiçada)\n\nCompleta + 25% do teto → score 25\nCompleta + 50% do teto → score 50\nCompleta + 100% do teto → score 100`,
       },
       {
-        titulo: 'Dicas para o consultor',
-        conteudo: `• Sempre verifique se o modelo simplificado ou completo é mais vantajoso antes de recomendar o PGBL.\n\n- O PGBL só faz sentido para quem declara pelo modelo completo. Para o modelo simplificado, o VGBL é mais indicado (sem dedução, mas sem IR sobre o total no resgate).\n\n- Contribuições acima do teto de 12% não são dedutíveis — o excedente deve ir para VGBL.\n\n- Para profissionais autônomos com renda variável, calcule o teto com base na renda tributável média anual.\n\n- O benefício é ainda maior para quem está na alíquota marginal de 27,5% — a economia por real deduzido é máxima nessa faixa.`,
+        titulo: "Dicas para o consultor",
+        conteudo: `• Sempre verifique qual modelo (completa/simplificada) é mais vantajoso antes de recomendar o PGBL — use o modo "Comparar".\n\n• O PGBL só faz sentido para quem declara pelo modelo completo. Para simplificada, o VGBL é mais indicado.\n\n• Contribuições acima do teto de 12% não são dedutíveis — o excedente deve ir para VGBL.\n\n• Para profissionais autônomos com renda variável, calcule o teto com base na renda tributável média anual.\n\n• O benefício é ainda maior para quem está na alíquota marginal de 27,5% — a economia por real deduzido é máxima nessa faixa.`,
       },
     ],
   };
@@ -243,14 +263,9 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           onClick={() => setPainelAjudaAberto(true)}
           style={{
             display: "flex", alignItems: "center", gap: 4,
-            background: "#EFF6FF",
-            border: "1px solid #BFDBFE",
-            borderRadius: 20,
-            padding: "4px 10px",
-            cursor: "pointer",
-            fontSize: 11, fontWeight: 600,
-            color: "#2563EB",
-            fontFamily: "inherit",
+            background: "#EFF6FF", border: "1px solid #BFDBFE",
+            borderRadius: 20, padding: "4px 10px", cursor: "pointer",
+            fontSize: 11, fontWeight: 600, color: "#2563EB", fontFamily: "inherit",
           }}
         >
           <i className="ti ti-help-circle" style={{ fontSize: 13 }} />
@@ -296,15 +311,15 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={{ marginTop: 12, background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
-              Na declaração simplificada, o PGBL <strong>não gera dedução fiscal</strong>. O resultado abaixo mostra o IR com desconto automático de R$ 16.754,34 — sem benefício PGBL.
+              Na declaração simplificada, o PGBL <strong>não gera dedução fiscal</strong>. As deduções individuais são substituídas pelo desconto automático de R$ 16.754,34.
             </p>
           </div>
         )}
-        {tipoDeclaracao === "nao_sei" && (
+        {tipoDeclaracao === "comparativo" && (
           <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
-              Tipo não definido — mostrando estimativa com <strong>deduções da declaração completa</strong>. O consultor vai orientar na escolha do modelo mais vantajoso.
+              Modo comparativo — mostrando os três cenários (completa sem PGBL, completa com PGBL e simplificada) para identificar o mais vantajoso.
             </p>
           </div>
         )}
@@ -315,70 +330,72 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         {cardHeader("ti-receipt", "Dados da Declaração")}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
 
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...labelStyle, marginBottom: 0 }}>Renda Bruta Anual Tributável (R$)</span>
-            </div>
+          {/* Renda bruta (full width) */}
+          <div style={{ gridColumn: "span 2" }}>
+            <span style={labelStyle}>Renda Bruta Anual Tributável (R$)</span>
             <input type="text" value={renda.display} onChange={renda.onChange} onBlur={renda.onBlur} placeholder="0,00" style={inputStyle} />
           </div>
 
+          {/* INSS */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...labelStyle, marginBottom: 0 }}>Despesas Dedutíveis (R$)</span>
-            </div>
-            <input type="text" value={despesas.display} onChange={despesas.onChange} onBlur={despesas.onBlur} placeholder="0,00" style={inputStyle} />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Saúde, educação, pensão alimentícia</p>
+            <span style={labelStyle}>INSS Pago no Ano (R$)</span>
+            <input type="text" value={inssPago.display} onChange={inssPago.onChange} onBlur={inssPago.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Dedução integral na declaração completa</p>
           </div>
 
+          {/* Dependentes */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...labelStyle, marginBottom: 0 }}>Dependentes</span>
-            </div>
+            <span style={labelStyle}>Dependentes</span>
             <input type="number" min={0} max={10} value={dependentes} onChange={(e) => setDependentes(e.target.value)} style={inputStyle} />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{formatBRL(DEDUCAO_DEPENDENTE)}/dep/ano deduzidos</p>
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>{formatBRL(DEDUCAO_DEPENDENTE_ANUAL)}/dep/ano deduzidos</p>
           </div>
 
+          {/* Despesas Médicas */}
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...labelStyle, marginBottom: 0 }}>Saldo Atual na Previdência (R$)</span>
-            </div>
-            <input
-              type="text"
-              value={saldoAtual.display}
-              onChange={saldoAtual.onChange}
-              onBlur={saldoAtual.onBlur}
-              placeholder="0,00"
-              style={inputStyle}
-            />
-            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
-              Saldo acumulado em previdência (usado na projeção patrimonial)
-            </p>
+            <span style={labelStyle}>Despesas Médicas (R$)</span>
+            <input type="text" value={despesasMedicas.display} onChange={despesasMedicas.onChange} onBlur={despesasMedicas.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Sem teto — dedução integral</p>
           </div>
 
+          {/* Despesas com Instrução */}
+          <div>
+            <span style={labelStyle}>Despesas com Instrução (R$)</span>
+            <input type="text" value={despesasInstrucao.display} onChange={despesasInstrucao.onChange} onBlur={despesasInstrucao.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Teto de {formatBRL(LIMITE_DESPESA_INSTRUCAO_ANUAL_POR_PESSOA)}/pessoa/ano</p>
+          </div>
+
+          {/* Pensão Alimentícia */}
+          <div>
+            <span style={labelStyle}>Pensão Alimentícia (R$)</span>
+            <input type="text" value={pensao.display} onChange={pensao.onChange} onBlur={pensao.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Dedução integral com decisão judicial</p>
+          </div>
+
+          {/* IR Retido na Fonte */}
+          <div>
+            <span style={labelStyle}>IR Retido na Fonte no Ano (R$)</span>
+            <input type="text" value={irRetido.display} onChange={irRetido.onChange} onBlur={irRetido.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Imposto já descontado em folha pelo empregador</p>
+          </div>
+
+          {/* Saldo na Previdência */}
+          <div>
+            <span style={labelStyle}>Saldo Atual na Previdência (R$)</span>
+            <input type="text" value={saldoAtual.display} onChange={saldoAtual.onChange} onBlur={saldoAtual.onBlur} placeholder="0,00" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>Usado na projeção patrimonial</p>
+          </div>
+
+          {/* Aporte PGBL */}
           <div style={{ gridColumn: "span 2" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <span style={{ ...labelStyle, marginBottom: 0 }}>Investimento em Previdência Privada (PGBL) no ano vigente (R$)</span>
-            </div>
-            <input
-              type="text"
-              value={aporteAnual.display}
-              onChange={aporteAnual.onChange}
-              onBlur={aporteAnual.onBlur}
-              placeholder="0,00"
-              style={inputStyle}
-            />
+            <span style={labelStyle}>Investimento em PGBL no Ano Vigente (R$)</span>
+            <input type="text" value={aporteAnual.display} onChange={aporteAnual.onChange} onBlur={aporteAnual.onBlur} placeholder="0,00 — deixe em branco para simular o teto cheio" style={inputStyle} />
             <p style={{ fontSize: 11, color: "#9CA3AF", margin: "4px 0 0" }}>
-              Total investido em PGBL no ano fiscal vigente
+              Deixe em branco (zero) para ver a economia máxima possível (teto de 12%)
             </p>
             {tetoPGBLLive > 0 && tipoDeclaracao !== "simplificada" && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6, fontSize: 11, color: "#6B7280" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
-                </div>
-                <span style={{
-                  fontWeight: 600,
-                  color: aproveitamentoPct >= 80 ? "#15803D" : aproveitamentoPct >= 50 ? "#B45309" : "#B91C1C",
-                }}>
+                <span>Teto anual: {formatBRL(tetoPGBLLive)} ({formatBRL(tetoPGBLLive / 12)}/mês)</span>
+                <span style={{ fontWeight: 600, color: aproveitamentoPct >= 80 ? "#15803D" : aproveitamentoPct >= 50 ? "#B45309" : "#B91C1C" }}>
                   {aproveitamentoPct}% aproveitado
                 </span>
               </div>
@@ -394,14 +411,13 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               </p>
             )}
           </div>
-
         </div>
 
         {excedenteAnual > 0 && tipoDeclaracao === "completa" && (
           <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.5 }}>
-              <strong>Considere VGBL para o excedente:</strong> Você está aportando {formatBRL(excedenteAnual)}/ano acima do teto dedutível de 12% da renda bruta. O excedente não gera benefício fiscal no PGBL — o VGBL pode ser uma alternativa para manter a previdência sem comprometer a dedução.
+              <strong>Considere VGBL para o excedente:</strong> Você está aportando {formatBRL(excedenteAnual)}/ano acima do teto dedutível de 12% da renda bruta. O excedente não gera benefício fiscal no PGBL — o VGBL pode ser uma alternativa.
             </p>
           </div>
         )}
@@ -409,7 +425,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
           <div style={{ marginTop: 12, background: "#FEF3C7", border: "0.5px solid #FCD34D", borderLeft: "4px solid #B45309", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
             <i className="ti ti-alert-triangle" style={{ color: "#B45309", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
             <p style={{ fontSize: 12, color: "#92400E", margin: 0, lineHeight: 1.5 }}>
-              <strong>Atenção: PGBL sem benefício na simplificada:</strong> Na declaração simplificada, o PGBL não gera dedução fiscal. Além disso, o aporte de {formatBRL(excedenteAnual)}/ano está acima do teto de 12% da renda bruta. O VGBL pode ser mais adequado ao seu perfil.
+              <strong>Atenção: PGBL sem benefício na simplificada.</strong> Além disso, o aporte de {formatBRL(excedenteAnual)}/ano está acima do teto de 12% da renda bruta. O VGBL pode ser mais adequado.
             </p>
           </div>
         )}
@@ -417,27 +433,16 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
 
       {/* ── CARD: Espaço Disponível para Dedução PGBL ────────────────────── */}
       {tipoDeclaracao === "completa" && renda.value > 0 && (
-        <div style={{
-          background: "#F0F7FF",
-          border: "1px solid #BFDBFE",
-          borderRadius: 12,
-          padding: "16px 20px",
-        }}>
+        <div style={{ background: "#F0F7FF", border: "1px solid #BFDBFE", borderRadius: 12, padding: "16px 20px" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#1E40AF", marginBottom: 14 }}>
             Espaço disponível para dedução PGBL
           </div>
-
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            {/* Teto anual */}
             <div style={{ background: "white", borderRadius: 8, padding: "12px 14px", border: "0.5px solid #E5E7EB" }}>
               <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>Teto PGBL (12%)</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
-                {fmtBRLInt(tetoPGBLLive)}
-              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>{fmtBRLInt(tetoPGBLLive)}</div>
               <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>no ano</div>
             </div>
-
-            {/* Já investido */}
             <div style={{ background: "white", borderRadius: 8, padding: "12px 14px", border: "0.5px solid #E5E7EB" }}>
               <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 4 }}>Já investido</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: jaInvestidoAno > tetoPGBLLive ? "#B91C1C" : "#111827" }}>
@@ -445,12 +450,9 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               </div>
               <div style={{ fontSize: 10, color: "#6B7280", marginTop: 2 }}>em {new Date().getFullYear()}</div>
             </div>
-
-            {/* Espaço restante */}
             <div style={{
               background: espacoDisponivel > 0 ? "#F0FDF4" : "#FEF2F2",
-              borderRadius: 8,
-              padding: "12px 14px",
+              borderRadius: 8, padding: "12px 14px",
               border: `0.5px solid ${espacoDisponivel > 0 ? "#86EFAC" : "#FECACA"}`,
             }}>
               <div style={{ fontSize: 10, color: espacoDisponivel > 0 ? "#15803D" : "#B91C1C", marginBottom: 4, fontWeight: 600 }}>
@@ -465,18 +467,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             </div>
           </div>
 
-          {/* Sugestão mensal */}
           {espacoDisponivel > 0 && mesesRestantes > 0 && (
-            <div style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              background: "white",
-              borderRadius: 8,
-              border: "0.5px solid #BFDBFE",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "white", borderRadius: 8, border: "0.5px solid #BFDBFE", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 11, color: "#374151", fontWeight: 600 }}>
                   Aporte mensal sugerido para aproveitar o teto até dezembro
@@ -491,17 +483,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
             </div>
           )}
 
-          {/* Aviso teto atingido */}
           {espacoDisponivel <= 0 && (
-            <div style={{
-              marginTop: 12,
-              padding: "10px 14px",
-              background: "#FEF2F2",
-              borderRadius: 8,
-              border: "0.5px solid #FECACA",
-              fontSize: 11,
-              color: "#B91C1C",
-            }}>
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "#FEF2F2", borderRadius: 8, border: "0.5px solid #FECACA", fontSize: 11, color: "#B91C1C" }}>
               O cliente já atingiu ou ultrapassou o teto de dedução do PGBL para {new Date().getFullYear()}.
               Contribuições adicionais não serão dedutíveis e devem ser direcionadas ao VGBL.
             </div>
@@ -509,11 +492,70 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
         </div>
       )}
 
-      {sim && (
+      {/* ── COMPARATIVO: Completa × Simplificada ────────────────────────── */}
+      {tipoDeclaracao === "comparativo" && compararModelos && renda.value > 0 && (
+        <div style={cardStyle("")}>
+          {cardHeader("ti-table", "Comparativo: Completa × Simplificada")}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+            {compararModelos.cenarios.map((c) => {
+              const isMelhor = c.id === compararModelos.melhorId;
+              return (
+                <div key={c.id} style={{
+                  background: isMelhor ? "#F0FDF4" : "white",
+                  border: `1px solid ${isMelhor ? "#86EFAC" : "#E5E7EB"}`,
+                  borderRadius: 10, padding: "14px 16px",
+                  display: "flex", flexDirection: "column", gap: 6,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: isMelhor ? "#15803D" : "#374151" }}>
+                      {c.label}
+                    </span>
+                    {isMelhor && (
+                      <span style={{ fontSize: 10, background: "#DCFCE7", color: "#15803D", padding: "2px 6px", borderRadius: 999, fontWeight: 600 }}>
+                        Melhor
+                      </span>
+                    )}
+                  </div>
+                  {metricBlock("Deduções", formatBRL(c.deducoes))}
+                  {metricBlock("Base de Cálculo", formatBRL(c.base))}
+                  {metricBlock("Imposto", formatBRL(c.imposto), isMelhor ? "#15803D" : "#B91C1C")}
+                  {metricBlock("Alíquota Efetiva", c.aliquotaEfetiva.toFixed(2) + "%")}
+                  {resultCard(c.saldo)}
+                </div>
+              );
+            })}
+          </div>
+          {compararModelos.diferencaAnual > 0 && (
+            <div style={{ marginTop: 12, background: "#DCFCE7", border: "1px solid #BBF7D0", borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, color: "#15803D", fontWeight: 600 }}>
+                Vantagem do modelo mais eficiente
+              </span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: "#15803D" }}>
+                {formatBRL(compararModelos.diferencaAnual)}/ano
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {sim && tipoDeclaracao !== "comparativo" && (
         <>
           {/* ── CARD 4: Resultado ─────────────────────────────────────────── */}
           <div style={cardStyle("")}>
             {cardHeader("ti-balance", "Resultado")}
+
+            {/* Banner isenção total (renda ≤ R$ 5.000/mês) */}
+            {isencaoTotal && (
+              <div style={{ marginBottom: 16, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
+                <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.7 }}>
+                  <strong>Isenção pela Reforma do IRPF 2026:</strong> Renda anual de {formatBRL(renda.value)} está abaixo de R$ 60.000/ano (R$ 5.000/mês). O imposto é zerado integralmente pelo desconto complementar da reforma.
+                  {sim.economiaAnual === 0 && (
+                    <> O PGBL pode ser avaliado como estratégia de acumulação via VGBL em vez de diferimento fiscal.</>
+                  )}
+                </p>
+              </div>
+            )}
 
             <div style={{ display: "grid", gridTemplateColumns: tipoDeclaracao === "simplificada" ? "1fr" : "1fr 1fr", gap: 16 }}>
               {/* Sem PGBL */}
@@ -525,11 +567,11 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   </span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                  {metricBlock("Base de Cálculo", formatBRL(sim.baseSemPGBL))}
-                  {metricBlock("Imposto Devido",    formatBRL(sim.irSemPGBL), "#B91C1C")}
-                  {metricBlock("Alíquota Efetiva",  sim.aliqEfetivaSem.toFixed(2) + "%")}
+                  {metricBlock("Base de Cálculo", formatBRL(sim.baseSemPgbl))}
+                  {metricBlock("Imposto Devido",    formatBRL(sim.irSemPgbl), "#B91C1C")}
+                  {metricBlock("Alíquota Efetiva",  sim.aliquotaEfetivaSem.toFixed(2) + "%")}
                 </div>
-                {resultCard(sim.resultadoSem)}
+                {resultCard(sim.saldoSemPgbl)}
               </div>
 
               {/* Com PGBL — oculto na simplificada */}
@@ -540,32 +582,18 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#15803D" }}>Com PGBL</span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-                    {metricBlock("Nova Base",             formatBRL(sim.baseComPGBL))}
-                    {metricBlock("Novo Imposto",           formatBRL(sim.irComPGBL), "#15803D")}
-                    {metricBlock("Nova Alíquota Efetiva",  sim.aliqEfetivaCom.toFixed(2) + "%")}
+                    {metricBlock("Nova Base",            formatBRL(sim.baseComPgbl))}
+                    {metricBlock("Novo Imposto",          formatBRL(sim.irComPgbl), "#15803D")}
+                    {metricBlock("Nova Alíquota Efetiva", sim.aliquotaEfetivaCom.toFixed(2) + "%")}
                   </div>
-                  {resultCard(sim.resultadoCom)}
+                  {resultCard(sim.saldoComPgbl)}
                 </div>
               )}
             </div>
-
-            {/* Aviso: Reforma IRPF 2026 zerou o imposto */}
-            {sim.reformaZerouIR && (
-              <div style={{ marginTop: 12, background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderLeft: "4px solid #2563EB", borderRadius: 8, padding: "10px 14px", display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <i className="ti ti-info-circle" style={{ color: "#2563EB", fontSize: 14, marginTop: 1, flexShrink: 0 }} />
-                <p style={{ fontSize: 12, color: "#1E40AF", margin: 0, lineHeight: 1.7 }}>
-                  <strong>Isenção pela Reforma do IRPF 2026:</strong> Renda anual de {formatBRL(renda.value)} está abaixo de R$ 60.000/ano (R$ 5.000/mês). Pelo desconto complementar da reforma, o imposto é zerado nessa faixa — mesmo que a tabela progressiva gerasse imposto sobre a base deduzida.
-                  {sim.economia === 0 && (
-                    <> O PGBL só gera economia fiscal para rendas acima de R$ 60.000/ano. Para este cliente, o PGBL pode ser avaliado como estratégia de acumulação (VGBL) em vez de diferimento fiscal.</>
-                  )}
-                </p>
-              </div>
-            )}
-
           </div>
 
           {/* ── CARD 5: Gráfico Comparativo ──────────────────────────────── */}
-          {sim.irSemPGBL > 0 && (
+          {sim.irSemPgbl > 0 && (
             <div style={cardStyle("")}>
               {cardHeader("ti-chart-bar", "Comparativo de IR")}
 
@@ -583,41 +611,24 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               </div>
 
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={dadosGrafico}
-                  margin={{ top: 20, right: 20, bottom: 0, left: 20 }}
-                  barCategoryGap="30%"
-                >
+                <BarChart data={dadosGrafico} margin={{ top: 20, right: 20, bottom: 0, left: 20 }} barCategoryGap="30%">
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 11, fill: "#6B7280" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#6B7280" }} axisLine={false} tickLine={false} />
                   <YAxis
                     tick={{ fontSize: 10, fill: "#9CA3AF" }}
                     tickFormatter={(v: unknown) => {
                       const n = Number(v);
                       return n >= 1000 ? `R$ ${(n / 1000).toFixed(0)}k` : `R$ ${n}`;
                     }}
-                    axisLine={false}
-                    tickLine={false}
+                    axisLine={false} tickLine={false}
                   />
                   <RechartsTooltip
                     formatter={(v: unknown) => [fmtBRLInt(Number(v)), ""]}
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
                   />
                   <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
-                    {dadosGrafico.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
-                    ))}
-                    <LabelList
-                      dataKey="valor"
-                      position="top"
-                      formatter={(v: unknown) => fmtBRLInt(Number(v))}
-                      style={{ fontSize: 11, fill: "#374151" }}
-                    />
+                    {dadosGrafico.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                    <LabelList dataKey="valor" position="top" formatter={(v: unknown) => fmtBRLInt(Number(v))} style={{ fontSize: 11, fill: "#374151" }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -632,7 +643,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                 Preencha a data de nascimento e idade de aposentadoria na Coleta de Dados para visualizar a projeção.
               </p>
             </div>
-          ) : projecao.length > 0 ? (
+          ) : sim.projecao.length > 0 ? (
             <div style={cardStyle("#2563EB")}>
               {cardHeader("ti-trending-up", "Projeção Patrimonial")}
               <p style={{ fontSize: 12, color: "#6B7280", margin: "-8px 0 12px" }}>
@@ -651,7 +662,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
               </div>
 
               <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={projecao} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
+                <LineChart data={sim.projecao} margin={{ top: 10, right: 20, left: 20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
                   <XAxis
                     dataKey="idade"
@@ -672,13 +683,13 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   <RechartsTooltip
                     formatter={(value: unknown, name: unknown) => [
                       Number(value).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
-                      name === "semPGBL" ? "Sem PGBL" : "Com PGBL + restituição",
+                      name === "semPgbl" ? "Sem PGBL" : "Com PGBL + restituição",
                     ]}
                     labelFormatter={(v: unknown) => `Idade: ${v} anos`}
                     contentStyle={{ fontSize: 12, borderRadius: 8, border: "0.5px solid #E5E7EB" }}
                   />
-                  <Line type="monotone" dataKey="semPGBL" stroke="#B91C1C" strokeWidth={2} dot={false} name="semPGBL" />
-                  <Line type="monotone" dataKey="comPGBL" stroke="#15803D" strokeWidth={2} dot={false} name="comPGBL" />
+                  <Line type="monotone" dataKey="semPgbl" stroke="#B91C1C" strokeWidth={2} dot={false} name="semPgbl" />
+                  <Line type="monotone" dataKey="comPgbl" stroke="#15803D" strokeWidth={2} dot={false} name="comPgbl" />
                 </LineChart>
               </ResponsiveContainer>
 
@@ -690,12 +701,12 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <p style={{ fontSize: 10, color: "#9CA3AF", textTransform: "uppercase", margin: "0 0 4px" }}>Economia anual reinvestida</p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(sim.economia)}</p>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: "#15803D", margin: 0 }}>{formatBRL(sim.economiaAnual)}</p>
                   <p style={{ fontSize: 11, color: "#6B7280", margin: "2px 0 0" }}>× {nAnos} anos + juros compostos</p>
                 </div>
               </div>
 
-              {sim.economia > 0 && (
+              {sim.economiaAnual > 0 && (
                 <div style={{ marginTop: 12, background: "#F0FDF4", border: "0.5px solid #BBF7D0", borderRadius: 8, padding: "12px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                     <i className="ti ti-sparkles" style={{ fontSize: 15, color: "#15803D" }} />
@@ -703,7 +714,7 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
                   </div>
                   <p style={{ fontSize: 12, color: "#14532D", margin: 0, lineHeight: 1.6 }}>
                     Ao contribuir <strong>{formatBRL(sim.aporteEfetivo / 12)}/mês</strong> em PGBL,
-                    você economiza <strong>{formatBRL(sim.economia)}/ano</strong> no IR.
+                    você economiza <strong>{formatBRL(sim.economiaAnual)}/ano</strong> no IR.
                     Reinvestindo essa restituição a uma taxa conservadora de IPCA+5% ao ano, a diferença
                     acumulada em <strong>{nAnos} anos</strong> é de{" "}
                     <strong>{formatBRL(diferencaFinal)}</strong> — o poder dos juros compostos trabalhando ao seu favor.
@@ -749,7 +760,8 @@ export function FerramentaPGBL({ plan, onClose, onSave, savedResult }: Props) {
 
       <p style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5, margin: 0, textAlign: "center" }}>
         Cálculo baseado na tabela oficial da Receita Federal 2026. Inclui redutor de isenção para rendas até
-        R$ 5.000/mês. PGBL: dedução de até 12% da renda bruta na declaração completa. IR no resgate: alíquota
+        R$ 5.000/mês. PGBL: dedução de até 12% da renda bruta na declaração completa. Despesas com instrução:
+        teto de {formatBRL(LIMITE_DESPESA_INSTRUCAO_ANUAL_POR_PESSOA)}/pessoa/ano. IR no resgate: alíquota
         regressiva de 15% (prazo &gt; 720 dias).
       </p>
     </div>
