@@ -427,9 +427,10 @@ export function FerramentaLiberdadeFinanceira({
   ]);
 
   const rendaSustentavel = useMemo(() => {
+    if (result?.rendaSustentavel) return result.rendaSustentavel;
     if (projecaoComAporteAtual <= 0) return 0;
     return (projecaoComAporteAtual * 0.04) / 12;
-  }, [projecaoComAporteAtual]);
+  }, [result, projecaoComAporteAtual]);
 
   const dadosGrafico = useMemo<PontoProjecao[]>(() => {
     if (!ajustes.usarCrescimentoAportes) {

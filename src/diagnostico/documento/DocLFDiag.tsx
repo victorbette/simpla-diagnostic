@@ -10,7 +10,7 @@ import {
 import { CardProjecaoPatrimonial } from "@/components/shared/CardProjecaoPatrimonial";
 import { PaginaDocFluidaDiag, type BlocoDoc } from "./PaginaDocFluidaDiag";
 import { calcularIdade } from "@/lib/parseDate";
-import { TAXA_LF_PADRAO, taxaMensalDe } from "@/lib/taxasDiag";
+import { TAXA_LF_PADRAO, TAXA_LF_RETIRO, taxaMensalDe } from "@/lib/taxasDiag";
 
 function corMeta(pct: number): string {
   return pct >= 100 ? "#15803D" : pct >= 51 ? "#B45309" : "#B91C1C";
@@ -74,7 +74,7 @@ export function DocLFDiag({ lead }: Props) {
   const projecaoParams: ProjecaoIFParams = {
     idadeAtual,
     idadeMeta,
-    idadeMaxima: 100,
+    idadeMaxima: 90,
     patrimonioInicial,
     aporteMensal,
     rendaMensalDesejada: rendaDesejada,
@@ -89,7 +89,16 @@ export function DocLFDiag({ lead }: Props) {
 
   // Usa patrimonioNaIF da simulação completa (inclui objetivos); fallback para fórmula simples
   const projecaoNaIF = result?.patrimonioNaIF ?? projecaoNaIFSimples;
-  const rendaSustentavel = (projecaoNaIF * 0.04) / 12;
+  // PMT annuity matching calcularProjecaoIF: monthly withdrawal that draws down
+  // patrimônio over (90 - idadeMeta) × 12 months at TAXA_LF_RETIRO (IPCA+4%).
+  // The old formula (projecaoNaIF * 0.04 / 12) was a perpetuity — it ignored
+  // principal drawdown and gave ~30% lower renda than the LF tab.
+  const _TAXA_RET_MENSAL = taxaMensalDe(TAXA_LF_RETIRO);
+  const _mesesRetirada   = Math.max(0, (90 - idadeMeta) * 12);
+  const _pmtFallback     = _mesesRetirada > 0
+    ? Math.round(projecaoNaIF * _TAXA_RET_MENSAL / (1 - Math.pow(1 + _TAXA_RET_MENSAL, -_mesesRetirada)) * 100) / 100
+    : 0;
+  const rendaSustentavel = result?.rendaSustentavel ?? _pmtFallback;
 
   const mesIF = result
     ? result.mesInicioRetirada
