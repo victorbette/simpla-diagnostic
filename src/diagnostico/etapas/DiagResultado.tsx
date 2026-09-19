@@ -137,7 +137,7 @@ export function DiagResultado({ lead }: Props) {
   function gerarTextoDiversificacao(): string {
     const am = dadosColeta.ativosInvestimento ?? {};
     const tem = (id: string) => am[id] === true;
-    const temRFPilar  = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem);
+    const temRFPilar  = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca","cdb"].some(tem);
     const temAcoesPilar = tem("acoes");
     const temFIIsPilar  = tem("fiis");
     const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
@@ -211,7 +211,7 @@ export function DiagResultado({ lead }: Props) {
     // Diversification pillars
     const tem = (id: string) => am[id] === true;
     const pilares = [
-      { label: "Renda Fixa",            icone: "ti-building-bank", ok: ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem) },
+      { label: "Renda Fixa",            icone: "ti-building-bank", ok: ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca","cdb"].some(tem) },
       { label: "Ações",                  icone: "ti-trending-up",   ok: tem("acoes") },
       { label: "Fundos Imobiliários",    icone: "ti-building",      ok: tem("fiis") },
       { label: "Investimentos Globais",  icone: "ti-world",         ok: ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem) },

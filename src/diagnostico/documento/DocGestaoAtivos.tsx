@@ -258,7 +258,7 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
 
   // ── Diversificação ──
   const tem = (id: string) => ativosMap[id] === true;
-  const temRFPilar     = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca"].some(tem);
+  const temRFPilar     = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca","cdb"].some(tem);
   const temAcoesPilar  = tem("acoes");
   const temFIIsPilar   = tem("fiis");
   const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
