@@ -1,7 +1,7 @@
 import { ATIVOS_INVESTIMENTO } from "./ativosInvestimento";
 import type { DadosColetaDiag } from "./types";
 import { calcularIdade } from "@/lib/parseDate";
-import { TAXA_DIAGNOSTICO_INICIAL, taxaMensalDe } from "@/lib/taxasDiag";
+import { TAXA_DIAGNOSTICO_INICIAL, TAXA_LF_RETIRO, taxaMensalDe } from "@/lib/taxasDiag";
 
 export function parseDateNasc(s: string): { ano: number; mes: number } | null {
   if (!s) return null;
@@ -54,7 +54,14 @@ export function calcularScoresDiag(
 
   const TAXA_MENSAL = taxaMensalDe(TAXA_DIAGNOSTICO_INICIAL);
 
-  const patrimonioNec = rendaDesejada > 0 ? (rendaDesejada * 12) / 0.04 : 0;
+  // PV of finite annuity — consistent with LF tab (avoids ~30% discrepancy vs perpetuity)
+  const TAXA_RET_MENSAL_SCORE = taxaMensalDe(TAXA_LF_RETIRO);
+  const mesesRetiradaScore = idadeMeta > 0 ? Math.max(0, (90 - idadeMeta) * 12) : 0;
+  const patrimonioNec = rendaDesejada > 0
+    ? (mesesRetiradaScore > 0
+      ? rendaDesejada * (1 - Math.pow(1 + TAXA_RET_MENSAL_SCORE, -mesesRetiradaScore)) / TAXA_RET_MENSAL_SCORE
+      : (rendaDesejada * 12) / TAXA_LF_RETIRO)
+    : 0;
   const nMeses        = Math.max(0, Math.round((idadeMeta - idadeAtual) * 12));
   const f             = nMeses > 0 ? Math.pow(1 + TAXA_MENSAL, nMeses) : 1;
   const projecao      = nMeses > 0 && isFinite(f)
@@ -72,7 +79,8 @@ export function calcularScoresDiag(
   const tem = (id: string) => ativosMap[id] === true;
 
   // Componente 1 — Diversificação (0-60 pts): 4 pilares Simpla, 15 pts cada
-  const pilarRF     = tem("tesouro_selic") || tem("fundo_rf") || tem("lci_lca") || tem("cdb");
+  const pilarRF     = tem("tesouro_selic") || tem("fundo_rf") || tem("lci_lca") || tem("cdb")
+    || tem("cri_cra") || tem("debentures") || tem("poupanca");
   const pilarAcoes  = tem("acoes");
   const pilarFIIs   = tem("fiis");
   const pilarGlobal = tem("renda_fixa_eua") || tem("stocks") || tem("reits") || tem("etfs_exterior") || tem("cripto");
@@ -99,7 +107,9 @@ export function calcularScoresDiag(
   // ── Score Blindagem ──
   // Toggle inicia desligado (false); ausência de dado = lead não possui o item = risco real
   const possuiSeguro      = dadosColeta.possuiSeguro === true;
-  const possuiPrevidencia = dadosColeta.temPrevidencia === true;
+  // temPrevidencia is never set by DiagColeta — also check the investment switch
+  const possuiPrevidencia = dadosColeta.temPrevidencia === true
+    || dadosColeta.ativosInvestimento?.["previdencia_privada"] === true;
   const blindagemTemDados = true; // seção sempre avaliada — toggle off = "Não possui"
 
   const scoreBlindagem =

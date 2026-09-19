@@ -349,7 +349,10 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
     });
   }
 
-  if (lead.dadosColeta.temPrevidencia) {
+  const temPrevidenciaAtivo = lead.dadosColeta.temPrevidencia === true
+    || lead.dadosColeta.ativosInvestimento?.["previdencia_privada"] === true;
+
+  if (temPrevidenciaAtivo) {
     const textoPrevidencia = `A previdência privada oferece dois benefícios relevantes para o planejamento de longo prazo: a sucessão patrimonial simplificada — os recursos são transferidos diretamente aos beneficiários sem necessidade de inventário — e o diferimento fiscal, já que o imposto incide apenas no momento do resgate, permitindo que o capital cresça sem tributação intermediária. No caso do PGBL, há ainda a possibilidade de deduzir até 12% da renda bruta anual na declaração completa do IR.\n\nO ponto de atenção está na qualidade do fundo onde o patrimônio está aplicado. Muitos planos comercializados por bancos concentram os recursos em fundos com taxas de administração elevadas e desempenho abaixo do CDI — o que pode comprometer boa parte dos benefícios fiscais. A vantagem da previdência só se concretiza com um fundo de qualidade, com taxa baixa e gestão eficiente.`;
 
     blocos.push({

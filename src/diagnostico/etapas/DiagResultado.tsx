@@ -285,7 +285,7 @@ export function DiagResultado({ lead }: Props) {
           </>
         )}
 
-        {dadosColeta.temPrevidencia && (
+        {(dadosColeta.temPrevidencia || dadosColeta.ativosInvestimento?.["previdencia_privada"] === true) && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#374151", textTransform: "uppercase" as const, letterSpacing: "0.08em", marginBottom: 10 }}>
               Previdência Privada
