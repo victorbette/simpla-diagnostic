@@ -71,13 +71,10 @@ function calcularValorFinal(item: PlanoAcaoItem): number {
   }
 }
 
-export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
+export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimonio: _patrimonio, aporteDisponivel = 0, onSalvar, salvando, salvo }: Props) {
   const [painelAjudaAberto, setPainelAjudaAberto] = useState(false);
   const patrimonioTotal = ativosAtuais.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
   const patrimonioBase  = patrimonioTotal + aporteDisponivel;
-  // kept for prop-pass compat (CardAlocacaoComparativa, CardSelecaoAtivos)
-  const patrimonioMeta  = patrimonio + aporteDisponivel;
-
   const macroAtualCalc = useMemo(
     () => CARD_ORDER.reduce((acc, id) => {
       const total = ativosAtuais
@@ -158,15 +155,27 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
 
   const patrimonioFinal = carteiraFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
 
-  const prevTotalEtapa4 = useMemo(
-    () => carteiraFinal.filter((a) => a.card === 'previdencia').reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+  const brlPerCardE4 = useMemo(
+    () => Object.fromEntries(
+      CARD_ORDER.map((id) => [
+        id,
+        carteiraFinal.filter((a) => a.card === id).reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+      ])
+    ),
     [carteiraFinal]
   );
-  const alocacaoMetaComPrev = useMemo(
-    () => prevTotalEtapa4 > 0
-      ? { ...alocacaoMeta, previdencia: (prevTotalEtapa4 / (patrimonioMeta || 1)) * 100 }
-      : { ...alocacaoMeta },
-    [prevTotalEtapa4, alocacaoMeta, patrimonioMeta]
+  const totalCarteiraFinalE4 = useMemo(
+    () => CARD_ORDER.reduce((s, id) => s + (brlPerCardE4[id] || 0), 0),
+    [brlPerCardE4]
+  );
+  const pctPerCardE4 = useMemo(
+    () => Object.fromEntries(
+      CARD_ORDER.map((id) => [
+        id,
+        totalCarteiraFinalE4 > 0 ? (brlPerCardE4[id] / totalCarteiraFinalE4) * 100 : 0,
+      ])
+    ),
+    [brlPerCardE4, totalCarteiraFinalE4]
   );
 
   const cardStyle = (_accent?: string): React.CSSProperties => ({
@@ -241,9 +250,9 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
       {/* Alocação Atual vs Proposta */}
       <CardAlocacaoComparativa
         macroAtual={macroAtualCalc}
-        macroMeta={alocacaoMetaComPrev}
-        patrimonio={patrimonioMeta}
-        patrimonioMeta={patrimonioMeta}
+        macroMeta={pctPerCardE4}
+        patrimonio={patrimonioTotal}
+        patrimonioMeta={totalCarteiraFinalE4}
       />
 
       {/* Comparativo por Card */}
@@ -332,8 +341,8 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
       {/* Seleção de Ativos Recomendados */}
       <CardSelecaoAtivos
         ativosRecomendados={carteiraFinal}
-        macroMeta={alocacaoMetaComPrev}
-        patrimonio={patrimonioMeta}
+        macroMeta={pctPerCardE4}
+        patrimonio={totalCarteiraFinalE4}
         titulo="Como sua carteira deverá ficar"
         subtitulo="Seleção de ativos após execução do plano"
       />

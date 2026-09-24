@@ -291,16 +291,27 @@ export function SecaoAssetAllocation({
 
   // ── State B — carteira defined ────────────────────────────────────────────
   const rc = resultadoCarteira;
-  const patrimonio = rc.patrimonio;
-  const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   const ativosCarteiraFinalAll = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
-  const prevTotal = ativosCarteiraFinalAll
-    .filter((a) => a.card === 'previdencia')
-    .reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-  const macroMetaComPrev: Record<string, number> = prevTotal > 0
-    ? { ...rc.macroMeta, previdencia: (prevTotal / patrimonioMeta) * 100 }
-    : { ...rc.macroMeta };
+
+  // Compute BRL and normalized % per card from actual carteiraFinal assets
+  // (includes previdência), so all values sum correctly to 100%
+  const brlPerCard: Record<string, number> = Object.fromEntries(
+    CARD_ORDER.map((id) => [
+      id,
+      ativosCarteiraFinalAll
+        .filter((a) => a.card === id)
+        .reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+    ])
+  );
+  const totalCarteiraFinal = CARD_ORDER.reduce((s, id) => s + (brlPerCard[id] || 0), 0);
+  const pctPerCard: Record<string, number> = Object.fromEntries(
+    CARD_ORDER.map((id) => [
+      id,
+      totalCarteiraFinal > 0 ? (brlPerCard[id] / totalCarteiraFinal) * 100 : 0,
+    ])
+  );
+  const prevTotal = brlPerCard['previdencia'] || 0;
 
   const totalAportes = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return a === "aportar" || a === "novo"; })
@@ -362,9 +373,9 @@ export function SecaoAssetAllocation({
           </div>
           <CardAlocacaoComparativa
             macroAtual={rc.macroAtual}
-            macroMeta={macroMetaComPrev}
+            macroMeta={pctPerCard}
             patrimonio={rc.patrimonio}
-            patrimonioMeta={patrimonioMeta}
+            patrimonioMeta={totalCarteiraFinal}
           />
         </div>
 
@@ -387,17 +398,17 @@ export function SecaoAssetAllocation({
             </div>
           </div>
 
-          {/* Groups — previdência is handled separately below */}
+          {/* Groups — all from HIERARQUIA_CLASSES, previdência handled separately below */}
           {HIERARQUIA_CLASSES.filter((g) => g.id !== 'previdencia_privada').map((grupo) => {
             const subsData = grupo.subclasses.map((sub) => ({
               ...sub,
-              pct: Number(rc.macroMeta[sub.cardId]) || 0,
-              brl: ((Number(rc.macroMeta[sub.cardId]) || 0) / 100) * patrimonioMeta,
+              pct: pctPerCard[sub.cardId] || 0,
+              brl: brlPerCard[sub.cardId] || 0,
             }));
-            const totalPct = subsData.reduce((s, sub) => s + sub.pct, 0);
             const totalBrl = subsData.reduce((s, sub) => s + sub.brl, 0);
-            if (totalPct === 0) return null;
-            const visibleSubs = subsData.filter((sub) => sub.pct > 0);
+            const totalPct = subsData.reduce((s, sub) => s + sub.pct, 0);
+            if (totalBrl <= 0) return null;
+            const visibleSubs = subsData.filter((sub) => sub.brl > 0);
 
             return (
               <div key={grupo.id}>
@@ -441,7 +452,7 @@ export function SecaoAssetAllocation({
           {/* Previdência — separate section */}
           {prevTotal > 0 && (() => {
             const prevAtivos = ativosCarteiraFinalAll.filter((a) => a.card === 'previdencia');
-            const prevPct = (prevTotal / patrimonioMeta) * 100;
+            const prevPct = pctPerCard['previdencia'] || 0;
             return (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#E0F2FE", borderBottom: "0.5px solid #E5E7EB", alignItems: "center" }}>
@@ -486,7 +497,7 @@ export function SecaoAssetAllocation({
               <span style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}>100%</span>
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: "#111827", textAlign: "right" }}>
-              {formatBRL(patrimonioMeta)}
+              {formatBRL(totalCarteiraFinal)}
             </span>
           </div>
         </div>
@@ -495,8 +506,8 @@ export function SecaoAssetAllocation({
         {ativosCarteiraFinalAll.length > 0 && (
           <CardSelecaoAtivos
             ativosRecomendados={ativosCarteiraFinalAll}
-            macroMeta={macroMetaComPrev}
-            patrimonio={patrimonioMeta}
+            macroMeta={pctPerCard}
+            patrimonio={totalCarteiraFinal}
             titulo="Como sua carteira deverá ficar"
             subtitulo="Seleção de ativos após execução do plano"
           />
