@@ -2,7 +2,7 @@ import { formatCurrency } from "@/lib/format";
 import { PERFIL_LABELS } from "@/types/financialPlanning";
 import type { FinancialPlan, PerfilRisco } from "@/types/financialPlanning";
 import type { ResultadosEstrategia } from "@/types/estrategiaResultados";
-import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO } from "@/lib/carteira/types";
+import { HIERARQUIA_CLASSES, ALOCACAO_PADRAO, CARD_ORDER } from "@/lib/carteira/types";
 import { montarCarteiraFinal } from "@/lib/carteira/carteiraFinal";
 import { DOC, TEXTO_CORPO } from "@/lib/documentoStyles";
 import { PaginaDocFluida, type BlocoDoc } from "./PaginaDocFluida";
@@ -87,6 +87,23 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
   const usandoModelo = !(rc?.macroMeta && Object.keys(rc.macroMeta).length > 0);
   const patrimonioMeta = patrimonio + (rc?.aporteDisponivel ?? 0);
 
+  // Normalize percentages from actual portfolio assets (includes previdência, all sum to 100%)
+  const ativosCarteiraFinalAll = rc
+    ? montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? [])
+    : [];
+  const brlPerCardDoc = Object.fromEntries(
+    CARD_ORDER.map((id) => [
+      id,
+      ativosCarteiraFinalAll.filter((a) => a.card === id).reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+    ])
+  );
+  const totalCarteiraFinalDoc = CARD_ORDER.reduce((s, id) => s + (brlPerCardDoc[id] || 0), 0);
+  const pctPerCardDoc: Record<string, number> =
+    !usandoModelo && totalCarteiraFinalDoc > 0
+      ? Object.fromEntries(CARD_ORDER.map((id) => [id, (brlPerCardDoc[id] / totalCarteiraFinalDoc) * 100]))
+      : (macroMeta ?? {});
+  const totalDocFooter = !usandoModelo ? totalCarteiraFinalDoc : patrimonioMeta;
+
   const blocos: BlocoDoc[] = [];
 
   if (perfil) {
@@ -151,13 +168,15 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
         {HIERARQUIA_CLASSES.filter((g) => g.id !== 'previdencia_privada').map((grupo) => {
           const subsData = grupo.subclasses.map((sub) => ({
             ...sub,
-            pct: Number(macroMeta[sub.cardId]) || 0,
-            brl: ((Number(macroMeta[sub.cardId]) || 0) / 100) * patrimonioMeta,
+            pct: Number(pctPerCardDoc[sub.cardId]) || 0,
+            brl: !usandoModelo
+              ? (brlPerCardDoc[sub.cardId] || 0)
+              : ((Number(pctPerCardDoc[sub.cardId]) || 0) / 100) * patrimonioMeta,
           }));
           const totalPct = subsData.reduce((s, sub) => s + sub.pct, 0);
           const totalBrl = subsData.reduce((s, sub) => s + sub.brl, 0);
-          if (totalPct === 0) return null;
-          const visibleSubs = subsData.filter((sub) => sub.pct > 0);
+          if (totalBrl === 0 && totalPct === 0) return null;
+          const visibleSubs = subsData.filter((sub) => sub.pct > 0 || sub.brl > 0);
 
           return (
             <div key={grupo.id}>
@@ -196,13 +215,13 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
           );
         })}
 
-        {/* Previdência — separate section (not part of the recommended allocation %) */}
+        {/* Previdência — separate section */}
         {(() => {
           if (!rc) return null;
-          const prevAtivos = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? [])
-            .filter((a) => a.card === 'previdencia');
-          const prevTotal = prevAtivos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+          const prevAtivos = ativosCarteiraFinalAll.filter((a) => a.card === 'previdencia');
+          const prevTotal = brlPerCardDoc['previdencia'] || 0;
           if (prevTotal <= 0) return null;
+          const prevPct = pctPerCardDoc['previdencia'] || 0;
           return (
             <div>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "8px 12px", backgroundColor: "#E0F2FE", borderBottom: `0.5px solid ${DOC.linha}`, alignItems: "center" }}>
@@ -213,7 +232,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
                   <span style={{ fontSize: 11.5, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#0284C7" }}>{fmtPct(prevPct)}</span>
                 </div>
                 <span style={{ fontSize: 11.5, fontWeight: 700, color: "#0284C7", textAlign: "right" }}>
                   {formatCurrency(prevTotal)}
@@ -245,7 +264,7 @@ export function DocAssetAllocation({ nomeCliente, plan, resultados }: Props) {
             <span style={{ fontSize: 11, fontWeight: 700, color: DOC.ink }}>100%</span>
           </div>
           <span style={{ fontSize: 11, fontWeight: 700, color: DOC.ink, textAlign: "right" }}>
-            {formatCurrency(patrimonioMeta)}
+            {formatCurrency(totalDocFooter)}
           </span>
         </div>
       </div>

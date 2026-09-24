@@ -198,18 +198,33 @@ export function DocAlocacaoAtualProposta({ nomeCliente, resultados }: Props) {
   if (!rc) return null;
 
   const patrimonio = rc.patrimonio;
-  const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
   const dadosAtual = montarFatias(rc.macroAtual, patrimonio);
-  const dadosProposta = montarFatias(rc.macroMeta, patrimonioMeta);
 
   // Mostra "Carteira Atual" sempre que houver dados reais — independente do flag
   // comecandoDoZero, que pode estar desatualizado se o consultor preencheu ativos depois.
   const temCarteiraAtual = Object.values(rc.macroAtual ?? {}).some((v) => (v as number) > 0);
 
   const ativosFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
-  const totalSomaMeta = ativosFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-  const linhas = montarLinhas(ativosFinal, rc.macroMeta ?? {}, patrimonioMeta);
+
+  // Normalize percentages from actual portfolio assets so previdência is included and all sum to 100%
+  const brlPerCard: Record<string, number> = Object.fromEntries(
+    CARD_ORDER.map((id) => [
+      id,
+      ativosFinal.filter((a) => a.card === id).reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+    ])
+  );
+  const totalCarteiraFinal = CARD_ORDER.reduce((s, id) => s + (brlPerCard[id] || 0), 0);
+  const pctPerCard: Record<string, number> = Object.fromEntries(
+    CARD_ORDER.map((id) => [
+      id,
+      totalCarteiraFinal > 0 ? (brlPerCard[id] / totalCarteiraFinal) * 100 : 0,
+    ])
+  );
+
+  const dadosProposta = montarFatias(pctPerCard, totalCarteiraFinal);
+  const totalSomaMeta = totalCarteiraFinal;
+  const linhas = montarLinhas(ativosFinal, pctPerCard, totalCarteiraFinal);
   const blocos = linhas.length > 0 ? dividirLinhas(linhas) : [];
 
   return (
