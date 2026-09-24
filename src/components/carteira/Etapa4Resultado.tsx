@@ -158,6 +158,17 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
 
   const patrimonioFinal = carteiraFinal.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
 
+  const prevTotalEtapa4 = useMemo(
+    () => carteiraFinal.filter((a) => a.card === 'previdencia').reduce((s, a) => s + (Number(a.valorBRL) || 0), 0),
+    [carteiraFinal]
+  );
+  const alocacaoMetaComPrev = useMemo(
+    () => prevTotalEtapa4 > 0
+      ? { ...alocacaoMeta, previdencia: (prevTotalEtapa4 / (patrimonioMeta || 1)) * 100 }
+      : { ...alocacaoMeta },
+    [prevTotalEtapa4, alocacaoMeta, patrimonioMeta]
+  );
+
   const cardStyle = (_accent?: string): React.CSSProperties => ({
     border: "0.5px solid #E5E7EB",
     borderRadius: 10, backgroundColor: "white", overflow: "hidden",
@@ -230,8 +241,9 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
       {/* Alocação Atual vs Proposta */}
       <CardAlocacaoComparativa
         macroAtual={macroAtualCalc}
-        macroMeta={alocacaoMeta}
+        macroMeta={alocacaoMetaComPrev}
         patrimonio={patrimonioMeta}
+        patrimonioMeta={patrimonioMeta}
       />
 
       {/* Comparativo por Card */}
@@ -320,7 +332,7 @@ export function Etapa4Resultado({ ativosAtuais, alocacaoMeta, planoAcao, patrimo
       {/* Seleção de Ativos Recomendados */}
       <CardSelecaoAtivos
         ativosRecomendados={carteiraFinal}
-        macroMeta={alocacaoMeta}
+        macroMeta={alocacaoMetaComPrev}
         patrimonio={patrimonioMeta}
         titulo="Como sua carteira deverá ficar"
         subtitulo="Seleção de ativos após execução do plano"

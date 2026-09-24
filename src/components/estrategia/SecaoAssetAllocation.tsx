@@ -294,6 +294,14 @@ export function SecaoAssetAllocation({
   const patrimonio = rc.patrimonio;
   const patrimonioMeta = patrimonio + (rc.aporteDisponivel ?? 0);
 
+  const ativosCarteiraFinalAll = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
+  const prevTotal = ativosCarteiraFinalAll
+    .filter((a) => a.card === 'previdencia')
+    .reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
+  const macroMetaComPrev: Record<string, number> = prevTotal > 0
+    ? { ...rc.macroMeta, previdencia: (prevTotal / patrimonioMeta) * 100 }
+    : { ...rc.macroMeta };
+
   const totalAportes = (rc.planoAcao ?? [])
     .filter((i) => { const a = i.acao ?? i.tipo; return a === "aportar" || a === "novo"; })
     .reduce((s, i) => s + (i.movimentacaoEditada ?? i.movimentacaoBRL ?? 0), 0);
@@ -354,8 +362,9 @@ export function SecaoAssetAllocation({
           </div>
           <CardAlocacaoComparativa
             macroAtual={rc.macroAtual}
-            macroMeta={rc.macroMeta}
+            macroMeta={macroMetaComPrev}
             patrimonio={rc.patrimonio}
+            patrimonioMeta={patrimonioMeta}
           />
         </div>
 
@@ -429,12 +438,10 @@ export function SecaoAssetAllocation({
             );
           })}
 
-          {/* Previdência — separate section (not part of the recommended allocation %) */}
-          {(() => {
-            const prevAtivos = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? [])
-              .filter((a) => a.card === 'previdencia');
-            const prevTotal = prevAtivos.reduce((s, a) => s + (Number(a.valorBRL) || 0), 0);
-            if (prevTotal <= 0) return null;
+          {/* Previdência — separate section */}
+          {prevTotal > 0 && (() => {
+            const prevAtivos = ativosCarteiraFinalAll.filter((a) => a.card === 'previdencia');
+            const prevPct = (prevTotal / patrimonioMeta) * 100;
             return (
               <div>
                 <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "10px 12px", backgroundColor: "#E0F2FE", borderBottom: "0.5px solid #E5E7EB", alignItems: "center" }}>
@@ -445,7 +452,9 @@ export function SecaoAssetAllocation({
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7" }}>Previdência Privada</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <span style={{ fontSize: 11, color: "#0284C7", fontStyle: "italic" }}>—</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 99, backgroundColor: "#0284C722", color: "#0284C7" }}>
+                      {formatPct(prevPct)}
+                    </span>
                   </div>
                   <span style={{ fontSize: 13, fontWeight: 700, color: "#0284C7", textAlign: "right" }}>
                     {formatBRL(prevTotal)}
@@ -483,20 +492,15 @@ export function SecaoAssetAllocation({
         </div>
 
         {/* Card 3B — Seleção de Ativos Recomendados */}
-        {(() => {
-          const ativosCarteiraFinal = montarCarteiraFinal(rc.planoAcao ?? [], rc.ativosRecomendados ?? [], rc.ativosAtuais ?? []);
-          if (ativosCarteiraFinal.length === 0) return null;
-          return (
-            <CardSelecaoAtivos
-              ativosRecomendados={ativosCarteiraFinal}
-              macroMeta={rc.macroMeta ?? {}}
-              patrimonio={patrimonioMeta}
-              titulo="Como sua carteira deverá ficar"
-              subtitulo="Seleção de ativos após execução do plano"
-              cardsExcluirPct={['previdencia']}
-            />
-          );
-        })()}
+        {ativosCarteiraFinalAll.length > 0 && (
+          <CardSelecaoAtivos
+            ativosRecomendados={ativosCarteiraFinalAll}
+            macroMeta={macroMetaComPrev}
+            patrimonio={patrimonioMeta}
+            titulo="Como sua carteira deverá ficar"
+            subtitulo="Seleção de ativos após execução do plano"
+          />
+        )}
 
         {/* Card 4 — Action plan */}
         <div style={CARD}>

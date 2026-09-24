@@ -8,6 +8,7 @@ interface Props {
   macroAtual: Record<string, number>;
   macroMeta: Record<string, number>;
   patrimonio: number;
+  patrimonioMeta?: number;
 }
 
 const ALTURA = 240;
@@ -59,7 +60,7 @@ function GraficoPizza({ titulo, dados }: { titulo: string; dados: Fatia[] }) {
   );
 }
 
-export function CardAlocacaoComparativa({ macroAtual, macroMeta, patrimonio }: Props) {
+export function CardAlocacaoComparativa({ macroAtual, macroMeta, patrimonio, patrimonioMeta }: Props) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [larguraGrid, setLarguraGrid] = useState(0);
 
@@ -95,7 +96,7 @@ export function CardAlocacaoComparativa({ macroAtual, macroMeta, patrimonio }: P
         }}
       >
         <GraficoPizza titulo="Carteira Atual" dados={montarFatias(macroAtual, patrimonio)} />
-        <GraficoPizza titulo="Alocação Proposta" dados={montarFatias(macroMeta, patrimonio)} />
+        <GraficoPizza titulo="Alocação Proposta" dados={montarFatias(macroMeta, patrimonioMeta ?? patrimonio)} />
       </div>
     </div>
   );
