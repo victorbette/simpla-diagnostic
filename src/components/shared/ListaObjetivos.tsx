@@ -336,9 +336,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                 style={{ flex: 1, padding: "6px 10px", borderRadius: 6, border: "1px solid #BFDBFE", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
               >
                 <option value="nenhuma">Sem repetição</option>
-                <option value="anual">Anual</option>
-                <option value="semestral">Semestral</option>
+                <option value="mensal">Mensal</option>
                 <option value="trimestral">Trimestral</option>
+                <option value="semestral">Semestral</option>
+                <option value="anual">Anual</option>
                 <option value="cada2anos">A cada 2 anos</option>
                 <option value="cada3anos">A cada 3 anos</option>
               </select>
@@ -466,9 +467,10 @@ export function ListaObjetivos({ objetivos, onObjetivos, anoAtual, anoMeta }: Pr
                     style={{ flex: 1, padding: "6px 10px", borderRadius: 6, border: "1px solid #FED7AA", fontSize: 13, color: "#000000", outline: "none", backgroundColor: "white" }}
                   >
                     <option value="nenhuma">Sem repetição</option>
-                    <option value="anual">Anual</option>
-                    <option value="semestral">Semestral</option>
+                    <option value="mensal">Mensal</option>
                     <option value="trimestral">Trimestral</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="anual">Anual</option>
                     <option value="cada2anos">A cada 2 anos</option>
                     <option value="cada3anos">A cada 3 anos</option>
                   </select>

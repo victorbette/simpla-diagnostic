@@ -554,7 +554,7 @@ function addMeses(mes: number, ano: number, delta: number): { mes: number; ano: 
 }
 
 const INTERVALO_MESES: Record<string, number> = {
-  anual: 12, semestral: 6, trimestral: 3, cada2anos: 24, cada3anos: 36,
+  mensal: 1, anual: 12, semestral: 6, trimestral: 3, cada2anos: 24, cada3anos: 36,
 };
 
 /** Expand objectives with repetition and/or installments into a flat list of single-occurrence objectives */

@@ -54,7 +54,7 @@ export interface ObjetivoVida {
   tipoFluxo?: 'saida' | 'entrada'; // undefined = saida (backwards compatible)
 
   // Repetição
-  repeticao?: 'nenhuma' | 'anual' | 'semestral' | 'trimestral' | 'cada2anos' | 'cada3anos';
+  repeticao?: 'nenhuma' | 'mensal' | 'anual' | 'semestral' | 'trimestral' | 'cada2anos' | 'cada3anos';
   quantidadeRepeticoes?: number;
 
   // Projeto a Prazo
