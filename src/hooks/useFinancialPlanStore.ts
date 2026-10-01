@@ -12,6 +12,7 @@ import type {
   DadosCliente,
 } from "@/types/financialPlanning";
 import { initialDadosCliente } from "@/types/financialPlanning";
+import { FP_BLOQUEADO_MENSAGEM } from "@/lib/fpBloqueado";
 
 // ─── Status calculation ───────────────────────────────────────────────────────
 
@@ -135,40 +136,9 @@ export function useFinancialPlanStore() {
 
   // ── Create blank plan ─────────────────────────────────────────────────────
 
-  const criarPlano = useCallback(async (clientId: string): Promise<FinancialPlan> => {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) throw new Error("Usuário não autenticado");
-
-    const { data, error: insertError } = await supabase
-      .from("financial_plans")
-      .insert({
-        client_id: clientId,
-        dados_cliente: {},
-        ativos_atuais: {},
-        alocacao_personalizada: null,
-        planejamento_if: {},
-        protecao: {},
-        fiscal: {},
-        sucessorio: {},
-        notas_assessor: "",
-        status: "nao_iniciado",
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("useFinancialPlanStore: criarPlano failed", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
-      });
-      throw new Error(insertError.message);
-    }
-
-    const novo = rowToPlan(data as unknown as PlanRow);
-    setPlanSafe(novo);
-    return novo;
+  // Financial Planning foi movido para o CRM Wealth — criação bloqueada.
+  const criarPlano = useCallback(async (_clientId: string): Promise<FinancialPlan> => {
+    throw new Error(FP_BLOQUEADO_MENSAGEM);
   }, []);
 
   // ── Upsert (save or create) ───────────────────────────────────────────────
@@ -219,26 +189,8 @@ export function useFinancialPlanStore() {
         setUltimoSalvo(new Date());
         return updated;
       } else {
-        const { data, error: insertError } = await supabase
-          .from("financial_plans")
-          .insert(payload)
-          .select()
-          .single();
-
-        if (insertError) {
-          console.error("savePlan (insert) — Supabase error:", {
-            message: insertError.message,
-            details: insertError.details,
-            hint: insertError.hint,
-            code: insertError.code,
-          });
-          throw insertError;
-        }
-
-        const created = rowToPlan(data as unknown as PlanRow);
-        setPlanSafe(created);
-        setUltimoSalvo(new Date());
-        return created;
+        // Financial Planning foi movido para o CRM Wealth — criação bloqueada.
+        throw new Error(FP_BLOQUEADO_MENSAGEM);
       }
     } catch (err) {
       console.error("useFinancialPlanStore: savePlan failed", err);

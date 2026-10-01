@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FinancialPlanningPage } from "@/components/financialPlanning/FinancialPlanningPage";
+import { FPBloqueadoModal } from "@/components/shared/FPBloqueadoModal";
 import { AcompanhamentoPage } from "@/pages/AcompanhamentoPage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useClientStore } from "@/hooks/useClientStore";
@@ -172,7 +172,7 @@ export function HomePage() {
   const { user, signOut } = useAuth();
   const clientStore = useClientStore();
 
-  const [clienteSelecionado, setClienteSelecionado] = useState<Client | null>(null);
+  const [fpBloqueadoAberto, setFpBloqueadoAberto] = useState(false);
   const [clienteAcompanhamento, setClienteAcompanhamento] = useState<Client | null>(null);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "pendente" | "em_andamento" | "completo">("todos");
@@ -256,19 +256,6 @@ export function HomePage() {
     return <DiagnosticoPage onVoltar={() => setMostrarDiagnostico(false)} />;
   }
 
-  if (clienteSelecionado) {
-    return (
-      <FinancialPlanningPage
-        clientId={clienteSelecionado.id}
-        clientName={clienteSelecionado.nome}
-        onClose={() => setClienteSelecionado(null)}
-        onPlanStatusChange={(planId, status) =>
-          clientStore.updateClientPlanStatus(clienteSelecionado.id, planId, status)
-        }
-      />
-    );
-  }
-
   if (clienteAcompanhamento) {
     return (
       <AcompanhamentoPage
@@ -342,7 +329,8 @@ export function HomePage() {
     }
   }
 
-  function handleAbrirFP(c: Client) { setClienteSelecionado(c); }
+  // Financial Planning foi movido para o CRM Wealth — acesso bloqueado.
+  function handleAbrirFP() { setFpBloqueadoAberto(true); }
 
   function concluirTour() {
     setTourAtivo(false);
@@ -631,7 +619,7 @@ export function HomePage() {
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <button
                       {...(idx === 0 ? { 'data-tour': 'btn-fp' } : {})}
-                      onClick={() => handleAbrirFP(c)}
+                      onClick={handleAbrirFP}
                       title="Financial Planning"
                       style={{ fontSize: 11, color: "#2563EB", background: "#EFF6FF", border: "0.5px solid #BFDBFE", borderRadius: 6, padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" as const }}
                     >
@@ -809,6 +797,8 @@ export function HomePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FPBloqueadoModal aberto={fpBloqueadoAberto} onFechar={() => setFpBloqueadoAberto(false)} />
 
       {/* ── Tour Guiado ── */}
       <TourGuiado
