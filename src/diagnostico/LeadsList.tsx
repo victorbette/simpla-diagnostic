@@ -21,7 +21,9 @@ interface Props {
   onCadastrar: (lead: Lead) => void;
   onAtualizar: (lead: Lead) => void;
   onExcluir: (id: string) => void;
-  onVoltar: () => void;
+  onVoltar?: () => void;
+  onConfig?: () => void;
+  onSair?: () => void;
   onConverterCliente: (lead: Lead) => Promise<void>;
 }
 
@@ -31,7 +33,7 @@ function getStatusBadge(lead: Lead): { label: string; color: string; bg: string 
   return { label: "Pendente", color: "#9CA3AF", bg: "#F3F4F6" };
 }
 
-export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExcluir, onVoltar, onConverterCliente }: Props) {
+export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExcluir, onVoltar, onConfig, onSair, onConverterCliente }: Props) {
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -136,18 +138,44 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
 
       {/* Minimal nav header */}
       <header style={{ backgroundColor: "#1E3A8A", padding: "16px 24px", display: "flex", alignItems: "center", gap: 14 }}>
-        <button
-          onClick={onVoltar}
-          style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "5px 13px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
-        >
-          ← Voltar
-        </button>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {onVoltar && (
+          <button
+            onClick={onVoltar}
+            style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.3)", color: "white", borderRadius: 8, padding: "5px 13px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            ← Voltar
+          </button>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
           <img src="/diamond-icon-small.png" alt="Simpla" style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 4 }} />
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.2 }}>
             <span style={{ color: "white", fontWeight: 700, fontSize: 15, fontFamily: "Poppins, sans-serif" }}>Simpla Invest</span>
-            <span style={{ color: "#93C5FD", fontSize: 11, fontFamily: "Poppins, sans-serif", fontWeight: 400, letterSpacing: "0.04em" }}>Financial Planning</span>
+            <span style={{ color: "#93C5FD", fontSize: 11, fontFamily: "Poppins, sans-serif", fontWeight: 400, letterSpacing: "0.04em" }}>Diagnóstico Financeiro</span>
           </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {onConfig && (
+            <button
+              onClick={onConfig}
+              title="Configurações"
+              style={{ background: "none", border: "none", color: "white", cursor: "pointer", padding: "6px 8px", borderRadius: 6, display: "flex", alignItems: "center", opacity: 0.75 }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.75")}
+            >
+              <i className="ti ti-settings" style={{ fontSize: 22 }} />
+            </button>
+          )}
+          {onSair && (
+            <button
+              onClick={onSair}
+              title="Sair"
+              style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: "6px 8px", borderRadius: 6, display: "flex", alignItems: "center" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#9CA3AF")}
+            >
+              <i className="ti ti-logout" style={{ fontSize: 20 }} />
+            </button>
+          )}
         </div>
       </header>
 

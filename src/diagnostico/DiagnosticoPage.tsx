@@ -24,10 +24,12 @@ function salvarLeads(leads: Lead[]): void {
 }
 
 interface Props {
-  onVoltar: () => void;
+  onVoltar?: () => void;
+  onConfig?: () => void;
+  onSair?: () => void;
 }
 
-export function DiagnosticoPage({ onVoltar }: Props) {
+export function DiagnosticoPage({ onVoltar, onConfig, onSair }: Props) {
   const [leads, setLeads] = useState<Lead[]>(carregarLeads);
   const [leadAtivo, setLeadAtivo] = useState<Lead | null>(null);
 
@@ -82,6 +84,8 @@ export function DiagnosticoPage({ onVoltar }: Props) {
         setLeads(prev => prev.filter(l => l.id !== id));
       }}
       onVoltar={onVoltar}
+      onConfig={onConfig}
+      onSair={onSair}
       onConverterCliente={handleConverterCliente}
     />
   );

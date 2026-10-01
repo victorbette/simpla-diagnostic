@@ -183,7 +183,7 @@ export function HomePage() {
   const [salvando, setSalvando] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [mostrarConfig, setMostrarConfig] = useState(false);
-  const [mostrarDiagnostico, setMostrarDiagnostico] = useState(false);
+  const [mostrarDiagnostico, setMostrarDiagnostico] = useState(true);
   const [menuAberto, setMenuAberto] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [tourAtivo, setTourAtivo] = useState(false);
@@ -253,7 +253,12 @@ export function HomePage() {
   }
 
   if (mostrarDiagnostico) {
-    return <DiagnosticoPage onVoltar={() => setMostrarDiagnostico(false)} />;
+    return (
+      <DiagnosticoPage
+        onConfig={() => setMostrarConfig(true)}
+        onSair={signOut}
+      />
+    );
   }
 
   if (clienteAcompanhamento) {
