@@ -101,16 +101,16 @@ export function DocDiagnosticoInicial({ lead }: Props) {
     ? (filhos[0].nome || "seu filho")
     : filhos.length > 1 ? `seus ${filhos.length} filhos` : "";
 
-  // P1 — score-adaptive opener
+  // P1 — score-adaptive opener (0-39 / 40-59 / 60-79 / 80-100)
   let p1: string;
   if (scoreGeral >= 80) {
-    p1 = `${nome}, poucos chegam a um diagnóstico com os números que você apresenta. Você construiu uma base sólida, com disciplina e consistência — e esse documento é o reconhecimento disso, mas também o mapa para o que ainda pode ser otimizado.`;
+    p1 = `${nome}, o seu score de ${scoreGeral} indica um planejamento maduro: o seu patrimônio está bem direcionado aos seus objetivos e a sua base de proteção é consistente. Nesse patamar, o desafio muda de natureza. A pergunta deixa de ser "como chegar" e passa a ser "como preservar, otimizar e transmitir": eficiência tributária, resiliência a cenários adversos e organização sucessória.`;
   } else if (scoreGeral >= 60) {
-    p1 = `${nome}, você está segurando em mãos algo que poucas pessoas têm coragem de buscar: a verdade sobre a própria situação financeira. E o que esses números mostram é que você já está à frente da maioria — mas ainda há distância importante entre onde você está e onde poderia estar.`;
+    p1 = `${nome}, o seu score de ${scoreGeral} coloca você acima da maior parte das pessoas que diagnosticamos. A sua estrutura tem fundamentos sólidos. Justamente por isso, as lacunas que restam ganham peso: são pontos específicos que, se não forem tratados, podem comprometer um patrimônio que já é relevante. O trabalho aqui é de precisão, não de reconstrução.`;
   } else if (scoreGeral >= 40) {
-    p1 = `${nome}, você está segurando em mãos algo que poucas pessoas têm coragem de buscar: a verdade sobre a própria situação financeira. Esses números mostram que há trabalho importante a fazer — e que o momento de começar é agora, não depois.`;
+    p1 = `${nome}, o seu score de ${scoreGeral} mostra que você já tem uma base: disciplina de poupar e algum patrimônio acumulado. O que falta é conexão. Hoje as peças existem, mas não conversam entre si: os investimentos não estão calibrados para a sua meta e a sua proteção não acompanha o que você construiu. É uma estrutura que funciona no dia a dia, mas ainda não sustenta o seu plano de longo prazo.`;
   } else {
-    p1 = `${nome}, o que você está segurando em mãos não é só um diagnóstico — é o primeiro olhar honesto sobre uma realidade que não pode mais ser postergada. Isso exige coragem, e o fato de você estar aqui já diferencia você da maioria.`;
+    p1 = `${nome}, o seu score de ${scoreGeral} mostra que, hoje, o seu patrimônio ainda não está organizado em função dos seus objetivos. Existe esforço e existe dinheiro guardado, mas sem uma estratégia que conecte o que você faz hoje ao que você quer lá na frente. Isso não é um julgamento sobre o passado: é o ponto de partida mais claro possível para montar um plano do zero, com cada peça no lugar certo.`;
   }
 
   // P2 — context for the journey (different tone for Caminho Certo)
@@ -183,7 +183,9 @@ export function DocDiagnosticoInicial({ lead }: Props) {
     p6 = `Pense no futuro que você imagina — a liberdade de acordar sem a pressão do trabalho por obrigação, de fazer escolhas com base no que deseja, não no que precisa.${notaProfP6}`;
   }
 
-  const textoEmocional = [p1, p2, p3, p4, p5, p6, `Os próximos passos estão mapeados neste documento. A jornada começa agora.`].join("\n\n");
+  const introScore = `O Score de Planejamento resume, em um único número, o quanto a sua vida financeira hoje está organizada para sustentar os seus objetivos. Ele não mede quanto você tem, e sim o quanto aquilo que você tem está trabalhando a seu favor: a distância até a sua independência financeira, a estrutura da sua carteira e a solidez da proteção sobre tudo que você construiu.`;
+
+  const textoEmocional = [introScore, p1, p2, p3, p4, p5, p6, `Os próximos passos estão mapeados neste documento. A jornada começa agora.`].join("\n\n");
 
   const blocos: BlocoDoc[] = [
     {

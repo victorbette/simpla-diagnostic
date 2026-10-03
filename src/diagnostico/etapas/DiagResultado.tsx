@@ -137,40 +137,65 @@ export function DiagResultado({ lead }: Props) {
   function gerarTextoDiversificacao(): string {
     const am = dadosColeta.ativosInvestimento ?? {};
     const tem = (id: string) => am[id] === true;
-    const temRFPilar  = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca","cdb"].some(tem);
-    const temAcoesPilar = tem("acoes");
-    const temFIIsPilar  = tem("fiis");
+    const temRFPilar     = ["tesouro_selic","fundo_rf","lci_lca","cri_cra","debentures","poupanca","cdb"].some(tem);
+    const temAcoesPilar  = tem("acoes");
+    const temFIIsPilar   = tem("fiis");
     const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
-    const faltam = [
-      !temRFPilar && "Renda Fixa",
-      !temAcoesPilar && "Ações",
-      !temFIIsPilar && "Fundos Imobiliários",
+
+    const classesPresentes = [
+      temRFPilar     && "Renda Fixa",
+      temAcoesPilar  && "Ações",
+      temFIIsPilar   && "Fundos Imobiliários",
+      temGlobalPilar && "Investimentos Globais",
+    ].filter(Boolean) as string[];
+    const classesAusentes = [
+      !temRFPilar     && "Renda Fixa",
+      !temAcoesPilar  && "Ações",
+      !temFIIsPilar   && "Fundos Imobiliários",
       !temGlobalPilar && "Investimentos Globais",
     ].filter(Boolean) as string[];
+    const count = classesPresentes.length;
 
-    if (faltam.length === 0) {
-      return `Sua carteira está distribuída pelos quatro pilares recomendados pela Simpla — Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais. Essa diversificação é fundamental para equilibrar proteção e crescimento em diferentes cenários econômicos.`;
+    const imeta = Number(dadosColeta.idadeMeta) || 0;
+    const nascStr = dadosColeta.dataNascimento || "";
+    const anosRest = (() => {
+      if (!nascStr || imeta <= 0) return 0;
+      const hoje = new Date();
+      let ano = 0, mes = 0;
+      if (nascStr.includes('-')) { [ano, mes] = nascStr.split('-').map(Number); }
+      else { ano = parseInt(nascStr.slice(6)); mes = parseInt(nascStr.slice(3, 5)); }
+      const idade = hoje.getFullYear() - ano + ((hoje.getMonth() + 1) < mes ? -1 : 0);
+      return imeta > idade ? imeta - idade : 0;
+    })();
+    const horizonte = anosRest > 0 ? ` no seu horizonte de ${anosRest} anos` : "";
+
+    if (!temRFPilar && count > 0) {
+      return `A sua carteira não contempla renda fixa. Essa é a classe que cumpre duas funções que nenhuma outra cumpre: dar previsibilidade ao dinheiro que você vai precisar no curto prazo e oferecer liquidez diante de imprevistos. Sem ela, qualquer necessidade de caixa se transforma em venda de ativo de risco, frequentemente no pior momento possível. É também a renda fixa que permite manter as posições de risco com tranquilidade, porque você deixa de depender delas para viver.`;
     }
-    if (!temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
+    if (count === 0) {
       return `Nenhum ativo foi mapeado. Para analisar a diversificação da sua carteira, preencha os investimentos na etapa de coleta.`;
     }
-    if (temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
-      return `Sua carteira está concentrada em Renda Fixa, sem exposição a Ações, Fundos Imobiliários ou Investimentos Globais. Embora a renda fixa ofereça segurança e previsibilidade, uma carteira sem ativos de crescimento tem um custo de oportunidade relevante no longo prazo. A Simpla recomenda distribuir o patrimônio pelos quatro pilares para equilibrar proteção, geração de renda e crescimento real.`;
+    if (count === 1) {
+      return `${nome}, a sua carteira está concentrada em ${classesPresentes[0]}. Hoje, todo o seu resultado depende de um único tipo de ativo e, portanto, de um único cenário econômico. Concentração não é apenas risco de perda: é também um limite. Enquanto todas as suas fontes de resultado forem a mesma, o patrimônio não consegue combinar segurança, crescimento e renda ao mesmo tempo.`;
     }
-    if (!temGlobalPilar) {
-      const temOutros = temRFPilar || temAcoesPilar || temFIIsPilar;
-      const base = temOutros
-        ? `Sua carteira ainda não tem exposição internacional.`
-        : `Não identificamos exposição internacional na sua carteira.`;
-      return `${base} O investimento global é fundamental para reduzir o risco-Brasil e capturar oportunidades em economias mais desenvolvidas — especialmente nos EUA, que concentra as maiores empresas do mundo e oferece um ambiente regulatório mais sólido. Renda Fixa americana, Stocks, REITs e ETFs globais são as principais formas de acessar essa diversificação.`;
+    if (count === 2) {
+      const listPresentes = classesPresentes.join(" e ");
+      const listAusentes = classesAusentes.length === 2
+        ? `${classesAusentes[0]} e ${classesAusentes[1]}`
+        : classesAusentes.join(" e ");
+      return `${nome}, a sua carteira contempla duas das quatro classes analisadas: ${listPresentes}. É um começo de estrutura, mas com funções relevantes ainda descobertas: falta ${listAusentes}${horizonte}. Na prática, você já resolveu uma parte do problema e deixou outra inteira em aberto.`;
     }
-    if (!temAcoesPilar && !temFIIsPilar) {
-      return `Você tem renda fixa e investimentos globais, mas sua carteira não conta com Ações nem Fundos Imobiliários. Esses dois pilares são essenciais para o crescimento real do patrimônio no longo prazo e para a geração de renda passiva — e estão ausentes da sua estratégia atual.`;
+    if (count === 3) {
+      const ausenteLabel = classesAusentes[0];
+      const funcaoAusente: Record<string, string> = {
+        "Renda Fixa":            "segurança e liquidez para o curto prazo",
+        "Ações":                 "crescimento de longo prazo",
+        "Fundos Imobiliários":   "renda recorrente e exposição a ativos reais",
+        "Investimentos Globais": "proteção contra o risco-país e o risco de moeda",
+      };
+      return `${nome}, a sua carteira contempla três das quatro classes analisadas, o que mostra que você já pensa em alocação e não apenas em produto. A lacuna está em ${ausenteLabel}, responsável por ${funcaoAusente[ausenteLabel] ?? "diversificação adicional"}. Em uma estrutura que já é boa, essa é a lacuna de maior ganho relativo: não se trata de refazer o que está feito, e sim de completar o que falta e revisar as proporções.`;
     }
-    const lista = faltam.length === 1
-      ? faltam[0]
-      : faltam.slice(0, -1).join(", ") + " e " + faltam[faltam.length - 1];
-    return `${faltam.length === 1 ? "Um pilar ainda está ausente" : "Alguns pilares ainda estão ausentes"} da sua carteira: ${lista}. A Simpla recomenda distribuição entre Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais para equilibrar segurança, crescimento e diversificação geográfica.`;
+    return `${nome}, a sua carteira contempla as quatro classes analisadas, o que é pouco comum e indica intenção clara de estrutura. É importante registrar, porém, o limite deste indicador: ele mede presença, não proporção. Ter as quatro classes não garante que os pesos entre elas correspondam ao seu perfil, ao seu prazo e ao seu objetivo, e é a proporção que determina como a carteira se comporta em cenários adversos.`;
   }
 
   const textoPrevidencia = `A previdência privada oferece dois benefícios relevantes para o planejamento de longo prazo: a sucessão patrimonial simplificada — os recursos são transferidos diretamente aos beneficiários sem necessidade de inventário — e o diferimento fiscal, já que o imposto incide apenas no momento do resgate, permitindo que o capital cresça sem tributação intermediária. No caso do PGBL, há ainda a possibilidade de deduzir até 12% da renda bruta anual na declaração completa do IR.\n\nO ponto de atenção está na qualidade do fundo onde o patrimônio está aplicado. Muitos planos comercializados por bancos concentram os recursos em fundos com taxas de administração elevadas e desempenho abaixo do CDI — o que pode comprometer boa parte dos benefícios fiscais. A vantagem da previdência só se concretiza com um fundo de qualidade, com taxa baixa e gestão eficiente.`;
@@ -324,31 +349,29 @@ export function DiagResultado({ lead }: Props) {
   }
 
   function gerarTextoBlindagem(): string {
-    const familiaRef = casado && conjuge ? conjuge : casado ? "sua família" : temFilhos ? (filhos.length === 1 ? (filhos[0].nome || "seu filho") : "seus filhos") : "quem você ama";
     const nFilhosStr = filhos.length === 1 ? (filhos[0].nome || "seu filho") : `seus ${filhos.length} filhos`;
     const conjugeRef = conjuge || "sua família";
     const tipoProf   = ehEmpresario ? "empresário" : ehAutonomo ? "autônomo" : "";
 
+    const introBlindagem = `Existe uma regra pétrea no planejamento financeiro: não adianta desenharmos a melhor estratégia de investimentos do mundo se a base sobre a qual ela está construída for vulnerável. Um único evento inesperado não planejado pode desmanchar anos de acumulação em poucos meses. Por isso, analisamos a sua blindagem patrimonial.`;
+
     // Parágrafo extra de profissão para quem não tem seguro
     const notaRendaVariavel = rendaVariavel
-      ? `\n\nComo ${tipoProf}, a sua renda depende diretamente da sua capacidade de trabalhar. Diferente de um empregado CLT, você não tem salário garantido, afastamento remunerado pelo empregador ou FGTS para cobrir um imprevisto grave. Se você para, a receita para junto — e isso torna a ausência de proteção ainda mais crítica do que para a maioria das pessoas.`
+      ? `\n\nComo ${tipoProf}, se você para, a receita para junto — sem salário garantido nem afastamento remunerado pelo empregador.${ehEmpresario ? " Há um risco adicional: a sua ausência pode comprometer a empresa inteira — sócios, contratos, funcionários. Um seguro de pessoa-chave protege tanto a família quanto a continuidade do negócio." : " Uma apólice com DIT (Diária de Incapacidade Temporária) e cobertura de invalidez parcial é o que garante renda quando você não pode trabalhar."}`
       : ehCLT
         ? `\n\nComo empregado CLT, você tem alguns benefícios institucionais — mas o que o INSS oferece em casos de invalidez raramente mantém o padrão de vida de quem era ativo. O auxílio-doença e a aposentadoria por invalidez cobrem uma fração da renda real, e durante um afastamento prolongado a diferença precisa vir de algum lugar.`
         : ehServidor
-          ? `\n\nComo servidor público, você tem estabilidade no emprego — mas em casos de doença grave ou invalidez permanente, os limites do regime público costumam surpreender negativamente na hora em que são mais necessários. Coberturas complementares fazem a diferença entre manter o padrão de vida ou ter que renegociá-lo por completo.`
+          ? `\n\nComo servidor público, você tem estabilidade — mas em casos de doença grave ou invalidez permanente, os limites do regime público costumam surpreender negativamente. Coberturas complementares fazem a diferença entre manter o padrão de vida ou ter que renegociá-lo por completo.`
           : "";
 
     if (!possuiSeguro) {
-      if (casado && temFilhos) {
-        return `${nome}, pare por um momento e imagine dois cenários. No primeiro: um acidente ou doença grave te incapacita temporária ou permanentemente de trabalhar. No segundo — o mais difícil de imaginar — um falecimento precoce. Em ambos, a pergunta é a mesma: o que acontece com ${conjugeRef} e ${nFilhosStr}?\n\nQuem paga o aluguel ou a parcela da casa no mês que vem? Quem garante a escola ${filhos.length === 1 ? "do" : "dos"} ${nFilhosStr}? Quem mantém o padrão de vida da família enquanto tudo é reorganizado? Essas não são perguntas retóricas — são perguntas com respostas concretas, e hoje a resposta é: ninguém. Porque você não tem seguro de vida montado.${notaRendaVariavel}\n\nUm seguro de vida bem estruturado cobre exatamente esses dois cenários: garante uma renda ou um capital para a família em caso de falecimento, e protege contra invalidez total ou parcial e doenças graves, que tiram a capacidade de gerar renda sem tirar a vida. São riscos distintos — e ambos precisam estar cobertos.\n\nEsse é o pilar mais urgente da sua estratégia financeira. Sem blindagem, tudo que você construiu e ainda vai construir está exposto a um único evento ruim. Esse ponto precisa ser resolvido antes de qualquer outra decisão financeira.`;
+      if (temFilhos) {
+        return `${introBlindagem}\n\n${nome}, hoje você não possui uma apólice de blindagem. Se amanhã um imprevisto grave tirar a sua capacidade de gerar renda ou tirar você de cena, quem paga a escola ${filhos.length === 1 ? "das crianças" : "das crianças"} no mês seguinte? Quem banca as contas fixas da casa enquanto as coisas se reorganizam? Sem uma cobertura estruturada, a família é obrigada a torrar as reservas e liquidar investimentos na pressa.${notaRendaVariavel}\n\nTerceirizar esse risco para uma seguradora é o pilar mais urgente antes de qualquer aporte.`;
       }
       if (casado) {
-        return `${nome}, você e ${conjugeRef} construíram muito juntos — uma vida, uma rotina, um futuro que estão planejando. Mas esse futuro está sendo construído sobre uma base sem proteção, e esse é um risco que precisa ser dito com clareza.\n\nSe amanhã um imprevisto tirar você de cena — um falecimento precoce, uma invalidez, uma doença grave que te afaste por meses — o que acontece com ${conjugeRef}? O patrimônio que você acumulou pode cobrir algum tempo, mas sem uma cobertura estruturada, ele começa a ser consumido rapidamente. Meses viram anos, e o que era para ser legado vira sobrevivência.${notaRendaVariavel}\n\nSem seguro de vida, você está deixando ${conjugeRef} exposto a um risco que não precisa existir. Um seguro adequado cobre tanto o risco de falecimento — garantindo um capital para a continuidade da vida de vocês — quanto invalidez e doenças graves, que podem ser financeiramente tão devastadoras quanto. Esse é o alicerce de qualquer estratégia financeira séria para quem tem responsabilidades com outra pessoa. Sem ele, todo o resto da estratégia está em risco.`;
+        return `${introBlindagem}\n\nHoje o patrimônio de vocês não tem blindagem. Se um evento de saúde afastar você do trabalho por um ano, o dinheiro que você e ${conjugeRef} juntaram para construir a vida a dois começará a ser drenado imediatamente para pagar tratamentos e despesas correntes. O que era projeto de independência vira fundo de sobrevivência médica.${notaRendaVariavel}\n\nUma apólice estruturada serve exatamente para impedir que ${conjugeRef} fique desamparado${conjuge ? "" : "a"}.`;
       }
-      if (temFilhos) {
-        return `${nome}, você é o principal pilar financeiro ${filhos.length === 1 ? `de ${nFilhosStr}` : `dos seus filhos`} — e isso é uma das maiores responsabilidades que existem. Mas hoje, sem seguro de vida, essa responsabilidade está completamente desprotegida.\n\nPense de forma concreta em dois cenários: um acidente ou doença grave que te incapacite de trabalhar, ou um falecimento precoce. Em qualquer um dos dois, quem garante o sustento ${filhos.length === 1 ? "dele" : "deles"}? Quem paga a escola, a alimentação, as despesas do dia a dia? A resposta honesta é que, sem uma estrutura de proteção, não há resposta — e isso é um risco real que não pode ser ignorado.${notaRendaVariavel}\n\nUm seguro de vida cobre os dois lados dessa equação: o capital em caso de falecimento, que protege ${filhos.length === 1 ? nFilhosStr : "seus filhos"} no pior cenário, e as coberturas de invalidez e doenças graves, que protegem a renda quando você está vivo mas impossibilitado de trabalhar. A ausência de qualquer um desses lados deixa a família exposta.\n\nEsse pilar é a base que qualquer família com dependentes precisa ter antes de qualquer outro planejamento. É o que garante que, independente do que aconteça, ${filhos.length === 1 ? "ele" : "eles"} terão a continuidade que merecem.`;
-      }
-      return `${nome}, mesmo sem dependentes diretos, a ausência de proteção cria uma vulnerabilidade que pode destruir décadas de trabalho em um único evento.\n\nFalecimento precoce, invalidez permanente, doença grave — não são riscos abstratos. São realidades que acontecem com frequência muito maior do que as pessoas imaginam. Um seguro de vida bem estruturado cobre os três: garante que um capital seja preservado ou direcionado em caso de morte, e protege a renda em caso de invalidez ou doenças que tiram a capacidade de trabalhar sem tirar a vida. Sem essa cobertura, o patrimônio acumulado começa a ser consumido para cobrir despesas que uma apólice cobriria por fração do custo.${notaRendaVariavel}\n\nEsse é o pilar que mais pessoas negligenciam e que, quando faz falta, não pode mais ser contratado nas mesmas condições. Quanto mais cedo for estruturado, menor o custo e maior a proteção.`;
+      return `${introBlindagem}\n\n${nome}, mesmo sem dependentes, a ausência de seguro é o maior risco da sua independência financeira. Se um acidente ou diagnóstico grave te impedir de trabalhar temporariamente, de onde sairá o dinheiro para pagar seu custo de vida e os médicos? Dos investimentos que você suou anos para acumular.${notaRendaVariavel}\n\nA blindagem pessoal de DIT e doenças graves existe para garantir que você nunca precise queimar o seu próprio patrimônio para se manter em pé.`;
     }
 
     // Tem seguro — nota específica por profissão para revisão da cobertura
@@ -358,7 +381,7 @@ export function DiagResultado({ lead }: Props) {
         ? `\n\nComo autônomo, além da cobertura de vida, a proteção de renda por invalidez ou incapacidade temporária é especialmente crítica — porque sem você trabalhando, não há renda entrando. Verificar se a sua apólice inclui cobertura de invalidez total e parcial e DIT (Diária de Incapacidade Temporária) pode fazer uma diferença enorme em um cenário de afastamento.`
         : "";
 
-    return `${nome}, você já deu um passo muito importante ao ter um seguro de vida — isso demonstra consciência sobre a proteção ${casado || temFilhos ? "da sua família" : "do seu patrimônio"} e coloca você à frente da maioria das pessoas, que jamais estruturam esse pilar.\n\nO próximo passo é garantir que a cobertura ainda reflete a sua realidade atual. Família cresce, patrimônio aumenta, responsabilidades mudam — e um seguro contratado há alguns anos pode ter um capital segurado que já não é adequado para o seu padrão de vida e compromissos de hoje.${notaSeguroProfissao}\n\nAlém disso, ${familiaRef} precisa estar protegido não só em caso de falecimento, mas também contra invalidez total ou parcial e doenças graves — coberturas que muitas apólices não incluem por padrão. Uma revisão completa garante que a proteção está calibrada para o que você realmente precisa.\n\nNa reunião inicial, vamos mapear se os valores cobertos são compatíveis com as necessidades reais ${casado || temFilhos ? "da sua família" : "suas"} e identificar oportunidades de melhorar a eficiência dessa proteção. Ter o seguro é o começo — calibrá-lo corretamente é o que transforma proteção em blindagem de verdade.`;
+    return `${introBlindagem}\n\n${nome}, você já deu um passo importante ao ter uma apólice contratada. O nosso foco agora é calibrar: será que o capital segurado contratado lá atrás ainda acompanha o custo de vida e o patrimônio que você tem hoje? Na idade ativa, é mais comum um imprevisto afastar alguém do trabalho do que tirá-lo de cena — e é exatamente esse cenário que muitas apólices não cobrem adequadamente.${notaSeguroProfissao}\n\nAlém disso, é fundamental verificar se a sua cobertura vai além do falecimento e inclui invalidez, doenças graves e DIT (Diária de Incapacidade Temporária). Ter a ferramenta certa descalibrada dá uma falsa sensação de segurança.\n\nPor fim, no Brasil o processo de inventário é burocrático, lento e custoso. Um planejamento sucessório estruturado garante que o patrimônio seja transmitido da forma mais eficiente possível.`;
   }
 
   function gerarTexto(area: string): string {
@@ -395,15 +418,29 @@ export function DiagResultado({ lead }: Props) {
           ? `\n\nComo servidor público, você tem uma base de segurança que poucos têm — mas a aposentadoria pelo regime público raramente mantém o padrão de vida de quem estava na ativa. A diferença entre o que o RPPS garante e o que você imagina como "aposentadoria ideal" é exatamente o que precisa ser planejado e construído agora.`
           : "";
 
+      const introLF = `A nossa liberdade financeira começa quando colocamos números concretos nos nossos objetivos. A maioria das pessoas trabalha a vida inteira sem saber exatamente quanto custa a sua independência: quanto precisa ter para parar quando quiser, viajar sem culpa ou simplesmente acordar sem a obrigação financeira de bater cartão. O nosso papel aqui foi calcular exatamente onde a sua estrutura atual te leva.`;
+
+      let bandTextLF: string;
+      if (pctIF >= 90) {
+        bandTextLF = `${nome}, a sua estrutura atual indica que você tem consistência e patrimônio suficientes para bancar a sua independência com folga. Mas construir patrimônio é apenas a primeira metade do jogo; a segunda metade é proteger o que foi construído. Quando você chega nesse patamar, os riscos mudam de natureza: o foco sai de correr atrás de rentabilidade pura e passa a ser a blindagem contra cenários econômicos adversos e a eficiência fiscal/sucessória.`;
+      } else if (pctIF > 50) {
+        bandTextLF = `${nome}, parabéns pela disciplina. Você já cobre ${pctIF}% da sua meta, o que te coloca muito à frente da média. Porém, é justamente no "quase lá" que os erros custam mais caro. Uma carteira mal diversificada ou posicionada de forma ineficiente na reta final pode devolver anos de esforço. A nossa missão aqui é fechar essa lacuna final com segurança técnica.`;
+      } else if (pctIF > 30) {
+        bandTextLF = `${nome}, a sua projeção atual cobre ${pctIF}% da renda que você planejou para a aposentadoria. O significado prático disso é simples: sem ajustes, você chega lá com menos da metade do que precisa para sustentar a sua vida. A boa notícia é que a janela ainda está aberta. Pequenas otimizações na sua carteira e no seu fluxo de aportes hoje mudam radicalmente essa curva nos próximos 10 a 15 anos.`;
+      } else {
+        bandTextLF = `${nome}, preciso ser muito transparente com você: no ritmo atual, você atingirá apenas ${pctIF}% do que precisa. Isso significa que, lá na frente, você terá que tomar decisões amargas: reduzir padrão de vida, abrir mão de projetos essenciais ou continuar trabalhando por pura necessidade. O ponto não é se lamentar, mas entender que o tempo nos investimentos é insubstituível. Cada mês de atraso torna a rota mais cara e difícil de corrigir.`;
+      }
+      const lfOpener = `${introLF}\n\n${bandTextLF}\n\n`;
+
       if (!lfTemDados) {
         const filhosRef = temFilhos ? `, dar a melhor educação ${filhos.length === 1 ? `para ${nFilhosStr}` : `para ${nFilhosStr}`}` : "";
         return `A liberdade financeira começa com clareza — e clareza começa com números.\n\nA maioria das pessoas passa a vida trabalhando sem saber exatamente para quê: quanto precisa acumular para parar quando quiser, viajar sem culpa${filhosRef} ou simplesmente acordar de manhã sem a pressão de ter que trabalhar por necessidade.\n\nEssa falta de clareza não é inocente — ela tem um custo enorme. Cada ano sem um plano definido é um ano em que os juros compostos poderiam estar trabalhando a seu favor, mas não estão. Complete os seus dados e descubra onde você realmente está e o que precisa mudar para construir a vida que imagina${aposFamiliaRef ? ` ${aposFamiliaRef}` : ""}.`;
       }
       if (pctIF <= 30) {
-        return `${nome}, este número precisa ser dito com clareza: a trajetória atual coloca você em uma situação de risco real no longo prazo.\n\nPense nos projetos que ${familiaLF} tem pela frente — ${sonhosFamilia} Tudo isso depende de um patrimônio que, com o ritmo atual, chegará a apenas ${pctIF}% do necessário. Isso significa escolhas dolorosas no futuro: abrir mão de projetos, reduzir o padrão de vida ou continuar trabalhando por obrigação muito além do que desejaria.${notaProfLF}\n\nO que dói mais não é a realidade dos números — é saber que isso ainda pode ser mudado, mas que cada mês de atraso torna a mudança mais difícil e mais cara. O tempo nos investimentos é insubstituível. Quem começa a agir hoje, mesmo com pequenos ajustes, tem uma vantagem enorme sobre quem decide esperar o "momento certo" — que raramente chega sozinho.\n\nVocê ainda tem tempo de reescrever esse cenário. Mas essa decisão precisa ser tomada agora — não amanhã, não no próximo mês. Agora.`;
+        return `${lfOpener}Pense nos projetos que ${familiaLF} tem pela frente — ${sonhosFamilia} Tudo isso depende de um patrimônio que, com o ritmo atual, chegará a apenas ${pctIF}% do necessário. Isso significa escolhas dolorosas no futuro: abrir mão de projetos, reduzir o padrão de vida ou continuar trabalhando por obrigação muito além do que desejaria.${notaProfLF}\n\nO que dói mais não é a realidade dos números — é saber que isso ainda pode ser mudado, mas que cada mês de atraso torna a mudança mais difícil e mais cara. O tempo nos investimentos é insubstituível. Quem começa a agir hoje, mesmo com pequenos ajustes, tem uma vantagem enorme sobre quem decide esperar o "momento certo" — que raramente chega sozinho.\n\nVocê ainda tem tempo de reescrever esse cenário. Mas essa decisão precisa ser tomada agora — não amanhã, não no próximo mês. Agora.`;
       }
       if (pctIF <= 50) {
-        return `${nome}, sua projeção atual cobre ${pctIF}% da renda que você imaginou ter na aposentadoria. Esse número tem um significado concreto: sem mudanças, você chegará nessa fase com menos da metade do que precisa para viver com o padrão que deseja — e isso se traduz em escolhas que você não quer fazer.\n\nPense nos projetos de ${familiaLF}: ${sonhosFamilia} Todos esses projetos têm um preço — e esse preço precisa estar no plano.${notaProfLF}\n\nA boa notícia é que você está em um momento em que ainda é possível mudar de forma significativa. Mas a janela vai se fechando. Cada ano que passa sem uma estratégia clara aumenta o esforço necessário para chegar ao mesmo resultado — e reduz as opções disponíveis.\n\nUma estratégia bem estruturada pode acelerar essa jornada de forma surpreendente. Pequenos ajustes no valor investido, na rentabilidade da carteira ou na forma como o patrimônio está alocado podem fazer uma diferença enorme em 10 ou 15 anos. O caminho existe — o que falta é traçar o plano e começar a seguir.`;
+        return `${lfOpener}Pense nos projetos de ${familiaLF}: ${sonhosFamilia} Todos esses projetos têm um preço — e esse preço precisa estar no plano.${notaProfLF}\n\nA boa notícia é que você está em um momento em que ainda é possível mudar de forma significativa. Mas a janela vai se fechando. Cada ano que passa sem uma estratégia clara aumenta o esforço necessário para chegar ao mesmo resultado — e reduz as opções disponíveis.\n\nUma estratégia bem estruturada pode acelerar essa jornada de forma surpreendente. Pequenos ajustes no valor investido, na rentabilidade da carteira ou na forma como o patrimônio está alocado podem fazer uma diferença enorme em 10 ou 15 anos. O caminho existe — o que falta é traçar o plano e começar a seguir.`;
       }
       if (pctIF <= 90) {
         const aposentRef = casado
@@ -411,7 +448,7 @@ export function DiagResultado({ lead }: Props) {
           : temFilhos
             ? `uma aposentadoria com liberdade total — para viajar, para estar presente${filhos.length === 1 ? ` para ${nFilhosStr}` : ` para ${nFilhosStr}`}, para apoiar os projetos deles —`
             : "uma aposentadoria com liberdade total — para viajar, para trabalhar por vontade e não por obrigação —";
-        return `${nome}, você está mais perto do que a maioria das pessoas — sua projeção já atinge ${pctIF}% da meta que você definiu para si mesmo. Isso é resultado de disciplina e consistência, e merece reconhecimento.${notaProfLF}\n\nMas "quase lá" sem a estratégia certa pode custar caro. São os últimos percentuais que mais exigem atenção: uma carteira mal diversificada, uma rentabilidade abaixo do potencial por alguns anos, ou uma decisão errada em um momento de volatilidade — e o que levou anos para construir pode demorar muito mais para recuperar.\n\nPense no que esse resultado representa: a diferença entre ${aposentRef} e uma aposentadoria com restrições que você não planejou. Esse intervalo entre ${pctIF}% e 100% é exatamente o que separa esses dois cenários.`;
+        return `${lfOpener}${notaProfLF ? notaProfLF.trimStart() + "\n\n" : ""}Mas "quase lá" sem a estratégia certa pode custar caro. São os últimos percentuais que mais exigem atenção: uma carteira mal diversificada, uma rentabilidade abaixo do potencial por alguns anos, ou uma decisão errada em um momento de volatilidade — e o que levou anos para construir pode demorar muito mais para recuperar.\n\nPense no que esse resultado representa: a diferença entre ${aposentRef} e uma aposentadoria com restrições que você não planejou. Esse intervalo entre ${pctIF}% e 100% é exatamente o que separa esses dois cenários.`;
       }
       const liberdadeRef = casado
         ? `para você e ${conjugeRef} acordarem de manhã e escolherem como usar o tempo — não por obrigação, mas por vontade`
@@ -419,7 +456,7 @@ export function DiagResultado({ lead }: Props) {
       const filhosLiberdade = temFilhos
         ? ` Significa poder estar presente nos momentos que importam${filhos.length === 1 ? ` para ${nFilhosStr}` : ` para ${nFilhosStr}`}, apoiar os projetos ${filhos.length === 1 ? "dele" : "deles"}, sem a pressão financeira que acompanha a maioria das famílias.`
         : "";
-      return `${nome}, você chegou a um lugar que a maioria das pessoas nunca alcança: sua projeção indica que, mantendo a disciplina atual, você chegará à aposentadoria com o patrimônio necessário para gerar a renda que deseja — para sempre.\n\nIsso significa liberdade de verdade: ${liberdadeRef}.${filhosLiberdade}${notaProfLF}\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro${casado || temFilhos ? ` de ${familiaLF}` : ""} está resguardado, independente do que aconteça.`;
+      return `${lfOpener}Isso significa liberdade de verdade: ${liberdadeRef}.${filhosLiberdade}${notaProfLF}\n\nMas construir é só metade do trabalho. Quem chegou tão longe tem muito a proteger — e esse é exatamente o momento em que os riscos mudam de natureza. Decisões erradas, falta de proteção adequada, carteira mal posicionada para o próximo ciclo econômico: esses são os desafios reais de quem já construiu.\n\nUma estratégia completa garante não apenas que você chegue lá, mas que se mantenha lá — com eficiência, proteção e a tranquilidade de saber que o futuro${casado || temFilhos ? ` de ${familiaLF}` : ""} está resguardado, independente do que aconteça.`;
     }
 
     if (area === "inv") return "";

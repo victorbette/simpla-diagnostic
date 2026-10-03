@@ -91,9 +91,21 @@ O momento de estruturar essa base é agora — porque os juros compostos trabalh
     );
   }
 
-  const texto = `A forma como você investe define o ritmo com que você se aproxima — ou se afasta — da vida que quer construir. A maioria das pessoas investe de forma reativa: aplica onde ouviu falar, coloca onde o gerente indicou, sem estratégia nem clareza sobre o papel de cada ativo. É essa falta de direção que faz carteiras ficarem estagnadas por anos, rendendo abaixo do potencial e carregando produtos inadequados.
+  const nome = lead.nome.split(" ")[0];
 
-Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em qualquer cenário e elimina decisões por impulso. Uma carteira bem estruturada combina ativos que protegem, ativos que crescem e ativos que geram renda — de forma que, ao longo dos anos, os juros compostos amplifiquem cada decisão certa tomada hoje.
+  const anosRestantes = (() => {
+    const imeta = Number(lead.dadosColeta.idadeMeta) || 0;
+    const nasc  = lead.dadosColeta.dataNascimento || "";
+    if (!nasc || imeta <= 0) return 0;
+    const hoje = new Date();
+    let ano = 0, mes = 0;
+    if (nasc.includes('-')) { [ano, mes] = nasc.split('-').map(Number); }
+    else { ano = parseInt(nasc.slice(6)); mes = parseInt(nasc.slice(3, 5)); }
+    const idade = hoje.getFullYear() - ano + ((hoje.getMonth() + 1) < mes ? -1 : 0);
+    return imeta > idade ? imeta - idade : 0;
+  })();
+
+  const texto = `Diversificação não é ter muitos produtos: é ter fontes de resultado diferentes, que reagem de formas diferentes ao mesmo cenário. Analisamos a sua carteira sob a ótica de quatro classes, cada uma com uma função que nenhuma outra cumpre: renda fixa (segurança e liquidez), ações (crescimento de longo prazo), fundos imobiliários (renda recorrente e exposição a ativos reais) e investimentos globais (proteção contra o risco-país e o risco de moeda). Quando uma dessas funções está ausente, o seu patrimônio passa a depender de um único cenário econômico dar certo.
 `;
 
   const classeIcone: Record<string, string> = {
@@ -264,35 +276,51 @@ Uma alocação bem definida vai além de maximizar retorno: ela dá clareza em q
   const temGlobalPilar = ["renda_fixa_eua","stocks","reits","etfs_exterior","cripto"].some(tem);
 
   function gerarTextoDiversificacao(): string {
-    const faltam = [
+    const classesPresentes = [
+      temRFPilar     && "Renda Fixa",
+      temAcoesPilar  && "Ações",
+      temFIIsPilar   && "Fundos Imobiliários",
+      temGlobalPilar && "Investimentos Globais",
+    ].filter(Boolean) as string[];
+    const classesAusentes = [
       !temRFPilar     && "Renda Fixa",
       !temAcoesPilar  && "Ações",
       !temFIIsPilar   && "Fundos Imobiliários",
       !temGlobalPilar && "Investimentos Globais",
     ].filter(Boolean) as string[];
+    const count = classesPresentes.length;
+    const horizonte = anosRestantes > 0 ? ` no seu horizonte de ${anosRestantes} anos` : "";
 
-    if (faltam.length === 0) {
-      return `Sua carteira está distribuída pelos quatro pilares recomendados pela Simpla — Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais. Essa diversificação é fundamental para equilibrar proteção e crescimento em diferentes cenários econômicos.`;
+    // No RF but has other classes — special case
+    if (!temRFPilar && count > 0) {
+      return `A sua carteira não contempla renda fixa. Essa é a classe que cumpre duas funções que nenhuma outra cumpre: dar previsibilidade ao dinheiro que você vai precisar no curto prazo e oferecer liquidez diante de imprevistos. Sem ela, qualquer necessidade de caixa se transforma em venda de ativo de risco, frequentemente no pior momento possível. É também a renda fixa que permite manter as posições de risco com tranquilidade, porque você deixa de depender delas para viver.`;
     }
-    if (!temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
-      return `Nenhum ativo foi mapeado. Para analisar a diversificação da sua carteira, preencha os investimentos na etapa de coleta.`;
+    if (count === 0) {
+      return `${nome}, nenhum investimento foi mapeado na coleta de dados. A análise de alocação será realizada na reunião inicial.`;
     }
-    if (temRFPilar && !temAcoesPilar && !temFIIsPilar && !temGlobalPilar) {
-      return `Sua carteira está concentrada em Renda Fixa, sem exposição a Ações, Fundos Imobiliários ou Investimentos Globais. Embora a renda fixa ofereça segurança e previsibilidade, uma carteira sem ativos de crescimento tem um custo de oportunidade relevante no longo prazo. A Simpla recomenda distribuir o patrimônio pelos quatro pilares para equilibrar proteção, geração de renda e crescimento real.`;
+    if (count === 1) {
+      const classe = classesPresentes[0];
+      return `${nome}, a sua carteira está concentrada em ${classe}. Hoje, todo o seu resultado depende de um único tipo de ativo e, portanto, de um único cenário econômico. Concentração não é apenas risco de perda: é também um limite. Enquanto todas as suas fontes de resultado forem a mesma, o patrimônio não consegue combinar segurança, crescimento e renda: você precisa escolher uma dessas funções para o dinheiro inteiro, em vez de ter as três trabalhando ao mesmo tempo.`;
     }
-    if (!temGlobalPilar) {
-      const base = (temRFPilar || temAcoesPilar || temFIIsPilar)
-        ? `Sua carteira ainda não tem exposição internacional.`
-        : `Não identificamos exposição internacional na sua carteira.`;
-      return `${base} O investimento global é fundamental para reduzir o risco-Brasil e capturar oportunidades em economias mais desenvolvidas — especialmente nos EUA, que concentra as maiores empresas do mundo e oferece um ambiente regulatório mais sólido. Renda Fixa americana, Stocks, REITs e ETFs globais são as principais formas de acessar essa diversificação.`;
+    if (count === 2) {
+      const listPresentes = classesPresentes.join(" e ");
+      const listAusentes = classesAusentes.length === 2
+        ? `${classesAusentes[0]} e ${classesAusentes[1]}`
+        : classesAusentes.join(" e ");
+      return `${nome}, a sua carteira contempla duas das quatro classes analisadas: ${listPresentes}. É um começo de estrutura, mas com funções relevantes ainda descobertas: falta ${listAusentes}${horizonte}. Na prática, você já resolveu uma parte do problema e deixou outra inteira em aberto, e é justamente a parte ausente que mais pesa no resultado final.`;
     }
-    if (!temAcoesPilar && !temFIIsPilar) {
-      return `Você tem renda fixa e investimentos globais, mas sua carteira não conta com Ações nem Fundos Imobiliários. Esses dois pilares são essenciais para o crescimento real do patrimônio no longo prazo e para a geração de renda passiva — e estão ausentes da sua estratégia atual.`;
+    if (count === 3) {
+      const ausenteLabel = classesAusentes[0];
+      const funcaoAusente: Record<string, string> = {
+        "Renda Fixa":            "segurança e liquidez para o curto prazo",
+        "Ações":                 "crescimento de longo prazo",
+        "Fundos Imobiliários":   "renda recorrente e exposição a ativos reais",
+        "Investimentos Globais": "proteção contra o risco-país e o risco de moeda",
+      };
+      return `${nome}, a sua carteira contempla três das quatro classes analisadas, o que mostra que você já pensa em alocação e não apenas em produto. A lacuna está em ${ausenteLabel}, responsável por ${funcaoAusente[ausenteLabel] ?? "diversificação adicional"}. Em uma estrutura que já é boa, essa é a lacuna de maior ganho relativo: não se trata de refazer o que está feito, e sim de completar o que falta e revisar as proporções entre o que já existe.`;
     }
-    const lista = faltam.length === 1
-      ? faltam[0]
-      : faltam.slice(0, -1).join(", ") + " e " + faltam[faltam.length - 1];
-    return `${faltam.length === 1 ? "Um pilar ainda está ausente" : "Alguns pilares ainda estão ausentes"} da sua carteira: ${lista}. A Simpla recomenda distribuição entre Renda Fixa, Ações, Fundos Imobiliários e Investimentos Globais para equilibrar segurança, crescimento e diversificação geográfica.`;
+    // count === 4
+    return `${nome}, a sua carteira contempla as quatro classes analisadas, o que é pouco comum e indica intenção clara de estrutura. É importante registrar, porém, o limite deste indicador: ele mede presença, não proporção. Ter as quatro classes não garante que os pesos entre elas correspondam ao seu perfil, ao seu prazo e ao seu objetivo, e é a proporção, muito mais do que a presença, que determina como a carteira se comporta em cenários adversos.`;
   }
 
   const pilares = [
