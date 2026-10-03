@@ -154,24 +154,10 @@ export function DocLFDiag({ lead }: Props) {
         ? `Como servidor público, você tem uma base de segurança que poucos têm — mas a aposentadoria pelo regime público raramente mantém o padrão de vida de quem estava na ativa. A diferença entre o que o RPPS garante e o que ${casado ? `você e ${conjugeRef} imaginam` : "você imagina"} como aposentadoria ideal é o que precisa ser planejado e construído agora.`
         : "";
 
-    // Parágrafo 3 — sensibilidade + sonhos + call to action
-    const sonhos = temFilhos && casado
-      ? `A melhor escola para seus filhos, a liberdade de ${conjugeRef} também ter mais opções, a aposentadoria que imaginam juntos — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
-      : casado
-        ? `As viagens que vocês planejaram, a liberdade de ${conjugeRef} também ter mais opções, a aposentadoria que imaginam juntos — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
-        : temFilhos
-          ? `A melhor escola para seus filhos, a faculdade sem aperto financeiro, estar presente nos momentos que importam — todos esses projetos têm um preço, e esse preço precisa estar no plano.`
-          : `As viagens que sempre adiou, a liberdade de trabalhar por vontade e não por obrigação — esses projetos têm um preço, e esse preço precisa estar no plano.`;
-
     if (atingeMeta) {
-      const legadoRef = temFilhos
-        ? ` Cada ponto percentual a mais de rentabilidade tem impacto exponencial no legado para seus filhos${casado ? ` e na tranquilidade de ${conjugeRef}` : ""}.`
-        : casado ? ` Cada ponto percentual a mais de rentabilidade tem impacto exponencial na tranquilidade de ${conjugeRef}.` : "";
-
-      let t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} chegam` : "Você chega"} ao patamar de independência financeira que ${casado ? "planejaram" : "planejou"}.`;
-      t += `\n\n${notaProf || `Esse resultado coloca você em uma posição que a maioria das pessoas nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer décadas de esforço.${legadoRef}`}`;
-      t += `\n\nA análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado. O objetivo não é apenas chegar à meta — é chegar com folga e com a estrutura certa para ${casado || temFilhos ? `manter ${casado ? conjugeRef : "seus filhos"} protegidos` : "se manter lá"}, independente do que aconteça.`;
-      return `${introLF}\n\n${t}`;
+      const t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} chegam` : "Você chega"} ao patamar de independência financeira que ${casado ? "planejaram" : "planejou"}.`;
+      const tExtra = notaProf || `Esse resultado coloca você em uma posição que a maioria das pessoas nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer décadas de esforço. A análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado.`;
+      return `${introLF}\n\n${t}\n\n${tExtra}`;
     }
 
     const diferencaRenda = rendaDesejada > rendaSustentavel ? rendaDesejada - rendaSustentavel : 0;
@@ -181,11 +167,7 @@ export function DocLFDiag({ lead }: Props) {
 
     const p2 = notaProf || `Aporte não é o único caminho: uma carteira mais eficiente pode aumentar a rentabilidade real e encurtar essa distância sem necessariamente investir mais. A análise de sensibilidade abaixo mostra que cada ano de atraso aumenta o esforço de forma desproporcional — ${anosRestantes <= 15 ? `com ${anosRestantes} anos até a aposentadoria, a janela existe, mas se fecha mais rápido do que parece` : `você tem ${anosRestantes} anos para mudar o cenário de forma significativa, mas não tempo infinito`}.`;
 
-    const p3 = notaProf
-      ? `Aporte não é o único caminho: uma carteira mais eficiente pode encurtar essa distância. ${sonhos}`
-      : sonhos;
-
-    return `${introLF}\n\n${p1}\n\n${p2}\n\n${p3}`;
+    return `${introLF}\n\n${p1}\n\n${p2}`;
   }
 
   // ── Análise de Sensibilidade — usa simulação completa com objetivos ──
