@@ -349,7 +349,6 @@ export function DiagResultado({ lead }: Props) {
   }
 
   function gerarTextoBlindagem(): string {
-    const nFilhosStr = filhos.length === 1 ? (filhos[0].nome || "seu filho") : `seus ${filhos.length} filhos`;
     const conjugeRef = conjuge || "sua família";
     const tipoProf   = ehEmpresario ? "empresário" : ehAutonomo ? "autônomo" : "";
 

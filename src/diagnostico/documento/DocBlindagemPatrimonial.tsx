@@ -24,10 +24,6 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
   const rendaVariavel = ehAutonomo || ehEmpresario;
 
   function gerarTextoBlindagem(): string {
-    const nFilhosStr = filhos.length === 1
-      ? (filhos[0].nome || "seu filho")
-      : filhos.length > 1 ? `seus ${filhos.length} filhos` : "seus filhos";
-
     const introBlindagem = `Existe uma regra pétrea no planejamento financeiro: não adianta desenharmos a melhor estratégia de investimentos do mundo se a base sobre a qual ela está construída for vulnerável. Um único evento inesperado não planejado pode desmanchar anos de acumulação em poucos meses. Por isso, analisamos a sua blindagem patrimonial.`;
 
     if (temSeguro) {
