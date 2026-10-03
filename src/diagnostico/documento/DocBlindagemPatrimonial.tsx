@@ -26,6 +26,8 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
   function gerarTextoBlindagem(): string {
     const introBlindagem = `Existe uma regra pétrea no planejamento financeiro: não adianta desenharmos a melhor estratégia de investimentos do mundo se a base sobre a qual ela está construída for vulnerável. Um único evento inesperado não planejado pode desmanchar anos de acumulação em poucos meses. Por isso, analisamos a sua blindagem patrimonial.`;
 
+    const notaSucessao = `Há ainda um risco que costuma passar despercebido: o custo do inventário. No Brasil, o processo pode consumir entre 10% e 20% do valor total dos bens — entre impostos, honorários e custas cartoriais. Sem um plano claro, o risco concreto é a venda forçada de ativos ou a contratação de dívida só para viabilizar os trâmites. Um patrimônio construído ao longo de anos pode precisar ser liquidado às pressas, no pior momento e pelo pior preço. Um planejamento sucessório estruturado garante que o que você construiu chegue a quem você quer, da forma mais eficiente possível.`;
+
     if (temSeguro) {
       const notaSeguroProfissao = ehEmpresario
         ? `\n\nComo empresário, há um ponto adicional que muitas vezes passa despercebido: o seguro de vida pessoal raramente cobre o risco que a sua ausência representa para a empresa — sócios, funcionários, contratos em andamento. Um seguro de pessoa-chave, estruturado corretamente, protege tanto a família quanto a continuidade do negócio.`
@@ -33,7 +35,7 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
           ? `\n\nComo autônomo, além da cobertura de vida, a proteção de renda por incapacidade temporária é especialmente crítica — sem você trabalhando, não há renda entrando. Verifique se a sua apólice inclui cobertura de invalidez parcial e DIT (Diária de Incapacidade Temporária).`
           : "";
 
-      return `${introBlindagem}\n\n${nome}, você já deu um passo importante ao ter uma apólice contratada. O nosso foco agora é calibrar: será que o capital segurado contratado lá atrás ainda acompanha o custo de vida e o patrimônio que você tem hoje? Na idade ativa, é mais comum um imprevisto afastar alguém do trabalho do que tirá-lo de cena — e é exatamente esse cenário que muitas apólices não cobrem adequadamente.${notaSeguroProfissao}\n\nAlém disso, é fundamental verificar se a sua cobertura vai além do falecimento e inclui invalidez, doenças graves e DIT (Diária de Incapacidade Temporária). Ter a ferramenta certa descalibrada dá uma falsa sensação de segurança.\n\nPor fim, no Brasil o processo de inventário é burocrático, lento e custoso. Um planejamento sucessório estruturado garante que o patrimônio seja transmitido da forma mais eficiente possível.`;
+      return `${introBlindagem}\n\n${nome}, você já deu um passo importante ao ter uma apólice contratada. O nosso foco agora é calibrar: será que o capital segurado contratado lá atrás ainda acompanha o custo de vida e o patrimônio que você tem hoje? Na idade ativa, é mais comum um imprevisto afastar alguém do trabalho do que tirá-lo de cena — e é exatamente esse cenário que muitas apólices não cobrem adequadamente.${notaSeguroProfissao}\n\nAlém disso, é fundamental verificar se a sua cobertura vai além do falecimento e inclui invalidez, doenças graves e DIT (Diária de Incapacidade Temporária). Ter a ferramenta certa descalibrada dá uma falsa sensação de segurança.\n\n${notaSucessao}`;
     }
 
     // Sem seguro
@@ -44,14 +46,14 @@ export function DocBlindagemPatrimonial({ lead }: Props) {
         : "";
 
     if (temFilhos) {
-      return `${introBlindagem}\n\n${nome}, hoje você não possui uma apólice de blindagem. Se amanhã um imprevisto grave tirar a sua capacidade de gerar renda ou tirar você de cena, quem paga a escola ${filhos.length === 1 ? "das crianças" : "das crianças"} no mês seguinte? Quem banca as contas fixas da casa enquanto as coisas se reorganizam? Sem uma cobertura estruturada, a família é obrigada a torrar as reservas e liquidar investimentos na pressa.${notaRendaVariavel}\n\nTerceirizar esse risco para uma seguradora é o pilar mais urgente antes de qualquer aporte.`;
+      return `${introBlindagem}\n\n${nome}, hoje você não possui uma apólice de blindagem. Se amanhã um imprevisto grave tirar a sua capacidade de gerar renda ou tirar você de cena, quem paga a escola ${filhos.length === 1 ? "das crianças" : "das crianças"} no mês seguinte? Quem banca as contas fixas da casa enquanto as coisas se reorganizam? Sem uma cobertura estruturada, a família é obrigada a torrar as reservas e liquidar investimentos na pressa.${notaRendaVariavel}\n\nTerceirizar esse risco para uma seguradora é o pilar mais urgente antes de qualquer aporte.\n\n${notaSucessao}`;
     }
 
     if (casado) {
-      return `${introBlindagem}\n\nHoje o patrimônio de vocês não tem blindagem. Se um evento de saúde afastar você do trabalho por um ano, o dinheiro que você e ${conjugeRef || "sua família"} juntaram para construir a vida a dois começará a ser drenado imediatamente para pagar tratamentos e despesas correntes. O que era projeto de independência vira fundo de sobrevivência médica.${notaRendaVariavel}\n\nUma apólice estruturada serve exatamente para impedir que ${conjugeRef || "sua família"} fique desamparado${conjugeRef ? "" : "a"}.`;
+      return `${introBlindagem}\n\nHoje o patrimônio de vocês não tem blindagem. Se um evento de saúde afastar você do trabalho por um ano, o dinheiro que você e ${conjugeRef || "sua família"} juntaram para construir a vida a dois começará a ser drenado imediatamente para pagar tratamentos e despesas correntes. O que era projeto de independência vira fundo de sobrevivência médica.${notaRendaVariavel}\n\nUma apólice estruturada serve exatamente para impedir que ${conjugeRef || "sua família"} fique desamparado${conjugeRef ? "" : "a"}.\n\n${notaSucessao}`;
     }
 
-    return `${introBlindagem}\n\n${nome}, mesmo sem dependentes, a ausência de seguro é o maior risco da sua independência financeira. Se um acidente ou diagnóstico grave te impedir de trabalhar temporariamente, de onde sairá o dinheiro para pagar seu custo de vida e os médicos? Dos investimentos que você suou anos para acumular.${notaRendaVariavel}\n\nA blindagem pessoal de DIT e doenças graves existe para garantir que você nunca precise queimar o seu próprio patrimônio para se manter em pé.`;
+    return `${introBlindagem}\n\n${nome}, mesmo sem dependentes, a ausência de seguro é o maior risco da sua independência financeira. Se um acidente ou diagnóstico grave te impedir de trabalhar temporariamente, de onde sairá o dinheiro para pagar seu custo de vida e os médicos? Dos investimentos que você suou anos para acumular.${notaRendaVariavel}\n\nA blindagem pessoal de DIT e doenças graves existe para garantir que você nunca precise queimar o seu próprio patrimônio para se manter em pé.\n\n${notaSucessao}`;
   }
 
   const paragrafos = gerarTextoBlindagem().split("\n\n").filter(p => p.trim().length > 0);
