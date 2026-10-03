@@ -419,17 +419,7 @@ export function DiagResultado({ lead }: Props) {
 
       const introLF = `A nossa liberdade financeira começa quando colocamos números concretos nos nossos objetivos. A maioria das pessoas trabalha a vida inteira sem saber exatamente quanto custa a sua independência: quanto precisa ter para parar quando quiser, viajar sem culpa ou simplesmente acordar sem a obrigação financeira de bater cartão. O nosso papel aqui foi calcular exatamente onde a sua estrutura atual te leva.`;
 
-      let bandTextLF: string;
-      if (pctIF >= 90) {
-        bandTextLF = `${nome}, a sua estrutura atual indica que você tem consistência e patrimônio suficientes para bancar a sua independência com folga. Mas construir patrimônio é apenas a primeira metade do jogo; a segunda metade é proteger o que foi construído. Quando você chega nesse patamar, os riscos mudam de natureza: o foco sai de correr atrás de rentabilidade pura e passa a ser a blindagem contra cenários econômicos adversos e a eficiência fiscal/sucessória.`;
-      } else if (pctIF > 50) {
-        bandTextLF = `${nome}, parabéns pela disciplina. Você já cobre ${pctIF}% da sua meta, o que te coloca muito à frente da média. Porém, é justamente no "quase lá" que os erros custam mais caro. Uma carteira mal diversificada ou posicionada de forma ineficiente na reta final pode devolver anos de esforço. A nossa missão aqui é fechar essa lacuna final com segurança técnica.`;
-      } else if (pctIF > 30) {
-        bandTextLF = `${nome}, a sua projeção atual cobre ${pctIF}% da renda que você planejou para a aposentadoria. O significado prático disso é simples: sem ajustes, você chega lá com menos da metade do que precisa para sustentar a sua vida. A boa notícia é que a janela ainda está aberta. Pequenas otimizações na sua carteira e no seu fluxo de aportes hoje mudam radicalmente essa curva nos próximos 10 a 15 anos.`;
-      } else {
-        bandTextLF = `${nome}, preciso ser muito transparente com você: no ritmo atual, você atingirá apenas ${pctIF}% do que precisa. Isso significa que, lá na frente, você terá que tomar decisões amargas: reduzir padrão de vida, abrir mão de projetos essenciais ou continuar trabalhando por pura necessidade. O ponto não é se lamentar, mas entender que o tempo nos investimentos é insubstituível. Cada mês de atraso torna a rota mais cara e difícil de corrigir.`;
-      }
-      const lfOpener = `${introLF}\n\n${bandTextLF}\n\n`;
+      const lfOpener = `${introLF}\n\n`;
 
       if (!lfTemDados) {
         const filhosRef = temFilhos ? `, dar a melhor educação ${filhos.length === 1 ? `para ${nFilhosStr}` : `para ${nFilhosStr}`}` : "";

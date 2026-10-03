@@ -142,19 +142,6 @@ export function DocLFDiag({ lead }: Props) {
 
     const introLF = `A nossa liberdade financeira começa quando colocamos números concretos nos nossos objetivos. A maioria das pessoas trabalha a vida inteira sem saber exatamente quanto custa a sua independência: quanto precisa ter para parar quando quiser, viajar sem culpa ou simplesmente acordar sem a obrigação financeira de bater cartão. O nosso papel aqui foi calcular exatamente onde a sua estrutura atual te leva.`;
 
-    let bandText: string;
-    if (pct > 100) {
-      bandText = `${nome}, a sua estrutura atual já supera a meta que você definiu: projetamos ${pct}% da renda planejada para a sua independência. Isso significa que o seu plano deixou de ser uma questão de acumulação e passou a ser uma questão de gestão de excedente. As perguntas agora são outras: qual é o seu horizonte real de parada, quanto desse patrimônio é para você e quanto é legado, e como estruturá-lo para atravessar crises, pagar menos imposto e chegar às próximas gerações da forma que você decidir.`;
-    } else if (pct > 90) {
-      bandText = `${nome}, a sua estrutura atual indica que você tem consistência e patrimônio suficientes para bancar a sua independência com folga. Mas construir patrimônio é apenas a primeira metade do jogo; a segunda metade é proteger o que foi construído. Quando você chega nesse patamar, os riscos mudam de natureza: o foco sai de correr atrás de rentabilidade pura e passa a ser a blindagem contra cenários econômicos adversos e a eficiência fiscal/sucessória.`;
-    } else if (pct > 50) {
-      bandText = `${nome}, parabéns pela disciplina. Você já cobre ${pct}% da sua meta, o que te coloca muito à frente da média. Porém, é justamente no "quase lá" que os erros custam mais caro. Uma carteira mal diversificada ou posicionada de forma ineficiente na reta final pode devolver anos de esforço. A nossa missão aqui é fechar essa lacuna final com segurança técnica.`;
-    } else if (pct > 30) {
-      bandText = `${nome}, a sua projeção atual cobre ${pct}% da renda que você planejou para a aposentadoria. O significado prático disso é simples: sem ajustes, você chega lá com menos da metade do que precisa para sustentar a sua vida. A boa notícia é que a janela ainda está aberta. Pequenas otimizações na sua carteira e no seu fluxo de aportes hoje mudam radicalmente essa curva nos próximos 10 a 15 anos.`;
-    } else {
-      bandText = `${nome}, preciso ser muito transparente com você: no ritmo atual, você atingirá apenas ${pct}% do que precisa. Isso significa que, lá na frente, você terá que tomar decisões amargas: reduzir padrão de vida, abrir mão de projetos essenciais ou continuar trabalhando por pura necessidade. O ponto não é se lamentar, mas entender que o tempo nos investimentos é insubstituível. Cada mês de atraso torna a rota mais cara e difícil de corrigir.`;
-    }
-
     // Referências de família para o texto
     const familiaRef = casado && temFilhos
       ? `você e ${conjugeRef}`
@@ -184,7 +171,7 @@ export function DocLFDiag({ lead }: Props) {
       let t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} chegam` : "Você chega"} ao patamar de independência financeira que ${casado ? "planejaram" : "planejou"}.`;
       t += `\n\n${notaProf || `Esse resultado coloca você em uma posição que a maioria das pessoas nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer décadas de esforço.${legadoRef}`}`;
       t += `\n\nA análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado. O objetivo não é apenas chegar à meta — é chegar com folga e com a estrutura certa para ${casado || temFilhos ? `manter ${casado ? conjugeRef : "seus filhos"} protegidos` : "se manter lá"}, independente do que aconteça.`;
-      return `${introLF}\n\n${bandText}\n\n${t}`;
+      return `${introLF}\n\n${t}`;
     }
 
     const diferencaRenda = rendaDesejada > rendaSustentavel ? rendaDesejada - rendaSustentavel : 0;
@@ -198,7 +185,7 @@ export function DocLFDiag({ lead }: Props) {
       ? `Aporte não é o único caminho: uma carteira mais eficiente pode encurtar essa distância. ${sonhos}`
       : sonhos;
 
-    return `${introLF}\n\n${bandText}\n\n${p1}\n\n${p2}\n\n${p3}`;
+    return `${introLF}\n\n${p1}\n\n${p2}\n\n${p3}`;
   }
 
   // ── Análise de Sensibilidade — usa simulação completa com objetivos ──
