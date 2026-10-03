@@ -58,10 +58,6 @@ export function DocLFDiag({ lead }: Props) {
 
   const TAXA_ANUAL  = usarTaxaCustom ? Math.max(3, taxaCustomAnual) / 100 : TAXA_LF_PADRAO;
   const TAXA_MENSAL = taxaMensalDe(TAXA_ANUAL);
-  const taxaLabel = usarTaxaCustom
-    ? `IPCA + ${taxaCustomAnual.toFixed(2).replace(".", ",")}%`
-    : "IPCA + 6,00%";
-
   const nMesesBase = Math.max(1, Math.round((idadeMeta - idadeAtual) * 12));
 
   const calcularProjecao = (): number => {
@@ -284,9 +280,7 @@ export function DocLFDiag({ lead }: Props) {
             </div>
           </div>
         </div>
-        <div style={{ fontSize: 8, color: "#9CA3AF", textAlign: "right" as const, marginBottom: 10 }}>
-          Taxa de retorno: {taxaLabel}
-        </div>
+
       </>
     ),
   });
