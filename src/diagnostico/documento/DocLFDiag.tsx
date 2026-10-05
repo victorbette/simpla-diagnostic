@@ -104,7 +104,6 @@ export function DocLFDiag({ lead }: Props) {
 
   const lfTemDados = patrimonioNecessario > 0 && idadeAtual > 0 && idadeMeta > 0 && idadeMeta > idadeAtual;
 
-  const temFilhos    = Array.isArray(dadosColeta.filhos) && dadosColeta.filhos.length > 0;
   const estadoCivil  = dadosColeta.estadoCivil ?? "";
   const casado       = estadoCivil === "casado" || estadoCivil === "uniao_estavel";
   const conjuge      = dadosColeta.nomeConjuge?.trim() || "";
@@ -136,32 +135,27 @@ export function DocLFDiag({ lead }: Props) {
     const anosRestantes = idadeMeta - idadeAtual;
     const atingeMeta = projecaoNaIF >= patrimonioNecessario;
 
-    const introLF = `A nossa liberdade financeira começa quando colocamos números concretos nos nossos objetivos. A maioria das pessoas trabalha a vida inteira sem saber exatamente quanto custa a sua independência: quanto precisa ter para parar quando quiser, viajar sem culpa ou simplesmente acordar sem a obrigação financeira de bater cartão. O nosso papel aqui foi calcular exatamente onde a sua estrutura atual te leva.`;
-
-    // Referências de família para o texto
-    const familiaRef = casado && temFilhos
-      ? `você e ${conjugeRef}`
-      : casado ? `você e ${conjugeRef}` : "você";
+    const introLF = `A liberdade financeira começa quando colocamos números concretos nos objetivos. A maioria das pessoas trabalha a vida inteira sem saber exatamente quanto custa a sua independência — quanto precisa acumular para parar quando quiser e viver sem a obrigação de bater cartão. Calculamos onde a sua estrutura atual te leva.`;
 
     // Nota de profissão — parágrafo 2
     const notaProf = rendaVariavel
-      ? `Como ${ehEmpresario ? "empresário" : "autônomo"}, a sua renda é variável — sem 13º, sem FGTS, sem renda garantida pelo empregador. A construção do patrimônio${casado ? ` para ${familiaRef}${temFilhos ? " e seus filhos" : ""}` : temFilhos ? " para sua família" : ""} depende exclusivamente da estratégia que você montar agora. Cada ano sem um plano estruturado tem um custo muito maior do que para a maioria das pessoas.`
+      ? `Como ${ehEmpresario ? "empresário" : "autônomo"}, a sua renda é variável — sem 13º, sem FGTS, sem renda garantida pelo empregador. A construção do patrimônio depende exclusivamente da estratégia que você montar agora. Cada ano sem um plano estruturado tem um custo desproporcionalmente maior.`
       : ehServidor
-        ? `Como servidor público, você tem uma base de segurança que poucos têm — mas a aposentadoria pelo regime público raramente mantém o padrão de vida de quem estava na ativa. A diferença entre o que o RPPS garante e o que ${casado ? `você e ${conjugeRef} imaginam` : "você imagina"} como aposentadoria ideal é o que precisa ser planejado e construído agora.`
+        ? `Como servidor público, a aposentadoria pelo regime público raramente mantém o padrão de vida da ativa. A diferença entre o que o RPPS garante e o que ${casado ? `você e ${conjugeRef} imaginam` : "você imagina"} como aposentadoria ideal é o que precisa ser construído agora.`
         : "";
 
     if (atingeMeta) {
-      const t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} chegam` : "Você chega"} ao patamar de independência financeira que ${casado ? "planejaram" : "planejou"}.`;
-      const tExtra = notaProf || `Esse resultado coloca você em uma posição que a maioria das pessoas nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada ou uma rentabilidade abaixo do potencial por alguns anos pode comprometer décadas de esforço. A análise de sensibilidade abaixo mostra como variações no aporte ou no prazo impactam o resultado.`;
+      const t = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — suficiente para gerar ${formatBRL(rendaSustentavel)}/mês de forma sustentável, acima da meta de ${formatBRL(rendaDesejada)}/mês. ${casado ? `Você e ${conjugeRef} estão` : "Você está"} no caminho da independência financeira que ${casado ? "planejaram" : "planejou"}.`;
+      const tExtra = notaProf || `Esse resultado coloca você em uma posição que a maioria nunca alcança. Mas construir é só metade do trabalho — uma carteira mal posicionada pode comprometer décadas de esforço. A análise de sensibilidade abaixo mostra como variações no aporte e no prazo impactam o resultado.`;
       return `${introLF}\n\n${t}\n\n${tExtra}`;
     }
 
     const diferencaRenda = rendaDesejada > rendaSustentavel ? rendaDesejada - rendaSustentavel : 0;
     const rendaSustStr = rendaSustentavel > 0 ? `${formatBRL(rendaSustentavel)}/mês` : "abaixo do necessário";
 
-    const p1 = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — ${pct}% do necessário para a aposentadoria que ${casado ? `você e ${conjugeRef} planejam` : "você planejou"}. A renda sustentável seria de ${rendaSustStr}${diferencaRenda > 0 ? ` — ${formatBRL(diferencaRenda)}/mês abaixo da meta de ${formatBRL(rendaDesejada)}/mês` : ""}. Fechar essa diferença exigiria ${formatBRL(aporteIdealCalc)}/mês${aporteIdealCalc > aporteMensal ? ` — ${formatBRL(aporteIdealCalc - aporteMensal)}/mês a mais do ritmo atual` : ""}.`;
+    const p1 = `${nome}, com ${formatBRL(patrimonioInicial)} de patrimônio e ${formatBRL(aporteMensal)}/mês de aporte, a projeção indica ${formatBRL(projecaoNaIF)} aos ${idadeMeta} anos — ${pct}% do necessário. A renda sustentável seria de ${rendaSustStr}${diferencaRenda > 0 ? `, ${formatBRL(diferencaRenda)}/mês abaixo da meta de ${formatBRL(rendaDesejada)}/mês` : ""}. Fechar essa diferença exigiria ${formatBRL(aporteIdealCalc)}/mês${aporteIdealCalc > aporteMensal ? ` — ${formatBRL(aporteIdealCalc - aporteMensal)}/mês a mais` : ""}.`;
 
-    const p2 = notaProf || `Aporte não é o único caminho: uma carteira mais eficiente pode aumentar a rentabilidade real e encurtar essa distância sem necessariamente investir mais. A análise de sensibilidade abaixo mostra que cada ano de atraso aumenta o esforço de forma desproporcional — ${anosRestantes <= 15 ? `com ${anosRestantes} anos até a aposentadoria, a janela existe, mas se fecha mais rápido do que parece` : `você tem ${anosRestantes} anos para mudar o cenário de forma significativa, mas não tempo infinito`}.`;
+    const p2 = notaProf || `Aporte não é o único caminho — uma carteira mais eficiente pode encurtar essa distância sem necessariamente investir mais. A análise de sensibilidade abaixo mostra que cada ano de atraso aumenta o esforço de forma desproporcional: ${anosRestantes <= 15 ? `com ${anosRestantes} anos até a aposentadoria, a janela existe, mas se fecha mais rápido do que parece` : `você tem ${anosRestantes} anos para mudar o cenário, mas não tempo infinito`}.`;
 
     return `${introLF}\n\n${p1}\n\n${p2}`;
   }
