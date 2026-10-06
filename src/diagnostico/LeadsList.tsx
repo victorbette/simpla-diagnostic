@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import type { Lead } from "./types";
+import { baixarExportacao } from "./exportarLeads";
 
 
 function formatDate(iso: string): string {
@@ -197,13 +198,24 @@ export function LeadsList({ leads, onSelecionar, onCadastrar, onAtualizar, onExc
             </div>
           </div>
 
-          <button
-            onClick={() => setMostrarCadastro(true)}
-            style={{ backgroundColor: "#000000", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit" }}
-          >
-            <i className="ti ti-user-plus" style={{ fontSize: 16 }} />
-            Novo Lead
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => baixarExportacao(leads)}
+              disabled={totalLeads === 0}
+              title="Baixa um arquivo com todos os seus leads, para importar no CRM Wealth"
+              style={{ backgroundColor: "white", color: "#1E3A8A", border: "1px solid #BFDBFE", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 500, cursor: totalLeads === 0 ? "not-allowed" : "pointer", opacity: totalLeads === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit" }}
+            >
+              <i className="ti ti-download" style={{ fontSize: 16 }} />
+              Exportar meus leads
+            </button>
+            <button
+              onClick={() => setMostrarCadastro(true)}
+              style={{ backgroundColor: "#000000", color: "white", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit" }}
+            >
+              <i className="ti ti-user-plus" style={{ fontSize: 16 }} />
+              Novo Lead
+            </button>
+          </div>
         </div>
 
         {/* Stats cards */}
